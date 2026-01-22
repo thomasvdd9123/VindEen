@@ -124,3 +124,40 @@ VITE_SUPABASE_ANON_KEY=
 - Centralized theming for easy rebranding
 - Mobile-first responsive design
 - Dutch (Belgian) language
+
+## Vercel Deployment
+
+The project is configured for Vercel serverless deployment.
+
+### Files
+- `vercel.json` - Vercel configuration with rewrites and function settings
+- `api/index.ts` - Serverless function entry point (wraps Express)
+
+### Deployment Steps
+1. Push code to GitHub
+2. Connect repository to Vercel
+3. Add environment variables in Vercel:
+   - `SUPABASE_URL`
+   - `SUPABASE_ANON_KEY`
+   - `SUPABASE_SERVICE_ROLE_KEY`
+   - `SESSION_SECRET`
+4. Deploy
+
+### Cron Jobs
+Add crons to `vercel.json` like this:
+```json
+{
+  "crons": [
+    {
+      "path": "/api/cron/daily-task",
+      "schedule": "0 0 * * *"
+    }
+  ]
+}
+```
+Then create the endpoint in your Express routes.
+
+### Notes
+- The same Express routes work on both Replit and Vercel
+- On Replit: Uses `npm run dev` with Express server
+- On Vercel: Uses serverless adapter wrapping Express
