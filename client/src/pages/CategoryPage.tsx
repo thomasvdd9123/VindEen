@@ -51,6 +51,11 @@ export default function CategoryPage() {
   if (locationSlug) searchParams.set("location", locationSlug);
   if (queryParam) searchParams.set("q", queryParam);
   if (specParam) searchParams.set("spec", specParam);
+  
+  // Build full URL with query string
+  const searchUrl = searchParams.toString() 
+    ? `/api/profiles/search?${searchParams.toString()}`
+    : "/api/profiles/search";
 
   const { data: profilesData, isLoading: profilesLoading } = useQuery<{
     profiles: ProfileWithRelations[];
@@ -58,7 +63,7 @@ export default function CategoryPage() {
     page: number;
     totalPages: number;
   }>({
-    queryKey: ["/api/profiles/search", searchParams.toString()],
+    queryKey: [searchUrl],
   });
 
   const profiles = profilesData?.profiles || [];

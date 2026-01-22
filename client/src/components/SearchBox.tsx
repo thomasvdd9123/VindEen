@@ -77,8 +77,11 @@ export function SearchBox({
   }
   
   const countQueryString = countParams.toString();
+  const countUrl = countQueryString 
+    ? `/api/profiles/count?${countQueryString}`
+    : "/api/profiles/count";
   const { data: searchData } = useQuery<{ total: number }>({
-    queryKey: ["/api/profiles/count", countQueryString],
+    queryKey: [countUrl],
     enabled: true,
   });
 
