@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useLocation } from "wouter";
@@ -35,7 +35,6 @@ export default function ProfileCreate() {
   const [, setLocation] = useLocation();
   const { user } = useAuth();
   const { toast } = useToast();
-  const [gardenerId, setGardenerId] = useState<string | null>(null);
 
   const { data: categories = [] } = useQuery<Category[]>({
     queryKey: ["/api/categories"],
@@ -44,6 +43,20 @@ export default function ProfileCreate() {
   const { data: locations = [] } = useQuery<Location[]>({
     queryKey: ["/api/locations"],
   });
+
+  const { data: gardener, isLoading: gardenerLoading } = useQuery({
+    queryKey: ["/api/gardeners", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      return apiRequest("POST", "/api/gardeners", {
+        accountId: user.id,
+        email: user.email,
+      });
+    },
+    enabled: !!user?.id,
+  });
+
+  const gardenerId = gardener?.id || null;
 
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
@@ -65,17 +78,6 @@ export default function ProfileCreate() {
       form.setValue("email", user.email);
     }
   }, [user?.email, form]);
-
-  useEffect(() => {
-    if (user?.id) {
-      apiRequest("POST", "/api/gardeners", {
-        accountId: user.id,
-        email: user.email,
-      }).then((gardener) => {
-        setGardenerId(gardener.id);
-      }).catch(console.error);
-    }
-  }, [user?.id, user?.email]);
 
   const createProfileMutation = useMutation({
     mutationFn: async (data: ProfileFormData) => {
@@ -299,16 +301,16 @@ export default function ProfileCreate() {
                 <div className="pt-4 flex gap-4">
                   <Button 
                     type="submit" 
-                    disabled={createProfileMutation.isPending}
+                    disabled={createProfileMutation.isPending || gardenerLoading || !gardenerId}
                     className="gap-2"
                     data-testid="button-submit"
                   >
-                    {createProfileMutation.isPending ? (
+                    {(createProfileMutation.isPending || gardenerLoading) ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
                       <Save className="h-4 w-4" />
                     )}
-                    Profiel aanmaken
+                    {gardenerLoading ? "Laden..." : "Profiel aanmaken"}
                   </Button>
                   <Button 
                     type="button" 
