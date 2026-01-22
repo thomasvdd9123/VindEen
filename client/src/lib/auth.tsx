@@ -54,7 +54,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       (event, session) => {
         if (!mounted) return;
         
-        console.log("Auth state change:", event, !!session);
+        // Only log significant events, not user updates
+        if (event !== 'USER_UPDATED') {
+          console.log("Auth state change:", event, !!session);
+        }
+        
+        // For USER_UPDATED events, only update the user object, not session
+        // This prevents full re-renders when just updating metadata
+        if (event === 'USER_UPDATED' && session?.user) {
+          setUser(session.user);
+          return;
+        }
+        
         setSession(session);
         setUser(session?.user ?? null);
         

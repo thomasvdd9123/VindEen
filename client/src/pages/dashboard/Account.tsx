@@ -67,9 +67,12 @@ export default function DashboardAccount() {
     },
   });
 
-  // Update form values when metadata changes
+  // Only load form values on initial mount, not on every metadata change
+  const [hasLoadedAccount, setHasLoadedAccount] = useState(false);
+  const [hasLoadedInvoice, setHasLoadedInvoice] = useState(false);
+
   useEffect(() => {
-    if (metadata.firstName) {
+    if (!hasLoadedAccount && metadata.firstName) {
       accountForm.reset({
         firstName: metadata.firstName || "",
         lastName: metadata.lastName || "",
@@ -77,8 +80,12 @@ export default function DashboardAccount() {
         birthYear: metadata.birthYear || "",
         showBirthDate: metadata.showBirthDate || "no",
       });
+      setHasLoadedAccount(true);
     }
-    if (metadata.invoiceName) {
+  }, [metadata.firstName, hasLoadedAccount]);
+
+  useEffect(() => {
+    if (!hasLoadedInvoice && metadata.invoiceName) {
       invoiceForm.reset({
         invoiceName: metadata.invoiceName || "",
         street: metadata.street || "",
@@ -89,8 +96,9 @@ export default function DashboardAccount() {
         btwNumber: metadata.btwNumber || "",
         kvkNumber: metadata.kvkNumber || "",
       });
+      setHasLoadedInvoice(true);
     }
-  }, [metadata.firstName, metadata.invoiceName]);
+  }, [metadata.invoiceName, hasLoadedInvoice]);
 
   const onSubmitAccount = async (data: AccountFormData) => {
     setIsLoadingAccount(true);
