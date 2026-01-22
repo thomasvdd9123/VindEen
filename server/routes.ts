@@ -138,18 +138,25 @@ export async function registerRoutes(
     try {
       const profileData = req.body;
       
-      console.log("Creating profile with data:", JSON.stringify(profileData, null, 2));
-      
       if (!profileData.gardenerId) {
         return res.status(400).json({ error: "gardenerId is required" });
       }
       
       // Generate slug from name
-      const slug = profileData.name
+      let baseSlug = profileData.name
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, "-")
-        .replace(/(^-|-$)/g, "") + 
-        "-" + Date.now().toString(36);
+        .replace(/(^-|-$)/g, "");
+      
+      // Check for existing slugs and add number if needed
+      let slug = baseSlug;
+      let counter = 1;
+      let existingProfile = await storage.getProfileBySlug(slug);
+      while (existingProfile) {
+        slug = `${baseSlug}-${counter}`;
+        counter++;
+        existingProfile = await storage.getProfileBySlug(slug);
+      }
       
       const profile = await storage.createProfile({
         gardenerId: profileData.gardenerId,
