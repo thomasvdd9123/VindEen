@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Link, useLocation } from "wouter";
@@ -23,8 +23,23 @@ type LoginFormData = z.infer<typeof loginSchema>;
 export default function Login() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const { signIn } = useAuth();
+  const { signIn, user, loading } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [loginSuccess, setLoginSuccess] = useState(false);
+
+  // Redirect when user is authenticated after successful login
+  useEffect(() => {
+    if (loginSuccess && user && !loading) {
+      setLocation("/dashboard");
+    }
+  }, [loginSuccess, user, loading, setLocation]);
+
+  // Also redirect if user is already logged in
+  useEffect(() => {
+    if (user && !loading && !isLoading) {
+      setLocation("/dashboard");
+    }
+  }, [user, loading, isLoading, setLocation]);
 
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -47,12 +62,14 @@ export default function Login() {
             : error.message,
           variant: "destructive",
         });
+        setIsLoading(false);
       } else {
         toast({
           title: "Welkom terug!",
           description: "Je bent succesvol ingelogd.",
         });
-        setLocation("/dashboard");
+        // Mark login as successful, redirect will happen via effect when user state updates
+        setLoginSuccess(true);
       }
     } catch (error) {
       toast({
@@ -60,7 +77,6 @@ export default function Login() {
         description: "Kon niet inloggen. Probeer het later opnieuw.",
         variant: "destructive",
       });
-    } finally {
       setIsLoading(false);
     }
   };
