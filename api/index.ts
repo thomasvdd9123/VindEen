@@ -5,6 +5,56 @@ const supabaseUrl = process.env.SUPABASE_URL!;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
+// Map camelCase keys to snake_case for database - only known fields
+const fieldMap: Record<string, string> = {
+  gardenerId: "gardener_id",
+  categoryId: "category_id",
+  locationId: "location_id",
+  logoUrl: "logo_url",
+  imageUrls: "image_urls",
+  hasWebsite: "has_website",
+  isActive: "is_active",
+  isPublic: "is_public",
+  isVerified: "is_verified",
+  isFeatured: "is_featured",
+  verificationStatus: "verification_status",
+  verifiedAt: "verified_at",
+  verifiedBy: "verified_by",
+  rejectionReason: "rejection_reason",
+  seoTitle: "seo_title",
+  seoDescription: "seo_description",
+  offeredServices: "offered_services",
+  createdAt: "created_at",
+  updatedAt: "updated_at",
+  sortOrder: "sort_order",
+  accountId: "account_id",
+  emailVerified: "email_verified",
+  emailVerifiedAt: "email_verified_at",
+  profileId: "profile_id",
+  visitorName: "visitor_name",
+  visitorEmail: "visitor_email",
+  gardenerReadAt: "gardener_read_at",
+  adminNotified: "admin_notified",
+};
+
+function toSnakeCase(obj: Record<string, any>): Record<string, any> {
+  const result: Record<string, any> = {};
+  for (const key in obj) {
+    // Use mapping if exists, otherwise keep original key
+    const snakeKey = fieldMap[key] || key;
+    result[snakeKey] = obj[key];
+  }
+  return result;
+}
+
+// Generate slug from name
+function generateSlug(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const { method } = req;
   const url = new URL(req.url!, `https://${req.headers.host}`);
@@ -101,7 +151,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (method === "GET" && path === "/api/profiles/search") {
       const category = url.searchParams.get("category");
       const location = url.searchParams.get("location");
-      const query = url.searchParams.get("query");
+      const query = url.searchParams.get("query") || url.searchParams.get("q");
       const page = parseInt(url.searchParams.get("page") || "1");
       const limit = parseInt(url.searchParams.get("limit") || "12");
       const offset = (page - 1) * limit;
@@ -285,32 +335,117 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(404).json({ error: "Profile not found" });
       }
       
-      const { name, email, phone, message, service } = req.body;
+      const { visitorName, visitorEmail, telnr, subject, message } = req.body;
       
       const { data, error } = await supabase
         .from("contact_requests")
         .insert({
           profile_id: profileId,
           gardener_id: profile.gardener_id,
-          name,
-          email,
-          phone,
+          visitor_name: visitorName,
+          visitor_email: visitorEmail,
+          telnr: telnr || null,
+          subject,
           message,
-          service,
           status: "NEW",
+          date: new Date().toISOString(),
         })
         .select()
         .single();
       
       if (error) throw error;
-      return res.status(200).json(data);
+      return res.status(201).json({ success: true, id: data.id });
+    }
+
+    // POST /api/contact-owner (platform contact form)
+    if (method === "POST" && path === "/api/contact-owner") {
+      const { name, email, subject, message } = req.body;
+      
+      if (!name || !email || !subject || !message) {
+        return res.status(400).json({ error: "All fields are required" });
+      }
+      
+      console.log("Platform contact request:", { name, email, subject, message });
+      return res.status(200).json({ success: true });
+    }
+
+    // DELETE /api/account/delete
+    if (method === "DELETE" && path === "/api/account/delete") {
+      return res.status(200).json({ success: true });
     }
 
     // POST /api/profiles
     if (method === "POST" && path === "/api/profiles") {
+      const profileData = req.body;
+      
+      if (!profileData.gardenerId) {
+        return res.status(400).json({ error: "gardenerId is required" });
+      }
+      
+      // Generate slug from name
+      let baseSlug = generateSlug(profileData.name);
+      let slug = baseSlug;
+      let counter = 1;
+      
+      // Check for existing slugs
+      let { data: existing } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("slug", slug)
+        .single();
+      
+      while (existing) {
+        slug = `${baseSlug}-${counter}`;
+        counter++;
+        const result = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("slug", slug)
+          .single();
+        existing = result.data;
+      }
+      
       const { data, error } = await supabase
         .from("profiles")
-        .insert(req.body)
+        .insert({
+          gardener_id: profileData.gardenerId,
+          slug,
+          name: profileData.name,
+          email: profileData.email,
+          telnr: profileData.telnr || "",
+          website: profileData.website || "",
+          has_website: profileData.hasWebsite || false,
+          title: profileData.title || "",
+          introduction: profileData.introduction || "",
+          description: profileData.description || "",
+          category_id: profileData.categoryId,
+          location_id: profileData.locationId,
+          is_active: true,
+          is_public: false,
+          is_verified: false,
+          verification_status: "PENDING",
+          is_featured: false,
+        })
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return res.status(201).json(data);
+    }
+
+    // PUT /api/profiles/:id (alias for PATCH)
+    if (method === "PUT" && path.match(/^\/api\/profiles\/[^/]+$/) && !path.includes("/by-id/")) {
+      const id = path.split("/").pop();
+      const slug = path.split("/").pop();
+      if (slug === "featured" || slug === "count" || slug === "search") {
+        return res.status(404).json({ error: "Not found" });
+      }
+      
+      const updates = toSnakeCase(req.body);
+      const { data, error } = await supabase
+        .from("profiles")
+        .update(updates)
+        .eq("id", id)
         .select()
         .single();
       
@@ -319,11 +454,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // PATCH /api/profiles/:id
-    if (method === "PATCH" && path.match(/^\/api\/profiles\/[^/]+$/)) {
+    if (method === "PATCH" && path.match(/^\/api\/profiles\/[^/]+$/) && !path.includes("/by-id/")) {
       const id = path.split("/").pop();
+      const slug = path.split("/").pop();
+      if (slug === "featured" || slug === "count" || slug === "search") {
+        return res.status(404).json({ error: "Not found" });
+      }
+      
+      const updates = toSnakeCase(req.body);
       const { data, error } = await supabase
         .from("profiles")
-        .update(req.body)
+        .update(updates)
         .eq("id", id)
         .select()
         .single();
@@ -333,8 +474,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // DELETE /api/profiles/:id
-    if (method === "DELETE" && path.match(/^\/api\/profiles\/[^/]+$/)) {
+    if (method === "DELETE" && path.match(/^\/api\/profiles\/[^/]+$/) && !path.includes("/by-id/")) {
       const id = path.split("/").pop();
+      const slug = path.split("/").pop();
+      if (slug === "featured" || slug === "count" || slug === "search") {
+        return res.status(404).json({ error: "Not found" });
+      }
+      
       const { error } = await supabase
         .from("profiles")
         .delete()
