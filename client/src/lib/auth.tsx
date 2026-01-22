@@ -3,6 +3,22 @@ import { useLocation } from "wouter";
 import { supabase, isSupabaseConfigured } from "./supabase";
 import type { User, Session } from "@supabase/supabase-js";
 
+interface UserMetadata {
+  firstName?: string;
+  lastName?: string;
+  gender?: string;
+  birthYear?: string;
+  showBirthDate?: string;
+  invoiceName?: string;
+  street?: string;
+  municipality?: string;
+  postcode?: string;
+  country?: string;
+  btwPlichtig?: string;
+  btwNumber?: string;
+  kvkNumber?: string;
+}
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
@@ -12,6 +28,8 @@ interface AuthContextType {
   signUp: (email: string, password: string) => Promise<{ error: Error | null; needsConfirmation: boolean }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: Error | null }>;
+  updateUserMetadata: (metadata: UserMetadata) => Promise<{ error: Error | null }>;
+  getUserMetadata: () => UserMetadata;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -20,30 +38,49 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
     if (!isSupabaseConfigured) {
       setLoading(false);
+      setInitialized(true);
       return;
     }
 
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    let mounted = true;
 
-    // Listen for auth changes
+    // Subscribe to auth changes FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+      (event, session) => {
+        if (!mounted) return;
+        
+        console.log("Auth state change:", event, !!session);
         setSession(session);
         setUser(session?.user ?? null);
+        
+        // Mark as initialized after first auth event
+        if (!initialized) {
+          setInitialized(true);
+        }
         setLoading(false);
       }
     );
 
-    return () => subscription.unsubscribe();
+    // THEN get initial session (this order matters for Supabase)
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!mounted) return;
+      
+      console.log("Initial session:", !!session);
+      setSession(session);
+      setUser(session?.user ?? null);
+      setInitialized(true);
+      setLoading(false);
+    });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signIn = useCallback(async (email: string, password: string) => {
@@ -105,17 +142,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { error: error as Error | null };
   }, []);
 
+  const updateUserMetadata = useCallback(async (metadata: UserMetadata) => {
+    if (!isSupabaseConfigured) {
+      return { error: new Error("Supabase is not configured.") };
+    }
+    const { error, data } = await supabase.auth.updateUser({
+      data: metadata,
+    });
+    
+    // Update local user state with new metadata
+    if (!error && data.user) {
+      setUser(data.user);
+    }
+    
+    return { error: error as Error | null };
+  }, []);
+
+  const getUserMetadata = useCallback((): UserMetadata => {
+    return (user?.user_metadata as UserMetadata) || {};
+  }, [user]);
+
   return (
     <AuthContext.Provider
       value={{
         user,
         session,
-        loading,
+        loading: loading || !initialized,
         isConfigured: isSupabaseConfigured,
         signIn,
         signUp,
         signOut,
         resetPassword,
+        updateUserMetadata,
+        getUserMetadata,
       }}
     >
       {children}
@@ -135,23 +194,9 @@ export function useAuth() {
 export function RequireAuth({ children }: { children: React.ReactNode }) {
   const { user, loading, isConfigured } = useAuth();
   const [, setLocation] = useLocation();
-  const hasRedirected = useRef(false);
+  const redirectedRef = useRef(false);
 
-  useEffect(() => {
-    // Only redirect if not loading, no user, configured, and haven't already redirected
-    if (!loading && !user && isConfigured && !hasRedirected.current) {
-      hasRedirected.current = true;
-      setLocation("/login");
-    }
-  }, [user, loading, isConfigured, setLocation]);
-
-  // Reset redirect flag when user logs in
-  useEffect(() => {
-    if (user) {
-      hasRedirected.current = false;
-    }
-  }, [user]);
-
+  // Show loading spinner while auth is being initialized
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -165,9 +210,29 @@ export function RequireAuth({ children }: { children: React.ReactNode }) {
     return <>{children}</>;
   }
 
-  if (!user) {
-    return null;
+  // Auth is loaded, no user = redirect to login (only once)
+  if (!user && !redirectedRef.current) {
+    redirectedRef.current = true;
+    // Use setTimeout to avoid React state update during render
+    setTimeout(() => setLocation("/login"), 0);
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
   }
+
+  // Still waiting for redirect to complete
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  // Reset redirect flag when user is present
+  redirectedRef.current = false;
 
   return <>{children}</>;
 }

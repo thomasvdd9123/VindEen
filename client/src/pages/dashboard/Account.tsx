@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -35,43 +35,86 @@ type AccountFormData = z.infer<typeof accountSchema>;
 type InvoiceFormData = z.infer<typeof invoiceSchema>;
 
 export default function DashboardAccount() {
-  const { user } = useAuth();
+  const { user, getUserMetadata, updateUserMetadata } = useAuth();
   const { toast } = useToast();
   const [isLoadingAccount, setIsLoadingAccount] = useState(false);
   const [isLoadingInvoice, setIsLoadingInvoice] = useState(false);
 
+  const metadata = getUserMetadata();
+
   const accountForm = useForm<AccountFormData>({
     resolver: zodResolver(accountSchema),
     defaultValues: {
-      firstName: "",
-      lastName: "",
-      gender: "",
-      birthYear: "",
-      showBirthDate: "no",
+      firstName: metadata.firstName || "",
+      lastName: metadata.lastName || "",
+      gender: metadata.gender || "",
+      birthYear: metadata.birthYear || "",
+      showBirthDate: metadata.showBirthDate || "no",
     },
   });
 
   const invoiceForm = useForm<InvoiceFormData>({
     resolver: zodResolver(invoiceSchema),
     defaultValues: {
-      invoiceName: "",
-      street: "",
-      municipality: "",
-      postcode: "",
-      country: "België",
-      btwPlichtig: "no",
-      btwNumber: "",
-      kvkNumber: "",
+      invoiceName: metadata.invoiceName || "",
+      street: metadata.street || "",
+      municipality: metadata.municipality || "",
+      postcode: metadata.postcode || "",
+      country: metadata.country || "België",
+      btwPlichtig: metadata.btwPlichtig || "no",
+      btwNumber: metadata.btwNumber || "",
+      kvkNumber: metadata.kvkNumber || "",
     },
   });
+
+  // Update form values when metadata changes
+  useEffect(() => {
+    if (metadata.firstName) {
+      accountForm.reset({
+        firstName: metadata.firstName || "",
+        lastName: metadata.lastName || "",
+        gender: metadata.gender || "",
+        birthYear: metadata.birthYear || "",
+        showBirthDate: metadata.showBirthDate || "no",
+      });
+    }
+    if (metadata.invoiceName) {
+      invoiceForm.reset({
+        invoiceName: metadata.invoiceName || "",
+        street: metadata.street || "",
+        municipality: metadata.municipality || "",
+        postcode: metadata.postcode || "",
+        country: metadata.country || "België",
+        btwPlichtig: metadata.btwPlichtig || "no",
+        btwNumber: metadata.btwNumber || "",
+        kvkNumber: metadata.kvkNumber || "",
+      });
+    }
+  }, [metadata.firstName, metadata.invoiceName]);
 
   const onSubmitAccount = async (data: AccountFormData) => {
     setIsLoadingAccount(true);
     try {
-      toast({
-        title: "Gegevens opgeslagen",
-        description: "Je persoonlijke gegevens zijn bijgewerkt.",
+      const { error } = await updateUserMetadata({
+        firstName: data.firstName,
+        lastName: data.lastName,
+        gender: data.gender,
+        birthYear: data.birthYear,
+        showBirthDate: data.showBirthDate,
       });
+      
+      if (error) {
+        toast({
+          title: "Er ging iets mis",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Gegevens opgeslagen",
+          description: "Je persoonlijke gegevens zijn bijgewerkt.",
+        });
+      }
     } catch (error) {
       toast({
         title: "Er ging iets mis",
@@ -86,10 +129,29 @@ export default function DashboardAccount() {
   const onSubmitInvoice = async (data: InvoiceFormData) => {
     setIsLoadingInvoice(true);
     try {
-      toast({
-        title: "Factuurgegevens opgeslagen",
-        description: "Je factuurgegevens zijn bijgewerkt.",
+      const { error } = await updateUserMetadata({
+        invoiceName: data.invoiceName,
+        street: data.street,
+        municipality: data.municipality,
+        postcode: data.postcode,
+        country: data.country,
+        btwPlichtig: data.btwPlichtig,
+        btwNumber: data.btwNumber,
+        kvkNumber: data.kvkNumber,
       });
+      
+      if (error) {
+        toast({
+          title: "Er ging iets mis",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Factuurgegevens opgeslagen",
+          description: "Je factuurgegevens zijn bijgewerkt.",
+        });
+      }
     } catch (error) {
       toast({
         title: "Er ging iets mis",
