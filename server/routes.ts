@@ -122,6 +122,20 @@ export async function registerRoutes(
     }
   });
 
+  // Get profile by ID (for editing)
+  app.get("/api/profiles/by-id/:id", async (req, res) => {
+    try {
+      const profile = await storage.getProfileById(req.params.id);
+      if (!profile) {
+        return res.status(404).json({ error: "Profile not found" });
+      }
+      res.json(profile);
+    } catch (error) {
+      console.error("Error fetching profile by ID:", error);
+      res.status(500).json({ error: "Failed to fetch profile" });
+    }
+  });
+
   // Get profiles by gardener (user's own profiles)
   app.get("/api/my-profiles/:gardenerId", async (req, res) => {
     try {
