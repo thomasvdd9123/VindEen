@@ -568,5 +568,101 @@ export async function registerRoutes(
     }
   });
 
+  // Sitemap XML
+  app.get("/sitemap.xml", async (req, res) => {
+    try {
+      const baseUrl = "https://www.zoek-een-tuinman.be";
+      const today = new Date().toISOString().split("T")[0];
+
+      // Get all data for sitemap
+      const [categories, locations, profilesResult] = await Promise.all([
+        storage.getCategories(),
+        storage.getLocations(),
+        storage.searchProfiles({ isPublic: true }),
+      ]);
+      const profiles = profilesResult.profiles;
+
+      let xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <!-- Static pages -->
+  <url>
+    <loc>${baseUrl}/</loc>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>${baseUrl}/faq</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>${baseUrl}/prijzen</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>${baseUrl}/over-ons</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+  </url>
+  <url>
+    <loc>${baseUrl}/contact</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+`;
+
+      // Category pages
+      for (const category of categories) {
+        xml += `  <url>
+    <loc>${baseUrl}/zoek/${category.slug}</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+`;
+        // Category + Location combinations
+        for (const location of locations) {
+          xml += `  <url>
+    <loc>${baseUrl}/zoek/${category.slug}/${location.slug}</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+`;
+        }
+      }
+
+      // Profile pages
+      for (const profile of profiles) {
+        xml += `  <url>
+    <loc>${baseUrl}/bedrijf/${profile.slug}</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+`;
+      }
+
+      xml += `</urlset>`;
+
+      res.set("Content-Type", "application/xml");
+      res.send(xml);
+    } catch (error) {
+      console.error("Error generating sitemap:", error);
+      res.status(500).send("Error generating sitemap");
+    }
+  });
+
+  // Robots.txt
+  app.get("/robots.txt", (req, res) => {
+    const baseUrl = "https://www.zoek-een-tuinman.be";
+    const robots = `User-agent: *
+Allow: /
+
+Sitemap: ${baseUrl}/sitemap.xml
+`;
+    res.set("Content-Type", "text/plain");
+    res.send(robots);
+  });
+
   return httpServer;
 }
