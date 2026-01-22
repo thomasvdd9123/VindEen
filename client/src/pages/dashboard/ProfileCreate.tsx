@@ -44,19 +44,6 @@ export default function ProfileCreate() {
     queryKey: ["/api/locations"],
   });
 
-  const { data: gardener, isLoading: gardenerLoading } = useQuery({
-    queryKey: ["/api/gardeners", user?.id],
-    queryFn: async () => {
-      if (!user?.id) return null;
-      return apiRequest("POST", "/api/gardeners", {
-        accountId: user.id,
-        email: user.email,
-      });
-    },
-    enabled: !!user?.id,
-  });
-
-  const gardenerId = gardener?.id || null;
 
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
@@ -81,11 +68,17 @@ export default function ProfileCreate() {
 
   const createProfileMutation = useMutation({
     mutationFn: async (data: ProfileFormData) => {
-      if (!gardenerId) throw new Error("Even geduld, je account wordt geladen...");
+      if (!user?.id) throw new Error("Je bent niet ingelogd");
+      
+      // Get or create gardener
+      const gardener = await apiRequest("POST", "/api/gardeners", {
+        accountId: user.id,
+        email: user.email,
+      });
       
       return apiRequest("POST", "/api/profiles", {
         ...data,
-        gardenerId,
+        gardenerId: gardener.id,
         hasWebsite: !!data.website,
       });
     },
@@ -301,16 +294,16 @@ export default function ProfileCreate() {
                 <div className="pt-4 flex gap-4">
                   <Button 
                     type="submit" 
-                    disabled={createProfileMutation.isPending || gardenerLoading || !gardenerId}
+                    disabled={createProfileMutation.isPending}
                     className="gap-2"
                     data-testid="button-submit"
                   >
-                    {(createProfileMutation.isPending || gardenerLoading) ? (
+                    {createProfileMutation.isPending ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
                       <Save className="h-4 w-4" />
                     )}
-                    {gardenerLoading ? "Laden..." : "Profiel aanmaken"}
+                    Profiel aanmaken
                   </Button>
                   <Button 
                     type="button" 
