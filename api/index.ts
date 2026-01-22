@@ -563,7 +563,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       xml += `</urlset>`;
 
-      res.set("Content-Type", "application/xml");
+      res.setHeader("Content-Type", "application/xml");
       return res.send(xml);
     }
 
@@ -575,7 +575,7 @@ Allow: /
 
 Sitemap: ${baseUrl}/sitemap.xml
 `;
-      res.set("Content-Type", "text/plain");
+      res.setHeader("Content-Type", "text/plain");
       return res.send(robots);
     }
 

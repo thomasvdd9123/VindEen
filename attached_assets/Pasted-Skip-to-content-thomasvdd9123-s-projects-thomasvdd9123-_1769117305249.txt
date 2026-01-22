@@ -1,0 +1,152 @@
+Skip to content
+thomasvdd9123's projects
+thomasvdd9123's projects
+
+Hobby
+
+vind-een
+
+D4v4jGydw
+
+
+Find…
+F
+
+Filters
+
+Timeline
+
+Combobox Menu
+Last 30 minutes
+
+Contains Console Level
+
+​
+Error
+2
+
+​
+Warning
+0
+
+​
+Fatal
+0
+
+
+Resource
+
+
+
+
+
+Environment
+
+
+
+
+Route
+
+Search Routes
+Search Routes…
+​
+/api
+9
+
+
+Request Path
+
+
+
+Status Code
+
+
+
+Request Type
+
+
+
+
+
+
+
+
+Host
+
+
+
+Request Method
+
+
+
+Cache
+
+
+
+Branch
+
+
+Search Logs
+Search logs…
+21:59:00
+22:04:10
+22:09:10
+22:14:10
+22:19:10
+22:29:00
+Time
+Status
+Host
+Request
+Messages
+Jan 22 22:27:59.83
+GET
+500
+www.zoek-een-tuinman.be
+/sitemap.xml
+API Error: TypeError: res.set is not a function at Object.handler (/vercel/path0/api/index.ts:566:11) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) at async r (/opt/rust/nodejs.js:2:15572) at async Server.<anonymous> (/opt/rust/nodejs.js:2:11594) at async Server.<anonymous> (/opt/rust/nodejs.js:17:9988)
+Jan 22 22:27:52.54
+GET
+500
+www.zoek-een-tuinman.be
+/robots.txt
+API Error: TypeError: res.set is not a function at Object.handler (/vercel/path0/api/index.ts:578:11) at r (/opt/rust/nodejs.js:2:15580) at Server.<anonymous> (/opt/rust/nodejs.js:2:11600) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) at async Server.<anonymous> (/opt/rust/nodejs.js:17:9988)
+Jan 22 22:27:48.93
+GET
+304
+www.zoek-een-tuinman.be
+/api/profiles/count
+Jan 22 22:27:48.25
+GET
+304
+www.zoek-een-tuinman.be
+/api/locations
+Jan 22 22:27:48.24
+GET
+304
+www.zoek-een-tuinman.be
+/api/categories
+Jan 22 22:27:20.98
+GET
+200
+vind-flwl7v93e-thomasvdd9123s-projects.vercel.app
+/api/locations
+Jan 22 22:27:20.98
+GET
+200
+vind-flwl7v93e-thomasvdd9123s-projects.vercel.app
+/api/categories
+Jan 22 22:27:20.98
+GET
+200
+vind-flwl7v93e-thomasvdd9123s-projects.vercel.app
+/api/locations
+Jan 22 22:27:20.98
+GET
+200
+vind-flwl7v93e-thomasvdd9123s-projects.vercel.app
+/api/categories
+No more logs to show within selected timeline
+
+vind-een – Deployment Runtime Logs – Vercel
+22:24:10
