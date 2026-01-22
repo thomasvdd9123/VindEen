@@ -1,0 +1,192 @@
+Skip to content
+thomasvdd9123's projects
+thomasvdd9123's projects
+
+Hobby
+
+vind-een
+
+Cyt2rShmo
+
+
+Find…
+F
+
+Filters
+
+Timeline
+
+Combobox Menu
+Last 30 minutes
+
+Contains Console Level
+
+​
+Error
+10
+
+​
+Fatal
+1
+
+​
+Warning
+0
+
+
+Resource
+
+
+
+
+
+Environment
+
+
+
+
+Route
+
+Search Routes
+Search Routes…
+​
+/api/locations
+4
+
+​
+/api/categories
+4
+
+​
+/api/gardeners
+2
+
+​
+/api/profiles/count
+1
+
+
+Request Path
+
+
+
+Status Code
+
+
+
+Request Type
+
+
+
+
+
+
+
+
+Host
+
+
+
+Request Method
+
+
+
+Cache
+
+
+
+Branch
+
+
+Search Logs
+Search logs…
+21:20:00
+21:25:10
+21:30:10
+21:35:10
+21:40:10
+21:50:00
+Time
+Status
+Host
+Request
+Messages
+Jan 22 21:48:54.26
+GET
+500
+vind-932wf3dh4-thomasvdd9123s-projects.vercel.app
+/api/categories
+Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/var/task/server/storage' imported from /var/task/api/index.js at finalizeResolution (node:internal/modules/esm/resolve:280:11) at moduleResolve (node:internal/modules/esm/resolve:870:10) at moduleResolveWithNodePath (node:internal/modules/esm/resolve:996:14) at defaultResolve (node:internal/modules/esm/resolve:1039:79) at #cachedDefaultResolve (node:internal/modules/esm/loader:757:20) at ModuleLoader.resolve (node:internal/modules/esm/loader:734:38) at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:317:38) at #link (node:internal/modules/esm/module_job:208:49) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) { code: 'ERR_MODULE_NOT_FOUND', url: 'file:///var/task/server/storage' } Node.js process exited with exit status: 1. The logs above can help with debugging the issue.
+Jan 22 21:48:54.26
+GET
+500
+vind-932wf3dh4-thomasvdd9123s-projects.vercel.app
+/api/locations
+Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/var/task/server/storage' imported from /var/task/api/index.js at finalizeResolution (node:internal/modules/esm/resolve:280:11) at moduleResolve (node:internal/modules/esm/resolve:870:10) at moduleResolveWithNodePath (node:internal/modules/esm/resolve:996:14) at defaultResolve (node:internal/modules/esm/resolve:1039:79) at #cachedDefaultResolve (node:internal/modules/esm/loader:757:20) at ModuleLoader.resolve (node:internal/modules/esm/loader:734:38) at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:317:38) at #link (node:internal/modules/esm/module_job:208:49) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) { code: 'ERR_MODULE_NOT_FOUND', url: 'file:///var/task/server/storage' } Node.js process exited with exit status: 1. The logs above can help with debugging the issue.
+Jan 22 21:48:53.41
+POST
+500
+vind-932wf3dh4-thomasvdd9123s-projects.vercel.app
+/api/gardeners
+Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/var/task/server/storage' imported from /var/task/api/index.js at finalizeResolution (node:internal/modules/esm/resolve:280:11) at moduleResolve (node:internal/modules/esm/resolve:870:10) at moduleResolveWithNodePath (node:internal/modules/esm/resolve:996:14) at defaultResolve (node:internal/modules/esm/resolve:1039:79) at #cachedDefaultResolve (node:internal/modules/esm/loader:757:20) at ModuleLoader.resolve (node:internal/modules/esm/loader:734:38) at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:317:38) at #link (node:internal/modules/esm/module_job:208:49) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) { code: 'ERR_MODULE_NOT_FOUND', url: 'file:///var/task/server/storage' } Node.js process exited with exit status: 1. The logs above can help with debugging the issue.
+Jan 22 21:48:50.81
+POST
+500
+vind-932wf3dh4-thomasvdd9123s-projects.vercel.app
+/api/gardeners
+Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/var/task/server/storage' imported from /var/task/api/index.js at finalizeResolution (node:internal/modules/esm/resolve:280:11) at moduleResolve (node:internal/modules/esm/resolve:870:10) at moduleResolveWithNodePath (node:internal/modules/esm/resolve:996:14) at defaultResolve (node:internal/modules/esm/resolve:1039:79) at #cachedDefaultResolve (node:internal/modules/esm/loader:757:20) at ModuleLoader.resolve (node:internal/modules/esm/loader:734:38) at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:317:38) at #link (node:internal/modules/esm/module_job:208:49) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) { code: 'ERR_MODULE_NOT_FOUND', url: 'file:///var/task/server/storage' } Node.js process exited with exit status: 1. The logs above can help with debugging the issue.
+Jan 22 21:48:42.08
+GET
+500
+vind-932wf3dh4-thomasvdd9123s-projects.vercel.app
+/api/profiles/count
+Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/var/task/server/storage' imported from /var/task/api/index.js at finalizeResolution (node:internal/modules/esm/resolve:280:11) at moduleResolve (node:internal/modules/esm/resolve:870:10) at moduleResolveWithNodePath (node:internal/modules/esm/resolve:996:14) at defaultResolve (node:internal/modules/esm/resolve:1039:79) at #cachedDefaultResolve (node:internal/modules/esm/loader:757:20) at ModuleLoader.resolve (node:internal/modules/esm/loader:734:38) at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:317:38) at #link (node:internal/modules/esm/module_job:208:49) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) { code: 'ERR_MODULE_NOT_FOUND', url: 'file:///var/task/server/storage' } Node.js process exited with exit status: 1. The logs above can help with debugging the issue.
+Jan 22 21:48:41.69
+GET
+500
+vind-932wf3dh4-thomasvdd9123s-projects.vercel.app
+/api/locations
+Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/var/task/server/storage' imported from /var/task/api/index.js at finalizeResolution (node:internal/modules/esm/resolve:280:11) at moduleResolve (node:internal/modules/esm/resolve:870:10) at moduleResolveWithNodePath (node:internal/modules/esm/resolve:996:14) at defaultResolve (node:internal/modules/esm/resolve:1039:79) at #cachedDefaultResolve (node:internal/modules/esm/loader:757:20) at ModuleLoader.resolve (node:internal/modules/esm/loader:734:38) at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:317:38) at #link (node:internal/modules/esm/module_job:208:49) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) { code: 'ERR_MODULE_NOT_FOUND', url: 'file:///var/task/server/storage' } Node.js process exited with exit status: 1. The logs above can help with debugging the issue.
+Jan 22 21:48:41.68
+GET
+500
+vind-932wf3dh4-thomasvdd9123s-projects.vercel.app
+/api/categories
+Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/var/task/server/storage' imported from /var/task/api/index.js at finalizeResolution (node:internal/modules/esm/resolve:280:11) at moduleResolve (node:internal/modules/esm/resolve:870:10) at moduleResolveWithNodePath (node:internal/modules/esm/resolve:996:14) at defaultResolve (node:internal/modules/esm/resolve:1039:79) at #cachedDefaultResolve (node:internal/modules/esm/loader:757:20) at ModuleLoader.resolve (node:internal/modules/esm/loader:734:38) at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:317:38) at #link (node:internal/modules/esm/module_job:208:49) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) { code: 'ERR_MODULE_NOT_FOUND', url: 'file:///var/task/server/storage' } Node.js process exited with exit status: 1. The logs above can help with debugging the issue.
+Jan 22 21:48:14.22
+GET
+500
+vind-932wf3dh4-thomasvdd9123s-projects.vercel.app
+/api/locations
+Node.js process exited with exit status: 1. The logs above can help with debugging the issue. Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/var/task/server/storage' imported from /var/task/api/index.js at finalizeResolution (node:internal/modules/esm/resolve:280:11) at moduleResolve (node:internal/modules/esm/resolve:870:10) at moduleResolveWithNodePath (node:internal/modules/esm/resolve:996:14) at defaultResolve (node:internal/modules/esm/resolve:1039:79) at #cachedDefaultResolve (node:internal/modules/esm/loader:757:20) at ModuleLoader.resolve (node:internal/modules/esm/loader:734:38) at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:317:38) at #link (node:internal/modules/esm/module_job:208:49) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) { code: 'ERR_MODULE_NOT_FOUND', url: 'file:///var/task/server/storage' } Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/var/task/server/storage' imported from /var/task/api/index.js at finalizeResolution (node:internal/modules/esm/resolve:280:11) at moduleResolve (node:internal/modules/esm/resolve:870:10) at moduleResolveWithNodePath (node:internal/modules/esm/resolve:996:14) at defaultResolve (node:internal/modules/esm/resolve:1039:79) at #cachedDefaultResolve (node:internal/modules/esm/loader:757:20) at ModuleLoader.resolve (node:internal/modules/esm/loader:734:38) at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:317:38) at #link (node:internal/modules/esm/module_job:208:49) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) { code: 'ERR_MODULE_NOT_FOUND', url: 'file:///var/task/server/storage' } Node.js process exited with exit status: 1. The logs above can help with debugging the issue.
+Jan 22 21:48:14.22
+GET
+500
+vind-932wf3dh4-thomasvdd9123s-projects.vercel.app
+/api/categories
+Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/var/task/server/storage' imported from /var/task/api/index.js at finalizeResolution (node:internal/modules/esm/resolve:280:11) at moduleResolve (node:internal/modules/esm/resolve:870:10) at moduleResolveWithNodePath (node:internal/modules/esm/resolve:996:14) at defaultResolve (node:internal/modules/esm/resolve:1039:79) at #cachedDefaultResolve (node:internal/modules/esm/loader:757:20) at ModuleLoader.resolve (node:internal/modules/esm/loader:734:38) at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:317:38) at #link (node:internal/modules/esm/module_job:208:49) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) { code: 'ERR_MODULE_NOT_FOUND', url: 'file:///var/task/server/storage' } Node.js process exited with exit status: 1. The logs above can help with debugging the issue. Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/var/task/server/storage' imported from /var/task/api/index.js at finalizeResolution (node:internal/modules/esm/resolve:280:11) at moduleResolve (node:internal/modules/esm/resolve:870:10) at moduleResolveWithNodePath (node:internal/modules/esm/resolve:996:14) at defaultResolve (node:internal/modules/esm/resolve:1039:79) at #cachedDefaultResolve (node:internal/modules/esm/loader:757:20) at ModuleLoader.resolve (node:internal/modules/esm/loader:734:38) at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:317:38) at #link (node:internal/modules/esm/module_job:208:49) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) { code: 'ERR_MODULE_NOT_FOUND', url: 'file:///var/task/server/storage' } Node.js process exited with exit status: 1. The logs above can help with debugging the issue.
+Jan 22 21:48:14.18
+GET
+500
+vind-932wf3dh4-thomasvdd9123s-projects.vercel.app
+/api/locations
+Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/var/task/server/storage' imported from /var/task/api/index.js at finalizeResolution (node:internal/modules/esm/resolve:280:11) at moduleResolve (node:internal/modules/esm/resolve:870:10) at moduleResolveWithNodePath (node:internal/modules/esm/resolve:996:14) at defaultResolve (node:internal/modules/esm/resolve:1039:79) at #cachedDefaultResolve (node:internal/modules/esm/loader:757:20) at ModuleLoader.resolve (node:internal/modules/esm/loader:734:38) at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:317:38) at #link (node:internal/modules/esm/module_job:208:49) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) { code: 'ERR_MODULE_NOT_FOUND', url: 'file:///var/task/server/storage' } Node.js process exited with exit status: 1. The logs above can help with debugging the issue.
+Jan 22 21:48:14.18
+GET
+500
+vind-932wf3dh4-thomasvdd9123s-projects.vercel.app
+/api/categories
+Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/var/task/server/storage' imported from /var/task/api/index.js at finalizeResolution (node:internal/modules/esm/resolve:280:11) at moduleResolve (node:internal/modules/esm/resolve:870:10) at moduleResolveWithNodePath (node:internal/modules/esm/resolve:996:14) at defaultResolve (node:internal/modules/esm/resolve:1039:79) at #cachedDefaultResolve (node:internal/modules/esm/loader:757:20) at ModuleLoader.resolve (node:internal/modules/esm/loader:734:38) at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:317:38) at #link (node:internal/modules/esm/module_job:208:49) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) { code: 'ERR_MODULE_NOT_FOUND', url: 'file:///var/task/server/storage' } Node.js process exited with exit status: 1. The logs above can help with debugging the issue.
+No more logs to show within selected timeline
+
+vind-een – Deployment Runtime Logs – Vercel
+Europe/Brussels	Jan 22, 2026, 9:48:54.262 PM
+UTC	Jan 22, 2026, 8:48:54.262 PM
+Relative	less than a minute ago
+Timestamp	1769114934262
+Europe/Brussels	Jan 22, 2026, 9:48:54.262 PM
+UTC	Jan 22, 2026, 8:48:54.262 PM
+Relative	less than a minute ago
+Timestamp	1769114934262
+21:45:10
+vind-932wf3dh4-thomasvdd9123s-projects.vercel.app
