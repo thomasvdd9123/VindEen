@@ -138,7 +138,7 @@ function LogoUpload({ profileId, currentLogoUrl, onUploadSuccess }: {
 
     try {
       const fileExt = file.name.split('.').pop();
-      const fileName = `${profileId}/logo.${fileExt}`;
+      const fileName = `profiles/${profileId}/logo-${Date.now()}.${fileExt}`;
       
       console.log("Uploading to Supabase Storage:", { bucket: 'uploads', path: fileName, fileSize: file.size });
       
@@ -263,7 +263,7 @@ function WorkPhotosUpload({ profileId, currentPhotos, onUploadSuccess }: {
       
       for (const file of validFiles) {
         const fileExt = file.name.split('.').pop();
-        const fileName = `${profileId}/photos/${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
+        const fileName = `profiles/${profileId}/photos/${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
         
         const { error: uploadError } = await supabase.storage
           .from('uploads')
