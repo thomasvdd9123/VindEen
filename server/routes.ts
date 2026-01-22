@@ -3,6 +3,23 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { contactFormSchema, searchParamsSchema } from "@shared/schema";
 import { z } from "zod";
+import multer from "multer";
+import { supabaseAdmin } from "./lib/supabase";
+
+// Configure multer for memory storage
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith("image/")) {
+      cb(null, true);
+    } else {
+      cb(new Error("Only image files are allowed"));
+    }
+  },
+});
 
 export async function registerRoutes(
   httpServer: Server,
@@ -335,6 +352,193 @@ export async function registerRoutes(
       }
       console.error("Error creating contact request:", error);
       res.status(500).json({ error: "Failed to send contact request" });
+    }
+  });
+
+  // Helper to verify profile ownership
+  async function verifyProfileOwnership(req: any, profileId: string): Promise<{ authorized: boolean; error?: string }> {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return { authorized: false, error: "Niet geautoriseerd" };
+    }
+
+    const token = authHeader.split(" ")[1];
+    const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
+    
+    if (error || !user) {
+      return { authorized: false, error: "Ongeldige sessie" };
+    }
+
+    const profile = await storage.getProfileById(profileId);
+    if (!profile) {
+      return { authorized: false, error: "Profiel niet gevonden" };
+    }
+
+    const gardener = await storage.getGardenerByAccountId(user.id);
+    if (!gardener || gardener.id !== profile.gardenerId) {
+      return { authorized: false, error: "Geen toegang tot dit profiel" };
+    }
+
+    return { authorized: true };
+  }
+
+  // File Upload - Profile Logo
+  app.post("/api/profiles/:id/logo", upload.single("file"), async (req, res) => {
+    try {
+      const profileId = req.params.id;
+      const file = req.file;
+
+      // Verify ownership
+      const authCheck = await verifyProfileOwnership(req, profileId);
+      if (!authCheck.authorized) {
+        return res.status(403).json({ error: authCheck.error });
+      }
+
+      if (!file) {
+        return res.status(400).json({ error: "No file uploaded" });
+      }
+
+      const profile = await storage.getProfileById(profileId);
+      if (!profile) {
+        return res.status(404).json({ error: "Profile not found" });
+      }
+
+      // Generate unique filename
+      const fileExt = file.originalname.split(".").pop();
+      const fileName = `profiles/${profileId}/logo-${Date.now()}.${fileExt}`;
+
+      // Upload to Supabase Storage
+      const { data, error } = await supabaseAdmin.storage
+        .from("uploads")
+        .upload(fileName, file.buffer, {
+          contentType: file.mimetype,
+          upsert: true,
+        });
+
+      if (error) {
+        console.error("Supabase storage error:", error);
+        return res.status(500).json({ error: "Failed to upload file" });
+      }
+
+      // Get public URL
+      const { data: urlData } = supabaseAdmin.storage
+        .from("uploads")
+        .getPublicUrl(fileName);
+
+      const logoUrl = urlData.publicUrl;
+
+      // Update profile with new logo URL
+      await storage.updateProfile(profileId, { logoUrl });
+
+      res.json({ url: logoUrl });
+    } catch (error) {
+      console.error("Error uploading logo:", error);
+      res.status(500).json({ error: "Failed to upload logo" });
+    }
+  });
+
+  // File Upload - Work Photos
+  app.post("/api/profiles/:id/photos", upload.array("files", 10), async (req, res) => {
+    try {
+      const profileId = req.params.id;
+      const files = req.files as Express.Multer.File[];
+
+      // Verify ownership
+      const authCheck = await verifyProfileOwnership(req, profileId);
+      if (!authCheck.authorized) {
+        return res.status(403).json({ error: authCheck.error });
+      }
+
+      if (!files || files.length === 0) {
+        return res.status(400).json({ error: "No files uploaded" });
+      }
+
+      const profile = await storage.getProfileById(profileId);
+      if (!profile) {
+        return res.status(404).json({ error: "Profile not found" });
+      }
+
+      const uploadedUrls: string[] = [];
+
+      for (const file of files) {
+        const fileExt = file.originalname.split(".").pop();
+        const fileName = `profiles/${profileId}/work-${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+
+        const { data, error } = await supabaseAdmin.storage
+          .from("uploads")
+          .upload(fileName, file.buffer, {
+            contentType: file.mimetype,
+          });
+
+        if (error) {
+          console.error("Supabase storage error:", error);
+          continue;
+        }
+
+        const { data: urlData } = supabaseAdmin.storage
+          .from("uploads")
+          .getPublicUrl(fileName);
+
+        uploadedUrls.push(urlData.publicUrl);
+      }
+
+      // Merge with existing photos
+      const existingUrls = profile.imageUrls || [];
+      const newImageUrls = [...existingUrls, ...uploadedUrls];
+
+      // Update profile with new photo URLs
+      await storage.updateProfile(profileId, { imageUrls: newImageUrls });
+
+      res.json({ urls: uploadedUrls, allUrls: newImageUrls });
+    } catch (error) {
+      console.error("Error uploading photos:", error);
+      res.status(500).json({ error: "Failed to upload photos" });
+    }
+  });
+
+  // Delete Work Photo
+  app.delete("/api/profiles/:id/photos", async (req, res) => {
+    try {
+      const profileId = req.params.id;
+      const { url } = req.body;
+
+      // Verify ownership
+      const authCheck = await verifyProfileOwnership(req, profileId);
+      if (!authCheck.authorized) {
+        return res.status(403).json({ error: authCheck.error });
+      }
+
+      if (!url) {
+        return res.status(400).json({ error: "No URL provided" });
+      }
+
+      const profile = await storage.getProfileById(profileId);
+      if (!profile) {
+        return res.status(404).json({ error: "Profile not found" });
+      }
+
+      // Remove URL from profile
+      const existingUrls = profile.imageUrls || [];
+      const newImageUrls = existingUrls.filter((u) => u !== url);
+
+      // Try to delete from Supabase Storage
+      try {
+        const urlParts = url.split("/uploads/");
+        if (urlParts.length > 1) {
+          const filePath = urlParts[1];
+          await supabaseAdmin.storage.from("uploads").remove([filePath]);
+        }
+      } catch (storageError) {
+        console.error("Error deleting from storage:", storageError);
+      }
+
+      // Update profile
+      await storage.updateProfile(profileId, { imageUrls: newImageUrls });
+
+      res.json({ success: true, remainingUrls: newImageUrls });
+    } catch (error) {
+      console.error("Error deleting photo:", error);
+      res.status(500).json({ error: "Failed to delete photo" });
     }
   });
 

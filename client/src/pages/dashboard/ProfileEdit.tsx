@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useLocation, useParams } from "wouter";
@@ -13,12 +13,13 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDes
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Loader2, Save, ArrowLeft, Info, Eye, EyeOff, CheckCircle } from "lucide-react";
+import { Loader2, Save, ArrowLeft, Info, Eye, EyeOff, CheckCircle, Upload, X, Image as ImageIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
+import { supabase } from "@/lib/supabase";
 import type { Category, Location, Profile } from "@shared/schema";
 
 // Calculate profile completeness from form values
@@ -101,6 +102,284 @@ function ProfileCompletenessCard({ form }: { form: ReturnType<typeof useForm<Pro
         )}
       </CardContent>
     </Card>
+  );
+}
+
+// Logo Upload Component
+function LogoUpload({ profileId, currentLogoUrl, onUploadSuccess }: { 
+  profileId: string; 
+  currentLogoUrl?: string | null;
+  onUploadSuccess: () => void;
+}) {
+  const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(currentLogoUrl || null);
+
+  useEffect(() => {
+    setPreviewUrl(currentLogoUrl || null);
+  }, [currentLogoUrl]);
+
+  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast({ title: "Fout", description: "Alleen afbeeldingen zijn toegestaan", variant: "destructive" });
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast({ title: "Fout", description: "Bestand is te groot (max 5MB)", variant: "destructive" });
+      return;
+    }
+
+    setIsUploading(true);
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const response = await fetch(`/api/profiles/${profileId}/logo`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${session?.access_token}`,
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Upload failed");
+      }
+
+      const data = await response.json();
+      setPreviewUrl(data.url);
+      toast({ title: "Gelukt", description: "Logo is geupload" });
+      onUploadSuccess();
+    } catch (error) {
+      toast({ title: "Fout", description: error instanceof Error ? error.message : "Kon logo niet uploaden", variant: "destructive" });
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-start gap-4">
+        <div 
+          className="w-24 h-24 rounded-md border-2 border-dashed border-muted-foreground/25 flex items-center justify-center overflow-hidden bg-muted"
+          data-testid="logo-preview"
+        >
+          {previewUrl ? (
+            <img src={previewUrl} alt="Logo" className="w-full h-full object-cover" />
+          ) : (
+            <ImageIcon className="h-8 w-8 text-muted-foreground/50" />
+          )}
+        </div>
+        <div className="flex-1 space-y-2">
+          <p className="text-sm text-muted-foreground">
+            Upload een profielfoto of bedrijfslogo. Max 5MB, alleen afbeeldingen.
+          </p>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleFileSelect}
+            className="hidden"
+            data-testid="input-logo-file"
+          />
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isUploading}
+            className="gap-2"
+            data-testid="button-upload-logo"
+          >
+            {isUploading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Upload className="h-4 w-4" />
+            )}
+            {isUploading ? "Uploaden..." : "Logo uploaden"}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Work Photos Upload Component
+function WorkPhotosUpload({ profileId, currentPhotos, onUploadSuccess }: {
+  profileId: string;
+  currentPhotos: string[];
+  onUploadSuccess: () => void;
+}) {
+  const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [isDeleting, setIsDeleting] = useState<string | null>(null);
+  const [photos, setPhotos] = useState<string[]>(currentPhotos);
+
+  useEffect(() => {
+    setPhotos(currentPhotos);
+  }, [currentPhotos]);
+
+  const handleFilesSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+
+    const validFiles = Array.from(files).filter(file => {
+      if (!file.type.startsWith("image/")) {
+        toast({ title: "Overgeslagen", description: `${file.name} is geen afbeelding`, variant: "destructive" });
+        return false;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        toast({ title: "Overgeslagen", description: `${file.name} is te groot (max 5MB)`, variant: "destructive" });
+        return false;
+      }
+      return true;
+    });
+
+    if (validFiles.length === 0) return;
+
+    setIsUploading(true);
+    const formData = new FormData();
+    validFiles.forEach(file => formData.append("files", file));
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const response = await fetch(`/api/profiles/${profileId}/photos`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${session?.access_token}`,
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Upload failed");
+      }
+
+      const data = await response.json();
+      setPhotos(data.allUrls);
+      toast({ title: "Gelukt", description: `${data.urls.length} foto('s) geupload` });
+      onUploadSuccess();
+    } catch (error) {
+      toast({ title: "Fout", description: error instanceof Error ? error.message : "Kon foto's niet uploaden", variant: "destructive" });
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
+
+  const handleDeletePhoto = async (url: string) => {
+    setIsDeleting(url);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const response = await fetch(`/api/profiles/${profileId}/photos`, {
+        method: "DELETE",
+        headers: { 
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session?.access_token}`,
+        },
+        body: JSON.stringify({ url }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Delete failed");
+      }
+
+      const data = await response.json();
+      setPhotos(data.remainingUrls);
+      toast({ title: "Gelukt", description: "Foto verwijderd" });
+      onUploadSuccess();
+    } catch (error) {
+      toast({ title: "Fout", description: error instanceof Error ? error.message : "Kon foto niet verwijderen", variant: "destructive" });
+    } finally {
+      setIsDeleting(null);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">
+          Upload foto's van je werk. Max 10 foto's, elk max 5MB.
+        </p>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          multiple
+          onChange={handleFilesSelect}
+          className="hidden"
+          data-testid="input-photos-file"
+        />
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={isUploading || photos.length >= 10}
+          className="gap-2"
+          data-testid="button-upload-photos"
+        >
+          {isUploading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Upload className="h-4 w-4" />
+          )}
+          {isUploading ? "Uploaden..." : "Foto's toevoegen"}
+        </Button>
+      </div>
+
+      {photos.length > 0 ? (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+          {photos.map((url, index) => (
+            <div 
+              key={url} 
+              className="relative group aspect-square rounded-md overflow-hidden border"
+              data-testid={`photo-item-${index}`}
+            >
+              <img src={url} alt={`Werk foto ${index + 1}`} className="w-full h-full object-cover" />
+              <Button
+                type="button"
+                variant="destructive"
+                size="icon"
+                className="absolute top-2 right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={() => handleDeletePhoto(url)}
+                disabled={isDeleting === url}
+                data-testid={`button-delete-photo-${index}`}
+              >
+                {isDeleting === url ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : (
+                  <X className="h-3 w-3" />
+                )}
+              </Button>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div 
+          className="border-2 border-dashed border-muted-foreground/25 rounded-md p-8 text-center"
+          data-testid="photos-empty-state"
+        >
+          <ImageIcon className="h-12 w-12 mx-auto text-muted-foreground/50 mb-2" />
+          <p className="text-sm text-muted-foreground">Nog geen foto's geupload</p>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -537,6 +816,44 @@ export default function ProfileEdit() {
                 </div>
               </form>
             </Form>
+          </CardContent>
+        </Card>
+
+        {/* Profile Photo Upload */}
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle>Profielfoto</CardTitle>
+            <CardDescription>
+              Upload een profielfoto of bedrijfslogo
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <LogoUpload 
+              profileId={id!} 
+              currentLogoUrl={profile?.logoUrl}
+              onUploadSuccess={() => {
+                queryClient.invalidateQueries({ queryKey: ["/api/profiles/id", id] });
+              }}
+            />
+          </CardContent>
+        </Card>
+
+        {/* Work Photos Upload */}
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle>Werk foto's</CardTitle>
+            <CardDescription>
+              Toon je beste werk aan potentiele klanten
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <WorkPhotosUpload 
+              profileId={id!} 
+              currentPhotos={profile?.imageUrls || []}
+              onUploadSuccess={() => {
+                queryClient.invalidateQueries({ queryKey: ["/api/profiles/id", id] });
+              }}
+            />
           </CardContent>
         </Card>
       </div>
