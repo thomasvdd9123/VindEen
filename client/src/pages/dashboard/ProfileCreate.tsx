@@ -79,7 +79,7 @@ export default function ProfileCreate() {
 
   const createProfileMutation = useMutation({
     mutationFn: async (data: ProfileFormData) => {
-      if (!gardenerId) throw new Error("Gardener ID not found");
+      if (!gardenerId) throw new Error("Even geduld, je account wordt geladen...");
       
       return apiRequest("POST", "/api/profiles", {
         ...data,
@@ -170,7 +170,7 @@ export default function ProfileCreate() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Categorie <span className="text-destructive">*</span></FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
                             <SelectTrigger data-testid="select-category">
                               <SelectValue placeholder="Selecteer categorie" />
@@ -193,7 +193,7 @@ export default function ProfileCreate() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Locatie <span className="text-destructive">*</span></FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
                             <SelectTrigger data-testid="select-location">
                               <SelectValue placeholder="Selecteer locatie" />
@@ -299,7 +299,7 @@ export default function ProfileCreate() {
                 <div className="pt-4 flex gap-4">
                   <Button 
                     type="submit" 
-                    disabled={createProfileMutation.isPending || !gardenerId}
+                    disabled={createProfileMutation.isPending}
                     className="gap-2"
                     data-testid="button-submit"
                   >
