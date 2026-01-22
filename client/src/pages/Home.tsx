@@ -9,15 +9,12 @@ import {
   ArrowRight, 
   Leaf,
   BookOpen,
-  HelpCircle,
-  FileText,
   Star,
   GraduationCap,
   Users,
-  MessageSquare,
 } from "lucide-react";
 import { siteConfig } from "@/lib/theme.config";
-import type { Category, Location, ProfileWithRelations } from "@shared/schema";
+import type { Category, Location } from "@shared/schema";
 
 // Quick start links (like "Snel starten" section)
 const quickStartLinks = [
@@ -42,10 +39,6 @@ export default function Home() {
 
   const { data: locations = [], isLoading: locationsLoading } = useQuery<Location[]>({
     queryKey: ["/api/locations"],
-  });
-
-  const { data: featuredProfiles = [], isLoading: profilesLoading } = useQuery<ProfileWithRelations[]>({
-    queryKey: ["/api/profiles/featured"],
   });
 
   return (
@@ -227,133 +220,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Featured Tuinmannen Section */}
-      <section className="py-12 sm:py-16 bg-muted/30">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-            <div>
-              <h2 className="text-2xl font-bold mb-1" data-testid="text-featured-title">
-                Uitgelichte tuinmannen
-              </h2>
-              <p className="text-muted-foreground">
-                Ontdek de best beoordeelde professionals in {siteConfig.country}
-              </p>
-            </div>
-            <Link href="/zoek/tuinaanlegger">
-              <Button variant="outline" className="gap-2" data-testid="button-view-all">
-                Bekijk alle
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </Link>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {profilesLoading ? (
-              Array.from({ length: 4 }).map((_, i) => (
-                <Card key={i} className="p-5">
-                  <div className="flex gap-4">
-                    <Skeleton className="h-20 w-20 rounded-md shrink-0" />
-                    <div className="flex-1 space-y-3">
-                      <Skeleton className="h-5 w-3/4" />
-                      <Skeleton className="h-4 w-1/2" />
-                      <Skeleton className="h-4 w-full" />
-                      <Skeleton className="h-4 w-full" />
-                    </div>
-                  </div>
-                </Card>
-              ))
-            ) : featuredProfiles.length > 0 ? (
-              featuredProfiles.slice(0, 4).map((profile) => (
-                <FeaturedProfileCard key={profile.id} profile={profile} />
-              ))
-            ) : (
-              <div className="col-span-full text-center py-12">
-                <Leaf className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="font-semibold text-lg mb-2">Nog geen tuinmannen beschikbaar</h3>
-                <p className="text-muted-foreground mb-4">
-                  Ben je tuinman? Registreer je nu en word zichtbaar voor potentiële klanten.
-                </p>
-                <Link href="/registreren">
-                  <Button data-testid="button-register-empty">
-                    Registreer als tuinman
-                  </Button>
-                </Link>
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
-
-      {/* Categories Section */}
-      <section className="py-12 sm:py-16">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-10">
-            <h2 className="text-2xl font-bold mb-2">
-              Zoek per specialisatie
-            </h2>
-            <p className="text-muted-foreground">
-              Vind de juiste professional voor jouw tuinproject
-            </p>
-          </div>
-
-          <div className="flex flex-wrap justify-center gap-3">
-            {categoriesLoading ? (
-              Array.from({ length: 6 }).map((_, i) => (
-                <Skeleton key={i} className="h-10 w-36 rounded-full" />
-              ))
-            ) : (
-              categories.map((category) => (
-                <Link key={category.id} href={`/zoek/${category.slug}`}>
-                  <Button 
-                    variant="outline" 
-                    className="rounded-full gap-2"
-                    data-testid={`button-category-${category.slug}`}
-                  >
-                    <Leaf className="h-4 w-4" />
-                    {category.name}
-                  </Button>
-                </Link>
-              ))
-            )}
-          </div>
-        </div>
-      </section>
-
-      {/* Popular Locations Section */}
-      <section className="py-12 sm:py-16 bg-muted/30">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-10">
-            <h2 className="text-2xl font-bold mb-2">
-              Populaire locaties
-            </h2>
-            <p className="text-muted-foreground">
-              Vind tuinmannen in de grootste steden van {siteConfig.country}
-            </p>
-          </div>
-
-          <div className="flex flex-wrap justify-center gap-2">
-            {locationsLoading ? (
-              Array.from({ length: 8 }).map((_, i) => (
-                <Skeleton key={i} className="h-9 w-28 rounded-full" />
-              ))
-            ) : (
-              locations.slice(0, 12).map((location) => (
-                <Link key={location.id} href={`/zoek/tuinaanlegger/${location.slug}`}>
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    className="rounded-full hover:bg-primary/10 hover:text-primary"
-                    data-testid={`button-location-${location.slug}`}
-                  >
-                    {location.name}
-                  </Button>
-                </Link>
-              ))
-            )}
-          </div>
-        </div>
-      </section>
-
       {/* CTA Section for Professionals */}
       <section className="py-16 bg-primary text-primary-foreground">
         <div className="container mx-auto px-4">
@@ -383,87 +249,5 @@ export default function Home() {
         </div>
       </section>
     </Layout>
-  );
-}
-
-// Featured Profile Card Component - matches vind-een-psycholoog.be style
-function FeaturedProfileCard({ profile }: { profile: ProfileWithRelations }) {
-  return (
-    <Link href={`/bedrijf/${profile.slug}`}>
-      <Card className="hover-elevate cursor-pointer h-full" data-testid={`card-profile-${profile.slug}`}>
-        <CardContent className="p-5">
-          <div className="flex gap-4">
-            {/* Profile image */}
-            <div className="w-20 h-20 rounded-md bg-muted shrink-0 overflow-hidden">
-              {profile.logoUrl ? (
-                <img 
-                  src={profile.logoUrl} 
-                  alt={profile.name}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-primary/5">
-                  <Leaf className="h-8 w-8 text-primary/40" />
-                </div>
-              )}
-            </div>
-
-            {/* Profile info */}
-            <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-foreground mb-0.5 truncate" data-testid={`text-profile-name-${profile.slug}`}>
-                {profile.name}
-              </h3>
-              {profile.title && (
-                <p className="text-sm text-muted-foreground mb-2 truncate">
-                  {profile.title}
-                </p>
-              )}
-              {profile.location && (
-                <p className="text-xs text-muted-foreground mb-2">
-                  {profile.location.name}
-                </p>
-              )}
-              <p className="text-sm text-muted-foreground line-clamp-2">
-                {profile.introduction || profile.description?.substring(0, 120)}
-              </p>
-            </div>
-          </div>
-
-          {/* Specializations as tags */}
-          {profile.specializations && profile.specializations.length > 0 && (
-            <div className="mt-4 pt-3 border-t border-border">
-              <div className="flex flex-wrap gap-1.5">
-                <span className="text-xs font-medium text-muted-foreground mr-1">Specialisaties:</span>
-                {profile.specializations.slice(0, 4).map((spec, index) => (
-                  <span 
-                    key={index}
-                    className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-muted text-muted-foreground"
-                  >
-                    {spec.toLowerCase().replace(/_/g, " ")}
-                  </span>
-                ))}
-                {profile.specializations.length > 4 && (
-                  <span className="text-xs text-muted-foreground">
-                    +{profile.specializations.length - 4}
-                  </span>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Category tags */}
-          {profile.category && (
-            <div className="mt-2">
-              <div className="flex flex-wrap gap-1.5">
-                <span className="text-xs font-medium text-muted-foreground mr-1">Ondersteuning bij:</span>
-                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-primary/10 text-primary">
-                  {profile.category.name}
-                </span>
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </Link>
   );
 }
