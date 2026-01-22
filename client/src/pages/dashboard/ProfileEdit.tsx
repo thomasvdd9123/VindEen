@@ -150,7 +150,7 @@ function LogoUpload({ profileId, currentLogoUrl, onUploadSuccess }: {
         .from('uploads')
         .getPublicUrl(fileName);
 
-      await apiRequest('PATCH', `/api/profiles/${profileId}`, { logo_url: publicUrl });
+      await apiRequest('PATCH', `/api/profiles/${profileId}`, { logoUrl: publicUrl });
       
       setPreviewUrl(publicUrl);
       toast({ title: "Gelukt", description: "Logo is geupload" });
@@ -269,7 +269,7 @@ function WorkPhotosUpload({ profileId, currentPhotos, onUploadSuccess }: {
       }
 
       const allUrls = [...photos, ...uploadedUrls];
-      await apiRequest('PATCH', `/api/profiles/${profileId}`, { image_urls: allUrls });
+      await apiRequest('PATCH', `/api/profiles/${profileId}`, { imageUrls: allUrls });
       
       setPhotos(allUrls);
       toast({ title: "Gelukt", description: `${uploadedUrls.length} foto('s) geupload` });
@@ -293,7 +293,7 @@ function WorkPhotosUpload({ profileId, currentPhotos, onUploadSuccess }: {
       }
 
       const remainingUrls = photos.filter(p => p !== url);
-      await apiRequest('PATCH', `/api/profiles/${profileId}`, { image_urls: remainingUrls });
+      await apiRequest('PATCH', `/api/profiles/${profileId}`, { imageUrls: remainingUrls });
       
       setPhotos(remainingUrls);
       toast({ title: "Gelukt", description: "Foto verwijderd" });
