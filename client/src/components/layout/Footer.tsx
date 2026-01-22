@@ -21,6 +21,8 @@ export function Footer() {
 
   const infoLinks = [
     { href: "/over-ons", label: "Over ons" },
+    { href: "/prijzen", label: "Prijzen" },
+    { href: "/faq", label: "FAQ" },
     { href: "/contact", label: "Contact" },
     { href: "/privacy", label: "Privacybeleid" },
     { href: "/voorwaarden", label: "Algemene voorwaarden" },

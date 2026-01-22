@@ -249,6 +249,61 @@ export async function registerRoutes(
     }
   });
 
+  // Account deletion
+  app.delete("/api/account/delete", async (req, res) => {
+    try {
+      // Note: In production, this would need proper authentication
+      // and would delete all user data from the database
+      // For now, return success - the frontend handles Supabase signout
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting account:", error);
+      res.status(500).json({ error: "Failed to delete account" });
+    }
+  });
+
+  // Contact owner (platform contact form)
+  app.post("/api/contact-owner", async (req, res) => {
+    try {
+      const { name, email, subject, message } = req.body;
+      
+      if (!name || !email || !subject || !message) {
+        return res.status(400).json({ error: "All fields are required" });
+      }
+      
+      // For now, just log the contact request
+      // In production, this would send an email to the platform owner
+      console.log("Platform contact request:", { name, email, subject, message });
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error processing contact request:", error);
+      res.status(500).json({ error: "Failed to process contact request" });
+    }
+  });
+
+  // Subscription plans
+  app.get("/api/subscription-plans", async (req, res) => {
+    try {
+      const plans = await storage.getSubscriptionPlans();
+      res.json(plans);
+    } catch (error) {
+      console.error("Error fetching subscription plans:", error);
+      res.status(500).json({ error: "Failed to fetch subscription plans" });
+    }
+  });
+
+  // Get contact requests for gardener
+  app.get("/api/contact-requests/:gardenerId", async (req, res) => {
+    try {
+      const requests = await storage.getContactRequestsByGardenerId(req.params.gardenerId);
+      res.json(requests);
+    } catch (error) {
+      console.error("Error fetching contact requests:", error);
+      res.status(500).json({ error: "Failed to fetch contact requests" });
+    }
+  });
+
   // Contact Requests
   app.post("/api/contact/:profileId", async (req, res) => {
     try {

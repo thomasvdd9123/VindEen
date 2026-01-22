@@ -1,0 +1,51 @@
+User stories
+1. Als tuinman wil ik mij registreren
+2. Als tuinman wil ik mijn e-mail bevestigen
+2. Als tuinman wil ik mij inloggen
+4. Als tuinman wil ik mij uitloggen
+5. Als tuinman wil ik mijn account permanent verwijderen
+3. Als tuinman wil ik mijn wachtwoord resetten
+4. Als tuinman wil ik mijn e-mail veranderen
+5. Als tuinman wil ik mijn profiel beheren
+5.1. Als tuinman wil ik mijn profiel invullen
+5.1.1 Als tuinman wil ik mijn profielfoto instellen
+5.1.2 Als tuinman wil ik foto's van reeds geleverde werk uploaden
+5.1.3 Als tuinman wil ik mijn website linken
+5.1.4 Als tuinman wil ik aanduiden wat voor services ik aanbied
+5.1.5 Als tuinman wil ik aanduiden waar ik actief ben
+5.1.6 Als tuinman wil ik mijn vestigingslocatie instellen
+5.1.7  Als tuinman wil ik mijn vestigingslocatie verbergen/tonen
+5.2 Als tuinman wil ik mijn profiel wijzigen
+5.2.1 Als tuinman wil ik mijn profielfoto wijzigen
+5.2.2 Als tuinman wil ik de optie om mijn profiel op inactief te zetten
+5.2.3 Als tuinman wil ik foto's verwijderen
+6. Als tuinman wil ik een overzicht van mogelijke subscripties raadplegen
+7. Als tuinman wil ik een subscriptie selecteren
+8. Als tuinman wil ik een betaling starten
+9. Als tuinman wil ik feedback of mijn betaling successvol is
+11. Als tuinman wil ik mijn betalingsgeschiedenis raadplegen
+12. Als tuinman wil ik mijn facturen downloaden/raadplegen
+13. Als tuinman wil ik mijn subscriptie raadplegen (start, stop etc, next expected payment)
+14. Als tuinman wil ik mijn subscriptie wijzigen
+15. Als tuinman wil ik mijn subscriptie stopzetten
+16. Als tuinman wil ik mijn subscriptie vernieuwen
+17. Als tuinman wil ik zien of mijn profiel publiek is
+18. Als tuinman wil ik weten waarom mijn profiel niet publiek is
+19. Als tuinman wil ik contactaanvragen ontvangen
+20. Als tuinman wil ik een overzicht van contactaanvragen raadplagen
+21. Als tuinman wil ik mijn contactaanvragen filteren op naam, datum, subject
+22. Als tuinman wil ik mijn contactaanvragen sorteren op naam, datum, subject
+23. Als bezoeker wil ik kunnen filteren op naam, gemeente, straal, specialisatie, provincie,...
+24. Als bezoeker wil ik een mail sturen naar de eigenaar van de website
+25. Als bezoeker wil ik de profielpagina van een tuinman bekijken
+26. Als bezoeker wil ik zien of een tuinman actief is
+27. Als bezoeker wil ik een contactformulier invullen en opsturen via mail
+28. Als bezoeker wil ik surfen naar de FAQ
+29. Als bezoeker wil ik surfen naar contact-info
+30. Als bezoeker wil ik de about page bezoeken
+31. (cron) Het systeem moet dagelijks status updaten publiek/prive (op basis van subscription)
+32. (cron) Het systeem moet dagelijks checken of subscriptie verlopen is (incl. grace period) en mail sturen
+33. (cron) Het systeem moet dagelijks automatisch subscription renewals checken
+34. (cron) Het systeem geneert dagelijks sitemapper.xml
+35. Als tuinman wil ik mijn statistieken bekijken (profielclicks?)
+36 Als tuinman wil ik % completeness van profiel bekijken    (en toon eventueel dat dit impact heeft op search results?)

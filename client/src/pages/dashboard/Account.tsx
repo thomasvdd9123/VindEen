@@ -10,7 +10,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/lib/auth";
-import { Loader2, Save } from "lucide-react";
+import { Loader2, Save, Mail, Trash2, AlertTriangle } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { supabase } from "@/lib/supabase";
 
 const accountSchema = z.object({
   firstName: z.string().min(2, "Voornaam is verplicht"),
@@ -39,6 +42,9 @@ export default function DashboardAccount() {
   const { toast } = useToast();
   const [isLoadingAccount, setIsLoadingAccount] = useState(false);
   const [isLoadingInvoice, setIsLoadingInvoice] = useState(false);
+  const [isChangingEmail, setIsChangingEmail] = useState(false);
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+  const [newEmail, setNewEmail] = useState("");
 
   const metadata = getUserMetadata();
 
@@ -168,6 +174,77 @@ export default function DashboardAccount() {
       });
     } finally {
       setIsLoadingInvoice(false);
+    }
+  };
+
+  const handleEmailChange = async () => {
+    if (!newEmail || !newEmail.includes("@")) {
+      toast({
+        title: "Ongeldig email adres",
+        description: "Vul een geldig email adres in.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsChangingEmail(true);
+    try {
+      const { error } = await supabase.auth.updateUser({
+        email: newEmail,
+      });
+      
+      if (error) {
+        toast({
+          title: "Er ging iets mis",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Bevestigingsmail verzonden",
+          description: "Controleer je inbox om je nieuwe email adres te bevestigen.",
+        });
+        setNewEmail("");
+      }
+    } catch {
+      toast({
+        title: "Er ging iets mis",
+        description: "Kon email niet wijzigen.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsChangingEmail(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    setIsDeletingAccount(true);
+    try {
+      // Call API to delete account and all associated data
+      const response = await fetch("/api/account/delete", {
+        method: "DELETE",
+        credentials: "include",
+      });
+      
+      if (response.ok) {
+        await supabase.auth.signOut();
+        window.location.href = "/";
+      } else {
+        const data = await response.json();
+        toast({
+          title: "Er ging iets mis",
+          description: data.error || "Kon account niet verwijderen.",
+          variant: "destructive",
+        });
+      }
+    } catch {
+      toast({
+        title: "Er ging iets mis",
+        description: "Kon account niet verwijderen.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeletingAccount(false);
     }
   };
 
@@ -446,6 +523,106 @@ export default function DashboardAccount() {
                 </div>
               </form>
             </Form>
+          </CardContent>
+        </Card>
+
+        {/* Email Change */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Mail className="h-5 w-5" />
+              Email wijzigen
+            </CardTitle>
+            <CardDescription>
+              Wijzig het email adres waarmee je inlogt.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm text-muted-foreground mb-2">
+                  Huidig email: <span className="font-medium text-foreground">{user?.email}</span>
+                </p>
+              </div>
+              <div className="flex gap-4">
+                <Input
+                  type="email"
+                  placeholder="Nieuw email adres"
+                  value={newEmail}
+                  onChange={(e) => setNewEmail(e.target.value)}
+                  className="max-w-sm"
+                  data-testid="input-new-email"
+                />
+                <Button 
+                  onClick={handleEmailChange} 
+                  disabled={isChangingEmail || !newEmail}
+                  data-testid="button-change-email"
+                >
+                  {isChangingEmail ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    "Wijzigen"
+                  )}
+                </Button>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Je ontvangt een bevestigingsmail op je nieuwe adres.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Account Deletion */}
+        <Card className="border-destructive/50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-destructive">
+              <Trash2 className="h-5 w-5" />
+              Account verwijderen
+            </CardTitle>
+            <CardDescription>
+              Verwijder je account en alle bijbehorende gegevens permanent.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Alert variant="destructive" className="mb-4">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle>Let op!</AlertTitle>
+              <AlertDescription>
+                Deze actie kan niet ongedaan worden gemaakt. Al je profielen, contactaanvragen en gegevens worden permanent verwijderd.
+              </AlertDescription>
+            </Alert>
+            
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" data-testid="button-delete-account">
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Account permanent verwijderen
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Weet je het zeker?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Deze actie verwijdert je account en alle bijbehorende gegevens permanent. 
+                    Dit kan niet ongedaan worden gemaakt.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Annuleren</AlertDialogCancel>
+                  <AlertDialogAction 
+                    onClick={handleDeleteAccount}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    disabled={isDeletingAccount}
+                  >
+                    {isDeletingAccount ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      "Ja, verwijder mijn account"
+                    )}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </CardContent>
         </Card>
       </div>

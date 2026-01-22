@@ -16,6 +16,10 @@ import DashboardProfiles from "@/pages/dashboard/Profiles";
 import ProfileCreate from "@/pages/dashboard/ProfileCreate";
 import ProfileEdit from "@/pages/dashboard/ProfileEdit";
 import DashboardContacts from "@/pages/dashboard/Contacts";
+import FAQ from "@/pages/FAQ";
+import Contact from "@/pages/Contact";
+import About from "@/pages/About";
+import Pricing from "@/pages/Pricing";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -34,6 +38,10 @@ function Router() {
       <Route path="/dashboard/profielen/nieuw" component={ProfileCreate} />
       <Route path="/dashboard/profielen/:id/bewerken" component={ProfileEdit} />
       <Route path="/dashboard/contacten" component={DashboardContacts} />
+      <Route path="/faq" component={FAQ} />
+      <Route path="/contact" component={Contact} />
+      <Route path="/over-ons" component={About} />
+      <Route path="/prijzen" component={Pricing} />
       <Route component={NotFound} />
     </Switch>
   );

@@ -9,6 +9,7 @@ import type {
   ContactRequest, InsertContactRequest,
   ProfileWithRelations,
   SearchParams,
+  SubscriptionPlan,
 } from "@shared/schema";
 import { supabaseStorage } from "./supabase-storage";
 
@@ -49,6 +50,10 @@ export interface IStorage {
 
   // Contact Requests
   createContactRequest(request: InsertContactRequest): Promise<ContactRequest>;
+  getContactRequestsByGardenerId(gardenerId: string): Promise<ContactRequest[]>;
+
+  // Subscription Plans
+  getSubscriptionPlans(): Promise<SubscriptionPlan[]>;
 }
 
 export class MemStorage implements IStorage {
@@ -643,6 +648,60 @@ export class MemStorage implements IStorage {
     };
     this.contactRequests.set(id, newRequest);
     return newRequest;
+  }
+
+  async getContactRequestsByGardenerId(gardenerId: string): Promise<ContactRequest[]> {
+    return Array.from(this.contactRequests.values())
+      .filter((r) => r.gardenerId === gardenerId)
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }
+
+  async getSubscriptionPlans(): Promise<SubscriptionPlan[]> {
+    // Return static plans for now
+    return [
+      {
+        id: "1",
+        type: "BASIC",
+        name: "Basis",
+        price: 9.99,
+        molliepriceId: null,
+        mollieProductId: null,
+        generalInfo: "Perfect om te starten",
+        features: "Profiel zichtbaar in zoekresultaten,Contactformulier,Basis statistieken",
+        isActive: true,
+        sortOrder: 1,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        id: "2",
+        type: "PROFESSIONAL",
+        name: "Professional",
+        price: 19.99,
+        molliepriceId: null,
+        mollieProductId: null,
+        generalInfo: "Meest gekozen",
+        features: "Alles van Basis,Uitgelichte vermelding,Onbeperkte foto uploads,Uitgebreide statistieken,Prioriteit in zoekresultaten",
+        isActive: true,
+        sortOrder: 2,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        id: "3",
+        type: "PREMIUM",
+        name: "Premium",
+        price: 39.99,
+        molliepriceId: null,
+        mollieProductId: null,
+        generalInfo: "Maximale zichtbaarheid",
+        features: "Alles van Professional,Featured badge,Eerste positie in resultaten,Premium support,Maandelijks rapport",
+        isActive: true,
+        sortOrder: 3,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    ];
   }
 }
 

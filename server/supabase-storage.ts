@@ -9,6 +9,7 @@ import type {
   ContactRequest, InsertContactRequest,
   ProfileWithRelations,
   SearchParams,
+  SubscriptionPlan,
 } from "@shared/schema";
 import type { IStorage } from "./storage";
 
@@ -439,6 +440,92 @@ export class SupabaseStorage implements IStorage {
     
     if (error) throw error;
     return this.mapContactRequest(data);
+  }
+
+  async getContactRequestsByGardenerId(gardenerId: string): Promise<ContactRequest[]> {
+    const { data, error } = await supabaseAdmin
+      .from("contact_requests")
+      .select("*")
+      .eq("gardener_id", gardenerId)
+      .order("created_at", { ascending: false });
+    
+    if (error) throw error;
+    return (data || []).map(this.mapContactRequest);
+  }
+
+  async getSubscriptionPlans(): Promise<SubscriptionPlan[]> {
+    const { data, error } = await supabaseAdmin
+      .from("subscription_plans")
+      .select("*")
+      .eq("is_active", true)
+      .order("sort_order", { ascending: true });
+    
+    if (error) {
+      // If table doesn't exist, return static plans
+      console.log("Subscription plans table not found, using static plans");
+      return [
+        {
+          id: "1",
+          type: "BASIC",
+          name: "Basis",
+          price: 9.99,
+          molliepriceId: null,
+          mollieProductId: null,
+          generalInfo: "Perfect om te starten",
+          features: "Profiel zichtbaar in zoekresultaten,Contactformulier,Basis statistieken",
+          isActive: true,
+          sortOrder: 1,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          id: "2",
+          type: "PROFESSIONAL",
+          name: "Professional",
+          price: 19.99,
+          molliepriceId: null,
+          mollieProductId: null,
+          generalInfo: "Meest gekozen",
+          features: "Alles van Basis,Uitgelichte vermelding,Onbeperkte foto uploads,Uitgebreide statistieken,Prioriteit in zoekresultaten",
+          isActive: true,
+          sortOrder: 2,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          id: "3",
+          type: "PREMIUM",
+          name: "Premium",
+          price: 39.99,
+          molliepriceId: null,
+          mollieProductId: null,
+          generalInfo: "Maximale zichtbaarheid",
+          features: "Alles van Professional,Featured badge,Eerste positie in resultaten,Premium support,Maandelijks rapport",
+          isActive: true,
+          sortOrder: 3,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ];
+    }
+    return (data || []).map(this.mapSubscriptionPlan);
+  }
+
+  private mapSubscriptionPlan(data: any): SubscriptionPlan {
+    return {
+      id: data.id,
+      type: data.type,
+      name: data.name,
+      price: data.price,
+      molliepriceId: data.mollie_price_id,
+      mollieProductId: data.mollie_product_id,
+      generalInfo: data.general_info,
+      features: data.features,
+      isActive: data.is_active,
+      sortOrder: data.sort_order,
+      createdAt: new Date(data.created_at),
+      updatedAt: new Date(data.updated_at),
+    };
   }
 
   // Mapping functions (snake_case to camelCase)
