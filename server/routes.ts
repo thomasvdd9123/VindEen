@@ -158,6 +158,12 @@ export async function registerRoutes(
       if (!profile) {
         return res.status(404).json({ error: "Profile not found" });
       }
+      
+      // Increment view count (don't await to not slow down response)
+      storage.incrementProfileViewCount(profile.id).catch(err => {
+        console.error("Error incrementing view count:", err);
+      });
+      
       res.json(profile);
     } catch (error) {
       console.error("Error fetching profile:", error);

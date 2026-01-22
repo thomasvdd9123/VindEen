@@ -402,9 +402,11 @@ export default function ProfilePage() {
                     <div className="flex items-start gap-3">
                       <MapPin className="h-5 w-5 text-primary mt-0.5" />
                       <div>
-                        <p className="text-sm text-muted-foreground mb-1">Adres</p>
-                        <p className="font-medium">{profile.office.street} {profile.office.number}</p>
-                        <p className="text-muted-foreground">{profile.office.postcode} {profile.office.town}</p>
+                        <p className="text-sm text-muted-foreground mb-1">Locatie</p>
+                        {!profile.hideAddress && (
+                          <p className="font-medium">{profile.office.street} {profile.office.number}</p>
+                        )}
+                        <p className={profile.hideAddress ? "font-medium" : "text-muted-foreground"}>{profile.office.postcode} {profile.office.town}</p>
                         <p className="text-muted-foreground">{profile.office.country}</p>
                       </div>
                     </div>

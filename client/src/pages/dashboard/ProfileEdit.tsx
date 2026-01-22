@@ -76,6 +76,7 @@ const profileSchema = z.object({
   categoryId: z.string().min(1, "Selecteer een categorie"),
   locationId: z.string().min(1, "Selecteer een locatie"),
   isActive: z.boolean().default(true),
+  hideAddress: z.boolean().default(false),
   offeredServices: z.array(z.string()).optional(),
 });
 
@@ -428,6 +429,7 @@ export default function ProfileEdit() {
       categoryId: "",
       locationId: "",
       isActive: true,
+      hideAddress: false,
       offeredServices: [],
     },
   });
@@ -445,6 +447,7 @@ export default function ProfileEdit() {
         categoryId: profile.categoryId || "",
         locationId: profile.locationId || "",
         isActive: profile.isActive ?? true,
+        hideAddress: profile.hideAddress ?? false,
         offeredServices: profile.offeredServices || [],
       });
     }
@@ -456,6 +459,7 @@ export default function ProfileEdit() {
         ...data,
         hasWebsite: !!data.website,
         isActive: data.isActive,
+        hideAddress: data.hideAddress,
         offeredServices: data.offeredServices,
       });
     },
@@ -645,6 +649,28 @@ export default function ProfileEdit() {
                     )}
                   />
                 </div>
+
+                <FormField
+                  control={form.control}
+                  name="hideAddress"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                      <div className="space-y-0.5">
+                        <FormLabel className="text-base">Adres verbergen</FormLabel>
+                        <FormDescription>
+                          Verberg je exacte adres op je profiel. Je stad blijft altijd zichtbaar.
+                        </FormDescription>
+                      </div>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                          data-testid="switch-hide-address"
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
 
                 <FormField
                   control={form.control}

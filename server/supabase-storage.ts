@@ -293,6 +293,7 @@ export class SupabaseStorage implements IStorage {
         is_verified: profile.isVerified ?? false,
         verification_status: profile.verificationStatus ?? "PENDING",
         is_featured: profile.isFeatured ?? false,
+        hide_address: profile.hideAddress ?? false,
         seo_title: profile.seoTitle,
         seo_description: profile.seoDescription,
         category_id: profile.categoryId,
@@ -336,6 +337,7 @@ export class SupabaseStorage implements IStorage {
     if (updates.locationId !== undefined) updateData.location_id = updates.locationId;
     if (updates.seoTitle !== undefined) updateData.seo_title = updates.seoTitle;
     if (updates.seoDescription !== undefined) updateData.seo_description = updates.seoDescription;
+    if (updates.hideAddress !== undefined) updateData.hide_address = updates.hideAddress;
     updateData.updated_at = new Date().toISOString();
 
     const { data, error } = await supabaseAdmin
@@ -356,6 +358,25 @@ export class SupabaseStorage implements IStorage {
       .eq("id", id);
     
     if (error) throw error;
+  }
+
+  async incrementProfileViewCount(id: string): Promise<void> {
+    const { error } = await supabaseAdmin.rpc('increment_view_count', { profile_id: id });
+    
+    // Fallback if RPC doesn't exist - use regular update
+    if (error) {
+      const { data: profile } = await supabaseAdmin
+        .from("profiles")
+        .select("view_count")
+        .eq("id", id)
+        .single();
+      
+      const currentCount = profile?.view_count || 0;
+      await supabaseAdmin
+        .from("profiles")
+        .update({ view_count: currentCount + 1 })
+        .eq("id", id);
+    }
   }
 
   // Offices
@@ -598,6 +619,8 @@ export class SupabaseStorage implements IStorage {
       verifiedBy: data.verified_by,
       rejectionReason: data.rejection_reason,
       isFeatured: data.is_featured,
+      hideAddress: data.hide_address ?? false,
+      viewCount: data.view_count ?? 0,
       seoTitle: data.seo_title,
       seoDescription: data.seo_description,
       categoryId: data.category_id,

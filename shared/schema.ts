@@ -91,6 +91,8 @@ export const profiles = pgTable("profiles", {
   verifiedBy: varchar("verified_by"),
   rejectionReason: text("rejection_reason"),
   isFeatured: boolean("is_featured").default(false),
+  hideAddress: boolean("hide_address").default(false),
+  viewCount: integer("view_count").default(0),
   seoTitle: text("seo_title"),
   seoDescription: text("seo_description"),
   categoryId: varchar("category_id").references(() => categories.id),

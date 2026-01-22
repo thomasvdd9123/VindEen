@@ -17,6 +17,8 @@ const fieldMap: Record<string, string> = {
   isPublic: "is_public",
   isVerified: "is_verified",
   isFeatured: "is_featured",
+  hideAddress: "hide_address",
+  viewCount: "view_count",
   verificationStatus: "verification_status",
   verifiedAt: "verified_at",
   verifiedBy: "verified_by",
@@ -278,6 +280,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       
       if (error && error.code !== "PGRST116") throw error;
       if (!data) return res.status(404).json({ error: "Profile not found" });
+      
+      // Increment view count (fire and forget)
+      supabase
+        .from("profiles")
+        .update({ view_count: (data.view_count || 0) + 1 })
+        .eq("id", data.id)
+        .then(() => {})
+        .catch((err: Error) => console.error("Error incrementing view count:", err));
+      
       return res.status(200).json(toCamelCase(data));
     }
 

@@ -39,6 +39,7 @@ export interface IStorage {
   createProfile(profile: InsertProfile): Promise<Profile>;
   updateProfile(id: string, updates: Partial<InsertProfile>): Promise<Profile | undefined>;
   deleteProfile(id: string): Promise<void>;
+  incrementProfileViewCount(id: string): Promise<void>;
 
   // Offices
   getOfficeByProfileId(profileId: string): Promise<Office | undefined>;
@@ -578,6 +579,14 @@ export class MemStorage implements IStorage {
 
   async deleteProfile(id: string): Promise<void> {
     this.profiles.delete(id);
+  }
+
+  async incrementProfileViewCount(id: string): Promise<void> {
+    const profile = this.profiles.get(id);
+    if (profile) {
+      profile.viewCount = (profile.viewCount || 0) + 1;
+      this.profiles.set(id, profile);
+    }
   }
 
   // Offices

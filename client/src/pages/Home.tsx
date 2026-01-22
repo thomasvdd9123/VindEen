@@ -126,7 +126,7 @@ export default function Home() {
                   Bekijk onze uitgelichte professionals en ontdek wie het beste bij jouw project past.
                 </p>
                 
-                <Link href="/zoeken">
+                <Link href="/zoek/tuinman">
                   <span className="text-sm text-primary hover:underline cursor-pointer">
                     Bekijk alle tuinmannen <ArrowRight className="h-3 w-3 inline" />
                   </span>
