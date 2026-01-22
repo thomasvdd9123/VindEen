@@ -13,8 +13,31 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDes
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Loader2, Save, ArrowLeft } from "lucide-react";
+import { Loader2, Save, ArrowLeft, Info, Eye, EyeOff, CheckCircle, XCircle } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Checkbox } from "@/components/ui/checkbox";
 import type { Category, Location, Profile } from "@shared/schema";
+
+// Predefined services for selection
+const AVAILABLE_SERVICES = [
+  "Tuinaanleg",
+  "Tuinonderhoud",
+  "Snoeien",
+  "Gazon aanleg",
+  "Gazon onderhoud",
+  "Vijver aanleg",
+  "Haag snoeien",
+  "Terras aanleg",
+  "Bestrating",
+  "Beplanting",
+  "Boomverzorging",
+  "Tuinontwerp",
+  "Irrigatie systemen",
+  "Verlichting",
+  "Afsluitingen",
+];
 
 const profileSchema = z.object({
   name: z.string().min(2, "Bedrijfsnaam is verplicht"),
@@ -26,6 +49,8 @@ const profileSchema = z.object({
   description: z.string().optional(),
   categoryId: z.string().min(1, "Selecteer een categorie"),
   locationId: z.string().min(1, "Selecteer een locatie"),
+  isActive: z.boolean().default(true),
+  offeredServices: z.array(z.string()).optional(),
 });
 
 type ProfileFormData = z.infer<typeof profileSchema>;
@@ -63,6 +88,8 @@ export default function ProfileEdit() {
       description: "",
       categoryId: "",
       locationId: "",
+      isActive: true,
+      offeredServices: [],
     },
   });
 
@@ -78,6 +105,8 @@ export default function ProfileEdit() {
         description: profile.description || "",
         categoryId: profile.categoryId || "",
         locationId: profile.locationId || "",
+        isActive: profile.isActive ?? true,
+        offeredServices: profile.offeredServices || [],
       });
     }
   }, [profile, form]);
@@ -87,6 +116,8 @@ export default function ProfileEdit() {
       return apiRequest("PUT", `/api/profiles/${id}`, {
         ...data,
         hasWebsite: !!data.website,
+        isActive: data.isActive,
+        offeredServices: data.offeredServices,
       });
     },
     onSuccess: () => {
@@ -155,6 +186,36 @@ export default function ProfileEdit() {
           <ArrowLeft className="h-4 w-4" />
           Terug naar profielen
         </Button>
+
+        {/* Profile Status Alert */}
+        {profile && (
+          <Alert 
+            className={`mb-4 ${profile.isPublic ? "border-primary/50" : "border-muted"}`}
+            data-testid="alert-profile-status"
+          >
+            {profile.isPublic ? (
+              <>
+                <CheckCircle className="h-4 w-4 text-primary" />
+                <AlertTitle>Profiel is gepubliceerd</AlertTitle>
+                <AlertDescription>
+                  Je profiel is zichtbaar voor bezoekers op de website.
+                </AlertDescription>
+              </>
+            ) : (
+              <>
+                <Info className="h-4 w-4" />
+                <AlertTitle>Profiel is nog niet gepubliceerd</AlertTitle>
+                <AlertDescription>
+                  {profile.verificationStatus === "PENDING" 
+                    ? "Je profiel wordt beoordeeld. Na goedkeuring wordt het zichtbaar op de website."
+                    : profile.verificationStatus === "REJECTED"
+                    ? "Je profiel is afgewezen. Pas de gegevens aan en probeer opnieuw."
+                    : "Vul je profiel volledig in en activeer het om zichtbaar te worden."}
+                </AlertDescription>
+              </>
+            )}
+          </Alert>
+        )}
 
         <Card>
           <CardHeader>
@@ -324,6 +385,78 @@ export default function ProfileEdit() {
                         <Input placeholder="https://www.jouwwebsite.be" {...field} data-testid="input-website" />
                       </FormControl>
                       <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Services Selection */}
+                <FormField
+                  control={form.control}
+                  name="offeredServices"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Aangeboden diensten</FormLabel>
+                      <FormDescription className="mb-2">
+                        Selecteer de diensten die je aanbiedt
+                      </FormDescription>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        {AVAILABLE_SERVICES.map((service) => (
+                          <div key={service} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`service-${service}`}
+                              checked={field.value?.includes(service) || false}
+                              onCheckedChange={(checked) => {
+                                const current = field.value || [];
+                                if (checked) {
+                                  field.onChange([...current, service]);
+                                } else {
+                                  field.onChange(current.filter((s) => s !== service));
+                                }
+                              }}
+                              data-testid={`checkbox-service-${service.toLowerCase().replace(/\s/g, '-')}`}
+                            />
+                            <label
+                              htmlFor={`service-${service}`}
+                              className="text-sm cursor-pointer"
+                            >
+                              {service}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Active/Inactive Toggle */}
+                <FormField
+                  control={form.control}
+                  name="isActive"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                      <div className="space-y-0.5">
+                        <FormLabel className="text-base flex items-center gap-2">
+                          {field.value ? (
+                            <Eye className="h-4 w-4 text-primary" />
+                          ) : (
+                            <EyeOff className="h-4 w-4 text-muted-foreground" />
+                          )}
+                          Profiel actief
+                        </FormLabel>
+                        <FormDescription>
+                          {field.value 
+                            ? "Je profiel is zichtbaar voor bezoekers" 
+                            : "Je profiel is verborgen voor bezoekers"}
+                        </FormDescription>
+                      </div>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                          data-testid="switch-active"
+                        />
+                      </FormControl>
                     </FormItem>
                   )}
                 />
