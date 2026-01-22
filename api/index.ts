@@ -456,12 +456,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // PATCH /api/profiles/:id
     if (method === "PATCH" && path.match(/^\/api\/profiles\/[^/]+$/) && !path.includes("/by-id/")) {
       const id = path.split("/").pop();
-      const slug = path.split("/").pop();
-      if (slug === "featured" || slug === "count" || slug === "search") {
+      if (id === "featured" || id === "count" || id === "search") {
         return res.status(404).json({ error: "Not found" });
       }
       
+      // Ensure we have a body
+      if (!req.body || Object.keys(req.body).length === 0) {
+        return res.status(400).json({ error: "No update data provided" });
+      }
+      
       const updates = toSnakeCase(req.body);
+      updates.updated_at = new Date().toISOString();
+      
+      console.log("PATCH /api/profiles/:id - Updating profile:", id, "with:", updates);
+      
       const { data, error } = await supabase
         .from("profiles")
         .update(updates)
@@ -469,7 +477,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         .select()
         .single();
       
-      if (error) throw error;
+      if (error) {
+        console.error("PATCH /api/profiles/:id - Error:", error);
+        throw error;
+      }
+      
+      console.log("PATCH /api/profiles/:id - Success:", data?.id);
       return res.status(200).json(data);
     }
 
