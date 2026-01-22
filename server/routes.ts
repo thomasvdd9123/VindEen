@@ -242,8 +242,22 @@ export async function registerRoutes(
     }
   });
 
-  // Update profile
+  // Update profile (PUT)
   app.put("/api/profiles/:id", async (req, res) => {
+    try {
+      const profile = await storage.updateProfile(req.params.id, req.body);
+      if (!profile) {
+        return res.status(404).json({ error: "Profile not found" });
+      }
+      res.json(profile);
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      res.status(500).json({ error: "Failed to update profile" });
+    }
+  });
+
+  // Update profile (PATCH - same as PUT for partial updates)
+  app.patch("/api/profiles/:id", async (req, res) => {
     try {
       const profile = await storage.updateProfile(req.params.id, req.body);
       if (!profile) {
