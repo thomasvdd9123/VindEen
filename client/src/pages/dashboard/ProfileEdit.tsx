@@ -140,15 +140,24 @@ function LogoUpload({ profileId, currentLogoUrl, onUploadSuccess }: {
       const fileExt = file.name.split('.').pop();
       const fileName = `${profileId}/logo.${fileExt}`;
       
-      const { error: uploadError } = await supabase.storage
+      console.log("Uploading to Supabase Storage:", { bucket: 'uploads', path: fileName, fileSize: file.size });
+      
+      const { data: uploadData, error: uploadError } = await supabase.storage
         .from('uploads')
         .upload(fileName, file, { upsert: true });
 
-      if (uploadError) throw uploadError;
+      console.log("Supabase Storage upload result:", { data: uploadData, error: uploadError });
+
+      if (uploadError) {
+        console.error("Supabase Storage upload error:", uploadError);
+        throw uploadError;
+      }
 
       const { data: { publicUrl } } = supabase.storage
         .from('uploads')
         .getPublicUrl(fileName);
+
+      console.log("Public URL generated:", publicUrl);
 
       await apiRequest('PATCH', `/api/profiles/${profileId}`, { logoUrl: publicUrl });
       
@@ -156,6 +165,7 @@ function LogoUpload({ profileId, currentLogoUrl, onUploadSuccess }: {
       toast({ title: "Gelukt", description: "Logo is geupload" });
       onUploadSuccess();
     } catch (error) {
+      console.error("Upload error caught:", error);
       toast({ title: "Fout", description: error instanceof Error ? error.message : "Kon logo niet uploaden", variant: "destructive" });
     } finally {
       setIsUploading(false);
