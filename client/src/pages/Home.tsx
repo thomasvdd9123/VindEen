@@ -106,66 +106,31 @@ export default function Home() {
               </CardContent>
             </Card>
 
-            {/* In de kijker column - Featured Profile */}
+            {/* In de kijker column - Featured */}
             <Card className="border-t-4 border-t-primary shadow-sm">
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-lg">
                   <Star className="h-5 w-5 text-amber-500" />
-                  In de kijker: Tuinman
+                  In de kijker
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-0">
-                {profilesLoading ? (
-                  <div className="space-y-4">
-                    <Skeleton className="h-40 w-full rounded-md" />
-                    <Skeleton className="h-4 w-3/4" />
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-full" />
+                <div className="relative h-40 bg-muted rounded-md mb-4 overflow-hidden">
+                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-primary/5">
+                    <Leaf className="h-12 w-12 text-primary/40" />
                   </div>
-                ) : featuredProfiles.length > 0 ? (
-                  <div>
-                    {/* Featured profile image placeholder */}
-                    <div className="relative h-40 bg-muted rounded-md mb-4 overflow-hidden">
-                      {featuredProfiles[0].logoUrl ? (
-                        <img 
-                          src={featuredProfiles[0].logoUrl} 
-                          alt={featuredProfiles[0].name}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-primary/5">
-                          <Leaf className="h-12 w-12 text-primary/40" />
-                        </div>
-                      )}
-                    </div>
-                    
-                    <h4 className="font-semibold mb-1">{featuredProfiles[0].name}</h4>
-                    <p className="text-sm text-muted-foreground mb-3 line-clamp-4">
-                      {featuredProfiles[0].introduction || featuredProfiles[0].description?.substring(0, 150)}
-                    </p>
-                    
-                    <div className="flex flex-wrap gap-2">
-                      <Link href={`/bedrijf/${featuredProfiles[0].slug}`}>
-                        <span className="text-sm text-primary hover:underline cursor-pointer">
-                          Lees verder <ArrowRight className="h-3 w-3 inline" />
-                        </span>
-                      </Link>
-                    </div>
-
-                    <div className="mt-4 pt-4 border-t border-border">
-                      <Link href="/zoek/tuinaanlegger">
-                        <span className="text-sm text-primary hover:underline cursor-pointer">
-                          Vind een tuinman <ArrowRight className="h-3 w-3 inline" />
-                        </span>
-                      </Link>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <Leaf className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-                    <p className="text-sm text-muted-foreground">Nog geen uitgelichte tuinmannen</p>
-                  </div>
-                )}
+                </div>
+                
+                <h4 className="font-medium mb-2">Vind de juiste tuinman</h4>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Bekijk onze uitgelichte professionals en ontdek wie het beste bij jouw project past.
+                </p>
+                
+                <Link href="/zoeken">
+                  <span className="text-sm text-primary hover:underline cursor-pointer">
+                    Bekijk alle tuinmannen <ArrowRight className="h-3 w-3 inline" />
+                  </span>
+                </Link>
               </CardContent>
             </Card>
 
