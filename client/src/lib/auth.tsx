@@ -1,4 +1,5 @@
-import { createContext, useContext, useEffect, useState, useCallback } from "react";
+import { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
+import { useLocation } from "wouter";
 import { supabase, isSupabaseConfigured } from "./supabase";
 import type { User, Session } from "@supabase/supabase-js";
 
@@ -126,12 +127,23 @@ export function useAuth() {
 // Protected route wrapper
 export function RequireAuth({ children }: { children: React.ReactNode }) {
   const { user, loading, isConfigured } = useAuth();
+  const [, setLocation] = useLocation();
+  const hasRedirected = useRef(false);
 
   useEffect(() => {
-    if (!loading && !user && isConfigured) {
-      window.location.href = "/login";
+    // Only redirect if not loading, no user, configured, and haven't already redirected
+    if (!loading && !user && isConfigured && !hasRedirected.current) {
+      hasRedirected.current = true;
+      setLocation("/login");
     }
-  }, [user, loading, isConfigured]);
+  }, [user, loading, isConfigured, setLocation]);
+
+  // Reset redirect flag when user logs in
+  useEffect(() => {
+    if (user) {
+      hasRedirected.current = false;
+    }
+  }, [user]);
 
   if (loading) {
     return (
