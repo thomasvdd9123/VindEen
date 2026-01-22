@@ -227,6 +227,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       
       if (error && error.code !== "PGRST116") throw error;
       if (!data) return res.status(404).json({ error: "Profile not found" });
+      res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
       return res.status(200).json(data);
     }
 
@@ -483,6 +484,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
       
       console.log("PATCH /api/profiles/:id - Success:", data?.id);
+      res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
       return res.status(200).json(data);
     }
 
