@@ -1,0 +1,385 @@
+Skip to content
+thomasvdd9123's projects
+thomasvdd9123's projects
+
+Hobby
+
+vind-een
+
+
+Find…
+F
+
+Filters
+
+Timeline
+
+Combobox Menu
+Last 30 minutes
+
+Contains Console Level
+
+​
+Warning
+0
+
+​
+Error
+0
+
+​
+Fatal
+0
+
+
+Resource
+
+
+
+
+
+Environment
+
+
+
+
+Route
+
+
+
+Request Path
+
+
+
+Status Code
+
+
+
+Request Type
+
+
+
+
+
+
+
+
+Host
+
+
+
+Request Method
+
+
+
+Cache
+
+
+
+Branch
+
+
+
+Deployment ID
+
+
+Search Logs
+Search logs…
+22:44:00
+22:49:10
+22:54:10
+22:59:10
+23:04:10
+23:14:00
+Time
+Status
+Host
+Request
+Messages
+Jan 22 23:13:36.21
+POST
+---
+www.zoek-een-tuinman.be
+/api/gardeners
+Jan 22 23:13:36.21
+GET
+---
+www.zoek-een-tuinman.be
+/api/profiles/by-id/f3aba26e-f586-4dc7-a91d-6eeb21fdaabd
+Jan 22 23:13:35.90
+PUT
+---
+www.zoek-een-tuinman.be
+/api/profiles/f3aba26e-f586-4dc7-a91d-6eeb21fdaabd
+Jan 22 23:13:30.19
+GET
+200
+www.zoek-een-tuinman.be
+/api/profiles/by-id/f3aba26e-f586-4dc7-a91d-6eeb21fdaabd
+Jan 22 23:13:29.72
+PATCH
+200
+www.zoek-een-tuinman.be
+/api/profiles/f3aba26e-f586-4dc7-a91d-6eeb21fdaabd
+2
+PATCH /api/profiles/:id - Success: f3aba26e-f586-4dc7-a91d-6eeb21fdaabd
+Jan 22 23:13:22.26
+GET
+200
+www.zoek-een-tuinman.be
+/api/profiles/by-id/f3aba26e-f586-4dc7-a91d-6eeb21fdaabd
+Jan 22 23:13:21.95
+PATCH
+200
+www.zoek-een-tuinman.be
+/api/profiles/f3aba26e-f586-4dc7-a91d-6eeb21fdaabd
+2
+PATCH /api/profiles/:id - Success: f3aba26e-f586-4dc7-a91d-6eeb21fdaabd
+Jan 22 23:13:18.45
+GET
+200
+www.zoek-een-tuinman.be
+/api/profiles/by-id/f3aba26e-f586-4dc7-a91d-6eeb21fdaabd
+Jan 22 23:13:18.13
+PATCH
+200
+www.zoek-een-tuinman.be
+/api/profiles/f3aba26e-f586-4dc7-a91d-6eeb21fdaabd
+2
+PATCH /api/profiles/:id - Success: f3aba26e-f586-4dc7-a91d-6eeb21fdaabd
+Jan 22 23:13:15.10
+GET
+304
+www.zoek-een-tuinman.be
+/api/locations
+Jan 22 23:13:15.10
+GET
+304
+www.zoek-een-tuinman.be
+/api/categories
+Jan 22 23:13:15.10
+GET
+304
+www.zoek-een-tuinman.be
+/api/profiles/by-id/f3aba26e-f586-4dc7-a91d-6eeb21fdaabd
+Jan 22 23:13:12.01
+GET
+200
+www.zoek-een-tuinman.be
+/api/my-profiles/3def7958-8e66-4a12-abb6-f62759fc531d
+Jan 22 23:13:11.65
+POST
+200
+www.zoek-een-tuinman.be
+/api/gardeners
+Jan 22 23:13:09.56
+GET
+200
+www.zoek-een-tuinman.be
+/api/profiles/count
+Jan 22 23:13:09.22
+GET
+200
+www.zoek-een-tuinman.be
+/api/locations
+Jan 22 23:13:09.22
+GET
+200
+www.zoek-een-tuinman.be
+/api/categories
+Jan 22 23:13:05.10
+GET
+200
+www.zoek-een-tuinman.be
+/api/profiles/count
+Jan 22 23:13:04.65
+GET
+200
+www.zoek-een-tuinman.be
+/api/locations
+Jan 22 23:13:04.64
+GET
+200
+www.zoek-een-tuinman.be
+/api/categories
+Jan 22 23:13:03.11
+GET
+304
+www.zoek-een-tuinman.be
+/api/profiles/by-id/f3aba26e-f586-4dc7-a91d-6eeb21fdaabd
+Jan 22 23:13:03.11
+GET
+304
+www.zoek-een-tuinman.be
+/api/categories
+Jan 22 23:13:03.11
+GET
+304
+www.zoek-een-tuinman.be
+/api/locations
+Jan 22 23:13:00.27
+GET
+200
+www.zoek-een-tuinman.be
+/api/profiles/count
+Jan 22 23:12:59.86
+GET
+200
+www.zoek-een-tuinman.be
+/api/locations
+Jan 22 23:12:59.76
+GET
+200
+www.zoek-een-tuinman.be
+/api/categories
+Jan 22 23:12:56.48
+GET
+---
+vind-h0t9lb6zb-thomasvdd9123s-projects.vercel.app
+/api/locations
+Jan 22 23:12:56.47
+GET
+200
+vind-h0t9lb6zb-thomasvdd9123s-projects.vercel.app
+/api/categories
+Jan 22 23:12:53.99
+GET
+200
+www.zoek-een-tuinman.be
+/api/profiles/count
+Jan 22 23:12:53.49
+GET
+200
+www.zoek-een-tuinman.be
+/api/categories
+Jan 22 23:12:53.49
+GET
+200
+www.zoek-een-tuinman.be
+/api/locations
+Jan 22 23:12:49.63
+GET
+200
+www.zoek-een-tuinman.be
+/api/profiles/count
+Jan 22 23:12:48.32
+GET
+200
+www.zoek-een-tuinman.be
+/api/profiles/count
+Jan 22 23:12:47.87
+GET
+200
+www.zoek-een-tuinman.be
+/api/locations
+Jan 22 23:12:47.78
+GET
+200
+www.zoek-een-tuinman.be
+/api/categories
+Jan 22 23:12:46.70
+GET
+200
+www.zoek-een-tuinman.be
+/api/locations
+Jan 22 23:12:46.69
+GET
+200
+www.zoek-een-tuinman.be
+/api/categories
+Jan 22 23:12:43.39
+GET
+200
+www.zoek-een-tuinman.be
+/api/profiles/count
+Jan 22 23:12:42.82
+GET
+200
+www.zoek-een-tuinman.be
+/api/locations
+Jan 22 23:12:42.82
+GET
+200
+www.zoek-een-tuinman.be
+/api/categories
+Jan 22 23:12:42.73
+GET
+200
+www.zoek-een-tuinman.be
+/api/profiles/count
+Jan 22 23:12:42.30
+GET
+200
+www.zoek-een-tuinman.be
+/api/categories
+Jan 22 23:12:42.30
+GET
+200
+www.zoek-een-tuinman.be
+/api/locations
+Jan 22 23:12:42.03
+GET
+200
+www.zoek-een-tuinman.be
+/api/profiles/count
+Jan 22 23:12:41.62
+GET
+200
+www.zoek-een-tuinman.be
+/api/locations
+Jan 22 23:12:41.61
+GET
+200
+www.zoek-een-tuinman.be
+/api/categories
+Jan 22 23:12:28.58
+GET
+---
+www.zoek-een-tuinman.be
+/api/profiles/count
+Jan 22 23:12:28.32
+GET
+---
+www.zoek-een-tuinman.be
+/api/categories
+Jan 22 23:12:28.32
+GET
+200
+www.zoek-een-tuinman.be
+/api/locations
+Jan 22 23:12:25.24
+GET
+200
+www.zoek-een-tuinman.be
+/api/profiles/count
+Logs
+GET
+
+/api/locations
+
+200
+Request started
+Jan 22 23:12:41.62GMT+1
+
+Received in Washington, D.C., USA (iad1)
+
+
+Function Invocation
+
+200
+
+
+External APIs
+GET
+
+xukahojkfudtymnwukfk.supabase.co/rest/v1/locations
+
+
+Fluid
+
+265 MB
+Response finished in 354ms
+Deployment Information
+
+vind-een – Logs – Vercel
+23:09:10

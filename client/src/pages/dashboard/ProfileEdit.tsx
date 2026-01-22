@@ -19,7 +19,7 @@ import { Switch } from "@/components/ui/switch";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
-import { supabase } from "@/lib/supabase";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import type { Category, Location, Profile } from "@shared/schema";
 
 // Calculate profile completeness from form values
@@ -137,10 +137,16 @@ function LogoUpload({ profileId, currentLogoUrl, onUploadSuccess }: {
     setIsUploading(true);
 
     try {
+      // Check if Supabase storage is available
+      if (!supabase.storage) {
+        console.error("Supabase storage not available - using mock client");
+        throw new Error("Supabase is not configured for storage");
+      }
+      
       const fileExt = file.name.split('.').pop();
       const fileName = `profiles/${profileId}/logo-${Date.now()}.${fileExt}`;
       
-      console.log("Uploading to Supabase Storage:", { bucket: 'uploads', path: fileName, fileSize: file.size });
+      console.log("Uploading to Supabase Storage:", { bucket: 'uploads', path: fileName, fileSize: file.size, isSupabaseConfigured });
       
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('uploads')
