@@ -6,6 +6,32 @@ import { z } from "zod";
 import multer from "multer";
 import { supabaseAdmin } from "./lib/supabase";
 
+const BUCKET_NAME = "uploads";
+
+async function ensureStorageBucket() {
+  try {
+    const { data: buckets } = await supabaseAdmin.storage.listBuckets();
+    const bucketExists = buckets?.some(b => b.name === BUCKET_NAME);
+    
+    if (!bucketExists) {
+      const { error } = await supabaseAdmin.storage.createBucket(BUCKET_NAME, {
+        public: true,
+        fileSizeLimit: 5 * 1024 * 1024,
+      });
+      if (error) {
+        console.error("Failed to create storage bucket:", error);
+      } else {
+        console.log(`Created storage bucket: ${BUCKET_NAME}`);
+      }
+    }
+  } catch (error) {
+    console.error("Error checking/creating storage bucket:", error);
+  }
+}
+
+// Initialize bucket on module load
+ensureStorageBucket();
+
 // Configure multer for memory storage
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -409,7 +435,7 @@ export async function registerRoutes(
 
       // Upload to Supabase Storage
       const { data, error } = await supabaseAdmin.storage
-        .from("uploads")
+        .from(BUCKET_NAME)
         .upload(fileName, file.buffer, {
           contentType: file.mimetype,
           upsert: true,
@@ -422,7 +448,7 @@ export async function registerRoutes(
 
       // Get public URL
       const { data: urlData } = supabaseAdmin.storage
-        .from("uploads")
+        .from(BUCKET_NAME)
         .getPublicUrl(fileName);
 
       const logoUrl = urlData.publicUrl;
@@ -465,7 +491,7 @@ export async function registerRoutes(
         const fileName = `profiles/${profileId}/work-${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
 
         const { data, error } = await supabaseAdmin.storage
-          .from("uploads")
+          .from(BUCKET_NAME)
           .upload(fileName, file.buffer, {
             contentType: file.mimetype,
           });
@@ -476,7 +502,7 @@ export async function registerRoutes(
         }
 
         const { data: urlData } = supabaseAdmin.storage
-          .from("uploads")
+          .from(BUCKET_NAME)
           .getPublicUrl(fileName);
 
         uploadedUrls.push(urlData.publicUrl);
@@ -523,10 +549,10 @@ export async function registerRoutes(
 
       // Try to delete from Supabase Storage
       try {
-        const urlParts = url.split("/uploads/");
+        const urlParts = url.split(`/${BUCKET_NAME}/`);
         if (urlParts.length > 1) {
           const filePath = urlParts[1];
-          await supabaseAdmin.storage.from("uploads").remove([filePath]);
+          await supabaseAdmin.storage.from(BUCKET_NAME).remove([filePath]);
         }
       } catch (storageError) {
         console.error("Error deleting from storage:", storageError);
