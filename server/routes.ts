@@ -122,6 +122,96 @@ export async function registerRoutes(
     }
   });
 
+  // Get profiles by gardener (user's own profiles)
+  app.get("/api/my-profiles/:gardenerId", async (req, res) => {
+    try {
+      const profiles = await storage.getProfilesByGardenerId(req.params.gardenerId);
+      res.json(profiles);
+    } catch (error) {
+      console.error("Error fetching user profiles:", error);
+      res.status(500).json({ error: "Failed to fetch profiles" });
+    }
+  });
+
+  // Create profile
+  app.post("/api/profiles", async (req, res) => {
+    try {
+      const profileData = req.body;
+      
+      // Generate slug from name
+      const slug = profileData.name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-|-$)/g, "") + 
+        "-" + Date.now().toString(36);
+      
+      const profile = await storage.createProfile({
+        ...profileData,
+        slug,
+        isActive: true,
+        isPublic: false,
+        isVerified: false,
+        verificationStatus: "PENDING",
+        isFeatured: false,
+      });
+      
+      res.status(201).json(profile);
+    } catch (error) {
+      console.error("Error creating profile:", error);
+      res.status(500).json({ error: "Failed to create profile" });
+    }
+  });
+
+  // Update profile
+  app.put("/api/profiles/:id", async (req, res) => {
+    try {
+      const profile = await storage.updateProfile(req.params.id, req.body);
+      if (!profile) {
+        return res.status(404).json({ error: "Profile not found" });
+      }
+      res.json(profile);
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      res.status(500).json({ error: "Failed to update profile" });
+    }
+  });
+
+  // Delete profile
+  app.delete("/api/profiles/:id", async (req, res) => {
+    try {
+      await storage.deleteProfile(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting profile:", error);
+      res.status(500).json({ error: "Failed to delete profile" });
+    }
+  });
+
+  // Get or create gardener for user
+  app.post("/api/gardeners", async (req, res) => {
+    try {
+      const { accountId, email } = req.body;
+      
+      // Try to find existing gardener
+      let gardener = await storage.getGardenerByAccountId(accountId);
+      
+      if (!gardener) {
+        // Create new gardener
+        gardener = await storage.createGardener({
+          accountId,
+          email,
+          role: "GARDENER",
+          emailVerified: true,
+        });
+      }
+      
+      res.json(gardener);
+    } catch (error) {
+      console.error("Error getting/creating gardener:", error);
+      res.status(500).json({ error: "Failed to get or create gardener" });
+    }
+  });
+
   // Contact Requests
   app.post("/api/contact/:profileId", async (req, res) => {
     try {

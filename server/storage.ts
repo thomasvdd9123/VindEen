@@ -32,9 +32,12 @@ export interface IStorage {
   getProfiles(): Promise<Profile[]>;
   getProfileBySlug(slug: string): Promise<ProfileWithRelations | undefined>;
   getProfileById(id: string): Promise<ProfileWithRelations | undefined>;
+  getProfilesByGardenerId(gardenerId: string): Promise<Profile[]>;
   getFeaturedProfiles(): Promise<ProfileWithRelations[]>;
   searchProfiles(params: SearchParams): Promise<{ profiles: ProfileWithRelations[]; total: number; page: number; totalPages: number }>;
   createProfile(profile: InsertProfile): Promise<Profile>;
+  updateProfile(id: string, updates: Partial<InsertProfile>): Promise<Profile | undefined>;
+  deleteProfile(id: string): Promise<void>;
 
   // Offices
   getOfficeByProfileId(profileId: string): Promise<Office | undefined>;
@@ -549,6 +552,27 @@ export class MemStorage implements IStorage {
     };
     this.profiles.set(id, newProfile);
     return newProfile;
+  }
+
+  async getProfilesByGardenerId(gardenerId: string): Promise<Profile[]> {
+    return Array.from(this.profiles.values()).filter(p => p.gardenerId === gardenerId);
+  }
+
+  async updateProfile(id: string, updates: Partial<InsertProfile>): Promise<Profile | undefined> {
+    const profile = this.profiles.get(id);
+    if (!profile) return undefined;
+    
+    const updatedProfile: Profile = {
+      ...profile,
+      ...updates,
+      updatedAt: new Date(),
+    };
+    this.profiles.set(id, updatedProfile);
+    return updatedProfile;
+  }
+
+  async deleteProfile(id: string): Promise<void> {
+    this.profiles.delete(id);
   }
 
   // Offices

@@ -1,8 +1,13 @@
+import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import { DashboardLayout } from "./DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useAuth } from "@/lib/auth";
+import { useToast } from "@/hooks/use-toast";
 import { 
   PlusCircle, 
   Eye,
@@ -12,10 +17,56 @@ import {
   Clock,
   XCircle,
   Leaf,
+  Loader2,
 } from "lucide-react";
+import type { Profile } from "@shared/schema";
 
 export default function DashboardProfiles() {
-  const profiles: any[] = [];
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [gardenerId, setGardenerId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (user?.id) {
+      apiRequest("POST", "/api/gardeners", {
+        accountId: user.id,
+        email: user.email,
+      }).then((gardener) => {
+        setGardenerId(gardener.id);
+      }).catch(console.error);
+    }
+  }, [user?.id, user?.email]);
+
+  const { data: profiles = [], isLoading } = useQuery<Profile[]>({
+    queryKey: ["/api/my-profiles", gardenerId],
+    enabled: !!gardenerId,
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (profileId: string) => {
+      return apiRequest("DELETE", `/api/profiles/${profileId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/my-profiles"] });
+      toast({
+        title: "Profiel verwijderd",
+        description: "Je profiel is succesvol verwijderd.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Er ging iets mis",
+        description: "Kon profiel niet verwijderen.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleDelete = (profileId: string, profileName: string) => {
+    if (confirm(`Weet je zeker dat je "${profileName}" wilt verwijderen?`)) {
+      deleteMutation.mutate(profileId);
+    }
+  };
 
   return (
     <DashboardLayout 
@@ -40,15 +91,22 @@ export default function DashboardProfiles() {
           </CardContent>
         </Card>
 
+        {/* Loading state */}
+        {isLoading && (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        )}
+
         {/* Existing profiles */}
-        {profiles.length > 0 ? (
+        {!isLoading && profiles.length > 0 ? (
           <div className="space-y-4">
             <h2 className="text-lg font-semibold">Je profielen</h2>
-            {profiles.map((profile: any) => (
-              <ProfileCard key={profile.id} profile={profile} />
+            {profiles.map((profile: Profile) => (
+              <ProfileCard key={profile.id} profile={profile} onDelete={handleDelete} />
             ))}
           </div>
-        ) : (
+        ) : !isLoading && (
           <Card>
             <CardContent className="py-12 text-center">
               <Leaf className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
@@ -64,21 +122,20 @@ export default function DashboardProfiles() {
   );
 }
 
-function ProfileCard({ profile }: { profile: any }) {
+function ProfileCard({ profile, onDelete }: { profile: Profile; onDelete: (id: string, name: string) => void }) {
   const statusConfig: Record<string, { label: string; icon: any; variant: "default" | "secondary" | "destructive" | "outline" }> = {
     APPROVED: { label: "Goedgekeurd", icon: CheckCircle, variant: "default" },
     PENDING: { label: "In behandeling", icon: Clock, variant: "secondary" },
     REJECTED: { label: "Afgewezen", icon: XCircle, variant: "destructive" },
   };
 
-  const status = statusConfig[profile.verificationStatus] || statusConfig.PENDING;
+  const status = statusConfig[profile.verificationStatus || "PENDING"] || statusConfig.PENDING;
   const StatusIcon = status.icon;
 
   return (
     <Card data-testid={`card-profile-${profile.id}`}>
       <CardContent className="p-5">
         <div className="flex flex-col sm:flex-row gap-4">
-          {/* Profile image */}
           <div className="w-20 h-20 rounded-md bg-muted shrink-0 overflow-hidden">
             {profile.logoUrl ? (
               <img src={profile.logoUrl} alt={profile.name} className="w-full h-full object-cover" />
@@ -89,7 +146,6 @@ function ProfileCard({ profile }: { profile: any }) {
             )}
           </div>
 
-          {/* Profile info */}
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2 mb-2">
               <div>
@@ -110,18 +166,24 @@ function ProfileCard({ profile }: { profile: any }) {
 
             <div className="flex flex-wrap gap-2">
               <Link href={`/bedrijf/${profile.slug}`}>
-                <Button variant="outline" size="sm" className="gap-1">
+                <Button variant="outline" size="sm" className="gap-1" data-testid={`button-view-${profile.id}`}>
                   <Eye className="h-3.5 w-3.5" />
                   Bekijken
                 </Button>
               </Link>
               <Link href={`/dashboard/profielen/${profile.id}/bewerken`}>
-                <Button variant="outline" size="sm" className="gap-1">
+                <Button variant="outline" size="sm" className="gap-1" data-testid={`button-edit-${profile.id}`}>
                   <Edit className="h-3.5 w-3.5" />
                   Bewerken
                 </Button>
               </Link>
-              <Button variant="ghost" size="sm" className="gap-1 text-destructive hover:text-destructive">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="gap-1 text-destructive hover:text-destructive"
+                onClick={() => onDelete(profile.id, profile.name)}
+                data-testid={`button-delete-${profile.id}`}
+              >
                 <Trash2 className="h-3.5 w-3.5" />
                 Verwijderen
               </Button>

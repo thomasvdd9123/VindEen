@@ -304,6 +304,59 @@ export class SupabaseStorage implements IStorage {
     return this.mapProfile(data);
   }
 
+  async getProfilesByGardenerId(gardenerId: string): Promise<Profile[]> {
+    const { data, error } = await supabaseAdmin
+      .from("profiles")
+      .select("*")
+      .eq("gardener_id", gardenerId);
+    
+    if (error) throw error;
+    return (data || []).map(d => this.mapProfile(d));
+  }
+
+  async updateProfile(id: string, updates: Partial<InsertProfile>): Promise<Profile | undefined> {
+    const updateData: any = {};
+    if (updates.name !== undefined) updateData.name = updates.name;
+    if (updates.email !== undefined) updateData.email = updates.email;
+    if (updates.telnr !== undefined) updateData.telnr = updates.telnr;
+    if (updates.website !== undefined) updateData.website = updates.website;
+    if (updates.hasWebsite !== undefined) updateData.has_website = updates.hasWebsite;
+    if (updates.description !== undefined) updateData.description = updates.description;
+    if (updates.introduction !== undefined) updateData.introduction = updates.introduction;
+    if (updates.title !== undefined) updateData.title = updates.title;
+    if (updates.education !== undefined) updateData.education = updates.education;
+    if (updates.specializations !== undefined) updateData.specializations = updates.specializations;
+    if (updates.offeredServices !== undefined) updateData.offered_services = updates.offeredServices;
+    if (updates.logoUrl !== undefined) updateData.logo_url = updates.logoUrl;
+    if (updates.imageUrls !== undefined) updateData.image_urls = updates.imageUrls;
+    if (updates.isActive !== undefined) updateData.is_active = updates.isActive;
+    if (updates.isPublic !== undefined) updateData.is_public = updates.isPublic;
+    if (updates.categoryId !== undefined) updateData.category_id = updates.categoryId;
+    if (updates.locationId !== undefined) updateData.location_id = updates.locationId;
+    if (updates.seoTitle !== undefined) updateData.seo_title = updates.seoTitle;
+    if (updates.seoDescription !== undefined) updateData.seo_description = updates.seoDescription;
+    updateData.updated_at = new Date().toISOString();
+
+    const { data, error } = await supabaseAdmin
+      .from("profiles")
+      .update(updateData)
+      .eq("id", id)
+      .select()
+      .single();
+    
+    if (error && error.code !== "PGRST116") throw error;
+    return data ? this.mapProfile(data) : undefined;
+  }
+
+  async deleteProfile(id: string): Promise<void> {
+    const { error } = await supabaseAdmin
+      .from("profiles")
+      .delete()
+      .eq("id", id);
+    
+    if (error) throw error;
+  }
+
   // Offices
   async getOfficeByProfileId(profileId: string): Promise<Office | undefined> {
     const { data, error } = await supabaseAdmin
