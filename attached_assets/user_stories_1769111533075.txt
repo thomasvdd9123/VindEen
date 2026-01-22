@@ -48,4 +48,4 @@ User stories
 33. (cron) Het systeem moet dagelijks automatisch subscription renewals checken
 34. (cron) Het systeem geneert dagelijks sitemapper.xml
 35. Als tuinman wil ik mijn statistieken bekijken (profielclicks?)
-36 Als tuinman wil ik % completeness van profiel bekijken    (en toon eventueel dat dit impact heeft op search results?)
+36 Als tuinman wil ik percentage completeness van profiel bekijken    (en toon eventueel dat dit impact heeft op search results?)
