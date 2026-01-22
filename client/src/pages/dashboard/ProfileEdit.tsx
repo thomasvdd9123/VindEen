@@ -189,7 +189,7 @@ function LogoUpload({ profileId, currentLogoUrl, onUploadSuccess }: {
           data-testid="logo-preview"
         >
           {previewUrl ? (
-            <img src={previewUrl} alt="Logo" className="w-full h-full object-cover" />
+            <img src={previewUrl} alt="Logo" className="w-full h-full object-cover" referrerPolicy="no-referrer" crossOrigin="anonymous" />
           ) : (
             <ImageIcon className="h-8 w-8 text-muted-foreground/50" />
           )}
@@ -362,7 +362,7 @@ function WorkPhotosUpload({ profileId, currentPhotos, onUploadSuccess }: {
               className="relative group aspect-square rounded-md overflow-hidden border"
               data-testid={`photo-item-${index}`}
             >
-              <img src={url} alt={`Werk foto ${index + 1}`} className="w-full h-full object-cover" />
+              <img src={url} alt={`Werk foto ${index + 1}`} className="w-full h-full object-cover" referrerPolicy="no-referrer" crossOrigin="anonymous" />
               <Button
                 type="button"
                 variant="destructive"
