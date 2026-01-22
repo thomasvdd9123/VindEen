@@ -3,20 +3,20 @@
 
 export const siteConfig = {
   // Brand Information
-  name: "Vind een Tuinman",
-  shortName: "Tuinman",
+  name: "Tuinmanvinden.be",
+  shortName: "Tuinmanvinden",
   description: "Vind de beste tuinmannen in België. Vergelijk profielen, lees reviews en vraag vrijblijvend offertes aan.",
   tagline: "Vind jouw perfecte tuinman in België",
   
   // SEO
-  seoTitle: "Vind een Tuinman | De beste tuinmannen in België",
+  seoTitle: "Tuinmanvinden.be | De beste tuinmannen in België",
   seoDescription: "Zoek en vergelijk tuinmannen in jouw regio. Bekijk profielen, specialisaties en contacteer direct voor een offerte.",
   
   // URLs
-  baseUrl: "https://vind-een-tuinman.be",
+  baseUrl: "https://tuinmanvinden.be",
   
   // Contact
-  email: "info@vind-een-tuinman.be",
+  email: "info@tuinmanvinden.be",
   
   // Social
   social: {

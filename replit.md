@@ -1,4 +1,4 @@
-# Vind een Tuinman - Belgian B2B Directory Platform
+# Tuinmanvinden.be - Belgian B2B Directory Platform
 
 ## Overview
 A SEO-optimized directory platform for Belgian businesses (inspired by vind-een-psycholoog.be), starting with gardening professionals. The platform allows companies to register, create profiles, and be discoverable by potential customers.
