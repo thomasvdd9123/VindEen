@@ -1,4 +1,4 @@
--- Supabase Schema for Tuinmanvinden.be Directory
+-- Supabase Schema for Zoek-een-tuinman.be Directory
 -- Run this in Supabase SQL Editor (Dashboard > SQL Editor)
 
 -- Enable UUID extension

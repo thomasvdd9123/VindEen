@@ -10,7 +10,7 @@ const faqs = [
     answer: "Klik op 'Registreren' in de navigatiebalk en vul je gegevens in. Na registratie ontvang je een bevestigingsmail. Zodra je email is bevestigd, kun je inloggen en je profiel aanmaken."
   },
   {
-    question: "Wat kost een vermelding op Tuinmanvinden.be?",
+    question: "Wat kost een vermelding op Zoek-een-tuinman.be?",
     answer: "Bekijk onze prijzenpagina voor een overzicht van de beschikbare abonnementen. We bieden verschillende opties aan, van een basisvermelding tot premium pakketten met extra functies."
   },
   {
@@ -42,8 +42,8 @@ const faqs = [
     answer: "Ga naar je dashboard en klik op 'Account'. Hier kun je je wachtwoord wijzigen. Je kunt ook via de 'Wachtwoord vergeten' link op de inlogpagina een nieuw wachtwoord aanvragen."
   },
   {
-    question: "In welke regio's is Tuinmanvinden.be actief?",
-    answer: "Tuinmanvinden.be is actief in heel België. Je kunt je werkgebied instellen in je profiel, zodat bezoekers uit jouw regio je kunnen vinden."
+    question: "In welke regio's is Zoek-een-tuinman.be actief?",
+    answer: "Zoek-een-tuinman.be is actief in heel België. Je kunt je werkgebied instellen in je profiel, zodat bezoekers uit jouw regio je kunnen vinden."
   }
 ];
 
