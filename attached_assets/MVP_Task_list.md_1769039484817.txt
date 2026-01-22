@@ -1,0 +1,200 @@
+SEO Directory MVP – Task List
+Fase 0 – Voorbereiding
+
+Menselijke taken
+
+Account aanmaken bij:
+
+Supabase (Postgres database + Auth + Storage)
+
+Vercel (hosting voor Next.js)
+
+Stripe (payments)
+
+Resend of Postmark (email)
+
+Domein(s) registreren voor MVP
+
+VS Code / Cursor installeren en project environment klaarzetten
+
+GitHub repository maken en linken aan Vercel
+
+AI tasks
+
+Next.js project scaffold aanmaken (npx create-next-app@latest)
+
+Basis folderstructuur maken (/pages, /app, /components, /admin, /lib, /styles)
+
+Initial .env setup genereren (Supabase, Stripe, Email keys placeholders)
+
+Fase 1 – Database & ORM
+
+Menselijke taken
+
+Supabase project configureren (EU regio)
+
+Tables en schema goedkeuren
+
+AI tasks
+
+Prisma ORM instellen en connectie met Supabase
+
+Tabellen genereren:
+
+companies
+
+categories
+
+locations
+
+subscriptions
+
+Sample seed data genereren voor tests
+
+Fase 2 – Auth & User Management
+
+Menselijke taken
+
+Rollen definiëren: admin, moderator, company user
+
+AI tasks
+
+Supabase Auth integreren in Next.js
+
+Login / register pages bouwen
+
+Admin vs company user access control implementeren
+
+Fase 3 – Core Business Logic
+
+Menselijke taken
+
+Bepalen welke velden per bedrijf verplicht zijn
+
+Validatie regels voor bedrijven
+
+AI tasks
+
+Bedrijf CRUD API routes (/api/companies)
+
+Subscription CRUD API routes (/api/subscriptions)
+
+Stripe checkout + webhook handlers integreren
+
+Email triggers bij registratie, betaling en verlopen abonnement
+
+Fase 4 – Public SEO Pages
+
+Menselijke taken
+
+URL structuur definitief maken (bijv. /vind-een-tuinaar/gent)
+
+SEO rules checken (titles, descriptions, H1/H2)
+
+AI tasks
+
+Static generation / ISR voor dynamische pages
+
+Pagina templates voor:
+
+Beroep overzicht
+
+Locatie overzicht
+
+Beroep + locatie
+
+Bedrijf detail
+
+Sitemap generatie script schrijven
+
+Meta tags en schema markup automatisch vullen
+
+Fase 5 – Search & Filtering
+
+Menselijke taken
+
+Filtervelden en zoekcriteria goedkeuren
+
+Beslissen over Algolia vs Meilisearch
+
+AI tasks
+
+Search engine integreren (Algolia of Meilisearch)
+
+Geo filtering implementeren
+
+Faceted search en pagination
+
+Fase 6 – Admin Panel
+
+Menselijke taken
+
+Rollen en rechten checken
+
+Admin workflows bepalen (validatie, moderatie)
+
+AI tasks
+
+Admin dashboard pagina’s:
+
+Bedrijven lijst + detail view + batch acties
+
+Abonnementen overzicht + Stripe status
+
+SEO metadata aanpassen
+
+Locaties & categorieën beheren
+
+Sitemap refresh triggers
+
+UI met Tailwind + TanStack Table
+
+Fase 7 – Customer Portal
+
+Menselijke taken
+
+UX flow voor bedrijven valideren
+
+Velden bepalen voor profielen
+
+AI tasks
+
+Bedrijven profielpagina maken
+
+Profiel bewerken + abonnement status tonen
+
+Contact formulier integratie (email via Resend/Postmark)
+
+Fase 8 – Testing & Deploy
+
+Menselijke taken
+
+Test data aanmaken
+
+Edge cases checken (geo search, subscription expirations)
+
+Beta testers inschakelen
+
+AI tasks
+
+Test scripts genereren
+
+Deploy pipeline naar Vercel configureren
+
+Preview deploys automatisch genereren bij push naar GitHub
+
+Fase 9 – MVP Launch
+
+Menselijke taken
+
+Domein live zetten
+
+Google Search Console integreren
+
+Basis SEO check uitvoeren
+
+AI tasks
+
+Eventuele content optimalisatie scripts draaien
+
+Sitemap automatisch bijwerken na updates

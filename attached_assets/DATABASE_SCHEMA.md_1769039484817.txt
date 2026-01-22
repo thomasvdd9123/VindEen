@@ -1,0 +1,476 @@
+# Database Schema - SEO Directory Platform (Updated)
+
+## Overzicht
+
+Dit schema modelleert een SEO-gedreven bedrijvengids waar bedrijven betalen om zichtbaar te zijn. Elke gebruiker heeft precies 1 locatie gekoppeld aan zijn profiel.
+
+## Entities & Relationships
+
+### Core Entities
+
+#### Account
+Basis authenticatie entity (Supabase Auth user)
+
+**Attributes:**
+- `id: UUID` (primary key, from Supabase Auth)
+- `email: string` (unique, login email)
+- `password_hash: string` (handled by Supabase Auth)
+- `role: AccountRole` (Enum: ADMIN, MODERATOR, GARDENER)
+- `created_at: Date`
+- `updated_at: Date`
+- `email_verified: Boolean`
+- `email_verified_at: Date`
+
+**Relationships:**
+- 1 → 1 `Gardener` (generalization)
+
+**Business Rules:**
+- Email is uniek en gebruikt voor login
+- Registratie email is privé en niet hetzelfde als profiel email (publiek)
+
+---
+
+#### Gardener
+Gespecialiseerde Account voor bedrijfsgebruikers
+
+**Attributes:**
+- `id: UUID` (primary key)
+- `account_id: UUID` (foreign key → Account, unique)
+- `created_at: Date`
+- `updated_at: Date`
+
+**Relationships:**
+- 1 → 0..* `Profile` (has many profiles - one login can create multiple profiles/locations)
+- 1 → 0..* `SubscriptionItem` (has, but subscriptions are linked to specific profiles)
+- 1 → 0..* `ContactRequest` (receives)
+
+**Business Rules:**
+- Een Gardener kan meerdere Profiles aanmaken
+- Elke Profile staat voor een bedrijf op een specifieke locatie
+- Dit maakt het mogelijk om meerdere locaties te bedienen met één login
+
+---
+
+#### Profile
+Publiek zichtbaar bedrijfsprofiel
+
+**Attributes:**
+- `id: UUID` (primary key)
+- `gardener_id: UUID` (foreign key → Gardener, NOT unique - one Gardener can have many Profiles)
+- `slug: string` (unique, voor SEO URLs: "jan-peters-tuinaanleg")
+- `name: string` (bedrijfsnaam)
+- `email: string` (publiek contact email, kan verschillen van account email)
+- `telnr: string` (telefoonnummer)
+- `website: string?` (URL naar bedrijfswebsite, nullable)
+- `hasWebsite: Boolean` (indicator of website beschikbaar is)
+- `description: string?` (lange beschrijving voor SEO/content)
+- `introduction: string` (korte introductie)
+- `title: string?` (titel/beroep)
+- `education: string?` (opleiding)
+- `specialization: SpecializationType[]` (array/list)
+- `offeredServices: string[]` (array/list van diensten)
+- `logo_url: string?` (Supabase Storage referentie)
+- `image_urls: string[]` (array van Supabase Storage referenties)
+- `isActive: Boolean` (actief/inactief)
+- `isPublic: Boolean` (computed: heeft actief abonnement)
+- `isVerified: Boolean` (admin verificatie)
+- `verification_status: VerificationStatus` (Enum: PENDING, APPROVED, REJECTED)
+- `verified_at: Date?`
+- `verified_by: UUID?` (foreign key → Account/Admin)
+- `rejection_reason: string?`
+- `is_featured: Boolean` (featured op homepage)
+- `seo_title: string?` (optionele override voor meta title)
+- `seo_description: string?` (optionele override voor meta description)
+- `category_id: UUID` (foreign key → Category)
+- `location_id: UUID` (foreign key → Location, 1 location per profile)
+- `created_at: Date`
+- `updated_at: Date`
+
+**Relationships:**
+- 1 → 1 `Category` (belongs to)
+- 1 → 1 `Location` (located in, 1 location per profile)
+- 1 → 1 `Office` (has address)
+- 1 → 1 `Practical` (has practical details)
+
+**Business Rules:**
+- `slug` is uniek en wordt gebruikt in URL: `/bedrijf/{slug}`
+- `isPublic` is computed: heeft actief SubscriptionItem met status ACTIVE
+- Email kan verschillen van account email (privacy)
+- Een Gardener kan meerdere Profiles hebben (elke profile = één locatie)
+- Elke Profile heeft precies één Location
+
+---
+
+#### Category
+Beroep/categorie classificatie
+
+**Attributes:**
+- `id: UUID` (primary key)
+- `name: string` (bijv. "Tuinaanlegger", "Tuinarchitect")
+- `slug: string` (unique, voor SEO: "tuinaanlegger")
+- `description: string?`
+- `is_active: Boolean`
+- `sort_order: Integer?`
+- `created_at: Date`
+- `updated_at: Date`
+
+**Relationships:**
+- 1 → 0..* `Profile` (has many)
+
+**Business Rules:**
+- `slug` wordt gebruikt in URLs: `/vind-een-{slug}/gent`
+- Elke Category kan meerdere Profiles hebben
+
+---
+
+#### Location
+Geografische locatie voor SEO paginageneratie
+
+**Attributes:**
+- `id: UUID` (primary key)
+- `name: string` (bijv. "Gent", "Antwerpen")
+- `slug: string` (unique, voor SEO: "gent")
+- `postcode: string` (postcode)
+- `municipality: string` (gemeente)
+- `latitude: float` (geografische breedtegraad)
+- `longitude: float` (geografische lengtegraad)
+- `region: string?` (provincie/regio)
+- `country: string` (default: "België" of "Nederland")
+- `is_active: Boolean`
+- `created_at: Date`
+- `updated_at: Date`
+
+**Relationships:**
+- 1 → 0..* `Profile` (has many, maar 1 location per profile)
+
+**Business Rules:**
+- `slug` wordt gebruikt in URLs: `/vind-een-tuinaanlegger/{slug}`
+- Elke Location kan meerdere Profiles hebben
+- Latitude/longitude gebruikt voor geo search/filtering
+- Postcode gebruikt voor zoekfunctionaliteit
+
+---
+
+#### Office
+Fysiek adres van bedrijf (kan verschillen van Location)
+
+**Attributes:**
+- `id: UUID` (primary key)
+- `profile_id: UUID` (foreign key → Profile, unique, 1 office per profile)
+- `street: string`
+- `number: string`
+- `town: string`
+- `municipality: string`
+- `postcode: string` (postcode voor adres)
+- `latitude: float?` (geografische breedtegraad)
+- `longitude: float?` (geografische lengtegraad)
+- `country: string` (default: "België" of "Nederland")
+- `created_at: Date`
+- `updated_at: Date`
+
+**Relationships:**
+- 1 → 1 `Profile` (belongs to)
+
+**Business Rules:**
+- Office is fysiek adres waar bedrijf gevestigd is
+- Location is voor SEO/zoekfunctie (kan algemener zijn)
+- Latitude/longitude optioneel, maar aanbevolen voor map features
+
+---
+
+#### Practical
+Praktische details voor profiel
+
+**Attributes:**
+- `id: UUID` (primary key)
+- `profile_id: UUID` (foreign key → Profile, unique)
+- `reachability: string` (bereikbaarheid: "Heel Vlaanderen", etc.)
+- `age: string` (ervaring/bedrijfsleeftijd)
+- `language: string[]` (array: ["Nederlands", "Frans", "Engels"])
+- `tariff: string` (tariefinformatie)
+- `acceptedPaymentMethods: string` (bijv. "Cash, Bancontact, Banktransfer")
+- `created_at: Date`
+- `updated_at: Date`
+
+**Relationships:**
+- 1 → 1 `Profile` (belongs to)
+
+---
+
+#### SubscriptionItem
+Abonnement per profiel (jaarlijks, betalingen kunnen opgesplitst zijn)
+
+**Attributes:**
+- `id: UUID` (primary key)
+- `profile_id: UUID` (foreign key → Profile, subscription is gekoppeld aan specifiek profiel)
+- `gardener_id: UUID` (foreign key → Gardener, voor snel opzoeken via login)
+- `subscription_plan_id: UUID` (foreign key → SubscriptionPlan)
+- `stripe_subscription_id: string?` (Stripe subscription ID, nullable)
+- `stripe_customer_id: string?` (Stripe customer ID)
+- `stripe_price_id: string?` (Stripe price ID)
+- `start_date: Date` (startdatum abonnement)
+- `end_date: Date` (einddatum abonnement)
+- `current_period_start: Date` (huidige periode start)
+- `current_period_end: Date` (huidige periode eind)
+- `auto_renew: Boolean` (automatisch verlengen)
+- `payment_frequency: PaymentFrequency` (Enum: MONTHLY, YEARLY)
+- `status: SubscriptionStatus` (Enum: ACTIVE, EXPIRED, CANCELLED)
+- `mail_invoice: Boolean` (email factuur naar klant)
+- `grace_period_until: Date?` (grace period voor deactivatie)
+- `cancel_at_period_end: Boolean` (opzeggen aan einde periode)
+- `canceled_at: Date?`
+- `created_at: Date`
+- `updated_at: Date`
+
+**Relationships:**
+- N → 1 `Profile` (belongs to specific profile)
+- 1 → 1 `SubscriptionPlan` (has)
+- 1 → 1..* `Payment` (has payments)
+
+**Business Rules:**
+- Subscription is gekoppeld aan een specifiek Profile (niet aan Gardener)
+- Elke Profile kan een eigen subscription hebben
+- Subscription is altijd jaarlijks, maar betalingen kunnen maandelijks opgesplitst worden
+- SubscriptionItem wordt alleen aangemaakt NA succesvolle betaling
+- Grace period mogelijk vooraleer deactivatie
+- Status bepaalt of Profile `isPublic` = true
+
+---
+
+#### SubscriptionPlan
+Plan definitie (BRONZE, SILVER, GOLD, etc.)
+
+**Attributes:**
+- `id: UUID` (primary key)
+- `type: SubscriptionType` (Enum: BRONZE, SILVER, GOLD, BASIC, PREMIUM)
+- `name: string` (display name)
+- `price: double` (prijs)
+- `stripe_price_id: string?` (Stripe price ID)
+- `stripe_product_id: string?` (Stripe product ID)
+- `general_info: string?` (algemene info over plan)
+- `features: JSON?` (extra features als JSON)
+- `is_active: Boolean` (plan beschikbaar)
+- `sort_order: Integer?`
+- `created_at: Date`
+- `updated_at: Date`
+
+**Relationships:**
+- 1 → 0..* `SubscriptionItem` (has many)
+
+**Business Rules:**
+- Elk plan heeft Stripe price/product ID's voor checkout
+- Features kunnen als JSON opgeslagen worden
+
+---
+
+#### Payment
+Individuele betaling binnen SubscriptionItem
+
+**Attributes:**
+- `id: UUID` (primary key)
+- `subscription_item_id: UUID` (foreign key → SubscriptionItem)
+- `amount: double` (bedrag)
+- `currency: string` (default: "EUR")
+- `status: PaymentStatus` (Enum: PENDING, PAID, FAILED, REFUNDED)
+- `provider: PaymentProvider` (Enum: STRIPE, PAYPAL, BANKACCOUNT, MOLLIE)
+- `date: Date` (betaling datum)
+- `stripe_payment_intent_id: string?` (Stripe payment intent ID)
+- `stripe_invoice_id: string?` (Stripe invoice ID)
+- `invoice_url: string?` (link naar factuur)
+- `invoice_pdf_url: string?` (PDF factuur URL)
+- `refund_reason: string?` (reden voor refund)
+- `refunded_at: Date?`
+- `created_at: Date`
+- `updated_at: Date`
+
+**Relationships:**
+- N → 1 `SubscriptionItem` (belongs to)
+
+**Business Rules:**
+- Payment wordt alleen aangemaakt NA succesvolle betaling
+- Stripe is primary provider, andere voor toekomstige uitbreiding
+- Invoice URLs linken naar Stripe dashboard
+
+---
+
+#### ContactRequest
+Contact aanvragen van bezoekers naar bedrijven
+
+**Attributes:**
+- `id: UUID` (primary key)
+- `gardener_id: UUID` (foreign key → Gardener)
+- `profile_id: UUID` (foreign key → Profile, voor snel opzoeken)
+- `visitor_name: string` (naam bezoeker)
+- `visitor_email: string` (email bezoeker)
+- `telnr: string?` (telefoonnummer, optioneel)
+- `subject: string` (onderwerp)
+- `message: string` (bericht)
+- `status: ContactRequestStatus` (Enum: NEW, READ, REPLIED, ARCHIVED)
+- `gardener_read_at: Date?`
+- `admin_notified: Boolean` (admin op de hoogte gebracht)
+- `date: Date` (aanmaakdatum)
+- `created_at: Date`
+- `updated_at: Date`
+
+**Relationships:**
+- N → 1 `Gardener` (sent to)
+
+**Business Rules:**
+- Email wordt verstuurd naar Gardener via Resend/Postmark
+- Status tracking voor Gardener dashboard
+
+---
+
+## Enumerations
+
+### AccountRole
+- `ADMIN` - Volledige toegang
+- `MODERATOR` - Kan bedrijven modereren
+- `GARDENER` - Bedrijfsgebruiker
+
+### VerificationStatus
+- `PENDING` - Wacht op goedkeuring
+- `APPROVED` - Goedgekeurd door admin
+- `REJECTED` - Afgewezen
+
+### SpecializationType
+- `BOOMVERZORGING` - Boomverzorging
+- `TUINAANLEG` - Tuinaanleg
+- `ECOLOGISCH_TUINIEREN` - Ecologisch tuinieren
+- `GAZONSPECIALIST` - Gazonspecialist
+- `STIJLSPECIALIST` - Stijlspecialist (Japans, Modern, etc.)
+
+### SubscriptionStatus
+- `ACTIVE` - Actief abonnement
+- `EXPIRED` - Verlopen
+- `CANCELLED` - Geannuleerd
+
+### SubscriptionType
+- `BRONZE` - Basis plan
+- `SILVER` - Midden plan
+- `GOLD` - Premium plan
+- `BASIC` - Starter plan
+- `PREMIUM` - Top plan
+
+### PaymentFrequency
+- `MONTHLY` - Maandelijks betalen (voor jaarlijkse subscription)
+- `YEARLY` - Jaarlijks betalen
+
+### PaymentStatus
+- `PENDING` - In afwachting
+- `PAID` - Betaald
+- `FAILED` - Mislukt
+- `REFUNDED` - Terugbetaald
+
+### PaymentProvider
+- `STRIPE` - Stripe (primary)
+- `PAYPAL` - PayPal (toekomst)
+- `BANKACCOUNT` - Bankoverschrijving (toekomst)
+- `MOLLIE` - Mollie (toekomst)
+
+### ContactRequestStatus
+- `NEW` - Nieuw bericht
+- `READ` - Gelezen door Gardener
+- `REPLIED` - Beantwoord
+- `ARCHIVED` - Gearchiveerd
+
+---
+
+## Belangrijke Business Rules & Notes
+
+### Registratie & Profile Aanmaak
+- Bij registratie wordt alleen een Gardener (Account) aangemaakt - GEEN Profile automatisch
+- Een Gardener kan na registratie meerdere Profiles aanmaken (elke profile = één locatie)
+- Name en telnr worden NIET opgeslagen in Account, maar in Profile
+- Registratie email (Account) ≠ Profile email (publiek), privacy
+- Gebruikers moeten expliciet een Profile aanmaken na login
+
+### Subscription & Payment Flow
+- Subscription is altijd jaarlijks, maar betalingen kunnen opgesplitst worden in maandelijkse delen
+- SubscriptionItem en Payment entiteiten worden pas aangemaakt NA succesvolle betaling
+- Payment provider (Stripe) maakt payment intent aan
+- Bij succes: Payment + SubscriptionItem worden aangemaakt
+- Profile visibility wordt gesynchroniseerd door status change (isPublic update)
+- Grace period mogelijk vooraleer deactivatie
+
+### Location & Category
+- Elke Profile heeft exact 1 Category (many-to-one)
+- Elke Profile heeft exact 1 Location (many-to-one)
+- Office is fysiek adres (kan verschillen van Location)
+- Location wordt gebruikt voor SEO paginageneratie: `/vind-een-{category-slug}/{location-slug}`
+- Category + Location combinatie genereert duizenden SEO pagina's
+- **Een Gardener kan meerdere Profiles hebben met verschillende Locations** - dit is hoe gebruikers meerdere locaties kunnen bedienen
+
+### Cron Jobs / Scheduled Tasks
+- Run cron job/script rond middernacht (traffic-limited)
+- 1x per dag:
+  - Update status: actief/deactief (check SubscriptionItem end_date)
+  - Check subscription renewals
+  - Stuur email bij einde subscription
+  - Sitemap generation/update
+
+### SEO & URLs
+- Profile slug: `/bedrijf/{profile-slug}`
+- Category + Location: `/vind-een-{category-slug}/{location-slug}`
+- Sitemaps gesplitst per type (category/location combos, profiles)
+- Elke pagina heeft unieke meta title/description
+- Schema markup (LocalBusiness) op detail pagina's
+
+---
+
+## Database Indexes
+
+### Critical Indexes
+- `Profile.slug` (unique index)
+- `Profile.gardener_id` (foreign key index, NOT unique - many profiles per gardener)
+- `Profile.category_id` (foreign key index)
+- `Profile.location_id` (foreign key index)
+- `Category.slug` (unique index)
+- `Location.slug` (unique index)
+- `SubscriptionItem.profile_id` (foreign key index - subscription per profile)
+- `SubscriptionItem.gardener_id` (foreign key index - for quick lookup by gardener)
+- `SubscriptionItem.status` (for filtering active subscriptions)
+- `SubscriptionItem.end_date` (for cron job queries)
+- `Office.latitude, Office.longitude` (for geo search)
+- `Location.latitude, Location.longitude` (for geo search)
+
+---
+
+## Supabase Auth Integration
+
+- Account entity wordt beheerd door Supabase Auth
+- `auth.users` tabel bevat basis user info
+- Custom user metadata kan worden opgeslagen in `auth.users.raw_user_meta_data`
+- Row Level Security (RLS) policies voor data access control
+- Gardener heeft 1:1 relatie met Supabase Auth user via `account_id`
+
+---
+
+## Stripe Integration
+
+- `stripe_subscription_id` - link naar Stripe subscription
+- `stripe_customer_id` - link naar Stripe customer
+- `stripe_price_id` - link naar Stripe price voor checkout
+- Webhooks verwerken: subscription.created, subscription.updated, subscription.deleted
+- Payment webhooks: invoice.payment_succeeded, invoice.payment_failed
+
+---
+
+## Storage (Supabase Storage)
+
+- Logo's: `logos/{profile_id}/{filename}`
+- Images: `images/{profile_id}/{filename}`
+- Public URLs worden opgeslagen in Profile.logo_url en Profile.image_urls
+
+---
+
+## Migrations & Seed Data
+
+- Categories: Seed data voor MVP (bijv. "Tuinaanlegger", "Tuinarchitect")
+- Locations: Seed data voor Belgische/Nederlandse steden
+- SubscriptionPlans: Seed data voor BRONZE, SILVER, GOLD plans
+- Test Gardener accounts voor development
+
+---
+
+Dit schema is de definitieve versie voor MVP implementatie.
