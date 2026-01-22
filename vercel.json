@@ -5,6 +5,10 @@
   "framework": null,
   "rewrites": [
     {
+      "source": "/googlec82c9dc9a541d03e.html",
+      "destination": "/api"
+    },
+    {
       "source": "/sitemap.xml",
       "destination": "/api"
     },

@@ -579,6 +579,12 @@ Sitemap: ${baseUrl}/sitemap.xml
       return res.send(robots);
     }
 
+    // GET /googlec82c9dc9a541d03e.html (Google Search Console verification)
+    if (method === "GET" && path === "/googlec82c9dc9a541d03e.html") {
+      res.setHeader("Content-Type", "text/html");
+      return res.send("google-site-verification: googlec82c9dc9a541d03e.html");
+    }
+
     return res.status(404).json({ error: "Not found" });
   } catch (error: any) {
     console.error("API Error:", error);
