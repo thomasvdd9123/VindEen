@@ -4,12 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { 
-  Search, 
-  SlidersHorizontal,
-  ChevronDown,
-  ChevronUp
-} from "lucide-react";
+import { Search } from "lucide-react";
 import type { Category, Location } from "@shared/schema";
 
 interface SearchBoxProps {
@@ -22,18 +17,6 @@ interface SearchBoxProps {
   showCount?: boolean;
 }
 
-// Specialization options for tuinmannen
-const SPECIALIZATIONS = [
-  { value: "all", label: "Ondersteuning bij (alle)" },
-  { value: "TUINAANLEG", label: "Tuinaanleg" },
-  { value: "ONDERHOUD", label: "Tuinonderhoud" },
-  { value: "SNOEIWERK", label: "Snoeiwerk" },
-  { value: "BESTRATING", label: "Bestrating" },
-  { value: "VIJVERS", label: "Vijvers & waterpartijen" },
-  { value: "GAZON", label: "Gazonaanleg" },
-  { value: "BEPLANTING", label: "Beplanting" },
-  { value: "AFSLUITINGEN", label: "Afsluitingen & hagen" },
-];
 
 
 export function SearchBox({ 
@@ -48,9 +31,7 @@ export function SearchBox({
   const [, navigate] = useLocation();
   const [cityQuery, setCityQuery] = useState(initialLocation || "");
   const [selectedCategory, setSelectedCategory] = useState(initialCategory || "all");
-  const [selectedSpecialization, setSelectedSpecialization] = useState("all");
   const [keyword, setKeyword] = useState(initialQuery);
-  const [showAdvanced, setShowAdvanced] = useState(false);
   const [filteredLocations, setFilteredLocations] = useState<Location[]>([]);
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
 
@@ -58,9 +39,6 @@ export function SearchBox({
   const countParams = new URLSearchParams();
   if (selectedCategory && selectedCategory !== "all") {
     countParams.set("category", selectedCategory);
-  }
-  if (selectedSpecialization && selectedSpecialization !== "all") {
-    countParams.set("spec", selectedSpecialization);
   }
   // Find location slug for count
   const selectedLocation = locations.find(
@@ -120,7 +98,6 @@ export function SearchBox({
 
     const params = new URLSearchParams();
     if (keyword) params.set("q", keyword);
-    if (selectedSpecialization !== "all") params.set("spec", selectedSpecialization);
 
     if (params.toString()) {
       url += `?${params.toString()}`;
@@ -236,7 +213,7 @@ export function SearchBox({
           </Button>
         </div>
 
-        {/* Row 2: Category + Specialization filters */}
+        {/* Row 2: Category filter */}
         <div className="flex flex-col sm:flex-row gap-3 items-center">
           <Select value={selectedCategory} onValueChange={setSelectedCategory}>
             <SelectTrigger className="w-full sm:w-[220px] h-10" data-testid="select-category-hero">
@@ -252,47 +229,17 @@ export function SearchBox({
             </SelectContent>
           </Select>
 
-          <Select value={selectedSpecialization} onValueChange={setSelectedSpecialization}>
-            <SelectTrigger className="w-full sm:w-[220px] h-10" data-testid="select-specialization-hero">
-              <SelectValue placeholder="Ondersteuning bij (alle)" />
-            </SelectTrigger>
-            <SelectContent>
-              {SPECIALIZATIONS.map((spec) => (
-                <SelectItem key={spec.value} value={spec.value} data-testid={`spec-option-${spec.value}`}>
-                  {spec.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <button
-            onClick={() => setShowAdvanced(!showAdvanced)}
-            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors ml-auto"
-            data-testid="button-advanced-filter"
-          >
-            <SlidersHorizontal className="h-4 w-4" />
-            Verfijn je zoekopdracht
-            {showAdvanced ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-          </button>
-        </div>
-
-        {/* Advanced filters (expandable) - keyword search */}
-        {showAdvanced && (
-          <div className="mt-4 pt-4 border-t border-border">
-            <div className="flex flex-col sm:flex-row gap-3">
-              <div className="flex-1">
-                <Input
-                  type="text"
-                  placeholder="Zoek op trefwoord (bedrijfsnaam, diensten, etc.)"
-                  value={keyword}
-                  onChange={(e) => setKeyword(e.target.value)}
-                  className="h-10"
-                  data-testid="input-keyword"
-                />
-              </div>
-            </div>
+          <div className="flex-1">
+            <Input
+              type="text"
+              placeholder="Zoek op trefwoord (bedrijfsnaam, diensten...)"
+              value={keyword}
+              onChange={(e) => setKeyword(e.target.value)}
+              className="h-10"
+              data-testid="input-keyword"
+            />
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
