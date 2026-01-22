@@ -277,13 +277,13 @@ function SearchResultCard({ profile }: { profile: ProfileWithRelations }) {
           {/* Profile info */}
           <div className="flex-1 min-w-0">
             <Link href={`/bedrijf/${profile.slug}`}>
-              <h3 className="font-semibold text-lg text-primary hover:underline cursor-pointer mb-0.5" data-testid={`text-result-name-${profile.slug}`}>
+              <h3 className="font-semibold text-lg text-foreground hover:text-primary hover:underline cursor-pointer mb-0.5" data-testid={`text-result-name-${profile.slug}`}>
                 {profile.name}
               </h3>
             </Link>
             
             {profile.title && (
-              <p className="text-sm text-primary/80 mb-1">
+              <p className="text-sm text-muted-foreground mb-1">
                 {profile.title}
               </p>
             )}

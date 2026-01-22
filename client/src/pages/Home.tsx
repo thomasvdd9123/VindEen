@@ -81,10 +81,10 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
             
             {/* Snel starten column */}
-            <Card className="border-t-4 border-t-primary">
+            <Card className="border-t-4 border-t-accent shadow-sm">
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-lg">
-                  <BookOpen className="h-5 w-5 text-primary" />
+                  <BookOpen className="h-5 w-5 text-accent" />
                   Snel starten
                 </CardTitle>
               </CardHeader>
@@ -92,9 +92,9 @@ export default function Home() {
                 <nav className="space-y-1">
                   {quickStartLinks.map((link, index) => (
                     <Link key={index} href={link.href}>
-                      <span className="flex items-center justify-between py-2 text-sm text-primary hover:underline cursor-pointer group" data-testid={`link-quick-${index}`}>
+                      <span className="flex items-center justify-between py-2 text-sm text-foreground hover:text-primary hover:underline cursor-pointer group" data-testid={`link-quick-${index}`}>
                         {link.title}
-                        <ArrowRight className="h-3.5 w-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <ArrowRight className="h-3.5 w-3.5 opacity-0 group-hover:opacity-100 transition-opacity text-primary" />
                       </span>
                     </Link>
                   ))}
@@ -114,10 +114,10 @@ export default function Home() {
             </Card>
 
             {/* In de kijker column - Featured Profile */}
-            <Card className="border-t-4 border-t-primary">
+            <Card className="border-t-4 border-t-primary shadow-sm">
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-lg">
-                  <Star className="h-5 w-5 text-primary" />
+                  <Star className="h-5 w-5 text-amber-500" />
                   In de kijker: Tuinman
                 </CardTitle>
               </CardHeader>
@@ -177,10 +177,10 @@ export default function Home() {
             </Card>
 
             {/* Tips & Training column */}
-            <Card className="border-t-4 border-t-primary">
+            <Card className="border-t-4 border-t-sky-500 shadow-sm">
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-lg">
-                  <GraduationCap className="h-5 w-5 text-primary" />
+                  <GraduationCap className="h-5 w-5 text-sky-500" />
                   Tips & Inspiratie
                 </CardTitle>
               </CardHeader>
@@ -410,11 +410,11 @@ function FeaturedProfileCard({ profile }: { profile: ProfileWithRelations }) {
 
             {/* Profile info */}
             <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-primary mb-0.5 truncate" data-testid={`text-profile-name-${profile.slug}`}>
+              <h3 className="font-semibold text-foreground mb-0.5 truncate" data-testid={`text-profile-name-${profile.slug}`}>
                 {profile.name}
               </h3>
               {profile.title && (
-                <p className="text-sm text-primary/80 mb-2 truncate">
+                <p className="text-sm text-muted-foreground mb-2 truncate">
                   {profile.title}
                 </p>
               )}

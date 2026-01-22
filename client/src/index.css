@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* LIGHT MODE - Green Tuinman Theme inspired by vind-een-psycholoog.be */
+/* LIGHT MODE - Professional Tuinman Theme with warm accents */
 :root {
   --button-outline: rgba(0,0,0, .10);
   --badge-outline: rgba(0,0,0, .05);
@@ -14,67 +14,67 @@
   --elevate-1: rgba(0,0,0, .03);
   --elevate-2: rgba(0,0,0, .08);
 
-  --background: 0 0% 100%;
+  --background: 40 25% 98%;
 
-  --foreground: 150 10% 15%;
+  --foreground: 220 15% 18%;
 
-  --border: 150 10% 88%;
+  --border: 40 15% 88%;
 
   --card: 0 0% 100%;
 
-  --card-foreground: 150 10% 15%;
+  --card-foreground: 220 15% 18%;
 
-  --card-border: 150 10% 90%;
+  --card-border: 40 12% 88%;
 
-  --sidebar: 150 15% 97%;
+  --sidebar: 40 20% 96%;
 
-  --sidebar-foreground: 150 10% 25%;
+  --sidebar-foreground: 220 15% 25%;
 
-  --sidebar-border: 150 10% 90%;
+  --sidebar-border: 40 15% 88%;
 
-  --sidebar-primary: 142 72% 29%;
+  --sidebar-primary: 142 65% 32%;
 
   --sidebar-primary-foreground: 0 0% 100%;
 
-  --sidebar-accent: 142 40% 92%;
+  --sidebar-accent: 40 40% 94%;
 
-  --sidebar-accent-foreground: 142 72% 25%;
+  --sidebar-accent-foreground: 220 15% 25%;
 
-  --sidebar-ring: 142 72% 29%;
+  --sidebar-ring: 142 65% 32%;
 
   --popover: 0 0% 100%;
 
-  --popover-foreground: 150 10% 15%;
+  --popover-foreground: 220 15% 18%;
 
-  --popover-border: 150 10% 90%;
+  --popover-border: 40 12% 88%;
 
-  --primary: 142 72% 29%;
+  --primary: 142 65% 32%;
 
   --primary-foreground: 0 0% 100%;
 
-  --secondary: 150 15% 95%;
+  --secondary: 40 30% 95%;
 
-  --secondary-foreground: 150 10% 25%;
+  --secondary-foreground: 220 15% 25%;
 
-  --muted: 150 10% 96%;
+  --muted: 40 20% 96%;
 
-  --muted-foreground: 150 10% 45%;
+  --muted-foreground: 220 10% 45%;
 
-  --accent: 142 40% 92%;
+  --accent: 32 85% 55%;
 
-  --accent-foreground: 142 72% 25%;
+  --accent-foreground: 0 0% 100%;
 
   --destructive: 0 84% 60%;
 
   --destructive-foreground: 0 0% 100%;
 
-  --input: 150 10% 85%;
-  --ring: 142 72% 29%;
-  --chart-1: 142 72% 29%;
-  --chart-2: 142 60% 40%;
-  --chart-3: 142 50% 50%;
-  --chart-4: 142 40% 60%;
-  --chart-5: 142 30% 70%;
+  --input: 40 15% 85%;
+  --ring: 142 65% 32%;
+  --chart-1: 142 65% 32%;
+  --chart-2: 32 85% 55%;
+  --chart-3: 200 75% 50%;
+  --chart-4: 280 60% 55%;
+  --chart-5: 350 70% 55%;
 
   --font-sans: 'Open Sans', 'Inter', sans-serif;
   --font-serif: 'Merriweather', Georgia, serif;
@@ -132,68 +132,68 @@
   --elevate-1: rgba(255,255,255, .04);
   --elevate-2: rgba(255,255,255, .09);
 
-  --background: 150 15% 8%;
+  --background: 220 20% 10%;
 
-  --foreground: 150 5% 95%;
+  --foreground: 40 15% 95%;
 
-  --border: 150 10% 20%;
+  --border: 220 15% 20%;
 
-  --card: 150 12% 11%;
+  --card: 220 18% 13%;
 
-  --card-foreground: 150 5% 95%;
+  --card-foreground: 40 15% 95%;
 
-  --card-border: 150 10% 18%;
+  --card-border: 220 15% 18%;
 
-  --sidebar: 150 15% 6%;
+  --sidebar: 220 20% 8%;
 
-  --sidebar-foreground: 150 5% 90%;
+  --sidebar-foreground: 40 10% 90%;
 
-  --sidebar-border: 150 10% 18%;
+  --sidebar-border: 220 15% 18%;
 
-  --sidebar-primary: 142 72% 40%;
+  --sidebar-primary: 142 60% 45%;
 
   --sidebar-primary-foreground: 0 0% 100%;
 
-  --sidebar-accent: 142 30% 18%;
+  --sidebar-accent: 220 20% 18%;
 
-  --sidebar-accent-foreground: 142 60% 70%;
+  --sidebar-accent-foreground: 40 10% 85%;
 
-  --sidebar-ring: 142 72% 40%;
+  --sidebar-ring: 142 60% 45%;
 
-  --popover: 150 12% 11%;
+  --popover: 220 18% 13%;
 
-  --popover-foreground: 150 5% 95%;
+  --popover-foreground: 40 15% 95%;
 
-  --popover-border: 150 10% 18%;
+  --popover-border: 220 15% 18%;
 
-  --primary: 142 72% 40%;
+  --primary: 142 60% 45%;
 
   --primary-foreground: 0 0% 100%;
 
-  --secondary: 150 12% 18%;
+  --secondary: 220 15% 18%;
 
-  --secondary-foreground: 150 5% 90%;
+  --secondary-foreground: 40 10% 90%;
 
-  --muted: 150 10% 15%;
+  --muted: 220 15% 15%;
 
-  --muted-foreground: 150 5% 60%;
+  --muted-foreground: 40 10% 60%;
 
-  --accent: 142 30% 18%;
+  --accent: 32 80% 50%;
 
-  --accent-foreground: 142 60% 70%;
+  --accent-foreground: 0 0% 100%;
 
   --destructive: 0 70% 50%;
 
   --destructive-foreground: 0 0% 100%;
 
   /* Used as the border around inputs. Dark mode: Should be a border that is light enough to have high contrast when rendered on a --card background. More contrast than standard --border */
-  --input: 150 10% 25%;
-  --ring: 142 72% 40%;
-  --chart-1: 142 72% 40%;
-  --chart-2: 142 60% 50%;
-  --chart-3: 142 50% 60%;
-  --chart-4: 142 40% 70%;
-  --chart-5: 142 30% 80%;
+  --input: 220 15% 25%;
+  --ring: 142 60% 45%;
+  --chart-1: 142 60% 45%;
+  --chart-2: 32 80% 50%;
+  --chart-3: 200 70% 55%;
+  --chart-4: 280 55% 60%;
+  --chart-5: 350 65% 55%;
 
   --shadow-2xs: 0px 1px 2px 0px rgba(0,0,0,0.15);
   --shadow-xs: 0px 1px 3px 0px rgba(0,0,0,0.2);

@@ -193,7 +193,7 @@ export function SearchBox({
   return (
     <div className="w-full">
       {/* Main search box */}
-      <div className="bg-card/95 backdrop-blur rounded-lg border border-border shadow-xl p-4 sm:p-6">
+      <div className="bg-card rounded-xl border border-border shadow-lg p-5 sm:p-7">
         {/* Row 1: City/Postcode input + Search button */}
         <div className="flex flex-col sm:flex-row gap-3 mb-4">
           <div className="relative flex-1">
