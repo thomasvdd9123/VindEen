@@ -1,228 +1,352 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import express from "express";
-import { storage } from "../server/storage";
-import { contactFormSchema, searchParamsSchema } from "../shared/schema";
-import { z } from "zod";
-import { supabaseAdmin } from "../server/lib/supabase";
+import { createClient } from "@supabase/supabase-js";
 
-const app = express();
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-
-// Categories
-app.get("/api/categories", async (req, res) => {
-  try {
-    const categories = await storage.getCategories();
-    res.json(categories);
-  } catch (error) {
-    res.status(500).json({ error: "Failed to fetch categories" });
-  }
-});
-
-app.get("/api/categories/:slug", async (req, res) => {
-  try {
-    const category = await storage.getCategoryBySlug(req.params.slug);
-    if (!category) {
-      return res.status(404).json({ error: "Category not found" });
-    }
-    res.json(category);
-  } catch (error) {
-    res.status(500).json({ error: "Failed to fetch category" });
-  }
-});
-
-// Locations
-app.get("/api/locations", async (req, res) => {
-  try {
-    const locations = await storage.getLocations();
-    res.json(locations);
-  } catch (error) {
-    res.status(500).json({ error: "Failed to fetch locations" });
-  }
-});
-
-app.get("/api/locations/:slug", async (req, res) => {
-  try {
-    const location = await storage.getLocationBySlug(req.params.slug);
-    if (!location) {
-      return res.status(404).json({ error: "Location not found" });
-    }
-    res.json(location);
-  } catch (error) {
-    res.status(500).json({ error: "Failed to fetch location" });
-  }
-});
-
-// Profiles
-app.get("/api/profiles/featured", async (req, res) => {
-  try {
-    const profiles = await storage.getFeaturedProfiles();
-    res.json(profiles);
-  } catch (error) {
-    res.status(500).json({ error: "Failed to fetch featured profiles" });
-  }
-});
-
-app.get("/api/profiles/count", async (req, res) => {
-  try {
-    const result = await storage.searchProfiles({ page: 1, limit: 1 });
-    res.json({ total: result.total });
-  } catch (error) {
-    res.status(500).json({ error: "Failed to fetch profile count" });
-  }
-});
-
-app.get("/api/profiles/search", async (req, res) => {
-  try {
-    const params = searchParamsSchema.parse({
-      category: req.query.category as string | undefined,
-      location: req.query.location as string | undefined,
-      query: req.query.query as string | undefined,
-      specializations: req.query.specializations
-        ? (req.query.specializations as string).split(",")
-        : undefined,
-      page: req.query.page ? parseInt(req.query.page as string) : 1,
-      limit: req.query.limit ? parseInt(req.query.limit as string) : 12,
-    });
-    const result = await storage.searchProfiles(params);
-    res.json(result);
-  } catch (error) {
-    res.status(500).json({ error: "Failed to search profiles" });
-  }
-});
-
-app.get("/api/profiles/:slug", async (req, res) => {
-  try {
-    const profile = await storage.getProfileBySlug(req.params.slug);
-    if (!profile) {
-      return res.status(404).json({ error: "Profile not found" });
-    }
-    res.json(profile);
-  } catch (error) {
-    res.status(500).json({ error: "Failed to fetch profile" });
-  }
-});
-
-app.get("/api/profiles/by-id/:id", async (req, res) => {
-  try {
-    const profile = await storage.getProfileById(req.params.id);
-    if (!profile) {
-      return res.status(404).json({ error: "Profile not found" });
-    }
-    res.json(profile);
-  } catch (error) {
-    res.status(500).json({ error: "Failed to fetch profile" });
-  }
-});
-
-app.get("/api/my-profiles/:gardenerId", async (req, res) => {
-  try {
-    const profiles = await storage.getProfilesByGardenerId(req.params.gardenerId);
-    res.json(profiles);
-  } catch (error) {
-    res.status(500).json({ error: "Failed to fetch profiles" });
-  }
-});
-
-// Gardeners
-app.post("/api/gardeners", async (req, res) => {
-  try {
-    const { accountId, email } = req.body;
-    let gardener = await storage.getGardenerByAccountId(accountId);
-    
-    if (!gardener) {
-      gardener = await storage.createGardener({
-        accountId,
-        email,
-        role: "GARDENER",
-        emailVerified: true,
-      });
-    }
-    
-    res.json(gardener);
-  } catch (error) {
-    res.status(500).json({ error: "Failed to create/get gardener" });
-  }
-});
-
-// Subscription Plans
-app.get("/api/subscription-plans", async (req, res) => {
-  try {
-    const plans = await storage.getSubscriptionPlans();
-    res.json(plans);
-  } catch (error) {
-    res.status(500).json({ error: "Failed to fetch subscription plans" });
-  }
-});
-
-// Contact Requests
-app.get("/api/contact-requests/:gardenerId", async (req, res) => {
-  try {
-    const requests = await storage.getContactRequestsByGardenerId(req.params.gardenerId);
-    res.json(requests);
-  } catch (error) {
-    res.status(500).json({ error: "Failed to fetch contact requests" });
-  }
-});
-
-app.post("/api/contact/:profileId", async (req, res) => {
-  try {
-    const profile = await storage.getProfileById(req.params.profileId);
-    if (!profile) {
-      return res.status(404).json({ error: "Profile not found" });
-    }
-    
-    const validatedData = contactFormSchema.parse(req.body);
-    const contactRequest = await storage.createContactRequest({
-      profileId: req.params.profileId,
-      ...validatedData,
-      status: "NEW",
-    });
-    
-    res.json(contactRequest);
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return res.status(400).json({ error: "Invalid form data", details: error.errors });
-    }
-    res.status(500).json({ error: "Failed to submit contact form" });
-  }
-});
-
-// Profile CRUD
-app.post("/api/profiles", async (req, res) => {
-  try {
-    const profile = await storage.createProfile(req.body);
-    res.json(profile);
-  } catch (error) {
-    res.status(500).json({ error: "Failed to create profile" });
-  }
-});
-
-app.patch("/api/profiles/:id", async (req, res) => {
-  try {
-    const profile = await storage.updateProfile(req.params.id, req.body);
-    if (!profile) {
-      return res.status(404).json({ error: "Profile not found" });
-    }
-    res.json(profile);
-  } catch (error) {
-    res.status(500).json({ error: "Failed to update profile" });
-  }
-});
-
-app.delete("/api/profiles/:id", async (req, res) => {
-  try {
-    await storage.deleteProfile(req.params.id);
-    res.json({ success: true });
-  } catch (error) {
-    res.status(500).json({ error: "Failed to delete profile" });
-  }
-});
+const supabaseUrl = process.env.SUPABASE_URL!;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  return new Promise((resolve) => {
-    app(req as any, res as any, () => {
-      resolve(undefined);
-    });
-  });
+  const { method } = req;
+  const url = new URL(req.url!, `https://${req.headers.host}`);
+  const path = url.pathname;
+
+  res.setHeader("Content-Type", "application/json");
+
+  try {
+    // GET /api/categories
+    if (method === "GET" && path === "/api/categories") {
+      const { data, error } = await supabase
+        .from("categories")
+        .select("*")
+        .eq("is_active", true)
+        .order("sort_order", { ascending: true });
+      
+      if (error) throw error;
+      return res.status(200).json(data || []);
+    }
+
+    // GET /api/categories/:slug
+    if (method === "GET" && path.match(/^\/api\/categories\/[^/]+$/)) {
+      const slug = path.split("/").pop();
+      const { data, error } = await supabase
+        .from("categories")
+        .select("*")
+        .eq("slug", slug)
+        .single();
+      
+      if (error && error.code !== "PGRST116") throw error;
+      if (!data) return res.status(404).json({ error: "Category not found" });
+      return res.status(200).json(data);
+    }
+
+    // GET /api/locations
+    if (method === "GET" && path === "/api/locations") {
+      const { data, error } = await supabase
+        .from("locations")
+        .select("*")
+        .eq("is_active", true)
+        .order("name", { ascending: true });
+      
+      if (error) throw error;
+      return res.status(200).json(data || []);
+    }
+
+    // GET /api/locations/:slug
+    if (method === "GET" && path.match(/^\/api\/locations\/[^/]+$/)) {
+      const slug = path.split("/").pop();
+      const { data, error } = await supabase
+        .from("locations")
+        .select("*")
+        .eq("slug", slug)
+        .single();
+      
+      if (error && error.code !== "PGRST116") throw error;
+      if (!data) return res.status(404).json({ error: "Location not found" });
+      return res.status(200).json(data);
+    }
+
+    // GET /api/profiles/featured
+    if (method === "GET" && path === "/api/profiles/featured") {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select(`
+          *,
+          category:categories(*),
+          location:locations(*),
+          office:offices(*),
+          practical:practicals(*)
+        `)
+        .eq("is_active", true)
+        .eq("is_public", true)
+        .eq("is_featured", true)
+        .limit(6);
+      
+      if (error) throw error;
+      return res.status(200).json(data || []);
+    }
+
+    // GET /api/profiles/count
+    if (method === "GET" && path === "/api/profiles/count") {
+      const { count, error } = await supabase
+        .from("profiles")
+        .select("*", { count: "exact", head: true })
+        .eq("is_active", true)
+        .eq("is_public", true);
+      
+      if (error) throw error;
+      return res.status(200).json({ total: count || 0 });
+    }
+
+    // GET /api/profiles/search
+    if (method === "GET" && path === "/api/profiles/search") {
+      const category = url.searchParams.get("category");
+      const location = url.searchParams.get("location");
+      const query = url.searchParams.get("query");
+      const page = parseInt(url.searchParams.get("page") || "1");
+      const limit = parseInt(url.searchParams.get("limit") || "12");
+      const offset = (page - 1) * limit;
+
+      let queryBuilder = supabase
+        .from("profiles")
+        .select(`
+          *,
+          category:categories(*),
+          location:locations(*),
+          office:offices(*),
+          practical:practicals(*)
+        `, { count: "exact" })
+        .eq("is_active", true)
+        .eq("is_public", true);
+
+      if (category) {
+        const { data: cat } = await supabase
+          .from("categories")
+          .select("id")
+          .eq("slug", category)
+          .single();
+        if (cat) {
+          queryBuilder = queryBuilder.eq("category_id", cat.id);
+        }
+      }
+
+      if (location) {
+        const { data: loc } = await supabase
+          .from("locations")
+          .select("id")
+          .eq("slug", location)
+          .single();
+        if (loc) {
+          queryBuilder = queryBuilder.eq("location_id", loc.id);
+        }
+      }
+
+      if (query) {
+        queryBuilder = queryBuilder.or(`name.ilike.%${query}%,introduction.ilike.%${query}%,title.ilike.%${query}%`);
+      }
+
+      const { data, count, error } = await queryBuilder
+        .range(offset, offset + limit - 1);
+
+      if (error) throw error;
+
+      const total = count || 0;
+      const totalPages = Math.ceil(total / limit);
+
+      return res.status(200).json({
+        profiles: data || [],
+        total,
+        page,
+        totalPages,
+      });
+    }
+
+    // GET /api/profiles/by-id/:id
+    if (method === "GET" && path.match(/^\/api\/profiles\/by-id\/[^/]+$/)) {
+      const id = path.split("/").pop();
+      const { data, error } = await supabase
+        .from("profiles")
+        .select(`
+          *,
+          category:categories(*),
+          location:locations(*),
+          office:offices(*),
+          practical:practicals(*)
+        `)
+        .eq("id", id)
+        .single();
+      
+      if (error && error.code !== "PGRST116") throw error;
+      if (!data) return res.status(404).json({ error: "Profile not found" });
+      return res.status(200).json(data);
+    }
+
+    // GET /api/profiles/:slug (must be after other /api/profiles/ routes)
+    if (method === "GET" && path.match(/^\/api\/profiles\/[^/]+$/) && !path.includes("/by-id/")) {
+      const slug = path.split("/").pop();
+      if (slug === "featured" || slug === "count" || slug === "search") {
+        return res.status(404).json({ error: "Not found" });
+      }
+      
+      const { data, error } = await supabase
+        .from("profiles")
+        .select(`
+          *,
+          category:categories(*),
+          location:locations(*),
+          office:offices(*),
+          practical:practicals(*)
+        `)
+        .eq("slug", slug)
+        .eq("is_active", true)
+        .single();
+      
+      if (error && error.code !== "PGRST116") throw error;
+      if (!data) return res.status(404).json({ error: "Profile not found" });
+      return res.status(200).json(data);
+    }
+
+    // GET /api/my-profiles/:gardenerId
+    if (method === "GET" && path.match(/^\/api\/my-profiles\/[^/]+$/)) {
+      const gardenerId = path.split("/").pop();
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("gardener_id", gardenerId);
+      
+      if (error) throw error;
+      return res.status(200).json(data || []);
+    }
+
+    // POST /api/gardeners
+    if (method === "POST" && path === "/api/gardeners") {
+      const { accountId, email } = req.body;
+      
+      const { data: existing } = await supabase
+        .from("gardeners")
+        .select("*")
+        .eq("account_id", accountId)
+        .single();
+      
+      if (existing) {
+        return res.status(200).json(existing);
+      }
+      
+      const { data, error } = await supabase
+        .from("gardeners")
+        .insert({
+          account_id: accountId,
+          email,
+          role: "GARDENER",
+          email_verified: true,
+        })
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return res.status(200).json(data);
+    }
+
+    // GET /api/subscription-plans
+    if (method === "GET" && path === "/api/subscription-plans") {
+      const { data, error } = await supabase
+        .from("subscription_plans")
+        .select("*")
+        .eq("is_active", true)
+        .order("sort_order", { ascending: true });
+      
+      if (error) throw error;
+      return res.status(200).json(data || []);
+    }
+
+    // GET /api/contact-requests/:gardenerId
+    if (method === "GET" && path.match(/^\/api\/contact-requests\/[^/]+$/)) {
+      const gardenerId = path.split("/").pop();
+      const { data, error } = await supabase
+        .from("contact_requests")
+        .select(`*, profile:profiles(name, slug)`)
+        .eq("gardener_id", gardenerId)
+        .order("created_at", { ascending: false });
+      
+      if (error) throw error;
+      return res.status(200).json(data || []);
+    }
+
+    // POST /api/contact/:profileId
+    if (method === "POST" && path.match(/^\/api\/contact\/[^/]+$/)) {
+      const profileId = path.split("/").pop();
+      
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("id, gardener_id")
+        .eq("id", profileId)
+        .single();
+      
+      if (!profile) {
+        return res.status(404).json({ error: "Profile not found" });
+      }
+      
+      const { name, email, phone, message, service } = req.body;
+      
+      const { data, error } = await supabase
+        .from("contact_requests")
+        .insert({
+          profile_id: profileId,
+          gardener_id: profile.gardener_id,
+          name,
+          email,
+          phone,
+          message,
+          service,
+          status: "NEW",
+        })
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return res.status(200).json(data);
+    }
+
+    // POST /api/profiles
+    if (method === "POST" && path === "/api/profiles") {
+      const { data, error } = await supabase
+        .from("profiles")
+        .insert(req.body)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return res.status(200).json(data);
+    }
+
+    // PATCH /api/profiles/:id
+    if (method === "PATCH" && path.match(/^\/api\/profiles\/[^/]+$/)) {
+      const id = path.split("/").pop();
+      const { data, error } = await supabase
+        .from("profiles")
+        .update(req.body)
+        .eq("id", id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return res.status(200).json(data);
+    }
+
+    // DELETE /api/profiles/:id
+    if (method === "DELETE" && path.match(/^\/api\/profiles\/[^/]+$/)) {
+      const id = path.split("/").pop();
+      const { error } = await supabase
+        .from("profiles")
+        .delete()
+        .eq("id", id);
+      
+      if (error) throw error;
+      return res.status(200).json({ success: true });
+    }
+
+    return res.status(404).json({ error: "Not found" });
+  } catch (error: any) {
+    console.error("API Error:", error);
+    return res.status(500).json({ error: error.message || "Internal server error" });
+  }
 }
