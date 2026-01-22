@@ -10,6 +10,7 @@ import type {
   ProfileWithRelations,
   SearchParams,
 } from "@shared/schema";
+import { supabaseStorage } from "./supabase-storage";
 
 export interface IStorage {
   // Categories
@@ -621,4 +622,19 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+// Check if Supabase is configured
+const isSupabaseConfigured = Boolean(
+  process.env.SUPABASE_URL &&
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
+
+// Use Supabase storage if configured, otherwise use in-memory storage
+const storage: IStorage = isSupabaseConfigured ? supabaseStorage : new MemStorage();
+
+if (isSupabaseConfigured) {
+  console.log("✅ Using Supabase database storage");
+} else {
+  console.log("⚠️ Using in-memory storage (Supabase not configured)");
+}
+
+export { storage };
