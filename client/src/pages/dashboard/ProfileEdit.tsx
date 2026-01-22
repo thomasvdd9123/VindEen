@@ -135,26 +135,24 @@ function LogoUpload({ profileId, currentLogoUrl, onUploadSuccess }: {
     }
 
     setIsUploading(true);
-    const formData = new FormData();
-    formData.append("file", file);
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const response = await fetch(`/api/profiles/${profileId}/logo`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${session?.access_token}`,
-        },
-        body: formData,
-      });
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${profileId}/logo.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('uploads')
+        .upload(fileName, file, { upsert: true });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Upload failed");
-      }
+      if (uploadError) throw uploadError;
 
-      const data = await response.json();
-      setPreviewUrl(data.url);
+      const { data: { publicUrl } } = supabase.storage
+        .from('uploads')
+        .getPublicUrl(fileName);
+
+      await apiRequest('PATCH', `/api/profiles/${profileId}`, { logo_url: publicUrl });
+      
+      setPreviewUrl(publicUrl);
       toast({ title: "Gelukt", description: "Logo is geupload" });
       onUploadSuccess();
     } catch (error) {
@@ -249,27 +247,32 @@ function WorkPhotosUpload({ profileId, currentPhotos, onUploadSuccess }: {
     if (validFiles.length === 0) return;
 
     setIsUploading(true);
-    const formData = new FormData();
-    validFiles.forEach(file => formData.append("files", file));
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const response = await fetch(`/api/profiles/${profileId}/photos`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${session?.access_token}`,
-        },
-        body: formData,
-      });
+      const uploadedUrls: string[] = [];
+      
+      for (const file of validFiles) {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${profileId}/photos/${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('uploads')
+          .upload(fileName, file);
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Upload failed");
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('uploads')
+          .getPublicUrl(fileName);
+          
+        uploadedUrls.push(publicUrl);
       }
 
-      const data = await response.json();
-      setPhotos(data.allUrls);
-      toast({ title: "Gelukt", description: `${data.urls.length} foto('s) geupload` });
+      const allUrls = [...photos, ...uploadedUrls];
+      await apiRequest('PATCH', `/api/profiles/${profileId}`, { image_urls: allUrls });
+      
+      setPhotos(allUrls);
+      toast({ title: "Gelukt", description: `${uploadedUrls.length} foto('s) geupload` });
       onUploadSuccess();
     } catch (error) {
       toast({ title: "Fout", description: error instanceof Error ? error.message : "Kon foto's niet uploaden", variant: "destructive" });
@@ -284,23 +287,15 @@ function WorkPhotosUpload({ profileId, currentPhotos, onUploadSuccess }: {
   const handleDeletePhoto = async (url: string) => {
     setIsDeleting(url);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const response = await fetch(`/api/profiles/${profileId}/photos`, {
-        method: "DELETE",
-        headers: { 
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session?.access_token}`,
-        },
-        body: JSON.stringify({ url }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Delete failed");
+      const urlPath = url.split('/uploads/')[1];
+      if (urlPath) {
+        await supabase.storage.from('uploads').remove([urlPath]);
       }
 
-      const data = await response.json();
-      setPhotos(data.remainingUrls);
+      const remainingUrls = photos.filter(p => p !== url);
+      await apiRequest('PATCH', `/api/profiles/${profileId}`, { image_urls: remainingUrls });
+      
+      setPhotos(remainingUrls);
       toast({ title: "Gelukt", description: "Foto verwijderd" });
       onUploadSuccess();
     } catch (error) {
