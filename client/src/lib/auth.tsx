@@ -50,10 +50,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!isSupabaseConfigured) {
       return { error: new Error("Supabase is not configured. Please set SUPABASE_URL and SUPABASE_ANON_KEY.") };
     }
-    const { error } = await supabase.auth.signInWithPassword({
+    const { error, data } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
+    
+    // Immediately update state if login successful
+    if (!error && data.session) {
+      setSession(data.session);
+      setUser(data.session.user);
+    }
+    
     return { error: error as Error | null };
   }, []);
 
