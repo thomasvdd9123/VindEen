@@ -1,10 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import { useParams, Link } from "wouter";
+import { useParams, Link, useSearch } from "wouter";
 import { Layout } from "@/components/layout/Layout";
 import { SearchBox } from "@/components/SearchBox";
 import { ProfileCard } from "@/components/ProfileCard";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { 
   Breadcrumb, 
@@ -14,7 +14,7 @@ import {
   BreadcrumbPage, 
   BreadcrumbSeparator 
 } from "@/components/ui/breadcrumb";
-import { ChevronLeft, ChevronRight, Leaf, MapPin, Filter } from "lucide-react";
+import { ChevronLeft, ChevronRight, Leaf, MapPin, ArrowRight } from "lucide-react";
 import type { Category, Location, ProfileWithRelations } from "@shared/schema";
 import { siteConfig } from "@/lib/theme.config";
 
@@ -22,6 +22,10 @@ export default function CategoryPage() {
   const params = useParams<{ category: string; location?: string }>();
   const categorySlug = params.category;
   const locationSlug = params.location;
+  const searchString = useSearch();
+  const urlParams = new URLSearchParams(searchString);
+  const queryParam = urlParams.get("q") || "";
+  const specParam = urlParams.get("spec") || "";
 
   const { data: category, isLoading: categoryLoading } = useQuery<Category>({
     queryKey: ["/api/categories", categorySlug],
@@ -33,17 +37,20 @@ export default function CategoryPage() {
     enabled: !!locationSlug,
   });
 
-  const { data: categories = [] } = useQuery<Category[]>({
+  const { data: categories = [], isLoading: categoriesListLoading } = useQuery<Category[]>({
     queryKey: ["/api/categories"],
   });
 
-  const { data: locations = [] } = useQuery<Location[]>({
+  const { data: locations = [], isLoading: locationsListLoading } = useQuery<Location[]>({
     queryKey: ["/api/locations"],
   });
 
+  // Build search params including all filters
   const searchParams = new URLSearchParams();
   if (categorySlug) searchParams.set("category", categorySlug);
   if (locationSlug) searchParams.set("location", locationSlug);
+  if (queryParam) searchParams.set("q", queryParam);
+  if (specParam) searchParams.set("spec", specParam);
 
   const { data: profilesData, isLoading: profilesLoading } = useQuery<{
     profiles: ProfileWithRelations[];
@@ -63,14 +70,33 @@ export default function CategoryPage() {
     ? `${category?.name || "Tuinmannen"} in ${location.name}`
     : category?.name || "Tuinmannen";
 
-  const pageDescription = locationSlug && location
-    ? `Vind de beste ${category?.name?.toLowerCase() || "tuinmannen"} in ${location.name} en omgeving. Vergelijk profielen en vraag vrijblijvend offertes aan.`
-    : `Vind de beste ${category?.name?.toLowerCase() || "tuinmannen"} in heel België. Vergelijk profielen en vraag vrijblijvend offertes aan.`;
-
   return (
     <Layout>
-      <div className="bg-muted/30 border-b border-border">
-        <div className="container mx-auto px-4 py-4">
+      {/* Search Section - Sticky at top like vind-een-psycholoog */}
+      <section className="bg-gradient-to-b from-muted/50 to-background border-b border-border">
+        <div className="container mx-auto px-4 py-6">
+          {categoriesListLoading || locationsListLoading ? (
+            <div className="max-w-4xl mx-auto">
+              <Skeleton className="h-24 w-full rounded-lg" />
+            </div>
+          ) : (
+            <div className="max-w-4xl mx-auto">
+              <SearchBox 
+                categories={categories} 
+                locations={locations}
+                initialCategory={categorySlug}
+                initialLocation={locationSlug}
+                initialQuery={queryParam}
+                showCount={true}
+              />
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Breadcrumb */}
+      <div className="bg-background border-b border-border">
+        <div className="container mx-auto px-4 py-3">
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem>
@@ -83,7 +109,7 @@ export default function CategoryPage() {
                 <>
                   <BreadcrumbItem>
                     <BreadcrumbLink asChild>
-                      <Link href={`/vind-een-${categorySlug}`} data-testid="breadcrumb-category">
+                      <Link href={`/zoek/${categorySlug}`} data-testid="breadcrumb-category">
                         {category?.name || categorySlug}
                       </Link>
                     </BreadcrumbLink>
@@ -107,81 +133,52 @@ export default function CategoryPage() {
         </div>
       </div>
 
-      <section className="py-8 sm:py-12 bg-gradient-to-b from-muted/30 to-background">
-        <div className="container mx-auto px-4">
-          <div className="max-w-3xl">
-            {isLoading ? (
-              <>
-                <Skeleton className="h-8 w-64 mb-3" />
-                <Skeleton className="h-5 w-full max-w-xl" />
-              </>
-            ) : (
-              <>
-                <div className="flex items-center gap-2 mb-3">
-                  <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold" data-testid="text-page-title">
-                    {pageTitle}
-                  </h1>
-                  {location && (
-                    <Badge variant="secondary" className="gap-1">
-                      <MapPin className="h-3 w-3" />
-                      {location.region}
-                    </Badge>
-                  )}
-                </div>
-                <p className="text-muted-foreground text-lg" data-testid="text-page-description">
-                  {pageDescription}
-                </p>
-              </>
-            )}
-          </div>
-        </div>
-      </section>
-
-      <section className="py-6 border-b border-border">
-        <div className="container mx-auto px-4">
-          <SearchBox 
-            categories={categories} 
-            locations={locations}
-            initialCategory={categorySlug}
-            initialLocation={locationSlug}
-            variant="compact"
-          />
-        </div>
-      </section>
-
+      {/* Results Section */}
       <section className="py-8">
         <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between mb-6">
+          {/* Results header */}
+          <div className="mb-6">
+            <h1 className="text-xl font-semibold mb-1" data-testid="text-results-title">
+              Resultaten voor "{pageTitle}"
+              {queryParam && <span className="text-primary"> - {queryParam}</span>}
+            </h1>
             {isLoading ? (
-              <Skeleton className="h-5 w-48" />
+              <Skeleton className="h-5 w-64" />
             ) : (
               <p className="text-muted-foreground" data-testid="text-results-count">
-                <span className="font-semibold text-foreground">{total}</span>{" "}
-                {total === 1 ? "resultaat" : "resultaten"} gevonden
+                Lijst van profielen die jouw zoekopdracht "{queryParam || pageTitle}" bevatten.
               </p>
             )}
           </div>
 
+          {/* Results list */}
           {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="bg-card rounded-lg border border-border p-5">
-                  <div className="flex gap-4">
-                    <Skeleton className="h-16 w-16 rounded-full shrink-0" />
-                    <div className="flex-1 space-y-3">
-                      <Skeleton className="h-5 w-3/4" />
-                      <Skeleton className="h-4 w-1/2" />
-                      <Skeleton className="h-4 w-full" />
-                      <Skeleton className="h-4 w-full" />
+            <div className="space-y-4">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <Card key={i}>
+                  <CardContent className="p-5">
+                    <div className="flex gap-4">
+                      <Skeleton className="h-24 w-24 rounded-md shrink-0" />
+                      <div className="flex-1 space-y-3">
+                        <Skeleton className="h-5 w-3/4" />
+                        <Skeleton className="h-4 w-1/2" />
+                        <Skeleton className="h-4 w-full" />
+                        <Skeleton className="h-4 w-full" />
+                        <div className="flex gap-2 pt-2">
+                          <Skeleton className="h-6 w-20" />
+                          <Skeleton className="h-6 w-24" />
+                          <Skeleton className="h-6 w-16" />
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
+                  </CardContent>
+                </Card>
               ))}
             </div>
           ) : profiles.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="space-y-4">
               {profiles.map((profile) => (
-                <ProfileCard key={profile.id} profile={profile} />
+                <SearchResultCard key={profile.id} profile={profile} />
               ))}
             </div>
           ) : (
@@ -197,15 +194,15 @@ export default function CategoryPage() {
               </p>
               <div className="flex flex-wrap justify-center gap-3">
                 {!locationSlug && locations.slice(0, 4).map((loc) => (
-                  <Link key={loc.id} href={`/vind-een-${categorySlug}/${loc.slug}`}>
-                    <Button variant="outline" size="sm">
+                  <Link key={loc.id} href={`/zoek/${categorySlug}/${loc.slug}`}>
+                    <Button variant="outline" size="sm" data-testid={`button-empty-loc-${loc.slug}`}>
                       {loc.name}
                     </Button>
                   </Link>
                 ))}
                 {locationSlug && (
-                  <Link href={`/vind-een-${categorySlug}`}>
-                    <Button variant="outline">
+                  <Link href={`/zoek/${categorySlug}`}>
+                    <Button variant="outline" data-testid="button-search-all-belgium">
                       Zoek in heel België
                     </Button>
                   </Link>
@@ -214,6 +211,7 @@ export default function CategoryPage() {
             </div>
           )}
 
+          {/* Pagination */}
           {profilesData && profilesData.totalPages > 1 && (
             <div className="flex items-center justify-center gap-2 mt-8">
               <Button
@@ -242,16 +240,17 @@ export default function CategoryPage() {
         </div>
       </section>
 
+      {/* Locations footer section */}
       {!locationSlug && locations.length > 0 && (
-        <section className="py-12 bg-muted/30">
+        <section className="py-12 bg-muted/30 border-t border-border">
           <div className="container mx-auto px-4">
-            <h2 className="text-xl font-semibold mb-6">
+            <h2 className="text-lg font-semibold mb-4">
               {category?.name || "Tuinmannen"} per locatie
             </h2>
             <div className="flex flex-wrap gap-2">
               {locations.map((loc) => (
-                <Link key={loc.id} href={`/vind-een-${categorySlug}/${loc.slug}`}>
-                  <Button variant="outline" size="sm" className="rounded-full" data-testid={`button-loc-${loc.slug}`}>
+                <Link key={loc.id} href={`/zoek/${categorySlug}/${loc.slug}`}>
+                  <Button variant="ghost" size="sm" className="rounded-full hover:bg-primary/10 hover:text-primary" data-testid={`button-loc-${loc.slug}`}>
                     {loc.name}
                   </Button>
                 </Link>
@@ -261,5 +260,110 @@ export default function CategoryPage() {
         </section>
       )}
     </Layout>
+  );
+}
+
+// Search Result Card - matches vind-een-psycholoog.be style
+function SearchResultCard({ profile }: { profile: ProfileWithRelations }) {
+  return (
+    <Card className="hover-elevate transition-all" data-testid={`card-result-${profile.slug}`}>
+      <CardContent className="p-5">
+        <div className="flex flex-col sm:flex-row gap-4">
+          {/* Profile info */}
+          <div className="flex-1 min-w-0">
+            <Link href={`/bedrijf/${profile.slug}`}>
+              <h3 className="font-semibold text-lg text-primary hover:underline cursor-pointer mb-0.5" data-testid={`text-result-name-${profile.slug}`}>
+                {profile.name}
+              </h3>
+            </Link>
+            
+            {profile.title && (
+              <p className="text-sm text-primary/80 mb-1">
+                {profile.title}
+              </p>
+            )}
+            
+            {profile.location && (
+              <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1">
+                <MapPin className="h-3 w-3" />
+                {profile.location.name}
+              </p>
+            )}
+            
+            <p className="text-sm text-muted-foreground mb-3 line-clamp-3">
+              {profile.introduction || profile.description?.substring(0, 200)}
+            </p>
+
+            <Link href={`/bedrijf/${profile.slug}`}>
+              <span className="text-sm text-muted-foreground hover:text-primary cursor-pointer">
+                Lees verder <ArrowRight className="h-3 w-3 inline" />
+              </span>
+            </Link>
+
+            {/* Specializations */}
+            {profile.specializations && profile.specializations.length > 0 && (
+              <div className="mt-4 pt-3 border-t border-border">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="text-xs font-medium text-muted-foreground">Specialisaties</span>
+                  {profile.specializations.slice(0, 5).map((spec, index) => (
+                    <span 
+                      key={index}
+                      className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-muted text-muted-foreground"
+                    >
+                      {spec.toLowerCase().replace(/_/g, " ")}
+                    </span>
+                  ))}
+                  {profile.specializations.length > 5 && (
+                    <span className="text-xs text-muted-foreground">
+                      +{profile.specializations.length - 5}
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Category / Support tags */}
+            {profile.category && (
+              <div className="mt-2">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="text-xs font-medium text-muted-foreground">Ondersteuning bij</span>
+                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-primary/10 text-primary">
+                    {profile.category.name}
+                  </span>
+                  {profile.offeredServices && profile.offeredServices.slice(0, 3).map((service, index) => (
+                    <span 
+                      key={index}
+                      className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-muted text-muted-foreground"
+                    >
+                      {service}
+                    </span>
+                  ))}
+                  {profile.offeredServices && profile.offeredServices.length > 3 && (
+                    <span className="text-xs text-muted-foreground">
+                      ...
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Profile image */}
+          <div className="w-full sm:w-28 h-32 sm:h-28 rounded-md bg-muted shrink-0 overflow-hidden order-first sm:order-last">
+            {profile.logoUrl ? (
+              <img 
+                src={profile.logoUrl} 
+                alt={profile.name}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-primary/5">
+                <Leaf className="h-10 w-10 text-primary/40" />
+              </div>
+            )}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

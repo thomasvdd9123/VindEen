@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/lib/auth";
 import { Leaf, Loader2, ArrowRight } from "lucide-react";
 import { siteConfig } from "@/lib/theme.config";
 
@@ -22,6 +23,7 @@ type LoginFormData = z.infer<typeof loginSchema>;
 export default function Login() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const { signIn } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<LoginFormData>({
@@ -35,10 +37,23 @@ export default function Login() {
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true);
     try {
-      toast({
-        title: "Login functionaliteit",
-        description: "Inloggen wordt binnenkort beschikbaar. Dit is een MVP demo.",
-      });
+      const { error } = await signIn(data.email, data.password);
+      
+      if (error) {
+        toast({
+          title: "Inloggen mislukt",
+          description: error.message === "Invalid login credentials" 
+            ? "Onjuist email of wachtwoord"
+            : error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Welkom terug!",
+          description: "Je bent succesvol ingelogd.",
+        });
+        setLocation("/dashboard");
+      }
     } catch (error) {
       toast({
         title: "Er ging iets mis",

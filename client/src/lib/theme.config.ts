@@ -31,8 +31,8 @@ export const siteConfig = {
   
   // URL Patterns
   urlPatterns: {
-    category: "/vind-een-{category}",
-    categoryLocation: "/vind-een-{category}/{location}",
+    category: "/zoek/{category}",
+    categoryLocation: "/zoek/{category}/{location}",
     profile: "/bedrijf/{slug}",
   },
   

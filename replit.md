@@ -22,14 +22,18 @@ A SEO-optimized directory platform for Belgian businesses (inspired by vind-een-
 
 ## Key Features (MVP)
 - ✅ Homepage with hero, search, featured profiles
-- ✅ Dynamic category pages (/vind-een-[category])
-- ✅ Dynamic location pages (/vind-een-[category]/[location])
+- ✅ Dynamic category pages (/zoek/[category])
+- ✅ Dynamic location pages (/zoek/[category]/[location])
 - ✅ Profile detail pages (/bedrijf/[slug])
 - ✅ Contact form for profiles
-- ✅ Search and filtering
+- ✅ Search and filtering with specialization filters
 - ✅ SEO-optimized meta tags
 - ✅ Mobile-first responsive design
 - ✅ Green tuinman theme with centralized configuration
+- ✅ Supabase authentication (login, register, password reset)
+- ✅ Dashboard with Shadcn Sidebar navigation
+- ✅ Account & Billing page (Belgian business settings)
+- ✅ Profile management for businesses
 
 ## Configuration
 

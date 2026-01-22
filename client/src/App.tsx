@@ -3,22 +3,33 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { AuthProvider } from "@/lib/auth";
 import Home from "@/pages/Home";
 import CategoryPage from "@/pages/CategoryPage";
 import ProfilePage from "@/pages/ProfilePage";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
+import ForgotPassword from "@/pages/ForgotPassword";
+import Dashboard from "@/pages/dashboard/Dashboard";
+import DashboardAccount from "@/pages/dashboard/Account";
+import DashboardProfiles from "@/pages/dashboard/Profiles";
+import DashboardContacts from "@/pages/dashboard/Contacts";
 import NotFound from "@/pages/not-found";
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
-      <Route path="/vind-een-:category/:location" component={CategoryPage} />
-      <Route path="/vind-een-:category" component={CategoryPage} />
+      <Route path="/zoek/:category/:location" component={CategoryPage} />
+      <Route path="/zoek/:category" component={CategoryPage} />
       <Route path="/bedrijf/:slug" component={ProfilePage} />
       <Route path="/login" component={Login} />
       <Route path="/registreren" component={Register} />
+      <Route path="/wachtwoord-vergeten" component={ForgotPassword} />
+      <Route path="/dashboard" component={Dashboard} />
+      <Route path="/dashboard/account" component={DashboardAccount} />
+      <Route path="/dashboard/profielen" component={DashboardProfiles} />
+      <Route path="/dashboard/contacten" component={DashboardContacts} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -27,10 +38,12 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Router />
-      </TooltipProvider>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Router />
+        </TooltipProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

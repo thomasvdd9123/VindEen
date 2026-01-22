@@ -10,7 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
-import { Leaf, Loader2, ArrowRight, CheckCircle } from "lucide-react";
+import { useAuth } from "@/lib/auth";
+import { Leaf, Loader2, ArrowRight, CheckCircle, Mail } from "lucide-react";
 import { siteConfig } from "@/lib/theme.config";
 
 const registerSchema = z.object({
@@ -30,7 +31,10 @@ type RegisterFormData = z.infer<typeof registerSchema>;
 export default function Register() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const { signUp } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState("");
 
   const form = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
@@ -45,10 +49,24 @@ export default function Register() {
   const onSubmit = async (data: RegisterFormData) => {
     setIsLoading(true);
     try {
-      toast({
-        title: "Registratie functionaliteit",
-        description: "Registreren wordt binnenkort beschikbaar. Dit is een MVP demo.",
-      });
+      const { error, needsConfirmation } = await signUp(data.email, data.password);
+      
+      if (error) {
+        toast({
+          title: "Registratie mislukt",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else if (needsConfirmation) {
+        setRegisteredEmail(data.email);
+        setShowConfirmation(true);
+      } else {
+        toast({
+          title: "Account aangemaakt!",
+          description: "Je account is succesvol aangemaakt.",
+        });
+        setLocation("/dashboard");
+      }
     } catch (error) {
       toast({
         title: "Er ging iets mis",
@@ -66,6 +84,42 @@ export default function Register() {
     "Ontvang direct contactaanvragen",
     "Beheer je zichtbaarheid zelf",
   ];
+
+  if (showConfirmation) {
+    return (
+      <Layout>
+        <div className="min-h-[calc(100vh-200px)] flex items-center justify-center py-12 px-4">
+          <Card className="w-full max-w-md text-center" data-testid="card-confirmation">
+            <CardHeader>
+              <div className="flex justify-center mb-4">
+                <div className="flex items-center justify-center w-16 h-16 rounded-full bg-primary/10">
+                  <Mail className="h-8 w-8 text-primary" />
+                </div>
+              </div>
+              <CardTitle className="text-2xl">Controleer je email</CardTitle>
+              <CardDescription className="text-base">
+                We hebben een bevestigingslink gestuurd naar:
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="font-medium text-lg" data-testid="text-email">{registeredEmail}</p>
+              <p className="text-muted-foreground">
+                Klik op de link in de email om je account te bevestigen en door te gaan met het aanmaken van je profiel.
+              </p>
+              <div className="pt-4">
+                <Link href="/login">
+                  <Button variant="outline" className="gap-2" data-testid="button-back-login">
+                    Terug naar inloggen
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>

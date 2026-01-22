@@ -6,17 +6,17 @@ export function Footer() {
   const currentYear = new Date().getFullYear();
 
   const categoryLinks = [
-    { href: "/vind-een-tuinaanlegger", label: "Tuinaanleggers" },
-    { href: "/vind-een-tuinarchitect", label: "Tuinarchitecten" },
-    { href: "/vind-een-hovenier", label: "Hoveniers" },
-    { href: "/vind-een-boomverzorger", label: "Boomverzorgers" },
+    { href: "/zoek/tuinaanlegger", label: "Tuinaanleggers" },
+    { href: "/zoek/tuinarchitect", label: "Tuinarchitecten" },
+    { href: "/zoek/hovenier", label: "Hoveniers" },
+    { href: "/zoek/boomverzorger", label: "Boomverzorgers" },
   ];
 
   const locationLinks = [
-    { href: "/vind-een-tuinaanlegger/gent", label: "Tuinmannen Gent" },
-    { href: "/vind-een-tuinaanlegger/antwerpen", label: "Tuinmannen Antwerpen" },
-    { href: "/vind-een-tuinaanlegger/brussel", label: "Tuinmannen Brussel" },
-    { href: "/vind-een-tuinaanlegger/brugge", label: "Tuinmannen Brugge" },
+    { href: "/zoek/tuinaanlegger/gent", label: "Tuinmannen Gent" },
+    { href: "/zoek/tuinaanlegger/antwerpen", label: "Tuinmannen Antwerpen" },
+    { href: "/zoek/tuinaanlegger/brussel", label: "Tuinmannen Brussel" },
+    { href: "/zoek/tuinaanlegger/brugge", label: "Tuinmannen Brugge" },
   ];
 
   const infoLinks = [

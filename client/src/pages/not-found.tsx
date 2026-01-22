@@ -34,7 +34,7 @@ export default function NotFound() {
                 Naar homepage
               </Button>
             </Link>
-            <Link href="/vind-een-tuinaanlegger">
+            <Link href="/zoek/tuinaanlegger">
               <Button variant="outline" className="gap-2" data-testid="button-search">
                 <Search className="h-4 w-4" />
                 Zoek tuinmannen

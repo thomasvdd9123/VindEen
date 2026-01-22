@@ -67,13 +67,33 @@ export async function registerRoutes(
     }
   });
 
+  // Get profile count for search filters
+  app.get("/api/profiles/count", async (req, res) => {
+    try {
+      const params = searchParamsSchema.parse({
+        query: req.query.q as string | undefined,
+        categorySlug: req.query.category as string | undefined,
+        locationSlug: req.query.location as string | undefined,
+        specializations: req.query.spec ? [req.query.spec as string] : undefined,
+        page: 1,
+        limit: 1,
+      });
+
+      const result = await storage.searchProfiles(params);
+      res.json({ total: result.total });
+    } catch (error) {
+      console.error("Error counting profiles:", error);
+      res.status(500).json({ error: "Failed to count profiles" });
+    }
+  });
+
   app.get("/api/profiles/search", async (req, res) => {
     try {
       const params = searchParamsSchema.parse({
-        query: req.query.query as string | undefined,
+        query: req.query.q as string | undefined,
         categorySlug: req.query.category as string | undefined,
         locationSlug: req.query.location as string | undefined,
-        specializations: req.query.specializations ? (req.query.specializations as string).split(",") : undefined,
+        specializations: req.query.spec ? [req.query.spec as string] : undefined,
         page: req.query.page ? parseInt(req.query.page as string) : 1,
         limit: req.query.limit ? parseInt(req.query.limit as string) : 12,
       });

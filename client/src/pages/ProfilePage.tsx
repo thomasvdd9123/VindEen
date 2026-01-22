@@ -132,7 +132,7 @@ export default function ProfilePage() {
                 <>
                   <BreadcrumbItem>
                     <BreadcrumbLink asChild>
-                      <Link href={`/vind-een-${profile.category.slug}`} data-testid="breadcrumb-category">
+                      <Link href={`/zoek/${profile.category.slug}`} data-testid="breadcrumb-category">
                         {profile.category.name}
                       </Link>
                     </BreadcrumbLink>
@@ -145,7 +145,7 @@ export default function ProfilePage() {
                   <BreadcrumbItem>
                     <BreadcrumbLink asChild>
                       <Link 
-                        href={`/vind-een-${profile.category?.slug || 'tuinaanlegger'}/${profile.location.slug}`}
+                        href={`/zoek/${profile.category?.slug || 'tuinaanlegger'}/${profile.location.slug}`}
                         data-testid="breadcrumb-location"
                       >
                         {profile.location.name}
