@@ -9,6 +9,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/lib/auth";
 import type { ContactRequest, Gardener } from "@shared/schema";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { 
   MessageSquare,
   Mail,
@@ -20,6 +21,7 @@ import {
   Search,
   SortAsc,
   Loader2,
+  AlertCircle,
 } from "lucide-react";
 
 type SortOption = "date-desc" | "date-asc" | "name-asc" | "name-desc" | "subject-asc" | "subject-desc";
@@ -44,7 +46,7 @@ export default function DashboardContacts() {
   });
 
   // Fetch contact requests
-  const { data: contacts = [], isLoading } = useQuery<ContactRequest[]>({
+  const { data: contacts = [], isLoading, isError } = useQuery<ContactRequest[]>({
     queryKey: ["/api/contact-requests", gardener?.id],
     queryFn: async () => {
       if (!gardener?.id) return [];
@@ -159,6 +161,14 @@ export default function DashboardContacts() {
           <div className="flex justify-center py-12">
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
           </div>
+        ) : isError ? (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Fout bij laden</AlertTitle>
+            <AlertDescription>
+              Kon de contactverzoeken niet ophalen. Probeer het later opnieuw.
+            </AlertDescription>
+          </Alert>
         ) : filteredContacts.length > 0 ? (
           <div className="space-y-4">
             {filteredContacts.map((contact) => (

@@ -4,12 +4,13 @@ import { Badge } from "@/components/ui/badge";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { useQuery } from "@tanstack/react-query";
-import { Check, Loader2 } from "lucide-react";
+import { Check, Loader2, AlertCircle } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Link } from "wouter";
 import type { SubscriptionPlan } from "@shared/schema";
 
 export default function Pricing() {
-  const { data: plans = [], isLoading } = useQuery<SubscriptionPlan[]>({
+  const { data: plans = [], isLoading, isError } = useQuery<SubscriptionPlan[]>({
     queryKey: ["/api/subscription-plans"],
   });
 
@@ -33,6 +34,14 @@ export default function Pricing() {
             <div className="flex justify-center py-12">
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
+          ) : isError ? (
+            <Alert variant="destructive" className="max-w-md mx-auto">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Fout bij laden</AlertTitle>
+              <AlertDescription>
+                Kon de prijzen niet ophalen. Probeer het later opnieuw.
+              </AlertDescription>
+            </Alert>
           ) : (
             <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
               {plans.map((plan, index) => {

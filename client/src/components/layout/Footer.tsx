@@ -108,7 +108,7 @@ export function Footer() {
               © {currentYear} {siteConfig.name}. Alle rechten voorbehouden.
             </p>
             <p className="text-sm text-muted-foreground">
-              Made with <span className="text-primary">♥</span> in {siteConfig.country}
+              Made in {siteConfig.country}
             </p>
           </div>
         </div>

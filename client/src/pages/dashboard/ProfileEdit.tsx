@@ -13,12 +13,37 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDes
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Loader2, Save, ArrowLeft, Info, Eye, EyeOff, CheckCircle, XCircle } from "lucide-react";
+import { Loader2, Save, ArrowLeft, Info, Eye, EyeOff, CheckCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Progress } from "@/components/ui/progress";
 import type { Category, Location, Profile } from "@shared/schema";
+
+// Calculate profile completeness from form values
+function calculateProfileCompleteness(formValues: ProfileFormData): { percentage: number; missing: string[] } {
+  const fields = [
+    { key: "name", label: "Bedrijfsnaam", value: formValues.name },
+    { key: "email", label: "Email", value: formValues.email },
+    { key: "introduction", label: "Introductie", value: formValues.introduction },
+    { key: "categoryId", label: "Categorie", value: formValues.categoryId },
+    { key: "locationId", label: "Locatie", value: formValues.locationId },
+    { key: "telnr", label: "Telefoonnummer", value: formValues.telnr },
+    { key: "website", label: "Website", value: formValues.website },
+    { key: "description", label: "Beschrijving", value: formValues.description },
+    { key: "title", label: "Functietitel", value: formValues.title },
+    { key: "offeredServices", label: "Diensten", value: formValues.offeredServices?.length ? formValues.offeredServices : null },
+  ];
+  
+  const filled = fields.filter(f => f.value && String(f.value).trim() !== "");
+  const missing = fields.filter(f => !f.value || String(f.value).trim() === "").map(f => f.label);
+  
+  return {
+    percentage: Math.round((filled.length / fields.length) * 100),
+    missing,
+  };
+}
 
 // Predefined services for selection
 const AVAILABLE_SERVICES = [
@@ -54,6 +79,30 @@ const profileSchema = z.object({
 });
 
 type ProfileFormData = z.infer<typeof profileSchema>;
+
+function ProfileCompletenessCard({ form }: { form: ReturnType<typeof useForm<ProfileFormData>> }) {
+  const formValues = form.watch();
+  const { percentage, missing } = calculateProfileCompleteness(formValues);
+  
+  return (
+    <Card className="mb-4" data-testid="card-profile-completeness">
+      <CardContent className="pt-4">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-sm font-medium">Profiel volledigheid</span>
+          <Badge variant={percentage === 100 ? "default" : "secondary"}>
+            {percentage}%
+          </Badge>
+        </div>
+        <Progress value={percentage} className="h-2" />
+        {missing.length > 0 && (
+          <p className="text-xs text-muted-foreground mt-2">
+            Nog toe te voegen: {missing.join(", ")}
+          </p>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function ProfileEdit() {
   const [, setLocation] = useLocation();
@@ -216,6 +265,9 @@ export default function ProfileEdit() {
             )}
           </Alert>
         )}
+
+        {/* Profile Completeness Indicator */}
+        <ProfileCompletenessCard form={form} />
 
         <Card>
           <CardHeader>
