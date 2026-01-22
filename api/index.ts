@@ -47,6 +47,31 @@ function toSnakeCase(obj: Record<string, any>): Record<string, any> {
   return result;
 }
 
+// Reverse mapping: snake_case to camelCase
+const reverseFieldMap: Record<string, string> = Object.fromEntries(
+  Object.entries(fieldMap).map(([camel, snake]) => [snake, camel])
+);
+
+function toCamelCase(obj: Record<string, any>): Record<string, any> {
+  if (!obj || typeof obj !== 'object') return obj;
+  if (Array.isArray(obj)) return obj.map(item => toCamelCase(item));
+  
+  const result: Record<string, any> = {};
+  for (const key in obj) {
+    const camelKey = reverseFieldMap[key] || key;
+    const value = obj[key];
+    // Recursively convert nested objects (but not arrays of primitives)
+    if (value && typeof value === 'object' && !Array.isArray(value)) {
+      result[camelKey] = toCamelCase(value);
+    } else if (Array.isArray(value) && value.length > 0 && typeof value[0] === 'object') {
+      result[camelKey] = value.map(item => toCamelCase(item));
+    } else {
+      result[camelKey] = value;
+    }
+  }
+  return result;
+}
+
 // Generate slug from name
 function generateSlug(name: string): string {
   return name
@@ -132,7 +157,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         .limit(6);
       
       if (error) throw error;
-      return res.status(200).json(data || []);
+      return res.status(200).json(toCamelCase(data || []));
     }
 
     // GET /api/profiles/count
@@ -203,7 +228,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const totalPages = Math.ceil(total / limit);
 
       return res.status(200).json({
-        profiles: data || [],
+        profiles: toCamelCase(data || []),
         total,
         page,
         totalPages,
@@ -228,7 +253,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (error && error.code !== "PGRST116") throw error;
       if (!data) return res.status(404).json({ error: "Profile not found" });
       res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
-      return res.status(200).json(data);
+      return res.status(200).json(toCamelCase(data));
     }
 
     // GET /api/profiles/:slug (must be after other /api/profiles/ routes)
@@ -253,7 +278,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       
       if (error && error.code !== "PGRST116") throw error;
       if (!data) return res.status(404).json({ error: "Profile not found" });
-      return res.status(200).json(data);
+      return res.status(200).json(toCamelCase(data));
     }
 
     // GET /api/my-profiles/:gardenerId
@@ -265,7 +290,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         .eq("gardener_id", gardenerId);
       
       if (error) throw error;
-      return res.status(200).json(data || []);
+      return res.status(200).json(toCamelCase(data || []));
     }
 
     // POST /api/gardeners
@@ -451,7 +476,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         .single();
       
       if (error) throw error;
-      return res.status(200).json(data);
+      return res.status(200).json(toCamelCase(data));
     }
 
     // PATCH /api/profiles/:id
@@ -485,7 +510,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       
       console.log("PATCH /api/profiles/:id - Success:", data?.id);
       res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
-      return res.status(200).json(data);
+      return res.status(200).json(toCamelCase(data));
     }
 
     // DELETE /api/profiles/:id
