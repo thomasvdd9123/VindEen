@@ -843,7 +843,7 @@ export default function ProfileEdit() {
               profileId={id!} 
               currentLogoUrl={profile?.logoUrl}
               onUploadSuccess={() => {
-                queryClient.invalidateQueries({ queryKey: ["/api/profiles/id", id] });
+                queryClient.refetchQueries({ queryKey: ["/api/profiles/id", id] });
               }}
             />
           </CardContent>
@@ -862,7 +862,7 @@ export default function ProfileEdit() {
               profileId={id!} 
               currentPhotos={profile?.imageUrls || []}
               onUploadSuccess={() => {
-                queryClient.invalidateQueries({ queryKey: ["/api/profiles/id", id] });
+                queryClient.refetchQueries({ queryKey: ["/api/profiles/id", id] });
               }}
             />
           </CardContent>
