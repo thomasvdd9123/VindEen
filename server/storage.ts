@@ -35,6 +35,7 @@ export interface IStorage {
   getProfileBySlug(slug: string): Promise<ProfileWithRelations | undefined>;
   getProfileById(id: string): Promise<ProfileWithRelations | undefined>;
   getProfilesByBusinessId(businessId: string): Promise<Profile[]>;
+  getProfilesByGardenerId(gardenerId: string): Promise<Profile[]>;
   getFeaturedProfiles(): Promise<ProfileWithRelations[]>;
   searchProfiles(params: SearchParams): Promise<{ profiles: ProfileWithRelations[]; total: number; page: number; totalPages: number }>;
   createProfile(profile: InsertProfile): Promise<Profile>;
@@ -527,6 +528,10 @@ export class MemStorage implements IStorage {
     return Array.from(this.profiles.values()).filter((p) => p.businessId === businessId);
   }
 
+  async getProfilesByGardenerId(gardenerId: string): Promise<Profile[]> {
+    return Array.from(this.profiles.values()).filter((p) => p.gardenerId === gardenerId);
+  }
+
   async getFeaturedProfiles(): Promise<ProfileWithRelations[]> {
     const featured = Array.from(this.profiles.values())
       .filter((p) => p.isActive && p.isPublic)
@@ -801,5 +806,9 @@ export class MemStorage implements IStorage {
 
 // Use environment variable to determine which storage to use
 const USE_SUPABASE = process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+console.log('[Storage] SUPABASE_URL exists:', !!process.env.SUPABASE_URL);
+console.log('[Storage] SUPABASE_SERVICE_ROLE_KEY exists:', !!process.env.SUPABASE_SERVICE_ROLE_KEY);
+console.log('[Storage] Using:', USE_SUPABASE ? 'Supabase' : 'MemStorage');
 
 export const storage: IStorage = USE_SUPABASE ? supabaseStorage : new MemStorage();

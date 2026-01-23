@@ -200,6 +200,16 @@ export class SupabaseStorage implements IStorage {
     return (data || []).map(d => this.mapProfile(d));
   }
 
+  async getProfilesByGardenerId(gardenerId: string): Promise<Profile[]> {
+    const { data, error } = await supabaseAdmin
+      .from("profiles")
+      .select("*")
+      .eq("gardener_id", gardenerId);
+    
+    if (error) throw error;
+    return (data || []).map(d => this.mapProfile(d));
+  }
+
   async getFeaturedProfiles(): Promise<ProfileWithRelations[]> {
     const { data, error } = await supabaseAdmin
       .from("profiles")
