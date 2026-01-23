@@ -95,7 +95,17 @@ shared/
 - `POST /api/contact/:profileId` - Submit contact form
 
 ## Seed Data
-Includes Belgian categories (tuinaanlegger, tuinarchitect, hovenier, etc.) and major cities (Gent, Antwerpen, Brussel, Brugge, Leuven, etc.) with sample profiles.
+Includes Belgian categories (Tuinonderhoud, Tuinaanleg) with specializations, major cities (Gent, Antwerpen, Brussel, Brugge, Leuven, Hasselt, Kortrijk) with sample verified profiles.
+
+## Recent Schema Changes (Jan 2026)
+- **Universal Naming**: Renamed `gardeners` to `businesses` for easy rebranding to other industries
+- **Categories**: Two main categories: `TUINONDERHOUD` (maintenance: grass mowing, pruning) and `TUINAANLEG` (creation: grass laying, paths, wooden walls)
+- **Profile Verification**: Added `isVerified` and `verificationStatus` fields with `ProfileStatusHistory` for audit trail
+- **Belgian Localization**: Added province/region enums, language enum (NL, FR, DE, EN)
+- **Simplified Practicals**: Changed `experience` to `experienceYears` (integer), removed `reachability`
+- **Office**: Removed `country` field (hardcoded "België" in UI)
+- **ContactRequest**: Simplified to async-only (no status tracking for external emails)
+- **SubscriptionItem**: Uses `businessId` only (removed duplicate `profileId`)
 
 ## Environment Variables
 ```
