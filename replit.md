@@ -37,7 +37,7 @@ A SEO-optimized directory platform for Belgian businesses (inspired by vind-een-
 - ✅ Password reset flow (/wachtwoord-reset)
 - ✅ Multi-step onboarding wizard for new signups (/onboarding)
 - ✅ Map view for search results with Leaflet
-- ✅ 60+ Belgian cities with postcodes for autocomplete search
+- ✅ 572 Belgian municipalities with postcodes, coordinates for autocomplete search and SEO
 
 ## Configuration
 
