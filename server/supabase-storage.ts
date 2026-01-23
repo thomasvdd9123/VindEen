@@ -140,6 +140,33 @@ export class SupabaseStorage implements IStorage {
     return this.mapAccount(data);
   }
 
+  async updateAccount(id: string, updates: Partial<InsertAccount>): Promise<Account | undefined> {
+    const updateData: Record<string, unknown> = {};
+    
+    if (updates.email !== undefined) updateData.email = updates.email;
+    if (updates.role !== undefined) updateData.role = updates.role;
+    if (updates.vatNumber !== undefined) updateData.vat_number = updates.vatNumber;
+    if (updates.companyName !== undefined) updateData.company_name = updates.companyName;
+    if (updates.billingStreet !== undefined) updateData.billing_street = updates.billingStreet;
+    if (updates.billingNumber !== undefined) updateData.billing_number = updates.billingNumber;
+    if (updates.billingPostcode !== undefined) updateData.billing_postcode = updates.billingPostcode;
+    if (updates.billingCity !== undefined) updateData.billing_city = updates.billingCity;
+    if (updates.emailVerified !== undefined) updateData.email_verified = updates.emailVerified;
+    if (updates.emailVerifiedAt !== undefined) updateData.email_verified_at = updates.emailVerifiedAt;
+    
+    updateData.updated_at = new Date().toISOString();
+    
+    const { data, error } = await supabaseAdmin
+      .from("accounts")
+      .update(updateData)
+      .eq("id", id)
+      .select()
+      .single();
+    
+    if (error && error.code !== "PGRST116") throw error;
+    return data ? this.mapAccount(data) : undefined;
+  }
+
   // Profiles
   async getProfiles(): Promise<Profile[]> {
     const { data, error } = await supabaseAdmin

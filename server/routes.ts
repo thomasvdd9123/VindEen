@@ -243,6 +243,49 @@ export async function registerRoutes(
     }
   });
 
+  // Get account by ID
+  app.get("/api/accounts/:id", async (req, res) => {
+    try {
+      const account = await storage.getAccount(req.params.id);
+      if (!account) {
+        return res.status(404).json({ error: "Account not found" });
+      }
+      res.json(account);
+    } catch (error) {
+      console.error("Error fetching account:", error);
+      res.status(500).json({ error: "Failed to fetch account" });
+    }
+  });
+
+  // Get account by auth user ID (Supabase user UUID)
+  app.get("/api/accounts/by-auth/:authUserId", async (req, res) => {
+    try {
+      const account = await storage.getAccountByAuthUserId(req.params.authUserId);
+      if (!account) {
+        return res.status(404).json({ error: "Account not found" });
+      }
+      res.json(account);
+    } catch (error) {
+      console.error("Error fetching account by auth user:", error);
+      res.status(500).json({ error: "Failed to fetch account" });
+    }
+  });
+
+  // Update account (PATCH)
+  app.patch("/api/accounts/:id", async (req, res) => {
+    try {
+      const updates = req.body;
+      const account = await storage.updateAccount(req.params.id, updates);
+      if (!account) {
+        return res.status(404).json({ error: "Account not found" });
+      }
+      res.json(account);
+    } catch (error) {
+      console.error("Error updating account:", error);
+      res.status(500).json({ error: "Failed to update account" });
+    }
+  });
+
   // Get profiles by account (user's own profiles)
   app.get("/api/my-profiles/:accountId", async (req, res) => {
     try {
@@ -481,7 +524,7 @@ export async function registerRoutes(
   // File Upload - Profile Logo
   app.post("/api/profiles/:id/logo", upload.single("file"), async (req, res) => {
     try {
-      const profileId = req.params.id;
+      const profileId = req.params.id as string;
       const file = req.file;
 
       // Verify ownership
@@ -536,7 +579,7 @@ export async function registerRoutes(
   // File Upload - Work Photos
   app.post("/api/profiles/:id/photos", upload.array("files", 10), async (req, res) => {
     try {
-      const profileId = req.params.id;
+      const profileId = req.params.id as string;
       const files = req.files as Express.Multer.File[];
 
       // Verify ownership
@@ -595,7 +638,7 @@ export async function registerRoutes(
   // Delete Work Photo
   app.delete("/api/profiles/:id/photos", async (req, res) => {
     try {
-      const profileId = req.params.id;
+      const profileId = req.params.id as string;
       const { url } = req.body;
 
       // Verify ownership

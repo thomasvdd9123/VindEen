@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useQuery } from "@tanstack/react-query";
 import { DashboardLayout } from "./DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,8 @@ import { Loader2, Save, Mail, Trash2, AlertTriangle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { supabase } from "@/lib/supabase";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import type { Account } from "@shared/schema";
 
 const accountSchema = z.object({
   firstName: z.string().min(2, "Voornaam is verplicht"),
@@ -48,6 +51,12 @@ export default function DashboardAccount() {
 
   const metadata = getUserMetadata();
 
+  // Fetch account data from API using Supabase Auth user ID
+  const { data: accountData } = useQuery<Account>({
+    queryKey: ["/api/accounts/by-auth", user?.id],
+    enabled: !!user?.id,
+  });
+
   const accountForm = useForm<AccountFormData>({
     resolver: zodResolver(accountSchema),
     defaultValues: {
@@ -62,14 +71,14 @@ export default function DashboardAccount() {
   const invoiceForm = useForm<InvoiceFormData>({
     resolver: zodResolver(invoiceSchema),
     defaultValues: {
-      invoiceName: metadata.invoiceName || "",
-      street: metadata.street || "",
-      municipality: metadata.municipality || "",
-      postcode: metadata.postcode || "",
-      country: metadata.country || "België",
-      btwPlichtig: metadata.btwPlichtig || "no",
-      btwNumber: metadata.btwNumber || "",
-      kvkNumber: metadata.kvkNumber || "",
+      invoiceName: "",
+      street: "",
+      municipality: "",
+      postcode: "",
+      country: "België",
+      btwPlichtig: "no",
+      btwNumber: "",
+      kvkNumber: "",
     },
   });
 
@@ -90,21 +99,22 @@ export default function DashboardAccount() {
     }
   }, [metadata.firstName, hasLoadedAccount]);
 
+  // Load invoice form from account data (from database)
   useEffect(() => {
-    if (!hasLoadedInvoice && metadata.invoiceName) {
+    if (!hasLoadedInvoice && accountData) {
       invoiceForm.reset({
-        invoiceName: metadata.invoiceName || "",
-        street: metadata.street || "",
-        municipality: metadata.municipality || "",
-        postcode: metadata.postcode || "",
-        country: metadata.country || "België",
-        btwPlichtig: metadata.btwPlichtig || "no",
-        btwNumber: metadata.btwNumber || "",
-        kvkNumber: metadata.kvkNumber || "",
+        invoiceName: accountData.companyName || "",
+        street: accountData.billingStreet || "",
+        municipality: accountData.billingCity || "",
+        postcode: accountData.billingPostcode || "",
+        country: "België",
+        btwPlichtig: accountData.vatNumber ? "yes" : "no",
+        btwNumber: accountData.vatNumber || "",
+        kvkNumber: "", // Not stored in accounts table yet
       });
       setHasLoadedInvoice(true);
     }
-  }, [metadata.invoiceName, hasLoadedInvoice]);
+  }, [accountData, hasLoadedInvoice]);
 
   const onSubmitAccount = async (data: AccountFormData) => {
     setIsLoadingAccount(true);
@@ -141,31 +151,32 @@ export default function DashboardAccount() {
   };
 
   const onSubmitInvoice = async (data: InvoiceFormData) => {
+    if (!accountData?.id) {
+      toast({
+        title: "Er ging iets mis",
+        description: "Account niet gevonden.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setIsLoadingInvoice(true);
     try {
-      const { error } = await updateUserMetadata({
-        invoiceName: data.invoiceName,
-        street: data.street,
-        municipality: data.municipality,
-        postcode: data.postcode,
-        country: data.country,
-        btwPlichtig: data.btwPlichtig,
-        btwNumber: data.btwNumber,
-        kvkNumber: data.kvkNumber,
+      await apiRequest("PATCH", `/api/accounts/${accountData.id}`, {
+        companyName: data.invoiceName,
+        billingStreet: data.street,
+        billingCity: data.municipality,
+        billingPostcode: data.postcode,
+        vatNumber: data.btwPlichtig === "yes" ? data.btwNumber : null,
       });
       
-      if (error) {
-        toast({
-          title: "Er ging iets mis",
-          description: error.message,
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Factuurgegevens opgeslagen",
-          description: "Je factuurgegevens zijn bijgewerkt.",
-        });
-      }
+      // Invalidate account cache to refresh data
+      queryClient.invalidateQueries({ queryKey: ["/api/accounts/by-auth", user?.id] });
+      
+      toast({
+        title: "Factuurgegevens opgeslagen",
+        description: "Je factuurgegevens zijn bijgewerkt.",
+      });
     } catch (error) {
       toast({
         title: "Er ging iets mis",

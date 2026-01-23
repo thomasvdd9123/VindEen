@@ -29,6 +29,7 @@ export interface IStorage {
   getAccount(id: string): Promise<Account | undefined>;
   getAccountByAuthUserId(authUserId: string): Promise<Account | undefined>;
   createAccount(account: InsertAccount): Promise<Account>;
+  updateAccount(id: string, updates: Partial<InsertAccount>): Promise<Account | undefined>;
 
   // Profiles (service listings)
   getProfiles(): Promise<Profile[]>;
@@ -518,6 +519,19 @@ export class MemStorage implements IStorage {
     return newAccount;
   }
 
+  async updateAccount(id: string, updates: Partial<InsertAccount>): Promise<Account | undefined> {
+    const existing = this.accounts.get(id);
+    if (!existing) return undefined;
+    
+    const updated: Account = {
+      ...existing,
+      ...updates,
+      updatedAt: new Date(),
+    };
+    this.accounts.set(id, updated);
+    return updated;
+  }
+
   // Profiles
   async getProfiles(): Promise<Profile[]> {
     return Array.from(this.profiles.values()).filter((p) => p.isActive);
@@ -629,6 +643,8 @@ export class MemStorage implements IStorage {
       seoDescription: profile.seoDescription ?? null,
       categoryId: profile.categoryId ?? null,
       locationId: profile.locationId ?? null,
+      isVerified: profile.isVerified ?? false,
+      verificationStatus: profile.verificationStatus ?? "PENDING",
       createdAt: new Date(),
       updatedAt: new Date(),
     };
