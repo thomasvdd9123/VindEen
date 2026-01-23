@@ -28,6 +28,7 @@ interface AuthContextType {
   signUp: (email: string, password: string) => Promise<{ error: Error | null; needsConfirmation: boolean }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: Error | null }>;
+  updatePassword: (newPassword: string) => Promise<{ error: Error | null }>;
   updateUserMetadata: (metadata: UserMetadata) => Promise<{ error: Error | null }>;
   getUserMetadata: () => UserMetadata;
 }
@@ -123,7 +124,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       email,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/dashboard`,
+        emailRedirectTo: `${window.location.origin}/onboarding`,
       },
     });
     
@@ -149,6 +150,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/wachtwoord-reset`,
+    });
+    return { error: error as Error | null };
+  }, []);
+
+  const updatePassword = useCallback(async (newPassword: string) => {
+    if (!isSupabaseConfigured) {
+      return { error: new Error("Supabase is not configured.") };
+    }
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword,
     });
     return { error: error as Error | null };
   }, []);
@@ -184,6 +195,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signUp,
         signOut,
         resetPassword,
+        updatePassword,
         updateUserMetadata,
         getUserMetadata,
       }}

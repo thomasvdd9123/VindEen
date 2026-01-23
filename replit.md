@@ -34,6 +34,10 @@ A SEO-optimized directory platform for Belgian businesses (inspired by vind-een-
 - ✅ Dashboard with Shadcn Sidebar navigation
 - ✅ Account & Billing page (Belgian business settings)
 - ✅ Profile management for businesses
+- ✅ Password reset flow (/wachtwoord-reset)
+- ✅ Multi-step onboarding wizard for new signups (/onboarding)
+- ✅ Map view for search results with Leaflet
+- ✅ 60+ Belgian cities with postcodes for autocomplete search
 
 ## Configuration
 

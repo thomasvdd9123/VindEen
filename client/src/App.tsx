@@ -10,6 +10,8 @@ import ProfilePage from "@/pages/ProfilePage";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import ForgotPassword from "@/pages/ForgotPassword";
+import PasswordReset from "@/pages/PasswordReset";
+import Onboarding from "@/pages/Onboarding";
 import Dashboard from "@/pages/dashboard/Dashboard";
 import DashboardAccount from "@/pages/dashboard/Account";
 import DashboardProfiles from "@/pages/dashboard/Profiles";
@@ -33,6 +35,8 @@ function Router() {
       <Route path="/login" component={Login} />
       <Route path="/registreren" component={Register} />
       <Route path="/wachtwoord-vergeten" component={ForgotPassword} />
+      <Route path="/wachtwoord-reset" component={PasswordReset} />
+      <Route path="/onboarding" component={Onboarding} />
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/dashboard/account" component={DashboardAccount} />
       <Route path="/dashboard/profielen" component={DashboardProfiles} />

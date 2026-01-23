@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useParams, Link, useSearch } from "wouter";
 import { Layout } from "@/components/layout/Layout";
 import { SearchBox } from "@/components/SearchBox";
 import { ProfileCard } from "@/components/ProfileCard";
+import { SearchMap } from "@/components/SearchMap";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -14,11 +16,12 @@ import {
   BreadcrumbPage, 
   BreadcrumbSeparator 
 } from "@/components/ui/breadcrumb";
-import { ChevronLeft, ChevronRight, Leaf, MapPin, ArrowRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Leaf, MapPin, ArrowRight, List, Map } from "lucide-react";
 import type { Category, Location, ProfileWithRelations } from "@shared/schema";
 import { siteConfig } from "@/lib/theme.config";
 
 export default function CategoryPage() {
+  const [viewMode, setViewMode] = useState<"list" | "map">("list");
   const params = useParams<{ category: string; location?: string }>();
   const categorySlug = params.category;
   const locationSlug = params.location;
@@ -142,21 +145,45 @@ export default function CategoryPage() {
       <section className="py-8">
         <div className="container mx-auto px-4">
           {/* Results header */}
-          <div className="mb-6">
-            <h1 className="text-xl font-semibold mb-1" data-testid="text-results-title">
-              Resultaten voor "{pageTitle}"
-              {queryParam && <span className="text-primary"> - {queryParam}</span>}
-            </h1>
-            {isLoading ? (
-              <Skeleton className="h-5 w-64" />
-            ) : (
-              <p className="text-muted-foreground" data-testid="text-results-count">
-                Lijst van profielen die jouw zoekopdracht "{queryParam || pageTitle}" bevatten.
-              </p>
-            )}
+          <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h1 className="text-xl font-semibold mb-1" data-testid="text-results-title">
+                Resultaten voor "{pageTitle}"
+                {queryParam && <span className="text-primary"> - {queryParam}</span>}
+              </h1>
+              {isLoading ? (
+                <Skeleton className="h-5 w-64" />
+              ) : (
+                <p className="text-muted-foreground" data-testid="text-results-count">
+                  {total} {total === 1 ? "resultaat" : "resultaten"} gevonden
+                </p>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant={viewMode === "list" ? "secondary" : "ghost"}
+                size="sm"
+                onClick={() => setViewMode("list")}
+                className="gap-2"
+                data-testid="button-view-list"
+              >
+                <List className="h-4 w-4" />
+                Lijst
+              </Button>
+              <Button
+                variant={viewMode === "map" ? "secondary" : "ghost"}
+                size="sm"
+                onClick={() => setViewMode("map")}
+                className="gap-2"
+                data-testid="button-view-map"
+              >
+                <Map className="h-4 w-4" />
+                Kaart
+              </Button>
+            </div>
           </div>
 
-          {/* Results list */}
+          {/* Results list or map */}
           {isLoading ? (
             <div className="space-y-4">
               {Array.from({ length: 4 }).map((_, i) => (
@@ -181,11 +208,19 @@ export default function CategoryPage() {
               ))}
             </div>
           ) : profiles.length > 0 ? (
-            <div className="space-y-4">
-              {profiles.map((profile) => (
-                <SearchResultCard key={profile.id} profile={profile} />
-              ))}
-            </div>
+            viewMode === "map" ? (
+              <SearchMap 
+                profiles={profiles} 
+                locations={locations} 
+                className="h-[600px]" 
+              />
+            ) : (
+              <div className="space-y-4">
+                {profiles.map((profile) => (
+                  <SearchResultCard key={profile.id} profile={profile} />
+                ))}
+              </div>
+            )
           ) : (
             <div className="text-center py-16">
               <Leaf className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
