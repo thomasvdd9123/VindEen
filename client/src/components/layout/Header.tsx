@@ -18,9 +18,7 @@ export function Header() {
   const [location] = useLocation();
   const { user, signOut, loading } = useAuth();
 
-  const navLinks = [
-    { href: "/zoek/tuinaanlegger", label: "Vind een tuinman" },
-  ];
+  const navLinks: { href: string; label: string }[] = [];
 
   const handleSignOut = async () => {
     await signOut();
