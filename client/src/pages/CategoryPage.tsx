@@ -115,6 +115,8 @@ export default function CategoryPage() {
             <div className="max-w-4xl mx-auto">
               <SearchBox 
                 locations={locations}
+                initialCategory={isMainCategory ? mainCategoryValue : undefined}
+                initialSpecialization={specParam || undefined}
                 initialLocation={locationSlug}
                 initialQuery={queryParam}
                 showCount={true}
