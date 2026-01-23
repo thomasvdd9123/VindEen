@@ -2,7 +2,7 @@ import { randomUUID } from "crypto";
 import type {
   Category, InsertCategory,
   Location, InsertLocation,
-  Gardener, InsertGardener,
+  Business, InsertBusiness,
   Profile, InsertProfile,
   Office, InsertOffice,
   Practical, InsertPractical,
@@ -10,6 +10,7 @@ import type {
   ProfileWithRelations,
   SearchParams,
   SubscriptionPlan,
+  ProfileStatusHistory, InsertProfileStatusHistory,
 } from "@shared/schema";
 import { supabaseStorage } from "./supabase-storage";
 
@@ -24,16 +25,16 @@ export interface IStorage {
   getLocationBySlug(slug: string): Promise<Location | undefined>;
   createLocation(location: InsertLocation): Promise<Location>;
 
-  // Gardeners
-  getGardener(id: string): Promise<Gardener | undefined>;
-  getGardenerByAccountId(accountId: string): Promise<Gardener | undefined>;
-  createGardener(gardener: InsertGardener): Promise<Gardener>;
+  // Businesses (formerly Gardeners)
+  getBusiness(id: string): Promise<Business | undefined>;
+  getBusinessByAccountId(accountId: string): Promise<Business | undefined>;
+  createBusiness(business: InsertBusiness): Promise<Business>;
 
   // Profiles
   getProfiles(): Promise<Profile[]>;
   getProfileBySlug(slug: string): Promise<ProfileWithRelations | undefined>;
   getProfileById(id: string): Promise<ProfileWithRelations | undefined>;
-  getProfilesByGardenerId(gardenerId: string): Promise<Profile[]>;
+  getProfilesByBusinessId(businessId: string): Promise<Profile[]>;
   getFeaturedProfiles(): Promise<ProfileWithRelations[]>;
   searchProfiles(params: SearchParams): Promise<{ profiles: ProfileWithRelations[]; total: number; page: number; totalPages: number }>;
   createProfile(profile: InsertProfile): Promise<Profile>;
@@ -41,17 +42,23 @@ export interface IStorage {
   deleteProfile(id: string): Promise<void>;
   incrementProfileViewCount(id: string): Promise<void>;
 
+  // Profile Status History
+  getProfileStatusHistory(profileId: string): Promise<ProfileStatusHistory[]>;
+  createProfileStatusHistory(entry: InsertProfileStatusHistory): Promise<ProfileStatusHistory>;
+
   // Offices
   getOfficeByProfileId(profileId: string): Promise<Office | undefined>;
   createOffice(office: InsertOffice): Promise<Office>;
+  updateOffice(profileId: string, updates: Partial<InsertOffice>): Promise<Office | undefined>;
 
   // Practicals
   getPracticalByProfileId(profileId: string): Promise<Practical | undefined>;
   createPractical(practical: InsertPractical): Promise<Practical>;
+  updatePractical(profileId: string, updates: Partial<InsertPractical>): Promise<Practical | undefined>;
 
   // Contact Requests
   createContactRequest(request: InsertContactRequest): Promise<ContactRequest>;
-  getContactRequestsByGardenerId(gardenerId: string): Promise<ContactRequest[]>;
+  getContactRequestsByProfileId(profileId: string): Promise<ContactRequest[]>;
 
   // Subscription Plans
   getSubscriptionPlans(): Promise<SubscriptionPlan[]>;
@@ -60,8 +67,9 @@ export interface IStorage {
 export class MemStorage implements IStorage {
   private categories: Map<string, Category>;
   private locations: Map<string, Location>;
-  private gardeners: Map<string, Gardener>;
+  private businesses: Map<string, Business>;
   private profiles: Map<string, Profile>;
+  private profileStatusHistory: Map<string, ProfileStatusHistory>;
   private offices: Map<string, Office>;
   private practicals: Map<string, Practical>;
   private contactRequests: Map<string, ContactRequest>;
@@ -69,8 +77,9 @@ export class MemStorage implements IStorage {
   constructor() {
     this.categories = new Map();
     this.locations = new Map();
-    this.gardeners = new Map();
+    this.businesses = new Map();
     this.profiles = new Map();
+    this.profileStatusHistory = new Map();
     this.offices = new Map();
     this.practicals = new Map();
     this.contactRequests = new Map();
@@ -79,14 +88,10 @@ export class MemStorage implements IStorage {
   }
 
   private seedData() {
-    // Seed Categories
+    // Seed Categories (now Tuinonderhoud and Tuinaanleg as main categories)
     const categoriesData = [
-      { name: "Tuinaanlegger", slug: "tuinaanlegger", description: "Specialisten in het aanleggen van tuinen", sortOrder: 1 },
-      { name: "Tuinarchitect", slug: "tuinarchitect", description: "Ontwerpers van tuinen en buitenruimtes", sortOrder: 2 },
-      { name: "Hovenier", slug: "hovenier", description: "Professionals in tuinonderhoud", sortOrder: 3 },
-      { name: "Boomverzorger", slug: "boomverzorger", description: "Experts in boomverzorging en -snoei", sortOrder: 4 },
-      { name: "Gazonspecialist", slug: "gazonspecialist", description: "Specialisten in gazonaanleg en -onderhoud", sortOrder: 5 },
-      { name: "Vijverspecialist", slug: "vijverspecialist", description: "Experts in vijvers en waterpartijen", sortOrder: 6 },
+      { name: "Tuinonderhoud", slug: "tuinonderhoud", mainCategory: "TUINONDERHOUD" as const, description: "Onderhoud van bestaande tuinen", sortOrder: 1 },
+      { name: "Tuinaanleg", slug: "tuinaanleg", mainCategory: "TUINAANLEG" as const, description: "Aanleg van nieuwe tuinen", sortOrder: 2 },
     ];
 
     categoriesData.forEach((cat) => {
@@ -95,6 +100,7 @@ export class MemStorage implements IStorage {
         id,
         name: cat.name,
         slug: cat.slug,
+        mainCategory: cat.mainCategory,
         description: cat.description,
         isActive: true,
         sortOrder: cat.sortOrder,
@@ -104,20 +110,20 @@ export class MemStorage implements IStorage {
       this.categories.set(id, category);
     });
 
-    // Seed Locations (Belgian cities)
+    // Seed Locations (Belgian cities with provinces and regions)
     const locationsData = [
-      { name: "Gent", slug: "gent", postcode: "9000", municipality: "Gent", region: "Oost-Vlaanderen", country: "België", latitude: 51.0543, longitude: 3.7174 },
-      { name: "Antwerpen", slug: "antwerpen", postcode: "2000", municipality: "Antwerpen", region: "Antwerpen", country: "België", latitude: 51.2194, longitude: 4.4025 },
-      { name: "Brussel", slug: "brussel", postcode: "1000", municipality: "Brussel", region: "Brussel", country: "België", latitude: 50.8503, longitude: 4.3517 },
-      { name: "Brugge", slug: "brugge", postcode: "8000", municipality: "Brugge", region: "West-Vlaanderen", country: "België", latitude: 51.2093, longitude: 3.2247 },
-      { name: "Leuven", slug: "leuven", postcode: "3000", municipality: "Leuven", region: "Vlaams-Brabant", country: "België", latitude: 50.8798, longitude: 4.7005 },
-      { name: "Mechelen", slug: "mechelen", postcode: "2800", municipality: "Mechelen", region: "Antwerpen", country: "België", latitude: 51.0259, longitude: 4.4776 },
-      { name: "Hasselt", slug: "hasselt", postcode: "3500", municipality: "Hasselt", region: "Limburg", country: "België", latitude: 50.9307, longitude: 5.3378 },
-      { name: "Kortrijk", slug: "kortrijk", postcode: "8500", municipality: "Kortrijk", region: "West-Vlaanderen", country: "België", latitude: 50.8279, longitude: 3.2649 },
-      { name: "Aalst", slug: "aalst", postcode: "9300", municipality: "Aalst", region: "Oost-Vlaanderen", country: "België", latitude: 50.9364, longitude: 4.0355 },
-      { name: "Oostende", slug: "oostende", postcode: "8400", municipality: "Oostende", region: "West-Vlaanderen", country: "België", latitude: 51.2154, longitude: 2.9286 },
-      { name: "Sint-Niklaas", slug: "sint-niklaas", postcode: "9100", municipality: "Sint-Niklaas", region: "Oost-Vlaanderen", country: "België", latitude: 51.1562, longitude: 4.1437 },
-      { name: "Roeselare", slug: "roeselare", postcode: "8800", municipality: "Roeselare", region: "West-Vlaanderen", country: "België", latitude: 50.9444, longitude: 3.1257 },
+      { name: "Gent", slug: "gent", postcode: "9000", municipality: "Gent", province: "OOST_VLAANDEREN" as const, region: "VLAANDEREN" as const, latitude: 51.0543, longitude: 3.7174 },
+      { name: "Antwerpen", slug: "antwerpen", postcode: "2000", municipality: "Antwerpen", province: "ANTWERPEN" as const, region: "VLAANDEREN" as const, latitude: 51.2194, longitude: 4.4025 },
+      { name: "Brussel", slug: "brussel", postcode: "1000", municipality: "Brussel", province: "BRUSSEL" as const, region: "BRUSSEL" as const, latitude: 50.8503, longitude: 4.3517 },
+      { name: "Brugge", slug: "brugge", postcode: "8000", municipality: "Brugge", province: "WEST_VLAANDEREN" as const, region: "VLAANDEREN" as const, latitude: 51.2093, longitude: 3.2247 },
+      { name: "Leuven", slug: "leuven", postcode: "3000", municipality: "Leuven", province: "VLAAMS_BRABANT" as const, region: "VLAANDEREN" as const, latitude: 50.8798, longitude: 4.7005 },
+      { name: "Mechelen", slug: "mechelen", postcode: "2800", municipality: "Mechelen", province: "ANTWERPEN" as const, region: "VLAANDEREN" as const, latitude: 51.0259, longitude: 4.4776 },
+      { name: "Hasselt", slug: "hasselt", postcode: "3500", municipality: "Hasselt", province: "LIMBURG" as const, region: "VLAANDEREN" as const, latitude: 50.9307, longitude: 5.3378 },
+      { name: "Kortrijk", slug: "kortrijk", postcode: "8500", municipality: "Kortrijk", province: "WEST_VLAANDEREN" as const, region: "VLAANDEREN" as const, latitude: 50.8279, longitude: 3.2649 },
+      { name: "Aalst", slug: "aalst", postcode: "9300", municipality: "Aalst", province: "OOST_VLAANDEREN" as const, region: "VLAANDEREN" as const, latitude: 50.9364, longitude: 4.0355 },
+      { name: "Oostende", slug: "oostende", postcode: "8400", municipality: "Oostende", province: "WEST_VLAANDEREN" as const, region: "VLAANDEREN" as const, latitude: 51.2154, longitude: 2.9286 },
+      { name: "Sint-Niklaas", slug: "sint-niklaas", postcode: "9100", municipality: "Sint-Niklaas", province: "OOST_VLAANDEREN" as const, region: "VLAANDEREN" as const, latitude: 51.1562, longitude: 4.1437 },
+      { name: "Roeselare", slug: "roeselare", postcode: "8800", municipality: "Roeselare", province: "WEST_VLAANDEREN" as const, region: "VLAANDEREN" as const, latitude: 50.9444, longitude: 3.1257 },
     ];
 
     locationsData.forEach((loc) => {
@@ -128,8 +134,8 @@ export class MemStorage implements IStorage {
         slug: loc.slug,
         postcode: loc.postcode,
         municipality: loc.municipality,
+        province: loc.province,
         region: loc.region,
-        country: loc.country,
         latitude: loc.latitude,
         longitude: loc.longitude,
         isActive: true,
@@ -143,7 +149,7 @@ export class MemStorage implements IStorage {
     const categoryArray = Array.from(this.categories.values());
     const locationArray = Array.from(this.locations.values());
 
-    // Seed sample Gardeners and Profiles
+    // Seed sample Businesses and Profiles
     const sampleProfiles = [
       {
         name: "Groene Vingers Tuinen",
@@ -155,16 +161,14 @@ export class MemStorage implements IStorage {
         title: "Tuinaanleg & Onderhoud",
         introduction: "Met meer dan 15 jaar ervaring creëren wij droomtuinen. Van kleine stadstuinen tot grote landschapsprojecten, wij maken uw groene dromen waar.",
         description: "Groene Vingers Tuinen is gespecialiseerd in het ontwerpen en aanleggen van tuinen die perfect passen bij uw woning en levensstijl. Wij werken met duurzame materialen en hebben oog voor detail.\n\nOnze diensten omvatten complete tuinaanleg, terrasaanleg, vijvers, gazonaanleg en seizoensonderhoud.",
-        specializations: ["TUINAANLEG", "ONDERHOUD", "BESTRATING"],
+        specializations: ["GRASAANLEG", "PADEN_TERRASSEN", "BESTRATING"],
         offeredServices: ["Tuinontwerp", "Tuinaanleg", "Terrasaanleg", "Gazonaanleg", "Seizoensonderhoud", "Snoeien"],
-        isFeatured: true,
-        isVerified: true,
         isPublic: true,
         isActive: true,
-        categorySlug: "tuinaanlegger",
+        categorySlug: "tuinaanleg",
         locationSlug: "gent",
-        office: { street: "Korenmarkt", number: "15", town: "Gent", municipality: "Gent", postcode: "9000", country: "België" },
-        practical: { reachability: "Oost-Vlaanderen", experience: "15+ jaar", languages: ["Nederlands", "Frans", "Engels"], tariff: "Op aanvraag", acceptedPaymentMethods: "Bankoverschrijving, Bancontact" },
+        office: { street: "Korenmarkt", number: "15", town: "Gent", municipality: "Gent", postcode: "9000", province: "OOST_VLAANDEREN" as const },
+        practical: { experienceYears: 15, languages: ["NL" as const, "FR" as const, "EN" as const], tariff: "Op aanvraag", acceptedPaymentMethods: "Bankoverschrijving, Bancontact" },
       },
       {
         name: "De Tuinarchitect",
@@ -176,16 +180,14 @@ export class MemStorage implements IStorage {
         title: "Tuinontwerp & Landschapsarchitectuur",
         introduction: "Innovatieve tuinontwerpen die functionaliteit en esthetiek combineren. Elk project is uniek, net zoals uw tuin dat verdient te zijn.",
         description: "Als ervaren tuinarchitect ontwerp ik tuinen die niet alleen mooi zijn, maar ook praktisch en duurzaam. Ik luister naar uw wensen en vertaal deze naar een coherent ontwerp dat past bij uw budget en onderhoudsmogelijkheden.",
-        specializations: ["TUINAANLEG", "STIJLSPECIALIST", "ECOLOGISCH_TUINIEREN"],
+        specializations: ["GRASAANLEG", "BEPLANTING", "VIJVERS"],
         offeredServices: ["3D Tuinontwerp", "Beplantingsplan", "Verlichtingsplan", "Begeleiding aanleg", "Adviesgesprek"],
-        isFeatured: true,
-        isVerified: true,
         isPublic: true,
         isActive: true,
-        categorySlug: "tuinarchitect",
+        categorySlug: "tuinaanleg",
         locationSlug: "antwerpen",
-        office: { street: "Meir", number: "42", town: "Antwerpen", municipality: "Antwerpen", postcode: "2000", country: "België" },
-        practical: { reachability: "Heel Vlaanderen", experience: "12 jaar", languages: ["Nederlands", "Engels"], tariff: "€75-125/uur", acceptedPaymentMethods: "Bankoverschrijving" },
+        office: { street: "Meir", number: "42", town: "Antwerpen", municipality: "Antwerpen", postcode: "2000", province: "ANTWERPEN" as const },
+        practical: { experienceYears: 12, languages: ["NL" as const, "EN" as const], tariff: "€75-125/uur", acceptedPaymentMethods: "Bankoverschrijving" },
       },
       {
         name: "Boomzorg Vlaanderen",
@@ -196,16 +198,14 @@ export class MemStorage implements IStorage {
         title: "Gecertificeerd Boomverzorger",
         introduction: "Professionele boomverzorging door gecertificeerde arboristen. Veilig, vakkundig en met respect voor de natuur.",
         description: "Boomzorg Vlaanderen biedt complete boomverzorging aan: van snoeien en vellen tot stronkverwijdering en boomonderzoek. Al onze medewerkers zijn European Tree Worker gecertificeerd.",
-        specializations: ["BOOMVERZORGING", "SNOEIEN"],
+        specializations: ["SNOEIEN_BOMEN", "SNOEIEN_STRUIKEN"],
         offeredServices: ["Snoeien", "Vellen", "Stronkverwijdering", "Boomonderzoek", "Stormschade", "Kroonreductie"],
-        isFeatured: true,
-        isVerified: true,
         isPublic: true,
         isActive: true,
-        categorySlug: "boomverzorger",
+        categorySlug: "tuinonderhoud",
         locationSlug: "brugge",
-        office: { street: "Markt", number: "7", town: "Brugge", municipality: "Brugge", postcode: "8000", country: "België" },
-        practical: { reachability: "West-Vlaanderen & Oost-Vlaanderen", experience: "20 jaar", languages: ["Nederlands", "Frans"], tariff: "Op basis van offerte", acceptedPaymentMethods: "Cash, Bankoverschrijving" },
+        office: { street: "Markt", number: "7", town: "Brugge", municipality: "Brugge", postcode: "8000", province: "WEST_VLAANDEREN" as const },
+        practical: { experienceYears: 20, languages: ["NL" as const, "FR" as const], tariff: "Op basis van offerte", acceptedPaymentMethods: "Cash, Bankoverschrijving" },
       },
       {
         name: "Tuinonderhoud Plus",
@@ -216,16 +216,14 @@ export class MemStorage implements IStorage {
         hasWebsite: true,
         title: "Hovenier",
         introduction: "Betrouwbaar tuinonderhoud het hele jaar door. Van grasmaaien tot complete seizoensklussen.",
-        specializations: ["ONDERHOUD", "GAZONSPECIALIST", "SNOEIEN"],
+        specializations: ["GRAS_MAAIEN", "GAZONONDERHOUD", "SNOEIEN_STRUIKEN"],
         offeredServices: ["Grasmaaien", "Hagen knippen", "Onkruid verwijderen", "Bladruimen", "Bemesting", "Verticuteren"],
-        isFeatured: false,
-        isVerified: true,
         isPublic: true,
         isActive: true,
-        categorySlug: "hovenier",
+        categorySlug: "tuinonderhoud",
         locationSlug: "leuven",
-        office: { street: "Bondgenotenlaan", number: "88", town: "Leuven", municipality: "Leuven", postcode: "3000", country: "België" },
-        practical: { reachability: "Vlaams-Brabant", experience: "8 jaar", languages: ["Nederlands"], tariff: "€35/uur", acceptedPaymentMethods: "Bancontact, Cash" },
+        office: { street: "Bondgenotenlaan", number: "88", town: "Leuven", municipality: "Leuven", postcode: "3000", province: "VLAAMS_BRABANT" as const },
+        practical: { experienceYears: 8, languages: ["NL" as const], tariff: "€35/uur", acceptedPaymentMethods: "Bancontact, Cash" },
       },
       {
         name: "Eco Tuinen",
@@ -237,16 +235,14 @@ export class MemStorage implements IStorage {
         title: "Ecologische Tuinaanleg",
         introduction: "Duurzame tuinen die bijdragen aan de biodiversiteit. Wij creëren natuurlijke tuinen waar mens, dier en plant floreren.",
         description: "Eco Tuinen is gespecialiseerd in ecologische tuinaanleg. Wij gebruiken uitsluitend inheemse plantensoorten en duurzame materialen. Onze tuinen trekken vlinders, bijen en vogels aan.",
-        specializations: ["ECOLOGISCH_TUINIEREN", "TUINAANLEG", "VIJVERS"],
+        specializations: ["BEPLANTING", "GRASAANLEG", "VIJVERS"],
         offeredServices: ["Ecologische tuinaanleg", "Insectenhotels", "Natuurlijke vijvers", "Bloemenweiden", "Biodiversiteitsadvies"],
-        isFeatured: true,
-        isVerified: true,
         isPublic: true,
         isActive: true,
-        categorySlug: "tuinaanlegger",
+        categorySlug: "tuinaanleg",
         locationSlug: "hasselt",
-        office: { street: "Kolonel Dusartplein", number: "12", town: "Hasselt", municipality: "Hasselt", postcode: "3500", country: "België" },
-        practical: { reachability: "Limburg & Vlaams-Brabant", experience: "10 jaar", languages: ["Nederlands", "Duits"], tariff: "Op aanvraag", acceptedPaymentMethods: "Bankoverschrijving" },
+        office: { street: "Kolonel Dusartplein", number: "12", town: "Hasselt", municipality: "Hasselt", postcode: "3500", province: "LIMBURG" as const },
+        practical: { experienceYears: 10, languages: ["NL" as const, "DE" as const], tariff: "Op aanvraag", acceptedPaymentMethods: "Bankoverschrijving" },
       },
       {
         name: "Gazon Expert",
@@ -256,34 +252,33 @@ export class MemStorage implements IStorage {
         hasWebsite: false,
         title: "Gazonspecialist",
         introduction: "Het perfecte gazon begint hier. Aanleg, renovatie en professioneel onderhoud van gazons.",
-        specializations: ["GAZONSPECIALIST", "ONDERHOUD"],
+        specializations: ["GAZONONDERHOUD", "GRAS_MAAIEN", "BEMESTING"],
         offeredServices: ["Gazonaanleg", "Gazonrenovatie", "Verticuteren", "Bemesting", "Mosbestrijding", "Graszoden plaatsen"],
-        isFeatured: false,
-        isVerified: true,
         isPublic: true,
         isActive: true,
-        categorySlug: "gazonspecialist",
+        categorySlug: "tuinonderhoud",
         locationSlug: "kortrijk",
-        office: { street: "Grote Markt", number: "1", town: "Kortrijk", municipality: "Kortrijk", postcode: "8500", country: "België" },
-        practical: { reachability: "West-Vlaanderen", experience: "6 jaar", languages: ["Nederlands", "Frans"], tariff: "€40/uur of forfait", acceptedPaymentMethods: "Cash, Bancontact, Bankoverschrijving" },
+        office: { street: "Grote Markt", number: "1", town: "Kortrijk", municipality: "Kortrijk", postcode: "8500", province: "WEST_VLAANDEREN" as const },
+        practical: { experienceYears: 6, languages: ["NL" as const, "FR" as const], tariff: "€40/uur of forfait", acceptedPaymentMethods: "Cash, Bancontact, Bankoverschrijving" },
       },
     ];
 
     sampleProfiles.forEach((profileData) => {
-      const gardenerId = randomUUID();
+      const businessId = randomUUID();
       const profileId = randomUUID();
       const officeId = randomUUID();
       const practicalId = randomUUID();
+      const statusHistoryId = randomUUID();
 
       const category = categoryArray.find((c) => c.slug === profileData.categorySlug);
       const location = locationArray.find((l) => l.slug === profileData.locationSlug);
 
-      // Create gardener
-      this.gardeners.set(gardenerId, {
-        id: gardenerId,
+      // Create business
+      this.businesses.set(businessId, {
+        id: businessId,
         accountId: randomUUID(),
         email: profileData.email,
-        role: "GARDENER",
+        role: "BUSINESS",
         emailVerified: true,
         emailVerifiedAt: new Date(),
         createdAt: new Date(),
@@ -293,13 +288,13 @@ export class MemStorage implements IStorage {
       // Create profile
       this.profiles.set(profileId, {
         id: profileId,
-        gardenerId,
+        businessId,
         slug: profileData.slug,
         name: profileData.name,
         email: profileData.email,
         telnr: profileData.telnr || null,
         website: profileData.website || null,
-        hasWebsite: profileData.hasWebsite,
+        hasWebsite: profileData.hasWebsite || false,
         description: profileData.description || null,
         introduction: profileData.introduction || null,
         title: profileData.title || null,
@@ -310,12 +305,8 @@ export class MemStorage implements IStorage {
         imageUrls: null,
         isActive: profileData.isActive,
         isPublic: profileData.isPublic,
-        isVerified: profileData.isVerified,
-        verificationStatus: "APPROVED",
-        verifiedAt: new Date(),
-        verifiedBy: null,
-        rejectionReason: null,
-        isFeatured: profileData.isFeatured,
+        hideAddress: false,
+        viewCount: 0,
         seoTitle: null,
         seoDescription: null,
         categoryId: category?.id || null,
@@ -324,12 +315,26 @@ export class MemStorage implements IStorage {
         updatedAt: new Date(),
       });
 
+      // Create initial status history
+      this.profileStatusHistory.set(statusHistoryId, {
+        id: statusHistoryId,
+        profileId,
+        status: "APPROVED",
+        reason: null,
+        createdAt: new Date(),
+      });
+
       // Create office
       if (profileData.office) {
         this.offices.set(officeId, {
           id: officeId,
           profileId,
-          ...profileData.office,
+          street: profileData.office.street,
+          number: profileData.office.number,
+          town: profileData.office.town,
+          municipality: profileData.office.municipality,
+          postcode: profileData.office.postcode,
+          province: profileData.office.province,
           latitude: null,
           longitude: null,
           createdAt: new Date(),
@@ -342,9 +347,8 @@ export class MemStorage implements IStorage {
         this.practicals.set(practicalId, {
           id: practicalId,
           profileId,
-          reachability: profileData.practical.reachability || null,
-          experience: profileData.practical.experience || null,
-          languages: profileData.practical.languages || null,
+          experienceYears: profileData.practical.experienceYears,
+          languages: profileData.practical.languages,
           tariff: profileData.practical.tariff || null,
           acceptedPaymentMethods: profileData.practical.acceptedPaymentMethods || null,
           createdAt: new Date(),
@@ -356,22 +360,23 @@ export class MemStorage implements IStorage {
 
   // Categories
   async getCategories(): Promise<Category[]> {
-    return Array.from(this.categories.values()).sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+    return Array.from(this.categories.values())
+      .filter((c) => c.isActive)
+      .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
   }
 
   async getCategoryBySlug(slug: string): Promise<Category | undefined> {
-    return Array.from(this.categories.values()).find((c) => c.slug === slug);
+    return Array.from(this.categories.values()).find((c) => c.slug === slug && c.isActive);
   }
 
   async createCategory(category: InsertCategory): Promise<Category> {
     const id = randomUUID();
     const newCategory: Category = {
       id,
-      name: category.name,
-      slug: category.slug,
-      description: category.description ?? null,
+      ...category,
+      mainCategory: category.mainCategory,
       isActive: category.isActive ?? true,
-      sortOrder: category.sortOrder ?? null,
+      sortOrder: category.sortOrder ?? 0,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -381,25 +386,20 @@ export class MemStorage implements IStorage {
 
   // Locations
   async getLocations(): Promise<Location[]> {
-    return Array.from(this.locations.values()).sort((a, b) => a.name.localeCompare(b.name));
+    return Array.from(this.locations.values())
+      .filter((l) => l.isActive)
+      .sort((a, b) => a.name.localeCompare(b.name));
   }
 
   async getLocationBySlug(slug: string): Promise<Location | undefined> {
-    return Array.from(this.locations.values()).find((l) => l.slug === slug);
+    return Array.from(this.locations.values()).find((l) => l.slug === slug && l.isActive);
   }
 
   async createLocation(location: InsertLocation): Promise<Location> {
     const id = randomUUID();
     const newLocation: Location = {
       id,
-      name: location.name,
-      slug: location.slug,
-      postcode: location.postcode,
-      municipality: location.municipality,
-      latitude: location.latitude ?? null,
-      longitude: location.longitude ?? null,
-      region: location.region ?? null,
-      country: location.country ?? "België",
+      ...location,
       isActive: location.isActive ?? true,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -408,50 +408,33 @@ export class MemStorage implements IStorage {
     return newLocation;
   }
 
-  // Gardeners
-  async getGardener(id: string): Promise<Gardener | undefined> {
-    return this.gardeners.get(id);
+  // Businesses
+  async getBusiness(id: string): Promise<Business | undefined> {
+    return this.businesses.get(id);
   }
 
-  async getGardenerByAccountId(accountId: string): Promise<Gardener | undefined> {
-    return Array.from(this.gardeners.values()).find((g) => g.accountId === accountId);
+  async getBusinessByAccountId(accountId: string): Promise<Business | undefined> {
+    return Array.from(this.businesses.values()).find((b) => b.accountId === accountId);
   }
 
-  async createGardener(gardener: InsertGardener): Promise<Gardener> {
+  async createBusiness(business: InsertBusiness): Promise<Business> {
     const id = randomUUID();
-    const newGardener: Gardener = {
+    const newBusiness: Business = {
       id,
-      accountId: gardener.accountId,
-      email: gardener.email,
-      role: gardener.role ?? "GARDENER",
-      emailVerified: gardener.emailVerified ?? null,
-      emailVerifiedAt: gardener.emailVerifiedAt ?? null,
+      ...business,
+      role: business.role ?? "BUSINESS",
+      emailVerified: business.emailVerified ?? false,
+      emailVerifiedAt: business.emailVerifiedAt ?? null,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
-    this.gardeners.set(id, newGardener);
-    return newGardener;
-  }
-
-  // Helper to enrich profile with relations
-  private async enrichProfile(profile: Profile): Promise<ProfileWithRelations> {
-    const category = profile.categoryId ? Array.from(this.categories.values()).find((c) => c.id === profile.categoryId) : undefined;
-    const location = profile.locationId ? Array.from(this.locations.values()).find((l) => l.id === profile.locationId) : undefined;
-    const office = await this.getOfficeByProfileId(profile.id);
-    const practical = await this.getPracticalByProfileId(profile.id);
-
-    return {
-      ...profile,
-      category,
-      location,
-      office,
-      practical,
-    };
+    this.businesses.set(id, newBusiness);
+    return newBusiness;
   }
 
   // Profiles
   async getProfiles(): Promise<Profile[]> {
-    return Array.from(this.profiles.values()).filter((p) => p.isActive && p.isPublic);
+    return Array.from(this.profiles.values()).filter((p) => p.isActive);
   }
 
   async getProfileBySlug(slug: string): Promise<ProfileWithRelations | undefined> {
@@ -466,58 +449,69 @@ export class MemStorage implements IStorage {
     return this.enrichProfile(profile);
   }
 
+  async getProfilesByBusinessId(businessId: string): Promise<Profile[]> {
+    return Array.from(this.profiles.values()).filter((p) => p.businessId === businessId);
+  }
+
   async getFeaturedProfiles(): Promise<ProfileWithRelations[]> {
     const featured = Array.from(this.profiles.values())
-      .filter((p) => p.isActive && p.isPublic && p.isFeatured)
+      .filter((p) => p.isActive && p.isPublic)
       .slice(0, 6);
-    
     return Promise.all(featured.map((p) => this.enrichProfile(p)));
   }
 
   async searchProfiles(params: SearchParams): Promise<{ profiles: ProfileWithRelations[]; total: number; page: number; totalPages: number }> {
-    let profiles = Array.from(this.profiles.values()).filter((p) => p.isActive && p.isPublic);
+    let results = Array.from(this.profiles.values()).filter((p) => p.isActive && p.isPublic);
 
     // Filter by category
     if (params.categorySlug) {
       const category = await this.getCategoryBySlug(params.categorySlug);
       if (category) {
-        profiles = profiles.filter((p) => p.categoryId === category.id);
+        results = results.filter((p) => p.categoryId === category.id);
       }
+    }
+
+    // Filter by main category
+    if (params.mainCategory) {
+      const categories = await this.getCategories();
+      const matchingCategories = categories.filter((c) => c.mainCategory === params.mainCategory);
+      const categoryIds = matchingCategories.map((c) => c.id);
+      results = results.filter((p) => p.categoryId && categoryIds.includes(p.categoryId));
     }
 
     // Filter by location
     if (params.locationSlug) {
       const location = await this.getLocationBySlug(params.locationSlug);
       if (location) {
-        profiles = profiles.filter((p) => p.locationId === location.id);
+        results = results.filter((p) => p.locationId === location.id);
       }
-    }
-
-    // Filter by query (name, introduction)
-    if (params.query) {
-      const query = params.query.toLowerCase();
-      profiles = profiles.filter((p) =>
-        p.name.toLowerCase().includes(query) ||
-        p.introduction?.toLowerCase().includes(query) ||
-        p.title?.toLowerCase().includes(query)
-      );
     }
 
     // Filter by specializations
     if (params.specializations && params.specializations.length > 0) {
-      profiles = profiles.filter((p) =>
-        p.specializations?.some((s) => params.specializations!.includes(s))
+      results = results.filter((p) =>
+        p.specializations && params.specializations!.some((s) => p.specializations!.includes(s))
       );
     }
 
-    const total = profiles.length;
+    // Search query
+    if (params.query) {
+      const query = params.query.toLowerCase();
+      results = results.filter(
+        (p) =>
+          p.name.toLowerCase().includes(query) ||
+          p.description?.toLowerCase().includes(query) ||
+          p.title?.toLowerCase().includes(query)
+      );
+    }
+
+    const total = results.length;
     const page = params.page || 1;
     const limit = params.limit || 12;
     const totalPages = Math.ceil(total / limit);
-    const offset = (page - 1) * limit;
 
-    const paginatedProfiles = profiles.slice(offset, offset + limit);
-    const enrichedProfiles = await Promise.all(paginatedProfiles.map((p) => this.enrichProfile(p)));
+    const paginatedResults = results.slice((page - 1) * limit, page * limit);
+    const enrichedProfiles = await Promise.all(paginatedResults.map((p) => this.enrichProfile(p)));
 
     return { profiles: enrichedProfiles, total, page, totalPages };
   }
@@ -526,33 +520,12 @@ export class MemStorage implements IStorage {
     const id = randomUUID();
     const newProfile: Profile = {
       id,
-      gardenerId: profile.gardenerId,
-      slug: profile.slug,
-      name: profile.name,
-      email: profile.email,
-      telnr: profile.telnr ?? null,
-      website: profile.website ?? null,
+      ...profile,
       hasWebsite: profile.hasWebsite ?? false,
-      description: profile.description ?? null,
-      introduction: profile.introduction ?? null,
-      title: profile.title ?? null,
-      education: profile.education ?? null,
-      specializations: profile.specializations ?? null,
-      offeredServices: profile.offeredServices ?? null,
-      logoUrl: profile.logoUrl ?? null,
-      imageUrls: profile.imageUrls ?? null,
       isActive: profile.isActive ?? true,
       isPublic: profile.isPublic ?? false,
-      isVerified: profile.isVerified ?? null,
-      verificationStatus: profile.verificationStatus ?? "PENDING",
-      verifiedAt: profile.verifiedAt ?? null,
-      verifiedBy: profile.verifiedBy ?? null,
-      rejectionReason: profile.rejectionReason ?? null,
-      isFeatured: profile.isFeatured ?? null,
-      seoTitle: profile.seoTitle ?? null,
-      seoDescription: profile.seoDescription ?? null,
-      categoryId: profile.categoryId ?? null,
-      locationId: profile.locationId ?? null,
+      hideAddress: profile.hideAddress ?? false,
+      viewCount: profile.viewCount ?? 0,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -560,14 +533,10 @@ export class MemStorage implements IStorage {
     return newProfile;
   }
 
-  async getProfilesByGardenerId(gardenerId: string): Promise<Profile[]> {
-    return Array.from(this.profiles.values()).filter(p => p.gardenerId === gardenerId);
-  }
-
   async updateProfile(id: string, updates: Partial<InsertProfile>): Promise<Profile | undefined> {
     const profile = this.profiles.get(id);
     if (!profile) return undefined;
-    
+
     const updatedProfile: Profile = {
       ...profile,
       ...updates,
@@ -579,6 +548,17 @@ export class MemStorage implements IStorage {
 
   async deleteProfile(id: string): Promise<void> {
     this.profiles.delete(id);
+    // Also delete related data
+    for (const [officeId, office] of this.offices.entries()) {
+      if (office.profileId === id) {
+        this.offices.delete(officeId);
+      }
+    }
+    for (const [practicalId, practical] of this.practicals.entries()) {
+      if (practical.profileId === id) {
+        this.practicals.delete(practicalId);
+      }
+    }
   }
 
   async incrementProfileViewCount(id: string): Promise<void> {
@@ -587,6 +567,24 @@ export class MemStorage implements IStorage {
       profile.viewCount = (profile.viewCount || 0) + 1;
       this.profiles.set(id, profile);
     }
+  }
+
+  // Profile Status History
+  async getProfileStatusHistory(profileId: string): Promise<ProfileStatusHistory[]> {
+    return Array.from(this.profileStatusHistory.values())
+      .filter((h) => h.profileId === profileId)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+
+  async createProfileStatusHistory(entry: InsertProfileStatusHistory): Promise<ProfileStatusHistory> {
+    const id = randomUUID();
+    const newEntry: ProfileStatusHistory = {
+      id,
+      ...entry,
+      createdAt: new Date(),
+    };
+    this.profileStatusHistory.set(id, newEntry);
+    return newEntry;
   }
 
   // Offices
@@ -598,20 +596,25 @@ export class MemStorage implements IStorage {
     const id = randomUUID();
     const newOffice: Office = {
       id,
-      profileId: office.profileId,
-      street: office.street,
-      number: office.number,
-      town: office.town,
-      municipality: office.municipality,
-      postcode: office.postcode,
-      latitude: office.latitude ?? null,
-      longitude: office.longitude ?? null,
-      country: office.country ?? "België",
+      ...office,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
     this.offices.set(id, newOffice);
     return newOffice;
+  }
+
+  async updateOffice(profileId: string, updates: Partial<InsertOffice>): Promise<Office | undefined> {
+    const office = Array.from(this.offices.values()).find((o) => o.profileId === profileId);
+    if (!office) return undefined;
+
+    const updatedOffice: Office = {
+      ...office,
+      ...updates,
+      updatedAt: new Date(),
+    };
+    this.offices.set(office.id, updatedOffice);
+    return updatedOffice;
   }
 
   // Practicals
@@ -623,12 +626,7 @@ export class MemStorage implements IStorage {
     const id = randomUUID();
     const newPractical: Practical = {
       id,
-      profileId: practical.profileId,
-      reachability: practical.reachability ?? null,
-      experience: practical.experience ?? null,
-      languages: practical.languages ?? null,
-      tariff: practical.tariff ?? null,
-      acceptedPaymentMethods: practical.acceptedPaymentMethods ?? null,
+      ...practical,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -636,97 +634,60 @@ export class MemStorage implements IStorage {
     return newPractical;
   }
 
+  async updatePractical(profileId: string, updates: Partial<InsertPractical>): Promise<Practical | undefined> {
+    const practical = Array.from(this.practicals.values()).find((p) => p.profileId === profileId);
+    if (!practical) return undefined;
+
+    const updatedPractical: Practical = {
+      ...practical,
+      ...updates,
+      updatedAt: new Date(),
+    };
+    this.practicals.set(practical.id, updatedPractical);
+    return updatedPractical;
+  }
+
   // Contact Requests
   async createContactRequest(request: InsertContactRequest): Promise<ContactRequest> {
     const id = randomUUID();
     const newRequest: ContactRequest = {
       id,
-      gardenerId: request.gardenerId,
-      profileId: request.profileId,
-      visitorName: request.visitorName,
-      visitorEmail: request.visitorEmail,
-      telnr: request.telnr ?? null,
-      subject: request.subject,
-      message: request.message,
-      status: request.status ?? "NEW",
-      gardenerReadAt: request.gardenerReadAt ?? null,
-      adminNotified: request.adminNotified ?? null,
-      date: request.date ?? new Date(),
+      ...request,
       createdAt: new Date(),
-      updatedAt: new Date(),
     };
     this.contactRequests.set(id, newRequest);
     return newRequest;
   }
 
-  async getContactRequestsByGardenerId(gardenerId: string): Promise<ContactRequest[]> {
+  async getContactRequestsByProfileId(profileId: string): Promise<ContactRequest[]> {
     return Array.from(this.contactRequests.values())
-      .filter((r) => r.gardenerId === gardenerId)
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      .filter((r) => r.profileId === profileId)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   }
 
+  // Subscription Plans
   async getSubscriptionPlans(): Promise<SubscriptionPlan[]> {
-    // Return static plans for now
-    return [
-      {
-        id: "1",
-        type: "BASIC",
-        name: "Basis",
-        price: 9.99,
-        molliepriceId: null,
-        mollieProductId: null,
-        generalInfo: "Perfect om te starten",
-        features: "Profiel zichtbaar in zoekresultaten,Contactformulier,Basis statistieken",
-        isActive: true,
-        sortOrder: 1,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-      {
-        id: "2",
-        type: "PROFESSIONAL",
-        name: "Professional",
-        price: 19.99,
-        molliepriceId: null,
-        mollieProductId: null,
-        generalInfo: "Meest gekozen",
-        features: "Alles van Basis,Uitgelichte vermelding,Onbeperkte foto uploads,Uitgebreide statistieken,Prioriteit in zoekresultaten",
-        isActive: true,
-        sortOrder: 2,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-      {
-        id: "3",
-        type: "PREMIUM",
-        name: "Premium",
-        price: 39.99,
-        molliepriceId: null,
-        mollieProductId: null,
-        generalInfo: "Maximale zichtbaarheid",
-        features: "Alles van Professional,Featured badge,Eerste positie in resultaten,Premium support,Maandelijks rapport",
-        isActive: true,
-        sortOrder: 3,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-    ];
+    return [];
+  }
+
+  // Helper to enrich profile with relations
+  private async enrichProfile(profile: Profile): Promise<ProfileWithRelations> {
+    const category = profile.categoryId ? this.categories.get(profile.categoryId) : undefined;
+    const location = profile.locationId ? this.locations.get(profile.locationId) : undefined;
+    const office = await this.getOfficeByProfileId(profile.id);
+    const practical = await this.getPracticalByProfileId(profile.id);
+
+    return {
+      ...profile,
+      category,
+      location,
+      office,
+      practical,
+    };
   }
 }
 
-// Check if Supabase is configured
-const isSupabaseConfigured = Boolean(
-  process.env.SUPABASE_URL &&
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+// Use environment variable to determine which storage to use
+const USE_SUPABASE = process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-// Use Supabase storage if configured, otherwise use in-memory storage
-const storage: IStorage = isSupabaseConfigured ? supabaseStorage : new MemStorage();
-
-if (isSupabaseConfigured) {
-  console.log("✅ Using Supabase database storage");
-} else {
-  console.log("⚠️ Using in-memory storage (Supabase not configured)");
-}
-
-export { storage };
+export const storage: IStorage = USE_SUPABASE ? supabaseStorage : new MemStorage();
