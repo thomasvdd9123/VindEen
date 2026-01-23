@@ -9,7 +9,7 @@ async function seed() {
   await supabaseAdmin.from("offices").delete().neq("id", "00000000-0000-0000-0000-000000000000");
   await supabaseAdmin.from("contact_requests").delete().neq("id", "00000000-0000-0000-0000-000000000000");
   await supabaseAdmin.from("profiles").delete().neq("id", "00000000-0000-0000-0000-000000000000");
-  await supabaseAdmin.from("businesses").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+  await supabaseAdmin.from("accounts").delete().neq("id", "00000000-0000-0000-0000-000000000000");
   await supabaseAdmin.from("locations").delete().neq("id", "00000000-0000-0000-0000-000000000000");
   await supabaseAdmin.from("categories").delete().neq("id", "00000000-0000-0000-0000-000000000000");
 
@@ -283,11 +283,11 @@ async function seed() {
   ];
 
   for (const profileData of sampleProfiles) {
-    // Create business
-    const { data: business, error: businessError } = await supabaseAdmin
-      .from("businesses")
+    // Create account
+    const { data: account, error: accountError } = await supabaseAdmin
+      .from("accounts")
       .insert({
-        account_id: crypto.randomUUID(),
+        auth_user_id: crypto.randomUUID(),
         email: profileData.email,
         role: "BUSINESS",
         email_verified: true,
@@ -296,8 +296,8 @@ async function seed() {
       .select()
       .single();
 
-    if (businessError) {
-      console.error(`Error creating business for ${profileData.name}:`, businessError);
+    if (accountError) {
+      console.error(`Error creating account for ${profileData.name}:`, accountError);
       continue;
     }
 
@@ -305,7 +305,7 @@ async function seed() {
     const { data: profile, error: profileError } = await supabaseAdmin
       .from("profiles")
       .insert({
-        business_id: business.id,
+        account_id: account.id,
         slug: profileData.slug,
         name: profileData.name,
         email: profileData.email,

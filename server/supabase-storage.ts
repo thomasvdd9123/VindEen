@@ -100,10 +100,10 @@ export class SupabaseStorage implements IStorage {
     return this.mapLocation(data);
   }
 
-  // Accounts (login, VAT, billing) - NOTE: Supabase table is still named "businesses"
+  // Accounts (login, VAT, billing)
   async getAccount(id: string): Promise<Account | undefined> {
     const { data, error } = await supabaseAdmin
-      .from("businesses")
+      .from("accounts")
       .select("*")
       .eq("id", id)
       .single();
@@ -114,9 +114,9 @@ export class SupabaseStorage implements IStorage {
 
   async getAccountByAuthUserId(authUserId: string): Promise<Account | undefined> {
     const { data, error } = await supabaseAdmin
-      .from("businesses")
+      .from("accounts")
       .select("*")
-      .eq("account_id", authUserId)
+      .eq("auth_user_id", authUserId)
       .single();
     
     if (error && error.code !== "PGRST116") throw error;
@@ -125,9 +125,9 @@ export class SupabaseStorage implements IStorage {
 
   async createAccount(account: InsertAccount): Promise<Account> {
     const { data, error } = await supabaseAdmin
-      .from("businesses")
+      .from("accounts")
       .insert({
-        account_id: account.authUserId,
+        auth_user_id: account.authUserId,
         email: account.email,
         role: account.role ?? "BUSINESS",
         email_verified: account.emailVerified ?? false,
@@ -194,7 +194,7 @@ export class SupabaseStorage implements IStorage {
     const { data, error } = await supabaseAdmin
       .from("profiles")
       .select("*")
-      .eq("business_id", accountId); // Supabase uses business_id
+      .eq("account_id", accountId);
     
     if (error) throw error;
     return (data || []).map(d => this.mapProfile(d));
@@ -291,7 +291,7 @@ export class SupabaseStorage implements IStorage {
     const { data, error } = await supabaseAdmin
       .from("profiles")
       .insert({
-        business_id: profile.accountId, // Supabase uses business_id
+        account_id: profile.accountId,
         slug: profile.slug,
         name: profile.name,
         email: profile.email,
@@ -589,7 +589,7 @@ export class SupabaseStorage implements IStorage {
   private mapAccount(data: Record<string, unknown>): Account {
     return {
       id: data.id as string,
-      authUserId: data.account_id as string, // Supabase uses account_id for auth user reference
+      authUserId: data.auth_user_id as string,
       email: data.email as string,
       role: data.role as Account["role"],
       vatNumber: data.vat_number as string | null ?? null,
@@ -608,7 +608,7 @@ export class SupabaseStorage implements IStorage {
   private mapProfile(data: Record<string, unknown>): Profile {
     return {
       id: data.id as string,
-      accountId: data.business_id as string, // Supabase uses business_id
+      accountId: data.account_id as string,
       slug: data.slug as string,
       name: data.name as string,
       email: data.email as string,
