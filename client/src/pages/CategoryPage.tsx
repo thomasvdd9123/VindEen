@@ -40,10 +40,6 @@ export default function CategoryPage() {
     enabled: !!locationSlug,
   });
 
-  const { data: categories = [], isLoading: categoriesListLoading } = useQuery<Category[]>({
-    queryKey: ["/api/categories"],
-  });
-
   const { data: locations = [], isLoading: locationsListLoading } = useQuery<Location[]>({
     queryKey: ["/api/locations"],
   });
@@ -83,16 +79,14 @@ export default function CategoryPage() {
       {/* Search Section - Sticky at top like vind-een-psycholoog */}
       <section className="bg-gradient-to-b from-muted/50 to-background border-b border-border">
         <div className="container mx-auto px-4 py-6">
-          {categoriesListLoading || locationsListLoading ? (
+          {locationsListLoading ? (
             <div className="max-w-4xl mx-auto">
               <Skeleton className="h-24 w-full rounded-lg" />
             </div>
           ) : (
             <div className="max-w-4xl mx-auto">
               <SearchBox 
-                categories={categories} 
                 locations={locations}
-                initialCategory={categorySlug}
                 initialLocation={locationSlug}
                 initialQuery={queryParam}
                 showCount={true}

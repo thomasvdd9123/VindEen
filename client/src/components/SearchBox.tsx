@@ -5,24 +5,23 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, MapPin } from "lucide-react";
-import type { Category, Location } from "@shared/schema";
+import type { Location } from "@shared/schema";
+import { mainCategoryLabels, specializationLabels, specializationsByCategory } from "@shared/schema";
 
 interface SearchBoxProps {
-  categories: Category[];
   locations: Location[];
   initialCategory?: string;
+  initialSpecialization?: string;
   initialLocation?: string;
   initialQuery?: string;
   variant?: "hero" | "compact";
   showCount?: boolean;
 }
 
-
-
 export function SearchBox({ 
-  categories, 
   locations, 
   initialCategory,
+  initialSpecialization,
   initialLocation,
   initialQuery = "",
   variant = "hero",
@@ -30,15 +29,33 @@ export function SearchBox({
 }: SearchBoxProps) {
   const [, navigate] = useLocation();
   const [cityQuery, setCityQuery] = useState(initialLocation || "");
-  const [selectedCategory, setSelectedCategory] = useState(initialCategory || "all");
+  const [selectedMainCategory, setSelectedMainCategory] = useState(initialCategory || "all");
+  const [selectedSpecialization, setSelectedSpecialization] = useState(initialSpecialization || "all");
   const [keyword, setKeyword] = useState(initialQuery);
   const [filteredLocations, setFilteredLocations] = useState<Location[]>([]);
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
 
+  // Get available specializations based on selected main category
+  const availableSpecializations = selectedMainCategory !== "all" 
+    ? specializationsByCategory[selectedMainCategory] || []
+    : [];
+
+  // Reset specialization when main category changes
+  useEffect(() => {
+    if (selectedMainCategory === "all") {
+      setSelectedSpecialization("all");
+    } else if (!availableSpecializations.includes(selectedSpecialization)) {
+      setSelectedSpecialization("all");
+    }
+  }, [selectedMainCategory, availableSpecializations, selectedSpecialization]);
+
   // Fetch total count for the button based on current filters
   const countParams = new URLSearchParams();
-  if (selectedCategory && selectedCategory !== "all") {
-    countParams.set("category", selectedCategory);
+  if (selectedMainCategory && selectedMainCategory !== "all") {
+    countParams.set("mainCategory", selectedMainCategory);
+  }
+  if (selectedSpecialization && selectedSpecialization !== "all") {
+    countParams.set("specialization", selectedSpecialization);
   }
   // Find location slug for count
   const selectedLocation = locations.find(
@@ -83,7 +100,13 @@ export function SearchBox({
   }, [cityQuery, locations]);
 
   const handleSearch = () => {
-    const categorySlug = selectedCategory !== "all" ? selectedCategory : "tuinaanlegger";
+    // Build the search URL - use tuinaanlegger as default category slug
+    const categorySlug = selectedMainCategory === "TUINONDERHOUD" 
+      ? "tuinonderhoud" 
+      : selectedMainCategory === "TUINAANLEG" 
+        ? "tuinaanleg" 
+        : "tuinaanlegger";
+    
     const locationMatch = locations.find(
       (loc) =>
         loc.name.toLowerCase() === cityQuery.toLowerCase() ||
@@ -98,6 +121,9 @@ export function SearchBox({
 
     const params = new URLSearchParams();
     if (keyword) params.set("q", keyword);
+    if (selectedSpecialization && selectedSpecialization !== "all") {
+      params.set("specialization", selectedSpecialization);
+    }
 
     if (params.toString()) {
       url += `?${params.toString()}`;
@@ -146,19 +172,37 @@ export function SearchBox({
               )}
             </div>
 
-            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-              <SelectTrigger className="w-full sm:w-[180px]" data-testid="select-category-compact">
-                <SelectValue placeholder="Categorie" />
+            {/* Main Category */}
+            <Select value={selectedMainCategory} onValueChange={setSelectedMainCategory}>
+              <SelectTrigger className="w-full sm:w-[180px]" data-testid="select-main-category-compact">
+                <SelectValue placeholder="Type werk" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Alle categorieën</SelectItem>
-                {categories.map((cat) => (
-                  <SelectItem key={cat.id} value={cat.slug}>
-                    {cat.name}
+                <SelectItem value="all">Alle types</SelectItem>
+                {Object.entries(mainCategoryLabels).map(([key, label]) => (
+                  <SelectItem key={key} value={key}>
+                    {label}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
+
+            {/* Specialization sub-filter */}
+            {selectedMainCategory !== "all" && availableSpecializations.length > 0 && (
+              <Select value={selectedSpecialization} onValueChange={setSelectedSpecialization}>
+                <SelectTrigger className="w-full sm:w-[180px]" data-testid="select-specialization-compact">
+                  <SelectValue placeholder="Specialisatie" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Alle specialisaties</SelectItem>
+                  {availableSpecializations.map((spec) => (
+                    <SelectItem key={spec} value={spec}>
+                      {specializationLabels[spec] || spec}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
 
             <Button onClick={handleSearch} className="gap-2 whitespace-nowrap" data-testid="button-search-compact">
               <Search className="h-4 w-4" />
@@ -223,23 +267,42 @@ export function SearchBox({
           </Button>
         </div>
 
-        {/* Row 2: Category filter */}
-        <div className="flex flex-col sm:flex-row gap-3 items-center">
-          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-            <SelectTrigger className="w-full sm:w-[220px] h-10" data-testid="select-category-hero">
-              <SelectValue placeholder="Categorie (alle)" />
+        {/* Row 2: Category and Specialization filters */}
+        <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+          {/* Main Category filter */}
+          <Select value={selectedMainCategory} onValueChange={setSelectedMainCategory}>
+            <SelectTrigger className="w-full sm:w-[200px] h-10" data-testid="select-main-category-hero">
+              <SelectValue placeholder="Type werk" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Categorie (alle)</SelectItem>
-              {categories.map((cat) => (
-                <SelectItem key={cat.id} value={cat.slug} data-testid={`category-option-${cat.slug}`}>
-                  {cat.name}
+              <SelectItem value="all">Alle types</SelectItem>
+              {Object.entries(mainCategoryLabels).map(([key, label]) => (
+                <SelectItem key={key} value={key} data-testid={`main-category-option-${key.toLowerCase()}`}>
+                  {label}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
 
-          <div className="flex-1">
+          {/* Specialization sub-filter - only shown when main category selected */}
+          {selectedMainCategory !== "all" && availableSpecializations.length > 0 && (
+            <Select value={selectedSpecialization} onValueChange={setSelectedSpecialization}>
+              <SelectTrigger className="w-full sm:w-[200px] h-10" data-testid="select-specialization-hero">
+                <SelectValue placeholder="Specialisatie" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Alle specialisaties</SelectItem>
+                {availableSpecializations.map((spec) => (
+                  <SelectItem key={spec} value={spec} data-testid={`specialization-option-${spec.toLowerCase()}`}>
+                    {specializationLabels[spec] || spec}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+
+          {/* Keyword search */}
+          <div className="flex-1 w-full">
             <Input
               type="text"
               placeholder="Zoek op trefwoord (bedrijfsnaam, diensten...)"

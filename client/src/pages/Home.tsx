@@ -14,7 +14,7 @@ import {
   Users,
 } from "lucide-react";
 import { siteConfig } from "@/lib/theme.config";
-import type { Category, Location } from "@shared/schema";
+import type { Location } from "@shared/schema";
 
 // Quick start links (like "Snel starten" section)
 const quickStartLinks = [
@@ -33,10 +33,6 @@ const experienceLinks = [
 ];
 
 export default function Home() {
-  const { data: categories = [], isLoading: categoriesLoading } = useQuery<Category[]>({
-    queryKey: ["/api/categories"],
-  });
-
   const { data: locations = [], isLoading: locationsLoading } = useQuery<Location[]>({
     queryKey: ["/api/locations"],
   });
@@ -50,7 +46,7 @@ export default function Home() {
         
         <div className="container mx-auto px-4 py-12 sm:py-16 relative">
           <div className="max-w-4xl mx-auto">
-            {categoriesLoading || locationsLoading ? (
+            {locationsLoading ? (
               <Card className="p-6">
                 <div className="space-y-4">
                   <Skeleton className="h-11 w-full" />
@@ -62,7 +58,7 @@ export default function Home() {
                 </div>
               </Card>
             ) : (
-              <SearchBox categories={categories} locations={locations} />
+              <SearchBox locations={locations} />
             )}
           </div>
         </div>
