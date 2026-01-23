@@ -185,6 +185,46 @@ export async function registerRoutes(
     }
   });
 
+  // Create or get business (upsert based on accountId)
+  app.post("/api/businesses", async (req, res) => {
+    try {
+      const { accountId, email } = req.body;
+      
+      if (!accountId || !email) {
+        return res.status(400).json({ error: "accountId and email are required" });
+      }
+      
+      // Check if business already exists
+      const { data: existing } = await supabaseAdmin
+        .from("businesses")
+        .select("*")
+        .eq("account_id", accountId)
+        .single();
+      
+      if (existing) {
+        return res.status(200).json(existing);
+      }
+      
+      // Create new business
+      const { data, error } = await supabaseAdmin
+        .from("businesses")
+        .insert({
+          account_id: accountId,
+          email,
+          role: "BUSINESS",
+          email_verified: true,
+        })
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return res.status(200).json(data);
+    } catch (error) {
+      console.error("Error creating/getting business:", error);
+      res.status(500).json({ error: "Failed to create/get business" });
+    }
+  });
+
   // Get profiles by gardener (user's own profiles)
   app.get("/api/my-profiles/:businessId", async (req, res) => {
     try {
