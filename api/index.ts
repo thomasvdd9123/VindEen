@@ -7,7 +7,7 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Map camelCase keys to snake_case for database - only known fields
 const fieldMap: Record<string, string> = {
-  gardenerId: "gardener_id",
+  businessId: "business_id",
   categoryId: "category_id",
   locationId: "location_id",
   logoUrl: "logo_url",
@@ -16,7 +16,6 @@ const fieldMap: Record<string, string> = {
   isActive: "is_active",
   isPublic: "is_public",
   isVerified: "is_verified",
-  isFeatured: "is_featured",
   hideAddress: "hide_address",
   viewCount: "view_count",
   verificationStatus: "verification_status",
@@ -35,8 +34,8 @@ const fieldMap: Record<string, string> = {
   profileId: "profile_id",
   visitorName: "visitor_name",
   visitorEmail: "visitor_email",
-  gardenerReadAt: "gardener_read_at",
-  adminNotified: "admin_notified",
+  mainCategory: "main_category",
+  experienceYears: "experience_years",
 };
 
 function toSnakeCase(obj: Record<string, any>): Record<string, any> {
@@ -142,7 +141,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json(data);
     }
 
-    // GET /api/profiles/featured
+    // GET /api/profiles/featured - now returns verified profiles with high view counts
     if (method === "GET" && path === "/api/profiles/featured") {
       const { data, error } = await supabase
         .from("profiles")
@@ -155,7 +154,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         `)
         .eq("is_active", true)
         .eq("is_public", true)
-        .eq("is_featured", true)
+        .eq("is_verified", true)
+        .order("view_count", { ascending: false })
         .limit(6);
       
       if (error) throw error;
@@ -179,6 +179,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const category = url.searchParams.get("category");
       const location = url.searchParams.get("location");
       const query = url.searchParams.get("query") || url.searchParams.get("q");
+      const mainCategory = url.searchParams.get("mainCategory");
       const page = parseInt(url.searchParams.get("page") || "1");
       const limit = parseInt(url.searchParams.get("limit") || "12");
       const offset = (page - 1) * limit;
@@ -214,6 +215,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           .single();
         if (loc) {
           queryBuilder = queryBuilder.eq("location_id", loc.id);
+        }
+      }
+
+      if (mainCategory) {
+        // Filter by main category through category relation
+        const { data: cats } = await supabase
+          .from("categories")
+          .select("id")
+          .eq("main_category", mainCategory);
+        if (cats && cats.length > 0) {
+          const categoryIds = cats.map(c => c.id);
+          queryBuilder = queryBuilder.in("category_id", categoryIds);
         }
       }
 
@@ -282,34 +295,38 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (!data) return res.status(404).json({ error: "Profile not found" });
       
       // Increment view count (fire and forget)
-      supabase
-        .from("profiles")
-        .update({ view_count: (data.view_count || 0) + 1 })
-        .eq("id", data.id)
-        .then(() => {})
-        .catch((err: Error) => console.error("Error incrementing view count:", err));
+      (async () => {
+        try {
+          await supabase
+            .from("profiles")
+            .update({ view_count: (data.view_count || 0) + 1 })
+            .eq("id", data.id);
+        } catch (err) {
+          console.error("Error incrementing view count:", err);
+        }
+      })();
       
       return res.status(200).json(toCamelCase(data));
     }
 
-    // GET /api/my-profiles/:gardenerId
+    // GET /api/my-profiles/:businessId
     if (method === "GET" && path.match(/^\/api\/my-profiles\/[^/]+$/)) {
-      const gardenerId = path.split("/").pop();
+      const businessId = path.split("/").pop();
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
-        .eq("gardener_id", gardenerId);
+        .eq("business_id", businessId);
       
       if (error) throw error;
       return res.status(200).json(toCamelCase(data || []));
     }
 
-    // POST /api/gardeners
-    if (method === "POST" && path === "/api/gardeners") {
+    // POST /api/businesses (renamed from gardeners)
+    if (method === "POST" && path === "/api/businesses") {
       const { accountId, email } = req.body;
       
       const { data: existing } = await supabase
-        .from("gardeners")
+        .from("businesses")
         .select("*")
         .eq("account_id", accountId)
         .single();
@@ -319,11 +336,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
       
       const { data, error } = await supabase
-        .from("gardeners")
+        .from("businesses")
         .insert({
           account_id: accountId,
           email,
-          role: "GARDENER",
+          role: "BUSINESS",
           email_verified: true,
         })
         .select()
@@ -345,26 +362,37 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json(data || []);
     }
 
-    // GET /api/contact-requests/:gardenerId
+    // GET /api/contact-requests/:businessId
     if (method === "GET" && path.match(/^\/api\/contact-requests\/[^/]+$/)) {
-      const gardenerId = path.split("/").pop();
+      const businessId = path.split("/").pop();
+      // Contact requests are now linked only to profile
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("business_id", businessId);
+      
+      if (!profiles || profiles.length === 0) {
+        return res.status(200).json([]);
+      }
+
+      const profileIds = profiles.map(p => p.id);
       const { data, error } = await supabase
         .from("contact_requests")
         .select(`*, profile:profiles(name, slug)`)
-        .eq("gardener_id", gardenerId)
+        .in("profile_id", profileIds)
         .order("created_at", { ascending: false });
       
       if (error) throw error;
       return res.status(200).json(data || []);
     }
 
-    // POST /api/contact/:profileId
+    // POST /api/contact/:profileId (simplified - no status tracking)
     if (method === "POST" && path.match(/^\/api\/contact\/[^/]+$/)) {
       const profileId = path.split("/").pop();
       
       const { data: profile } = await supabase
         .from("profiles")
-        .select("id, gardener_id")
+        .select("id")
         .eq("id", profileId)
         .single();
       
@@ -378,14 +406,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         .from("contact_requests")
         .insert({
           profile_id: profileId,
-          gardener_id: profile.gardener_id,
           visitor_name: visitorName,
           visitor_email: visitorEmail,
           telnr: telnr || null,
           subject,
           message,
-          status: "NEW",
-          date: new Date().toISOString(),
         })
         .select()
         .single();
@@ -415,8 +440,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (method === "POST" && path === "/api/profiles") {
       const profileData = req.body;
       
-      if (!profileData.gardenerId) {
-        return res.status(400).json({ error: "gardenerId is required" });
+      if (!profileData.businessId) {
+        return res.status(400).json({ error: "businessId is required" });
       }
       
       // Generate slug from name
@@ -445,7 +470,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const { data, error } = await supabase
         .from("profiles")
         .insert({
-          gardener_id: profileData.gardenerId,
+          business_id: profileData.businessId,
           slug,
           name: profileData.name,
           email: profileData.email,
@@ -461,7 +486,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           is_public: false,
           is_verified: false,
           verification_status: "PENDING",
-          is_featured: false,
         })
         .select()
         .single();

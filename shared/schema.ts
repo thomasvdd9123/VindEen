@@ -131,6 +131,8 @@ export const profiles = pgTable("profiles", {
   imageUrls: text("image_urls").array(),
   isActive: boolean("is_active").default(true).notNull(),
   isPublic: boolean("is_public").default(false).notNull(),
+  isVerified: boolean("is_verified").default(false),
+  verificationStatus: verificationStatusEnum("verification_status").default("PENDING"),
   hideAddress: boolean("hide_address").default(false),
   viewCount: integer("view_count").default(0),
   seoTitle: text("seo_title"),

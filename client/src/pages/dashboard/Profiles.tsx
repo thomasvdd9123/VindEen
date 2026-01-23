@@ -24,22 +24,22 @@ import type { Profile } from "@shared/schema";
 export default function DashboardProfiles() {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [gardenerId, setGardenerId] = useState<string | null>(null);
+  const [businessId, setBusinessId] = useState<string | null>(null);
 
   useEffect(() => {
     if (user?.id) {
-      apiRequest("POST", "/api/gardeners", {
+      apiRequest("POST", "/api/businesses", {
         accountId: user.id,
         email: user.email,
-      }).then((gardener) => {
-        setGardenerId(gardener.id);
+      }).then((response) => {
+        setBusinessId((response as { id: string }).id);
       }).catch(console.error);
     }
   }, [user?.id, user?.email]);
 
   const { data: profiles = [], isLoading } = useQuery<Profile[]>({
-    queryKey: ["/api/my-profiles", gardenerId],
-    enabled: !!gardenerId,
+    queryKey: ["/api/my-profiles", businessId],
+    enabled: !!businessId,
   });
 
   const deleteMutation = useMutation({

@@ -187,11 +187,6 @@ export default function ProfilePage() {
                           Geverifieerd
                         </Badge>
                       )}
-                      {profile.isFeatured && (
-                        <Badge variant="secondary" className="shrink-0">
-                          Uitgelicht
-                        </Badge>
-                      )}
                     </div>
 
                     {profile.title && (
@@ -296,21 +291,12 @@ export default function ProfilePage() {
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {profile.practical.reachability && (
-                      <div className="flex items-start gap-3">
-                        <MapPin className="h-5 w-5 text-primary mt-0.5" />
-                        <div>
-                          <p className="font-medium text-sm">Werkgebied</p>
-                          <p className="text-muted-foreground text-sm">{profile.practical.reachability}</p>
-                        </div>
-                      </div>
-                    )}
-                    {profile.practical.experience && (
+                    {profile.practical.experienceYears && profile.practical.experienceYears > 0 && (
                       <div className="flex items-start gap-3">
                         <Clock className="h-5 w-5 text-primary mt-0.5" />
                         <div>
                           <p className="font-medium text-sm">Ervaring</p>
-                          <p className="text-muted-foreground text-sm">{profile.practical.experience}</p>
+                          <p className="text-muted-foreground text-sm">{profile.practical.experienceYears} jaar</p>
                         </div>
                       </div>
                     )}
@@ -407,7 +393,7 @@ export default function ProfilePage() {
                           <p className="font-medium">{profile.office.street} {profile.office.number}</p>
                         )}
                         <p className={profile.hideAddress ? "font-medium" : "text-muted-foreground"}>{profile.office.postcode} {profile.office.town}</p>
-                        <p className="text-muted-foreground">{profile.office.country}</p>
+                        <p className="text-muted-foreground">België</p>
                       </div>
                     </div>
                   </>

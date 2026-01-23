@@ -70,15 +70,15 @@ export default function ProfileCreate() {
     mutationFn: async (data: ProfileFormData) => {
       if (!user?.id) throw new Error("Je bent niet ingelogd");
       
-      // Get or create gardener
-      const gardener = await apiRequest("POST", "/api/gardeners", {
+      // Get or create business
+      const business = await apiRequest("POST", "/api/businesses", {
         accountId: user.id,
         email: user.email,
-      });
+      }) as { id: string };
       
       return apiRequest("POST", "/api/profiles", {
         ...data,
-        gardenerId: gardener.id,
+        businessId: business.id,
         hasWebsite: !!data.website,
       });
     },
