@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useParams, Link, useSearch } from "wouter";
 import { Layout } from "@/components/layout/Layout";
@@ -22,6 +22,7 @@ import { siteConfig } from "@/lib/theme.config";
 
 export default function CategoryPage() {
   const [viewMode, setViewMode] = useState<"list" | "map">("list");
+  const [currentPage, setCurrentPage] = useState(1);
   const params = useParams<{ category: string; location?: string }>();
   const categorySlug = params.category;
   const locationSlug = params.location;
@@ -47,6 +48,12 @@ export default function CategoryPage() {
     queryKey: ["/api/locations"],
   });
 
+  // Reset page when filters change
+  const filterKey = `${categorySlug}-${locationSlug}-${queryParam}-${specParam}`;
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterKey]);
+  
   // Build search params including all filters
   const searchParams = new URLSearchParams();
   // Don't filter by category when showing all
@@ -54,11 +61,10 @@ export default function CategoryPage() {
   if (locationSlug) searchParams.set("location", locationSlug);
   if (queryParam) searchParams.set("q", queryParam);
   if (specParam) searchParams.set("spec", specParam);
+  searchParams.set("page", currentPage.toString());
   
   // Build full URL with query string
-  const searchUrl = searchParams.toString() 
-    ? `/api/profiles/search?${searchParams.toString()}`
-    : "/api/profiles/search";
+  const searchUrl = `/api/profiles/search?${searchParams.toString()}`;
 
   const { data: profilesData, isLoading: profilesLoading } = useQuery<{
     profiles: ProfileWithRelations[];
@@ -255,19 +261,21 @@ export default function CategoryPage() {
               <Button
                 variant="outline"
                 size="sm"
-                disabled={profilesData.page <= 1}
+                disabled={currentPage <= 1}
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                 data-testid="button-prev-page"
               >
                 <ChevronLeft className="h-4 w-4" />
                 Vorige
               </Button>
               <span className="text-sm text-muted-foreground px-4">
-                Pagina {profilesData.page} van {profilesData.totalPages}
+                Pagina {currentPage} van {profilesData.totalPages}
               </span>
               <Button
                 variant="outline"
                 size="sm"
-                disabled={profilesData.page >= profilesData.totalPages}
+                disabled={currentPage >= profilesData.totalPages}
+                onClick={() => setCurrentPage(p => Math.min(profilesData.totalPages, p + 1))}
                 data-testid="button-next-page"
               >
                 Volgende
