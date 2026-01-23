@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -135,7 +135,7 @@ export function SearchBox({
                       data-testid={`location-option-${loc.slug}`}
                     >
                       <MapPin className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
-                      <span className="font-semibold text-primary">{loc.postcode}</span>
+                      <span className="font-semibold">{loc.postcode}</span>
                       <span className="font-medium">{loc.name}</span>
                       {loc.municipality !== loc.name && (
                         <span className="text-muted-foreground">({loc.municipality})</span>
@@ -199,7 +199,7 @@ export function SearchBox({
                   >
                     <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                     <div className="flex items-center gap-2">
-                      <span className="font-semibold text-primary min-w-[50px]">{loc.postcode}</span>
+                      <span className="font-semibold min-w-[50px]">{loc.postcode}</span>
                       <span className="font-medium">{loc.name}</span>
                       {loc.municipality !== loc.name && (
                         <span className="text-muted-foreground text-sm">({loc.municipality})</span>
