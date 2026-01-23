@@ -21,6 +21,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import type { Category, Location, Profile } from "@shared/schema";
+import { specializationLabels, specializationsByCategory, mainCategoryLabels } from "@shared/schema";
 
 // Calculate profile completeness from form values
 function calculateProfileCompleteness(formValues: ProfileFormData): { percentage: number; missing: string[] } {
@@ -78,6 +79,12 @@ const profileSchema = z.object({
   isActive: z.boolean().default(true),
   hideAddress: z.boolean().default(false),
   offeredServices: z.array(z.string()).optional(),
+  specializations: z.array(z.string()).optional(),
+  mainCategories: z.array(z.string()).optional(),
+  officeStreet: z.string().optional(),
+  officeNumber: z.string().optional(),
+  officeTown: z.string().optional(),
+  officePostcode: z.string().optional(),
 });
 
 type ProfileFormData = z.infer<typeof profileSchema>;
@@ -431,11 +438,26 @@ export default function ProfileEdit() {
       isActive: true,
       hideAddress: false,
       offeredServices: [],
+      specializations: [],
+      mainCategories: [],
+      officeStreet: "",
+      officeNumber: "",
+      officeTown: "",
+      officePostcode: "",
     },
   });
 
   useEffect(() => {
     if (profile) {
+      // Derive main categories from specializations
+      const derivedMainCategories: string[] = [];
+      if (profile.specializations?.some(s => specializationsByCategory.TUINONDERHOUD.includes(s))) {
+        derivedMainCategories.push("TUINONDERHOUD");
+      }
+      if (profile.specializations?.some(s => specializationsByCategory.TUINAANLEG.includes(s))) {
+        derivedMainCategories.push("TUINAANLEG");
+      }
+      
       form.reset({
         name: profile.name || "",
         email: profile.email || "",
@@ -449,6 +471,12 @@ export default function ProfileEdit() {
         isActive: profile.isActive ?? true,
         hideAddress: profile.hideAddress ?? false,
         offeredServices: profile.offeredServices || [],
+        specializations: profile.specializations || [],
+        mainCategories: derivedMainCategories,
+        officeStreet: (profile as any).office?.street || "",
+        officeNumber: (profile as any).office?.number || "",
+        officeTown: (profile as any).office?.town || "",
+        officePostcode: (profile as any).office?.postcode || "",
       });
     }
   }, [profile, form]);
@@ -461,6 +489,13 @@ export default function ProfileEdit() {
         isActive: data.isActive,
         hideAddress: data.hideAddress,
         offeredServices: data.offeredServices,
+        specializations: data.specializations,
+        office: {
+          street: data.officeStreet,
+          number: data.officeNumber,
+          town: data.officeTown,
+          postcode: data.officePostcode,
+        },
       });
     },
     onSuccess: () => {
@@ -796,6 +831,175 @@ export default function ProfileEdit() {
                     </FormItem>
                   )}
                 />
+
+                {/* Main Categories Selection */}
+                <FormField
+                  control={form.control}
+                  name="mainCategories"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Hoofdcategorieën</FormLabel>
+                      <FormDescription className="mb-2">
+                        Selecteer in welke categorieën je actief bent (je kunt beide selecteren)
+                      </FormDescription>
+                      <div className="flex flex-wrap gap-4">
+                        {Object.entries(mainCategoryLabels).map(([key, label]) => (
+                          <div key={key} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`main-cat-${key}`}
+                              checked={field.value?.includes(key) || false}
+                              onCheckedChange={(checked) => {
+                                const current = field.value || [];
+                                if (checked) {
+                                  field.onChange([...current, key]);
+                                } else {
+                                  field.onChange(current.filter((c) => c !== key));
+                                  // Also remove specializations from this category
+                                  const specs = form.getValues("specializations") || [];
+                                  const categorySpecs = specializationsByCategory[key] || [];
+                                  form.setValue("specializations", specs.filter(s => !categorySpecs.includes(s)));
+                                }
+                              }}
+                              data-testid={`checkbox-main-cat-${key.toLowerCase()}`}
+                            />
+                            <label htmlFor={`main-cat-${key}`} className="text-sm font-medium cursor-pointer">
+                              {label}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Specializations Selection */}
+                <FormField
+                  control={form.control}
+                  name="specializations"
+                  render={({ field }) => {
+                    const selectedMainCategories = form.watch("mainCategories") || [];
+                    const availableSpecs = selectedMainCategories.flatMap(
+                      cat => specializationsByCategory[cat] || []
+                    );
+                    
+                    return (
+                      <FormItem>
+                        <FormLabel>Specialisaties</FormLabel>
+                        <FormDescription className="mb-2">
+                          Selecteer je specialisaties (selecteer eerst een hoofdcategorie)
+                        </FormDescription>
+                        {selectedMainCategories.length === 0 ? (
+                          <p className="text-sm text-muted-foreground italic">
+                            Selecteer eerst een hoofdcategorie om specialisaties te zien
+                          </p>
+                        ) : (
+                          <div className="space-y-4">
+                            {selectedMainCategories.map(cat => (
+                              <div key={cat}>
+                                <p className="text-sm font-medium text-muted-foreground mb-2">
+                                  {mainCategoryLabels[cat]}
+                                </p>
+                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                  {(specializationsByCategory[cat] || []).map((spec) => (
+                                    <div key={spec} className="flex items-center space-x-2">
+                                      <Checkbox
+                                        id={`spec-${spec}`}
+                                        checked={field.value?.includes(spec) || false}
+                                        onCheckedChange={(checked) => {
+                                          const current = field.value || [];
+                                          if (checked) {
+                                            field.onChange([...current, spec]);
+                                          } else {
+                                            field.onChange(current.filter((s) => s !== spec));
+                                          }
+                                        }}
+                                        data-testid={`checkbox-spec-${spec.toLowerCase()}`}
+                                      />
+                                      <label
+                                        htmlFor={`spec-${spec}`}
+                                        className="text-sm cursor-pointer"
+                                      >
+                                        {specializationLabels[spec] || spec}
+                                      </label>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        <FormMessage />
+                      </FormItem>
+                    );
+                  }}
+                />
+
+                {/* Office Address */}
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-sm font-medium">Bedrijfsadres</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Het adres waar je bedrijf gevestigd is
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="officeStreet"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Straat</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Kerkstraat" {...field} data-testid="input-office-street" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="officeNumber"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Huisnummer</FormLabel>
+                          <FormControl>
+                            <Input placeholder="12" {...field} data-testid="input-office-number" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="officePostcode"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Postcode</FormLabel>
+                          <FormControl>
+                            <Input placeholder="9000" {...field} data-testid="input-office-postcode" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="officeTown"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Gemeente</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Gent" {...field} data-testid="input-office-town" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
 
                 {/* Active/Inactive Toggle */}
                 <FormField
