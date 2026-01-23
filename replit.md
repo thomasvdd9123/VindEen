@@ -15,7 +15,7 @@ A SEO-optimized directory platform for Belgian businesses (inspired by vind-een-
 - **Routing**: Wouter
 - **State Management**: TanStack Query
 - **Backend**: Express.js + Node.js
-- **Database**: Supabase (PostgreSQL) - connected to production Supabase
+- **Database**: Supabase (PostgreSQL) exclusively - no Replit in-house database
 - **Auth**: Supabase Auth (implemented)
 - **Payments**: Mollie (planned)
 - **Email**: Resend (planned)
