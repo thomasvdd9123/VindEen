@@ -35,7 +35,6 @@ const invoiceSchema = z.object({
   country: z.string().min(2, "Land is verplicht"),
   btwPlichtig: z.string(),
   btwNumber: z.string().optional(),
-  kvkNumber: z.string().optional(),
 });
 
 type AccountFormData = z.infer<typeof accountSchema>;
@@ -80,7 +79,6 @@ export default function DashboardAccount() {
       country: "België",
       btwPlichtig: "no",
       btwNumber: "",
-      kvkNumber: "",
     },
   });
 
@@ -113,7 +111,6 @@ export default function DashboardAccount() {
         country: "België",
         btwPlichtig: accountData.vatNumber ? "yes" : "no",
         btwNumber: accountData.vatNumber || "",
-        kvkNumber: "", // Not stored in accounts table yet
       });
       setHasLoadedInvoice(true);
     }
@@ -522,20 +519,6 @@ export default function DashboardAccount() {
                     )}
                   />
                 </div>
-
-                <FormField
-                  control={invoiceForm.control}
-                  name="kvkNumber"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Ondernemingsnummer / KVK-nummer</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Ondernemingsnummer" {...field} data-testid="input-kvk" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
 
                 <p className="text-sm text-muted-foreground">
                   Gegevens tussentijds opslaan
