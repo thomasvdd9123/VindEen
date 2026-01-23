@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useLocation, useParams } from "wouter";
 import { z } from "zod";
@@ -445,6 +445,13 @@ export default function ProfileEdit() {
       officeTown: "",
       officePostcode: "",
     },
+  });
+
+  // Watch main categories at component level to avoid infinite loops
+  const watchedMainCategories = useWatch({
+    control: form.control,
+    name: "mainCategories",
+    defaultValue: [],
   });
 
   useEffect(() => {
@@ -897,45 +904,48 @@ export default function ProfileEdit() {
                               ? "Onderhoud van bestaande tuinen: maaien, snoeien, hagen knippen, etc."
                               : "Aanleg van nieuwe tuinen: terrassen, paden, vijvers, gazon, etc.";
                             
+                            const handleToggle = (checked: boolean) => {
+                              const current = field.value || [];
+                              if (checked) {
+                                field.onChange([...current, key]);
+                              } else {
+                                field.onChange(current.filter((c: string) => c !== key));
+                                // Also remove specializations from this category
+                                const specs = form.getValues("specializations") || [];
+                                const categorySpecs = specializationsByCategory[key] || [];
+                                form.setValue("specializations", specs.filter((s: string) => !categorySpecs.includes(s)));
+                              }
+                            };
+                            
                             return (
-                              <div 
-                                key={key} 
-                                className={`relative rounded-lg border-2 p-4 cursor-pointer transition-colors ${
+                              <label 
+                                key={key}
+                                htmlFor={`main-cat-${key}`}
+                                className={`relative rounded-lg border-2 p-4 cursor-pointer transition-colors block ${
                                   isSelected 
                                     ? "border-primary bg-primary/5" 
                                     : "border-muted hover:border-muted-foreground/50"
                                 }`}
-                                onClick={() => {
-                                  const current = field.value || [];
-                                  if (isSelected) {
-                                    field.onChange(current.filter((c) => c !== key));
-                                    // Also remove specializations from this category
-                                    const specs = form.getValues("specializations") || [];
-                                    const categorySpecs = specializationsByCategory[key] || [];
-                                    form.setValue("specializations", specs.filter(s => !categorySpecs.includes(s)));
-                                  } else {
-                                    field.onChange([...current, key]);
-                                  }
-                                }}
                                 data-testid={`card-main-cat-${key.toLowerCase()}`}
                               >
                                 <div className="flex items-start gap-3">
                                   <Checkbox
                                     id={`main-cat-${key}`}
                                     checked={isSelected}
+                                    onCheckedChange={handleToggle}
                                     className="mt-1"
                                     data-testid={`checkbox-main-cat-${key.toLowerCase()}`}
                                   />
                                   <div className="flex-1">
-                                    <label htmlFor={`main-cat-${key}`} className="text-base font-medium cursor-pointer">
+                                    <span className="text-base font-medium">
                                       {label}
-                                    </label>
+                                    </span>
                                     <p className="text-sm text-muted-foreground mt-1">
                                       {description}
                                     </p>
                                   </div>
                                 </div>
-                              </div>
+                              </label>
                             );
                           })}
                         </div>
@@ -952,7 +962,7 @@ export default function ProfileEdit() {
                   control={form.control}
                   name="specializations"
                   render={({ field }) => {
-                    const selectedMainCategories = form.watch("mainCategories") || [];
+                    const selectedMainCategories = watchedMainCategories || [];
                     
                     if (selectedMainCategories.length === 0) {
                       return (
