@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search } from "lucide-react";
+import { Search, MapPin } from "lucide-react";
 import type { Category, Location } from "@shared/schema";
 
 interface SearchBoxProps {
@@ -119,7 +119,7 @@ export function SearchBox({
             <div className="relative flex-1 w-full sm:max-w-xs">
               <Input
                 type="text"
-                placeholder="Stad of gemeente"
+                placeholder="Postcode of stad"
                 value={cityQuery}
                 onChange={(e) => setCityQuery(e.target.value)}
                 className="w-full"
@@ -130,12 +130,16 @@ export function SearchBox({
                   {filteredLocations.map((loc) => (
                     <button
                       key={loc.id}
-                      className="w-full text-left px-4 py-2 hover:bg-muted transition-colors text-sm"
+                      className="w-full text-left px-4 py-2 hover:bg-muted transition-colors text-sm flex items-center gap-2"
                       onClick={() => selectLocation(loc)}
                       data-testid={`location-option-${loc.slug}`}
                     >
+                      <MapPin className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+                      <span className="font-semibold text-primary">{loc.postcode}</span>
                       <span className="font-medium">{loc.name}</span>
-                      <span className="text-muted-foreground ml-2">{loc.postcode}</span>
+                      {loc.municipality !== loc.name && (
+                        <span className="text-muted-foreground">({loc.municipality})</span>
+                      )}
                     </button>
                   ))}
                 </div>
@@ -176,7 +180,7 @@ export function SearchBox({
           <div className="relative flex-1">
             <Input
               type="text"
-              placeholder="Stad of gemeente"
+              placeholder="Postcode of stad (bv. 9000, Gent)"
               value={cityQuery}
               onChange={(e) => setCityQuery(e.target.value)}
               className="w-full h-11 text-base pl-4"
@@ -189,12 +193,18 @@ export function SearchBox({
                 {filteredLocations.map((loc) => (
                   <button
                     key={loc.id}
-                    className="w-full text-left px-4 py-3 hover:bg-muted transition-colors border-b border-border last:border-b-0"
+                    className="w-full text-left px-4 py-3 hover:bg-muted transition-colors border-b border-border last:border-b-0 flex items-center gap-3"
                     onClick={() => selectLocation(loc)}
                     data-testid={`hero-location-option-${loc.slug}`}
                   >
-                    <span className="font-medium">{loc.name}</span>
-                    <span className="text-muted-foreground ml-2 text-sm">{loc.postcode} - {loc.municipality}</span>
+                    <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-primary min-w-[50px]">{loc.postcode}</span>
+                      <span className="font-medium">{loc.name}</span>
+                      {loc.municipality !== loc.name && (
+                        <span className="text-muted-foreground text-sm">({loc.municipality})</span>
+                      )}
+                    </div>
                   </button>
                 ))}
               </div>
