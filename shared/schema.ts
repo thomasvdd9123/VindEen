@@ -99,7 +99,7 @@ export const locations = pgTable("locations", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-// Businesses Table (Account holders - renamed from gardeners for rebranding)
+// Businesses Table (Account holders)
 export const businesses = pgTable("businesses", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   accountId: varchar("account_id").notNull().unique(),
@@ -272,7 +272,7 @@ export type InsertLocation = z.infer<typeof insertLocationSchema>;
 export type Business = typeof businesses.$inferSelect;
 export type InsertBusiness = z.infer<typeof insertBusinessSchema>;
 
-// Keep Gardener as alias for backward compatibility
+// Legacy aliases (deprecated - use Business instead)
 export type Gardener = Business;
 export type InsertGardener = InsertBusiness;
 

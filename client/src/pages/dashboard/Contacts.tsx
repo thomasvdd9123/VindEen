@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/lib/auth";
-import type { ContactRequest, Gardener } from "@shared/schema";
+import type { ContactRequest, Business } from "@shared/schema";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { 
   MessageSquare,
@@ -32,12 +32,12 @@ export default function DashboardContacts() {
   const [sortBy, setSortBy] = useState<SortOption>("date-desc");
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
-  // Get gardener ID
-  const { data: gardener } = useQuery<Gardener>({
-    queryKey: ["/api/gardeners/by-account", user?.id],
+  // Get business ID
+  const { data: business } = useQuery<Business>({
+    queryKey: ["/api/businesses/by-account", user?.id],
     queryFn: async () => {
       if (!user?.id) throw new Error("No user");
-      return apiRequest("POST", "/api/gardeners", {
+      return apiRequest("POST", "/api/businesses", {
         accountId: user.id,
         email: user.email,
       });
@@ -47,12 +47,12 @@ export default function DashboardContacts() {
 
   // Fetch contact requests
   const { data: contacts = [], isLoading, isError } = useQuery<ContactRequest[]>({
-    queryKey: ["/api/contact-requests", gardener?.id],
+    queryKey: ["/api/contact-requests", business?.id],
     queryFn: async () => {
-      if (!gardener?.id) return [];
-      return apiRequest("GET", `/api/contact-requests/${gardener.id}`);
+      if (!business?.id) return [];
+      return apiRequest("GET", `/api/contact-requests/${business.id}`);
     },
-    enabled: !!gardener?.id,
+    enabled: !!business?.id,
   });
 
   // Filter and sort contacts

@@ -25,7 +25,7 @@ export interface IStorage {
   getLocationBySlug(slug: string): Promise<Location | undefined>;
   createLocation(location: InsertLocation): Promise<Location>;
 
-  // Businesses (formerly Gardeners)
+  // Businesses
   getBusiness(id: string): Promise<Business | undefined>;
   getBusinessByAccountId(accountId: string): Promise<Business | undefined>;
   createBusiness(business: InsertBusiness): Promise<Business>;

@@ -9,7 +9,7 @@ async function seed() {
   await supabaseAdmin.from("offices").delete().neq("id", "00000000-0000-0000-0000-000000000000");
   await supabaseAdmin.from("contact_requests").delete().neq("id", "00000000-0000-0000-0000-000000000000");
   await supabaseAdmin.from("profiles").delete().neq("id", "00000000-0000-0000-0000-000000000000");
-  await supabaseAdmin.from("gardeners").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+  await supabaseAdmin.from("businesses").delete().neq("id", "00000000-0000-0000-0000-000000000000");
   await supabaseAdmin.from("locations").delete().neq("id", "00000000-0000-0000-0000-000000000000");
   await supabaseAdmin.from("categories").delete().neq("id", "00000000-0000-0000-0000-000000000000");
 
@@ -283,21 +283,21 @@ async function seed() {
   ];
 
   for (const profileData of sampleProfiles) {
-    // Create gardener
-    const { data: gardener, error: gardenerError } = await supabaseAdmin
-      .from("gardeners")
+    // Create business
+    const { data: business, error: businessError } = await supabaseAdmin
+      .from("businesses")
       .insert({
         account_id: crypto.randomUUID(),
         email: profileData.email,
-        role: "GARDENER",
+        role: "BUSINESS",
         email_verified: true,
         email_verified_at: new Date().toISOString(),
       })
       .select()
       .single();
 
-    if (gardenerError) {
-      console.error(`Error creating gardener for ${profileData.name}:`, gardenerError);
+    if (businessError) {
+      console.error(`Error creating business for ${profileData.name}:`, businessError);
       continue;
     }
 
@@ -305,7 +305,7 @@ async function seed() {
     const { data: profile, error: profileError } = await supabaseAdmin
       .from("profiles")
       .insert({
-        gardener_id: gardener.id,
+        business_id: business.id,
         slug: profileData.slug,
         name: profileData.name,
         email: profileData.email,

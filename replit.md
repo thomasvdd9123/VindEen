@@ -15,8 +15,8 @@ A SEO-optimized directory platform for Belgian businesses (inspired by vind-een-
 - **Routing**: Wouter
 - **State Management**: TanStack Query
 - **Backend**: Express.js + Node.js
-- **Database**: Supabase (PostgreSQL) - currently using in-memory storage for MVP
-- **Auth**: Supabase Auth (planned)
+- **Database**: Supabase (PostgreSQL) - connected to production Supabase
+- **Auth**: Supabase Auth (implemented)
 - **Payments**: Mollie (planned)
 - **Email**: Resend (planned)
 
@@ -97,12 +97,14 @@ shared/
 - `GET /api/profiles/search` - Search profiles with filters
 - `GET /api/profiles/:slug` - Get profile by slug
 - `POST /api/contact/:profileId` - Submit contact form
+- `POST /api/businesses` - Get or create business for user (dashboard auth)
+- `GET /api/my-profiles/:businessId` - Get profiles owned by business
 
 ## Seed Data
 Includes Belgian categories (Tuinonderhoud, Tuinaanleg) with specializations, major cities (Gent, Antwerpen, Brussel, Brugge, Leuven, Hasselt, Kortrijk) with sample verified profiles.
 
 ## Recent Schema Changes (Jan 2026)
-- **Universal Naming**: Renamed `gardeners` to `businesses` for easy rebranding to other industries
+- **Universal Naming**: Renamed `gardeners` table to `businesses` and `gardener_id` column to `business_id` for easy rebranding to other industries
 - **Categories**: Two main categories: `TUINONDERHOUD` (maintenance: grass mowing, pruning) and `TUINAANLEG` (creation: grass laying, paths, wooden walls)
 - **Profile Verification**: Added `isVerified` and `verificationStatus` fields with `ProfileStatusHistory` for audit trail
 - **Belgian Localization**: Added province/region enums, language enum (NL, FR, DE, EN)
@@ -121,15 +123,15 @@ VITE_SUPABASE_ANON_KEY=
 ```
 
 ## Next Steps (Post-MVP)
-1. Supabase database integration (replace in-memory storage)
-2. Supabase Auth for login/registration
+1. ~~Supabase database integration~~ (DONE - using production Supabase)
+2. ~~Supabase Auth for login/registration~~ (DONE)
 3. Admin panel for managing profiles
-4. Company dashboard/portal
+4. ~~Company dashboard/portal~~ (DONE)
 5. Mollie payment integration
 6. Resend email integration
 7. Peppol invoicing (required for Belgium B2B by Jan 2026)
 8. Advanced search with geo-filtering
-9. Multi-step profile creation wizard
+9. ~~Multi-step profile creation wizard~~ (DONE - onboarding flow)
 
 ## User Preferences
 - No Replit-specific features (must export to Vercel)

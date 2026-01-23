@@ -12,7 +12,7 @@ DROP TABLE IF EXISTS payments CASCADE;
 DROP TABLE IF EXISTS subscription_items CASCADE;
 DROP TABLE IF EXISTS subscription_plans CASCADE;
 DROP TABLE IF EXISTS profiles CASCADE;
-DROP TABLE IF EXISTS gardeners CASCADE;
+DROP TABLE IF EXISTS businesses CASCADE;
 DROP TABLE IF EXISTS locations CASCADE;
 DROP TABLE IF EXISTS categories CASCADE;
 
@@ -28,7 +28,7 @@ DROP TYPE IF EXISTS contact_request_status CASCADE;
 DROP TYPE IF EXISTS specialization_type CASCADE;
 
 -- Create Enums
-CREATE TYPE account_role AS ENUM ('ADMIN', 'MODERATOR', 'GARDENER');
+CREATE TYPE account_role AS ENUM ('ADMIN', 'MODERATOR', 'BUSINESS');
 CREATE TYPE verification_status AS ENUM ('PENDING', 'APPROVED', 'REJECTED');
 CREATE TYPE subscription_status AS ENUM ('ACTIVE', 'EXPIRED', 'CANCELLED');
 CREATE TYPE subscription_type AS ENUM ('BRONZE', 'SILVER', 'GOLD', 'BASIC', 'PREMIUM');
@@ -77,12 +77,12 @@ CREATE TABLE locations (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- Gardeners Table (Account holders)
-CREATE TABLE gardeners (
+-- Businesses Table (Account holders - universal naming for rebranding)
+CREATE TABLE businesses (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   account_id TEXT NOT NULL UNIQUE,
   email TEXT NOT NULL,
-  role account_role NOT NULL DEFAULT 'GARDENER',
+  role account_role NOT NULL DEFAULT 'BUSINESS',
   email_verified BOOLEAN DEFAULT false,
   email_verified_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -92,7 +92,7 @@ CREATE TABLE gardeners (
 -- Profiles Table
 CREATE TABLE profiles (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  gardener_id UUID NOT NULL REFERENCES gardeners(id),
+  business_id UUID NOT NULL REFERENCES businesses(id),
   slug TEXT NOT NULL UNIQUE,
   name TEXT NOT NULL,
   email TEXT NOT NULL,
@@ -172,7 +172,7 @@ CREATE TABLE subscription_plans (
 CREATE TABLE subscription_items (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   profile_id UUID NOT NULL REFERENCES profiles(id),
-  gardener_id UUID NOT NULL REFERENCES gardeners(id),
+  business_id UUID NOT NULL REFERENCES businesses(id),
   subscription_plan_id UUID REFERENCES subscription_plans(id),
   mollie_subscription_id TEXT,
   mollie_customer_id TEXT,
@@ -214,7 +214,7 @@ CREATE TABLE payments (
 -- Contact Requests Table
 CREATE TABLE contact_requests (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  gardener_id UUID NOT NULL REFERENCES gardeners(id),
+  business_id UUID NOT NULL REFERENCES businesses(id),
   profile_id UUID NOT NULL REFERENCES profiles(id),
   visitor_name TEXT NOT NULL,
   visitor_email TEXT NOT NULL,
@@ -222,7 +222,7 @@ CREATE TABLE contact_requests (
   subject TEXT NOT NULL,
   message TEXT NOT NULL,
   status contact_request_status NOT NULL DEFAULT 'NEW',
-  gardener_read_at TIMESTAMPTZ,
+  business_read_at TIMESTAMPTZ,
   admin_notified BOOLEAN DEFAULT false,
   date TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -232,7 +232,7 @@ CREATE TABLE contact_requests (
 -- Create indexes for better performance
 CREATE INDEX idx_profiles_category ON profiles(category_id);
 CREATE INDEX idx_profiles_location ON profiles(location_id);
-CREATE INDEX idx_profiles_gardener ON profiles(gardener_id);
+CREATE INDEX idx_profiles_business ON profiles(business_id);
 CREATE INDEX idx_profiles_slug ON profiles(slug);
 CREATE INDEX idx_profiles_active_public ON profiles(is_active, is_public);
 CREATE INDEX idx_profiles_featured ON profiles(is_featured);
@@ -241,4 +241,4 @@ CREATE INDEX idx_locations_slug ON locations(slug);
 
 -- Enable Row Level Security (optional, for production)
 -- ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
--- ALTER TABLE gardeners ENABLE ROW LEVEL SECURITY;
+-- ALTER TABLE businesses ENABLE ROW LEVEL SECURITY;

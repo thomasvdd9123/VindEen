@@ -185,7 +185,7 @@ export async function registerRoutes(
     }
   });
 
-  // Create or get gardener (upsert based on accountId) - used by dashboard
+  // Create or get business (upsert based on accountId) - used by dashboard
   app.post("/api/businesses", async (req, res) => {
     try {
       const { accountId, email } = req.body;
@@ -194,9 +194,9 @@ export async function registerRoutes(
         return res.status(400).json({ error: "accountId and email are required" });
       }
       
-      // Check if gardener already exists (using gardeners table, not businesses)
+      // Check if business already exists
       const { data: existing } = await supabaseAdmin
-        .from("gardeners")
+        .from("businesses")
         .select("*")
         .eq("account_id", accountId)
         .single();
@@ -205,13 +205,13 @@ export async function registerRoutes(
         return res.status(200).json(existing);
       }
       
-      // Create new gardener
+      // Create new business
       const { data, error } = await supabaseAdmin
-        .from("gardeners")
+        .from("businesses")
         .insert({
           account_id: accountId,
           email,
-          role: "GARDENER",
+          role: "BUSINESS",
           email_verified: true,
         })
         .select()
@@ -220,15 +220,15 @@ export async function registerRoutes(
       if (error) throw error;
       return res.status(200).json(data);
     } catch (error) {
-      console.error("Error creating/getting gardener:", error);
-      res.status(500).json({ error: "Failed to create/get gardener" });
+      console.error("Error creating/getting business:", error);
+      res.status(500).json({ error: "Failed to create/get business" });
     }
   });
 
-  // Get profiles by gardener (user's own profiles)
-  app.get("/api/my-profiles/:gardenerId", async (req, res) => {
+  // Get profiles by business (user's own profiles)
+  app.get("/api/my-profiles/:businessId", async (req, res) => {
     try {
-      const profiles = await storage.getProfilesByGardenerId(req.params.gardenerId);
+      const profiles = await storage.getProfilesByBusinessId(req.params.businessId);
       res.json(profiles);
     } catch (error) {
       console.error("Error fetching user profiles:", error);
@@ -324,7 +324,7 @@ export async function registerRoutes(
     }
   });
 
-  // Get or create gardener for user
+  // Get or create business for user (legacy endpoint - redirects to businesses)
   app.post("/api/gardeners", async (req, res) => {
     try {
       const { accountId, email } = req.body;

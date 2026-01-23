@@ -100,7 +100,7 @@ export class SupabaseStorage implements IStorage {
     return this.mapLocation(data);
   }
 
-  // Businesses (formerly Gardeners)
+  // Businesses
   async getBusiness(id: string): Promise<Business | undefined> {
     const { data, error } = await supabaseAdmin
       .from("businesses")
@@ -201,13 +201,8 @@ export class SupabaseStorage implements IStorage {
   }
 
   async getProfilesByGardenerId(gardenerId: string): Promise<Profile[]> {
-    const { data, error } = await supabaseAdmin
-      .from("profiles")
-      .select("*")
-      .eq("gardener_id", gardenerId);
-    
-    if (error) throw error;
-    return (data || []).map(d => this.mapProfile(d));
+    // Redirect to getProfilesByBusinessId (gardener_id renamed to business_id)
+    return this.getProfilesByBusinessId(gardenerId);
   }
 
   async getFeaturedProfiles(): Promise<ProfileWithRelations[]> {
