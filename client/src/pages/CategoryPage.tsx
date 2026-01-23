@@ -31,12 +31,14 @@ export default function CategoryPage() {
   const queryParam = urlParams.get("q") || "";
   const specParam = urlParams.get("spec") || "";
 
-  // Check if we're showing all categories
+  // Check if we're showing all categories or main categories
   const isAllCategories = categorySlug === "alle";
+  const isMainCategory = categorySlug === "tuinonderhoud" || categorySlug === "tuinaanleg";
+  const mainCategoryValue = isMainCategory ? categorySlug.toUpperCase() : undefined;
   
   const { data: category, isLoading: categoryLoading } = useQuery<Category>({
     queryKey: ["/api/categories", categorySlug],
-    enabled: !!categorySlug && !isAllCategories,
+    enabled: !!categorySlug && !isAllCategories && !isMainCategory,
   });
 
   const { data: location, isLoading: locationLoading } = useQuery<Location>({
@@ -56,8 +58,12 @@ export default function CategoryPage() {
   
   // Build search params including all filters
   const searchParams = new URLSearchParams();
-  // Don't filter by category when showing all
-  if (categorySlug && !isAllCategories) searchParams.set("category", categorySlug);
+  // Use mainCategory for main category slugs, category for specific category slugs
+  if (isMainCategory && mainCategoryValue) {
+    searchParams.set("mainCategory", mainCategoryValue);
+  } else if (categorySlug && !isAllCategories) {
+    searchParams.set("category", categorySlug);
+  }
   if (locationSlug) searchParams.set("location", locationSlug);
   if (queryParam) searchParams.set("q", queryParam);
   if (specParam) searchParams.set("spec", specParam);
@@ -78,11 +84,22 @@ export default function CategoryPage() {
   const profiles = profilesData?.profiles || [];
   const total = profilesData?.total || 0;
 
-  const isLoading = (!isAllCategories && categoryLoading) || (locationSlug && locationLoading) || profilesLoading;
+  const isLoading = (!isAllCategories && !isMainCategory && categoryLoading) || (locationSlug && locationLoading) || profilesLoading;
+
+  // Get the display name for the category/main category
+  const mainCategoryLabels: Record<string, string> = {
+    tuinonderhoud: "Tuinonderhoud",
+    tuinaanleg: "Tuinaanleg",
+  };
+  const categoryDisplayName = isMainCategory 
+    ? mainCategoryLabels[categorySlug] 
+    : isAllCategories 
+      ? "Tuinmannen" 
+      : (category?.name || "Tuinmannen");
 
   const pageTitle = locationSlug && location
-    ? `${isAllCategories ? "Tuinmannen" : (category?.name || "Tuinmannen")} in ${location.name}`
-    : isAllCategories ? "Alle Tuinmannen" : (category?.name || "Tuinmannen");
+    ? `${categoryDisplayName} in ${location.name}`
+    : isAllCategories ? "Alle Tuinmannen" : categoryDisplayName;
 
   return (
     <Layout>
