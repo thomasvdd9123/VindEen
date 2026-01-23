@@ -35,7 +35,7 @@ function calculateProfileCompleteness(formValues: ProfileFormData): { percentage
     { key: "website", label: "Website", value: formValues.website },
     { key: "description", label: "Beschrijving", value: formValues.description },
     { key: "title", label: "Functietitel", value: formValues.title },
-    { key: "offeredServices", label: "Diensten", value: formValues.offeredServices?.length ? formValues.offeredServices : null },
+    { key: "specializations", label: "Specialisaties", value: formValues.specializations?.length ? formValues.specializations : null },
   ];
   
   const filled = fields.filter(f => f.value && String(f.value).trim() !== "");
@@ -46,25 +46,6 @@ function calculateProfileCompleteness(formValues: ProfileFormData): { percentage
     missing,
   };
 }
-
-// Predefined services for selection
-const AVAILABLE_SERVICES = [
-  "Tuinaanleg",
-  "Tuinonderhoud",
-  "Snoeien",
-  "Gazon aanleg",
-  "Gazon onderhoud",
-  "Vijver aanleg",
-  "Haag snoeien",
-  "Terras aanleg",
-  "Bestrating",
-  "Beplanting",
-  "Boomverzorging",
-  "Tuinontwerp",
-  "Irrigatie systemen",
-  "Verlichting",
-  "Afsluitingen",
-];
 
 const profileSchema = z.object({
   name: z.string().min(2, "Bedrijfsnaam is verplicht"),
@@ -78,7 +59,6 @@ const profileSchema = z.object({
   locationId: z.string().min(1, "Selecteer een locatie"),
   isActive: z.boolean().default(true),
   hideAddress: z.boolean().default(false),
-  offeredServices: z.array(z.string()).optional(),
   specializations: z.array(z.string()).optional(),
   mainCategories: z.array(z.string()).optional(),
   officeStreet: z.string().optional(),
@@ -437,7 +417,6 @@ export default function ProfileEdit() {
       locationId: "",
       isActive: true,
       hideAddress: false,
-      offeredServices: [],
       specializations: [],
       mainCategories: [],
       officeStreet: "",
@@ -477,7 +456,6 @@ export default function ProfileEdit() {
         locationId: profile.locationId || "",
         isActive: profile.isActive ?? true,
         hideAddress: profile.hideAddress ?? false,
-        offeredServices: profile.offeredServices || [],
         specializations: profile.specializations || [],
         mainCategories: derivedMainCategories,
         officeStreet: (profile as any).office?.street || "",
@@ -495,7 +473,6 @@ export default function ProfileEdit() {
         hasWebsite: !!data.website,
         isActive: data.isActive,
         hideAddress: data.hideAddress,
-        offeredServices: data.offeredServices,
         specializations: data.specializations,
         office: {
           street: data.officeStreet,
@@ -1029,53 +1006,6 @@ export default function ProfileEdit() {
                     );
                   }}
                 />
-
-                {/* ============================================ */}
-                {/* SECTION 6: EXTRA DIENSTEN */}
-                {/* ============================================ */}
-                <div className="space-y-6">
-                  <div className="border-b pb-2">
-                    <h3 className="text-lg font-semibold">Extra diensten</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Aanvullende diensten die je aanbiedt
-                    </p>
-                  </div>
-
-                  <FormField
-                    control={form.control}
-                    name="offeredServices"
-                    render={({ field }) => (
-                      <FormItem>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                          {AVAILABLE_SERVICES.map((service) => (
-                            <div key={service} className="flex items-center space-x-2">
-                              <Checkbox
-                                id={`service-${service}`}
-                                checked={field.value?.includes(service) || false}
-                                onCheckedChange={(checked) => {
-                                  const current = field.value || [];
-                                  if (checked) {
-                                    field.onChange([...current, service]);
-                                  } else {
-                                    field.onChange(current.filter((s) => s !== service));
-                                  }
-                                }}
-                                data-testid={`checkbox-service-${service.toLowerCase().replace(/\s/g, '-')}`}
-                              />
-                              <label
-                                htmlFor={`service-${service}`}
-                                className="text-sm cursor-pointer"
-                              >
-                                {service}
-                              </label>
-                            </div>
-                          ))}
-                        </div>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
 
                 {/* Active/Inactive Toggle */}
                 <FormField
