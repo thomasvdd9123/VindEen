@@ -100,10 +100,10 @@ export class SupabaseStorage implements IStorage {
     return this.mapLocation(data);
   }
 
-  // Accounts (login, VAT, billing)
+  // Accounts (login, VAT, billing) - NOTE: Supabase table is still named "businesses"
   async getAccount(id: string): Promise<Account | undefined> {
     const { data, error } = await supabaseAdmin
-      .from("accounts")
+      .from("businesses")
       .select("*")
       .eq("id", id)
       .single();
@@ -114,9 +114,9 @@ export class SupabaseStorage implements IStorage {
 
   async getAccountByAuthUserId(authUserId: string): Promise<Account | undefined> {
     const { data, error } = await supabaseAdmin
-      .from("accounts")
+      .from("businesses")
       .select("*")
-      .eq("auth_user_id", authUserId)
+      .eq("account_id", authUserId)
       .single();
     
     if (error && error.code !== "PGRST116") throw error;
@@ -125,17 +125,11 @@ export class SupabaseStorage implements IStorage {
 
   async createAccount(account: InsertAccount): Promise<Account> {
     const { data, error } = await supabaseAdmin
-      .from("accounts")
+      .from("businesses")
       .insert({
-        auth_user_id: account.authUserId,
+        account_id: account.authUserId,
         email: account.email,
         role: account.role ?? "BUSINESS",
-        vat_number: account.vatNumber,
-        company_name: account.companyName,
-        billing_street: account.billingStreet,
-        billing_number: account.billingNumber,
-        billing_postcode: account.billingPostcode,
-        billing_city: account.billingCity,
         email_verified: account.emailVerified ?? false,
         email_verified_at: account.emailVerifiedAt,
       })
@@ -200,7 +194,7 @@ export class SupabaseStorage implements IStorage {
     const { data, error } = await supabaseAdmin
       .from("profiles")
       .select("*")
-      .eq("account_id", accountId);
+      .eq("business_id", accountId); // Supabase uses business_id
     
     if (error) throw error;
     return (data || []).map(d => this.mapProfile(d));
@@ -297,7 +291,7 @@ export class SupabaseStorage implements IStorage {
     const { data, error } = await supabaseAdmin
       .from("profiles")
       .insert({
-        account_id: profile.accountId,
+        business_id: profile.accountId, // Supabase uses business_id
         slug: profile.slug,
         name: profile.name,
         email: profile.email,
@@ -595,15 +589,15 @@ export class SupabaseStorage implements IStorage {
   private mapAccount(data: Record<string, unknown>): Account {
     return {
       id: data.id as string,
-      authUserId: data.auth_user_id as string,
+      authUserId: data.account_id as string, // Supabase uses account_id for auth user reference
       email: data.email as string,
       role: data.role as Account["role"],
-      vatNumber: data.vat_number as string | null,
-      companyName: data.company_name as string | null,
-      billingStreet: data.billing_street as string | null,
-      billingNumber: data.billing_number as string | null,
-      billingPostcode: data.billing_postcode as string | null,
-      billingCity: data.billing_city as string | null,
+      vatNumber: data.vat_number as string | null ?? null,
+      companyName: data.company_name as string | null ?? null,
+      billingStreet: data.billing_street as string | null ?? null,
+      billingNumber: data.billing_number as string | null ?? null,
+      billingPostcode: data.billing_postcode as string | null ?? null,
+      billingCity: data.billing_city as string | null ?? null,
       emailVerified: data.email_verified as boolean | null,
       emailVerifiedAt: data.email_verified_at ? new Date(data.email_verified_at as string) : null,
       createdAt: new Date(data.created_at as string),
@@ -614,7 +608,7 @@ export class SupabaseStorage implements IStorage {
   private mapProfile(data: Record<string, unknown>): Profile {
     return {
       id: data.id as string,
-      accountId: data.account_id as string,
+      accountId: data.business_id as string, // Supabase uses business_id
       slug: data.slug as string,
       name: data.name as string,
       email: data.email as string,
