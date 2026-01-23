@@ -7,7 +7,7 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Map camelCase keys to snake_case for database - only known fields
 const fieldMap: Record<string, string> = {
-  businessId: "business_id",
+  accountId: "account_id",
   categoryId: "category_id",
   locationId: "location_id",
   logoUrl: "logo_url",
@@ -28,7 +28,7 @@ const fieldMap: Record<string, string> = {
   createdAt: "created_at",
   updatedAt: "updated_at",
   sortOrder: "sort_order",
-  accountId: "account_id",
+  authUserId: "auth_user_id",
   emailVerified: "email_verified",
   emailVerifiedAt: "email_verified_at",
   profileId: "profile_id",
@@ -36,6 +36,12 @@ const fieldMap: Record<string, string> = {
   visitorEmail: "visitor_email",
   mainCategory: "main_category",
   experienceYears: "experience_years",
+  vatNumber: "vat_number",
+  companyName: "company_name",
+  billingStreet: "billing_street",
+  billingNumber: "billing_number",
+  billingPostcode: "billing_postcode",
+  billingCity: "billing_city",
 };
 
 function toSnakeCase(obj: Record<string, any>): Record<string, any> {
@@ -309,45 +315,90 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json(toCamelCase(data));
     }
 
-    // GET /api/my-profiles/:businessId
+    // GET /api/my-profiles/:accountId
     if (method === "GET" && path.match(/^\/api\/my-profiles\/[^/]+$/)) {
-      const businessId = path.split("/").pop();
+      const accountId = path.split("/").pop();
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
-        .eq("business_id", businessId);
+        .eq("account_id", accountId);
       
       if (error) throw error;
       return res.status(200).json(toCamelCase(data || []));
     }
 
-    // POST /api/businesses (renamed from gardeners)
-    if (method === "POST" && path === "/api/businesses") {
-      const { accountId, email } = req.body;
+    // POST /api/accounts - get or create account
+    if (method === "POST" && path === "/api/accounts") {
+      const { authUserId, email } = req.body;
       
       const { data: existing } = await supabase
-        .from("businesses")
+        .from("accounts")
         .select("*")
-        .eq("account_id", accountId)
+        .eq("auth_user_id", authUserId)
         .single();
       
       if (existing) {
-        return res.status(200).json(existing);
+        return res.status(200).json(toCamelCase(existing));
       }
       
       const { data, error } = await supabase
-        .from("businesses")
+        .from("accounts")
         .insert({
-          account_id: accountId,
+          auth_user_id: authUserId,
           email,
-          role: "BUSINESS",
+          role: "GARDENER",
           email_verified: true,
         })
         .select()
         .single();
       
       if (error) throw error;
-      return res.status(200).json(data);
+      return res.status(200).json(toCamelCase(data));
+    }
+
+    // GET /api/accounts/by-auth/:authUserId
+    if (method === "GET" && path.match(/^\/api\/accounts\/by-auth\/[^/]+$/)) {
+      const authUserId = path.split("/").pop();
+      const { data, error } = await supabase
+        .from("accounts")
+        .select("*")
+        .eq("auth_user_id", authUserId)
+        .single();
+      
+      if (error && error.code !== "PGRST116") throw error;
+      if (!data) return res.status(404).json({ error: "Account not found" });
+      return res.status(200).json(toCamelCase(data));
+    }
+
+    // GET /api/accounts/:id
+    if (method === "GET" && path.match(/^\/api\/accounts\/[^/]+$/) && !path.includes("/by-auth/")) {
+      const id = path.split("/").pop();
+      const { data, error } = await supabase
+        .from("accounts")
+        .select("*")
+        .eq("id", id)
+        .single();
+      
+      if (error && error.code !== "PGRST116") throw error;
+      if (!data) return res.status(404).json({ error: "Account not found" });
+      return res.status(200).json(toCamelCase(data));
+    }
+
+    // PATCH /api/accounts/:id
+    if (method === "PATCH" && path.match(/^\/api\/accounts\/[^/]+$/) && !path.includes("/by-auth/")) {
+      const id = path.split("/").pop();
+      const updates = toSnakeCase(req.body);
+      updates.updated_at = new Date().toISOString();
+      
+      const { data, error } = await supabase
+        .from("accounts")
+        .update(updates)
+        .eq("id", id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return res.status(200).json(toCamelCase(data));
     }
 
     // GET /api/subscription-plans
@@ -362,14 +413,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json(data || []);
     }
 
-    // GET /api/contact-requests/:businessId
+    // GET /api/contact-requests/:accountId
     if (method === "GET" && path.match(/^\/api\/contact-requests\/[^/]+$/)) {
-      const businessId = path.split("/").pop();
-      // Contact requests are now linked only to profile
+      const accountId = path.split("/").pop();
+      // Contact requests are linked to profiles owned by this account
       const { data: profiles } = await supabase
         .from("profiles")
         .select("id")
-        .eq("business_id", businessId);
+        .eq("account_id", accountId);
       
       if (!profiles || profiles.length === 0) {
         return res.status(200).json([]);
@@ -440,8 +491,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (method === "POST" && path === "/api/profiles") {
       const profileData = req.body;
       
-      if (!profileData.businessId) {
-        return res.status(400).json({ error: "businessId is required" });
+      if (!profileData.accountId) {
+        return res.status(400).json({ error: "accountId is required" });
       }
       
       // Generate slug from name
@@ -470,7 +521,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const { data, error } = await supabase
         .from("profiles")
         .insert({
-          business_id: profileData.businessId,
+          account_id: profileData.accountId,
           slug,
           name: profileData.name,
           email: profileData.email,
@@ -491,7 +542,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         .single();
       
       if (error) throw error;
-      return res.status(201).json(data);
+      return res.status(201).json(toCamelCase(data));
     }
 
     // PUT /api/profiles/:id (alias for PATCH)
