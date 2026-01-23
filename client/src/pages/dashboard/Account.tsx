@@ -29,6 +29,7 @@ const accountSchema = z.object({
 const invoiceSchema = z.object({
   invoiceName: z.string().min(2, "Naam is verplicht"),
   street: z.string().min(2, "Straat is verplicht"),
+  houseNumber: z.string().min(1, "Huisnummer is verplicht"),
   municipality: z.string().min(2, "Gemeente is verplicht"),
   postcode: z.string().min(4, "Postcode is verplicht"),
   country: z.string().min(2, "Land is verplicht"),
@@ -73,6 +74,7 @@ export default function DashboardAccount() {
     defaultValues: {
       invoiceName: "",
       street: "",
+      houseNumber: "",
       municipality: "",
       postcode: "",
       country: "België",
@@ -105,6 +107,7 @@ export default function DashboardAccount() {
       invoiceForm.reset({
         invoiceName: accountData.companyName || "",
         street: accountData.billingStreet || "",
+        houseNumber: accountData.billingNumber || "",
         municipality: accountData.billingCity || "",
         postcode: accountData.billingPostcode || "",
         country: "België",
@@ -165,6 +168,7 @@ export default function DashboardAccount() {
       await apiRequest("PATCH", `/api/accounts/${accountData.id}`, {
         companyName: data.invoiceName,
         billingStreet: data.street,
+        billingNumber: data.houseNumber,
         billingCity: data.municipality,
         billingPostcode: data.postcode,
         vatNumber: data.btwPlichtig === "yes" ? data.btwNumber : null,
@@ -406,15 +410,15 @@ export default function DashboardAccount() {
                   )}
                 />
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                   <FormField
                     control={invoiceForm.control}
                     name="street"
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Straatnaam en huisnummer factuur <span className="text-destructive">*</span></FormLabel>
+                      <FormItem className="col-span-2 sm:col-span-3">
+                        <FormLabel>Straatnaam <span className="text-destructive">*</span></FormLabel>
                         <FormControl>
-                          <Input placeholder="Straat + nummer" {...field} data-testid="input-street" />
+                          <Input placeholder="Straatnaam" {...field} data-testid="input-street" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -422,10 +426,25 @@ export default function DashboardAccount() {
                   />
                   <FormField
                     control={invoiceForm.control}
+                    name="houseNumber"
+                    render={({ field }) => (
+                      <FormItem className="col-span-1">
+                        <FormLabel>Nr. <span className="text-destructive">*</span></FormLabel>
+                        <FormControl>
+                          <Input placeholder="Nr." {...field} data-testid="input-house-number" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <FormField
+                    control={invoiceForm.control}
                     name="municipality"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Gemeente facturatieadres <span className="text-destructive">*</span></FormLabel>
+                        <FormLabel>Gemeente <span className="text-destructive">*</span></FormLabel>
                         <FormControl>
                           <Input placeholder="Gemeente" {...field} data-testid="input-municipality" />
                         </FormControl>
