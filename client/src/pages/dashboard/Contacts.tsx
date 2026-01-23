@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/lib/auth";
-import type { ContactRequest, Business } from "@shared/schema";
+import type { ContactRequest, Account } from "@shared/schema";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { 
   MessageSquare,
@@ -32,13 +32,13 @@ export default function DashboardContacts() {
   const [sortBy, setSortBy] = useState<SortOption>("date-desc");
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
-  // Get business ID
-  const { data: business } = useQuery<Business>({
-    queryKey: ["/api/businesses/by-account", user?.id],
+  // Get account ID
+  const { data: account } = useQuery<Account>({
+    queryKey: ["/api/accounts/by-user", user?.id],
     queryFn: async () => {
       if (!user?.id) throw new Error("No user");
-      return apiRequest("POST", "/api/businesses", {
-        accountId: user.id,
+      return apiRequest("POST", "/api/accounts", {
+        authUserId: user.id,
         email: user.email,
       });
     },
@@ -47,12 +47,12 @@ export default function DashboardContacts() {
 
   // Fetch contact requests
   const { data: contacts = [], isLoading, isError } = useQuery<ContactRequest[]>({
-    queryKey: ["/api/contact-requests", business?.id],
+    queryKey: ["/api/contact-requests", account?.id],
     queryFn: async () => {
-      if (!business?.id) return [];
-      return apiRequest("GET", `/api/contact-requests/${business.id}`);
+      if (!account?.id) return [];
+      return apiRequest("GET", `/api/contact-requests/${account.id}`);
     },
-    enabled: !!business?.id,
+    enabled: !!account?.id,
   });
 
   // Filter and sort contacts

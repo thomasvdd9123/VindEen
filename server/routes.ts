@@ -185,31 +185,31 @@ export async function registerRoutes(
     }
   });
 
-  // Create or get business (upsert based on accountId) - used by dashboard
-  app.post("/api/businesses", async (req, res) => {
+  // Create or get account (upsert based on authUserId) - used by dashboard
+  app.post("/api/accounts", async (req, res) => {
     try {
-      const { accountId, email } = req.body;
+      const { authUserId, email } = req.body;
       
-      if (!accountId || !email) {
-        return res.status(400).json({ error: "accountId and email are required" });
+      if (!authUserId || !email) {
+        return res.status(400).json({ error: "authUserId and email are required" });
       }
       
-      // Check if business already exists
+      // Check if account already exists
       const { data: existing } = await supabaseAdmin
-        .from("businesses")
+        .from("accounts")
         .select("*")
-        .eq("account_id", accountId)
+        .eq("auth_user_id", authUserId)
         .single();
       
       if (existing) {
         return res.status(200).json(existing);
       }
       
-      // Create new business
+      // Create new account
       const { data, error } = await supabaseAdmin
-        .from("businesses")
+        .from("accounts")
         .insert({
-          account_id: accountId,
+          auth_user_id: authUserId,
           email,
           role: "BUSINESS",
           email_verified: true,
@@ -220,15 +220,33 @@ export async function registerRoutes(
       if (error) throw error;
       return res.status(200).json(data);
     } catch (error) {
-      console.error("Error creating/getting business:", error);
-      res.status(500).json({ error: "Failed to create/get business" });
+      console.error("Error creating/getting account:", error);
+      res.status(500).json({ error: "Failed to create/get account" });
     }
   });
 
-  // Get profiles by business (user's own profiles)
-  app.get("/api/my-profiles/:businessId", async (req, res) => {
+  // Legacy endpoint - redirect to /api/accounts
+  app.post("/api/businesses", async (req, res) => {
     try {
-      const profiles = await storage.getProfilesByBusinessId(req.params.businessId);
+      const { accountId, email } = req.body;
+      // Forward to accounts endpoint with authUserId
+      const response = await fetch(`${req.protocol}://${req.get('host')}/api/accounts`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ authUserId: accountId, email })
+      });
+      const data = await response.json();
+      res.status(response.status).json(data);
+    } catch (error) {
+      console.error("Error in legacy businesses endpoint:", error);
+      res.status(500).json({ error: "Failed to create/get account" });
+    }
+  });
+
+  // Get profiles by account (user's own profiles)
+  app.get("/api/my-profiles/:accountId", async (req, res) => {
+    try {
+      const profiles = await storage.getProfilesByAccountId(req.params.accountId);
       res.json(profiles);
     } catch (error) {
       console.error("Error fetching user profiles:", error);
@@ -241,8 +259,8 @@ export async function registerRoutes(
     try {
       const profileData = req.body;
       
-      if (!profileData.businessId) {
-        return res.status(400).json({ error: "businessId is required" });
+      if (!profileData.accountId) {
+        return res.status(400).json({ error: "accountId is required" });
       }
       
       // Generate slug from name
@@ -262,7 +280,7 @@ export async function registerRoutes(
       }
       
       const profile = await storage.createProfile({
-        businessId: profileData.businessId,
+        accountId: profileData.accountId,
         slug,
         name: profileData.name,
         email: profileData.email,
@@ -324,28 +342,28 @@ export async function registerRoutes(
     }
   });
 
-  // Get or create business for user (legacy endpoint - redirects to businesses)
+  // Legacy endpoint for gardeners - redirects to accounts
   app.post("/api/gardeners", async (req, res) => {
     try {
       const { accountId, email } = req.body;
       
-      // Try to find existing business
-      let business = await storage.getBusinessByAccountId(accountId);
+      // Try to find existing account
+      let account = await storage.getAccountByAuthUserId(accountId);
       
-      if (!business) {
-        // Create new business
-        business = await storage.createBusiness({
-          accountId,
+      if (!account) {
+        // Create new account
+        account = await storage.createAccount({
+          authUserId: accountId,
           email,
           role: "BUSINESS",
           emailVerified: true,
         });
       }
       
-      res.json(business);
+      res.json(account);
     } catch (error) {
-      console.error("Error getting/creating business:", error);
-      res.status(500).json({ error: "Failed to get or create business" });
+      console.error("Error getting/creating account:", error);
+      res.status(500).json({ error: "Failed to get or create account" });
     }
   });
 
@@ -452,8 +470,8 @@ export async function registerRoutes(
       return { authorized: false, error: "Profiel niet gevonden" };
     }
 
-    const business = await storage.getBusinessByAccountId(user.id);
-    if (!business || business.id !== profile.businessId) {
+    const account = await storage.getAccountByAuthUserId(user.id);
+    if (!account || account.id !== profile.accountId) {
       return { authorized: false, error: "Geen toegang tot dit profiel" };
     }
 

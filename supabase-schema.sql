@@ -11,7 +11,9 @@ DROP TABLE IF EXISTS contact_requests CASCADE;
 DROP TABLE IF EXISTS payments CASCADE;
 DROP TABLE IF EXISTS subscription_items CASCADE;
 DROP TABLE IF EXISTS subscription_plans CASCADE;
+DROP TABLE IF EXISTS profile_status_history CASCADE;
 DROP TABLE IF EXISTS profiles CASCADE;
+DROP TABLE IF EXISTS accounts CASCADE;
 DROP TABLE IF EXISTS businesses CASCADE;
 DROP TABLE IF EXISTS locations CASCADE;
 DROP TABLE IF EXISTS categories CASCADE;
@@ -77,22 +79,30 @@ CREATE TABLE locations (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- Businesses Table (Account holders - universal naming for rebranding)
-CREATE TABLE businesses (
+-- Accounts Table (login, VAT, billing - universal naming for rebranding)
+-- Hierarchy: Accounts → Profiles → Offices
+CREATE TABLE accounts (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  account_id TEXT NOT NULL UNIQUE,
+  auth_user_id TEXT NOT NULL UNIQUE, -- Supabase Auth user UUID
   email TEXT NOT NULL,
   role account_role NOT NULL DEFAULT 'BUSINESS',
+  -- VAT and billing info for Belgian B2B
+  vat_number TEXT, -- Belgian VAT format: BE0123456789
+  company_name TEXT,
+  billing_street TEXT,
+  billing_number TEXT,
+  billing_postcode TEXT,
+  billing_city TEXT,
   email_verified BOOLEAN DEFAULT false,
   email_verified_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- Profiles Table
+-- Profiles Table (service listings belonging to an account)
 CREATE TABLE profiles (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  business_id UUID NOT NULL REFERENCES businesses(id),
+  account_id UUID NOT NULL REFERENCES accounts(id),
   slug TEXT NOT NULL UNIQUE,
   name TEXT NOT NULL,
   email TEXT NOT NULL,
@@ -171,8 +181,7 @@ CREATE TABLE subscription_plans (
 -- Subscription Items Table
 CREATE TABLE subscription_items (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  profile_id UUID NOT NULL REFERENCES profiles(id),
-  business_id UUID NOT NULL REFERENCES businesses(id),
+  account_id UUID NOT NULL REFERENCES accounts(id),
   subscription_plan_id UUID REFERENCES subscription_plans(id),
   mollie_subscription_id TEXT,
   mollie_customer_id TEXT,

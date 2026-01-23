@@ -143,14 +143,14 @@ function OnboardingContent() {
     mutationFn: async (data: ProfileFormData) => {
       if (!user?.id) throw new Error("Je bent niet ingelogd");
       
-      const business = await apiRequest("POST", "/api/businesses", {
-        accountId: user.id,
+      const account = await apiRequest("POST", "/api/accounts", {
+        authUserId: user.id,
         email: user.email,
       }) as { id: string };
       
       return apiRequest("POST", "/api/profiles", {
         ...data,
-        businessId: business.id,
+        accountId: account.id,
         email: user.email,
         hasWebsite: !!data.website,
       });

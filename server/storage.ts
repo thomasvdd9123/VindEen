@@ -2,7 +2,7 @@ import { randomUUID } from "crypto";
 import type {
   Category, InsertCategory,
   Location, InsertLocation,
-  Business, InsertBusiness,
+  Account, InsertAccount,
   Profile, InsertProfile,
   Office, InsertOffice,
   Practical, InsertPractical,
@@ -25,17 +25,16 @@ export interface IStorage {
   getLocationBySlug(slug: string): Promise<Location | undefined>;
   createLocation(location: InsertLocation): Promise<Location>;
 
-  // Businesses
-  getBusiness(id: string): Promise<Business | undefined>;
-  getBusinessByAccountId(accountId: string): Promise<Business | undefined>;
-  createBusiness(business: InsertBusiness): Promise<Business>;
+  // Accounts (login, VAT, billing)
+  getAccount(id: string): Promise<Account | undefined>;
+  getAccountByAuthUserId(authUserId: string): Promise<Account | undefined>;
+  createAccount(account: InsertAccount): Promise<Account>;
 
-  // Profiles
+  // Profiles (service listings)
   getProfiles(): Promise<Profile[]>;
   getProfileBySlug(slug: string): Promise<ProfileWithRelations | undefined>;
   getProfileById(id: string): Promise<ProfileWithRelations | undefined>;
-  getProfilesByBusinessId(businessId: string): Promise<Profile[]>;
-  getProfilesByGardenerId(gardenerId: string): Promise<Profile[]>;
+  getProfilesByAccountId(accountId: string): Promise<Profile[]>;
   getFeaturedProfiles(): Promise<ProfileWithRelations[]>;
   searchProfiles(params: SearchParams): Promise<{ profiles: ProfileWithRelations[]; total: number; page: number; totalPages: number }>;
   createProfile(profile: InsertProfile): Promise<Profile>;
@@ -47,7 +46,7 @@ export interface IStorage {
   getProfileStatusHistory(profileId: string): Promise<ProfileStatusHistory[]>;
   createProfileStatusHistory(entry: InsertProfileStatusHistory): Promise<ProfileStatusHistory>;
 
-  // Offices
+  // Offices (physical location per profile)
   getOfficeByProfileId(profileId: string): Promise<Office | undefined>;
   createOffice(office: InsertOffice): Promise<Office>;
   updateOffice(profileId: string, updates: Partial<InsertOffice>): Promise<Office | undefined>;
@@ -68,7 +67,7 @@ export interface IStorage {
 export class MemStorage implements IStorage {
   private categories: Map<string, Category>;
   private locations: Map<string, Location>;
-  private businesses: Map<string, Business>;
+  private accounts: Map<string, Account>;
   private profiles: Map<string, Profile>;
   private profileStatusHistory: Map<string, ProfileStatusHistory>;
   private offices: Map<string, Office>;
@@ -78,7 +77,7 @@ export class MemStorage implements IStorage {
   constructor() {
     this.categories = new Map();
     this.locations = new Map();
-    this.businesses = new Map();
+    this.accounts = new Map();
     this.profiles = new Map();
     this.profileStatusHistory = new Map();
     this.offices = new Map();
@@ -328,7 +327,7 @@ export class MemStorage implements IStorage {
     ];
 
     sampleProfiles.forEach((profileData) => {
-      const businessId = randomUUID();
+      const accountId = randomUUID();
       const profileId = randomUUID();
       const officeId = randomUUID();
       const practicalId = randomUUID();
@@ -337,22 +336,28 @@ export class MemStorage implements IStorage {
       const category = categoryArray.find((c) => c.slug === profileData.categorySlug);
       const location = locationArray.find((l) => l.slug === profileData.locationSlug);
 
-      // Create business
-      this.businesses.set(businessId, {
-        id: businessId,
-        accountId: randomUUID(),
+      // Create account (login, VAT, billing)
+      this.accounts.set(accountId, {
+        id: accountId,
+        authUserId: randomUUID(), // Would be Supabase Auth user ID in production
         email: profileData.email,
         role: "BUSINESS",
+        vatNumber: null,
+        companyName: profileData.name,
+        billingStreet: null,
+        billingNumber: null,
+        billingPostcode: null,
+        billingCity: null,
         emailVerified: true,
         emailVerifiedAt: new Date(),
         createdAt: new Date(),
         updatedAt: new Date(),
       });
 
-      // Create profile
+      // Create profile (service listing)
       this.profiles.set(profileId, {
         id: profileId,
-        businessId,
+        accountId,
         slug: profileData.slug,
         name: profileData.name,
         email: profileData.email,
@@ -483,28 +488,34 @@ export class MemStorage implements IStorage {
     return newLocation;
   }
 
-  // Businesses
-  async getBusiness(id: string): Promise<Business | undefined> {
-    return this.businesses.get(id);
+  // Accounts (login, VAT, billing)
+  async getAccount(id: string): Promise<Account | undefined> {
+    return this.accounts.get(id);
   }
 
-  async getBusinessByAccountId(accountId: string): Promise<Business | undefined> {
-    return Array.from(this.businesses.values()).find((b) => b.accountId === accountId);
+  async getAccountByAuthUserId(authUserId: string): Promise<Account | undefined> {
+    return Array.from(this.accounts.values()).find((a) => a.authUserId === authUserId);
   }
 
-  async createBusiness(business: InsertBusiness): Promise<Business> {
+  async createAccount(account: InsertAccount): Promise<Account> {
     const id = randomUUID();
-    const newBusiness: Business = {
+    const newAccount: Account = {
       id,
-      ...business,
-      role: business.role ?? "BUSINESS",
-      emailVerified: business.emailVerified ?? false,
-      emailVerifiedAt: business.emailVerifiedAt ?? null,
+      ...account,
+      role: account.role ?? "BUSINESS",
+      vatNumber: account.vatNumber ?? null,
+      companyName: account.companyName ?? null,
+      billingStreet: account.billingStreet ?? null,
+      billingNumber: account.billingNumber ?? null,
+      billingPostcode: account.billingPostcode ?? null,
+      billingCity: account.billingCity ?? null,
+      emailVerified: account.emailVerified ?? false,
+      emailVerifiedAt: account.emailVerifiedAt ?? null,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
-    this.businesses.set(id, newBusiness);
-    return newBusiness;
+    this.accounts.set(id, newAccount);
+    return newAccount;
   }
 
   // Profiles
@@ -524,12 +535,8 @@ export class MemStorage implements IStorage {
     return this.enrichProfile(profile);
   }
 
-  async getProfilesByBusinessId(businessId: string): Promise<Profile[]> {
-    return Array.from(this.profiles.values()).filter((p) => p.businessId === businessId);
-  }
-
-  async getProfilesByGardenerId(gardenerId: string): Promise<Profile[]> {
-    return Array.from(this.profiles.values()).filter((p) => p.gardenerId === gardenerId);
+  async getProfilesByAccountId(accountId: string): Promise<Profile[]> {
+    return Array.from(this.profiles.values()).filter((p) => p.accountId === accountId);
   }
 
   async getFeaturedProfiles(): Promise<ProfileWithRelations[]> {
@@ -599,7 +606,7 @@ export class MemStorage implements IStorage {
     const id = randomUUID();
     const newProfile: Profile = {
       id,
-      businessId: profile.businessId,
+      accountId: profile.accountId,
       slug: profile.slug,
       name: profile.name,
       email: profile.email,

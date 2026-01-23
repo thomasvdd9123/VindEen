@@ -97,21 +97,24 @@ shared/
 - `GET /api/profiles/search` - Search profiles with filters
 - `GET /api/profiles/:slug` - Get profile by slug
 - `POST /api/contact/:profileId` - Submit contact form
-- `POST /api/businesses` - Get or create business for user (dashboard auth)
-- `GET /api/my-profiles/:businessId` - Get profiles owned by business
+- `POST /api/accounts` - Get or create account for user (dashboard auth, uses authUserId)
+- `POST /api/businesses` - Legacy endpoint (redirects to /api/accounts)
+- `GET /api/my-profiles/:accountId` - Get profiles owned by account
 
 ## Seed Data
 Includes Belgian categories (Tuinonderhoud, Tuinaanleg) with specializations, major cities (Gent, Antwerpen, Brussel, Brugge, Leuven, Hasselt, Kortrijk) with sample verified profiles.
 
 ## Recent Schema Changes (Jan 2026)
-- **Universal Naming**: Renamed `gardeners` table to `businesses` and `gardener_id` column to `business_id` for easy rebranding to other industries
+- **Accounts Naming**: Renamed `businesses` table to `accounts` with clear hierarchy: **Accounts** (login, VAT, billing) → **Profiles** (service listings) → **Offices** (locations)
+- **Belgian B2B Fields**: Added VAT number (BE0123456789 format), company name, and billing address fields to accounts table
+- **Auth User ID**: Changed `accountId` to `authUserId` in accounts table to clearly reference Supabase Auth UUID
 - **Categories**: Two main categories: `TUINONDERHOUD` (maintenance: grass mowing, pruning) and `TUINAANLEG` (creation: grass laying, paths, wooden walls)
 - **Profile Verification**: Added `isVerified` and `verificationStatus` fields with `ProfileStatusHistory` for audit trail
 - **Belgian Localization**: Added province/region enums, language enum (NL, FR, DE, EN)
 - **Simplified Practicals**: Changed `experience` to `experienceYears` (integer), removed `reachability`
 - **Office**: Removed `country` field (hardcoded "België" in UI)
 - **ContactRequest**: Simplified to async-only (no status tracking for external emails)
-- **SubscriptionItem**: Uses `businessId` only (removed duplicate `profileId`)
+- **SubscriptionItem**: Uses `accountId` only (removed duplicate `profileId`)
 
 ## Environment Variables
 ```

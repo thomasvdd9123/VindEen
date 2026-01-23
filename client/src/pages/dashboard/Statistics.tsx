@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/lib/auth";
-import type { Business } from "@shared/schema";
+import type { Account } from "@shared/schema";
 
 interface ProfileWithStats {
   id: string;
@@ -36,12 +36,12 @@ export default function DashboardStatistics() {
   const { user } = useAuth();
   const [timeRange, setTimeRange] = useState<TimeRange>("30d");
 
-  const { data: business } = useQuery<Business>({
-    queryKey: ["/api/businesses/by-account", user?.id],
+  const { data: account } = useQuery<Account>({
+    queryKey: ["/api/accounts/by-user", user?.id],
     queryFn: async () => {
       if (!user?.id) throw new Error("No user");
-      return apiRequest("POST", "/api/businesses", {
-        accountId: user.id,
+      return apiRequest("POST", "/api/accounts", {
+        authUserId: user.id,
         email: user.email,
       });
     },
@@ -49,26 +49,26 @@ export default function DashboardStatistics() {
   });
 
   const { data: profiles = [], isLoading: profilesLoading } = useQuery<ProfileWithStats[]>({
-    queryKey: ["/api/my-profiles", business?.id],
+    queryKey: ["/api/my-profiles", account?.id],
     queryFn: async () => {
-      if (!business?.id) return [];
-      return apiRequest("GET", `/api/my-profiles/${business.id}`);
+      if (!account?.id) return [];
+      return apiRequest("GET", `/api/my-profiles/${account.id}`);
     },
-    enabled: !!business?.id,
+    enabled: !!account?.id,
   });
 
   const { data: contactCounts = {}, isLoading: contactsLoading } = useQuery<Record<string, number>>({
-    queryKey: ["/api/contact-requests/counts", business?.id],
+    queryKey: ["/api/contact-requests/counts", account?.id],
     queryFn: async () => {
-      if (!business?.id) return {};
-      const requests = await apiRequest("GET", `/api/contact-requests/${business.id}`) as { profileId: string }[];
+      if (!account?.id) return {};
+      const requests = await apiRequest("GET", `/api/contact-requests/${account.id}`) as { profileId: string }[];
       const counts: Record<string, number> = {};
       requests.forEach((req) => {
         counts[req.profileId] = (counts[req.profileId] || 0) + 1;
       });
       return counts;
     },
-    enabled: !!business?.id,
+    enabled: !!account?.id,
   });
 
   const isLoading = profilesLoading || contactsLoading;

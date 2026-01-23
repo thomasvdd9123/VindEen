@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { categories, locations, businesses, profiles, offices, practicals } from "@shared/schema";
+import { categories, locations, accounts, profiles, offices, practicals } from "@shared/schema";
 import { sql } from "drizzle-orm";
 
 async function seed() {
@@ -9,7 +9,7 @@ async function seed() {
   await db.delete(practicals);
   await db.delete(offices);
   await db.delete(profiles);
-  await db.delete(businesses);
+  await db.delete(accounts);
   await db.delete(locations);
   await db.delete(categories);
 
@@ -274,9 +274,9 @@ async function seed() {
   ];
 
   for (const profileData of sampleProfiles) {
-    // Create business first
-    const [business] = await db.insert(businesses).values({
-      accountId: crypto.randomUUID(),
+    // Create account first
+    const [account] = await db.insert(accounts).values({
+      authUserId: crypto.randomUUID(),
       email: profileData.email,
       role: "BUSINESS",
       emailVerified: true,
@@ -285,7 +285,7 @@ async function seed() {
 
     // Create profile
     const [profile] = await db.insert(profiles).values({
-      businessId: business.id,
+      accountId: account.id,
       slug: profileData.slug,
       name: profileData.name,
       email: profileData.email,

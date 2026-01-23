@@ -2,7 +2,7 @@ import { supabaseAdmin } from "./lib/supabase";
 import type {
   Category, InsertCategory,
   Location, InsertLocation,
-  Business, InsertBusiness,
+  Account, InsertAccount,
   Profile, InsertProfile,
   Office, InsertOffice,
   Practical, InsertPractical,
@@ -100,44 +100,50 @@ export class SupabaseStorage implements IStorage {
     return this.mapLocation(data);
   }
 
-  // Businesses
-  async getBusiness(id: string): Promise<Business | undefined> {
+  // Accounts (login, VAT, billing)
+  async getAccount(id: string): Promise<Account | undefined> {
     const { data, error } = await supabaseAdmin
-      .from("businesses")
+      .from("accounts")
       .select("*")
       .eq("id", id)
       .single();
     
     if (error && error.code !== "PGRST116") throw error;
-    return data ? this.mapBusiness(data) : undefined;
+    return data ? this.mapAccount(data) : undefined;
   }
 
-  async getBusinessByAccountId(accountId: string): Promise<Business | undefined> {
+  async getAccountByAuthUserId(authUserId: string): Promise<Account | undefined> {
     const { data, error } = await supabaseAdmin
-      .from("businesses")
+      .from("accounts")
       .select("*")
-      .eq("account_id", accountId)
+      .eq("auth_user_id", authUserId)
       .single();
     
     if (error && error.code !== "PGRST116") throw error;
-    return data ? this.mapBusiness(data) : undefined;
+    return data ? this.mapAccount(data) : undefined;
   }
 
-  async createBusiness(business: InsertBusiness): Promise<Business> {
+  async createAccount(account: InsertAccount): Promise<Account> {
     const { data, error } = await supabaseAdmin
-      .from("businesses")
+      .from("accounts")
       .insert({
-        account_id: business.accountId,
-        email: business.email,
-        role: business.role ?? "BUSINESS",
-        email_verified: business.emailVerified ?? false,
-        email_verified_at: business.emailVerifiedAt,
+        auth_user_id: account.authUserId,
+        email: account.email,
+        role: account.role ?? "BUSINESS",
+        vat_number: account.vatNumber,
+        company_name: account.companyName,
+        billing_street: account.billingStreet,
+        billing_number: account.billingNumber,
+        billing_postcode: account.billingPostcode,
+        billing_city: account.billingCity,
+        email_verified: account.emailVerified ?? false,
+        email_verified_at: account.emailVerifiedAt,
       })
       .select()
       .single();
     
     if (error) throw error;
-    return this.mapBusiness(data);
+    return this.mapAccount(data);
   }
 
   // Profiles
@@ -190,19 +196,14 @@ export class SupabaseStorage implements IStorage {
     return this.mapProfileWithRelations(data);
   }
 
-  async getProfilesByBusinessId(businessId: string): Promise<Profile[]> {
+  async getProfilesByAccountId(accountId: string): Promise<Profile[]> {
     const { data, error } = await supabaseAdmin
       .from("profiles")
       .select("*")
-      .eq("business_id", businessId);
+      .eq("account_id", accountId);
     
     if (error) throw error;
     return (data || []).map(d => this.mapProfile(d));
-  }
-
-  async getProfilesByGardenerId(gardenerId: string): Promise<Profile[]> {
-    // Redirect to getProfilesByBusinessId (gardener_id renamed to business_id)
-    return this.getProfilesByBusinessId(gardenerId);
   }
 
   async getFeaturedProfiles(): Promise<ProfileWithRelations[]> {
@@ -296,7 +297,7 @@ export class SupabaseStorage implements IStorage {
     const { data, error } = await supabaseAdmin
       .from("profiles")
       .insert({
-        business_id: profile.businessId,
+        account_id: profile.accountId,
         slug: profile.slug,
         name: profile.name,
         email: profile.email,
@@ -591,12 +592,18 @@ export class SupabaseStorage implements IStorage {
     };
   }
 
-  private mapBusiness(data: Record<string, unknown>): Business {
+  private mapAccount(data: Record<string, unknown>): Account {
     return {
       id: data.id as string,
-      accountId: data.account_id as string,
+      authUserId: data.auth_user_id as string,
       email: data.email as string,
-      role: data.role as Business["role"],
+      role: data.role as Account["role"],
+      vatNumber: data.vat_number as string | null,
+      companyName: data.company_name as string | null,
+      billingStreet: data.billing_street as string | null,
+      billingNumber: data.billing_number as string | null,
+      billingPostcode: data.billing_postcode as string | null,
+      billingCity: data.billing_city as string | null,
       emailVerified: data.email_verified as boolean | null,
       emailVerifiedAt: data.email_verified_at ? new Date(data.email_verified_at as string) : null,
       createdAt: new Date(data.created_at as string),
@@ -607,7 +614,7 @@ export class SupabaseStorage implements IStorage {
   private mapProfile(data: Record<string, unknown>): Profile {
     return {
       id: data.id as string,
-      businessId: data.business_id as string,
+      accountId: data.account_id as string,
       slug: data.slug as string,
       name: data.name as string,
       email: data.email as string,
@@ -624,6 +631,8 @@ export class SupabaseStorage implements IStorage {
       imageUrls: data.image_urls as string[] | null,
       isActive: data.is_active as boolean,
       isPublic: data.is_public as boolean,
+      isVerified: (data.is_verified as boolean) ?? false,
+      verificationStatus: (data.verification_status as Profile["verificationStatus"]) ?? "PENDING",
       hideAddress: (data.hide_address as boolean) ?? false,
       viewCount: (data.view_count as number) ?? 0,
       seoTitle: data.seo_title as string | null,

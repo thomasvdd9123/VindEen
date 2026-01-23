@@ -24,22 +24,22 @@ import type { Profile } from "@shared/schema";
 export default function DashboardProfiles() {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [businessId, setBusinessId] = useState<string | null>(null);
+  const [accountId, setAccountId] = useState<string | null>(null);
 
   useEffect(() => {
     if (user?.id) {
-      apiRequest("POST", "/api/businesses", {
-        accountId: user.id,
+      apiRequest("POST", "/api/accounts", {
+        authUserId: user.id,
         email: user.email,
       }).then((response) => {
-        setBusinessId((response as { id: string }).id);
+        setAccountId((response as { id: string }).id);
       }).catch(console.error);
     }
   }, [user?.id, user?.email]);
 
   const { data: profiles = [], isLoading } = useQuery<Profile[]>({
-    queryKey: ["/api/my-profiles", businessId],
-    enabled: !!businessId,
+    queryKey: ["/api/my-profiles", accountId],
+    enabled: !!accountId,
   });
 
   const deleteMutation = useMutation({
