@@ -367,30 +367,6 @@ function SearchResultCard({ profile }: { profile: ProfileWithRelations }) {
               </div>
             )}
 
-            {/* Category / Support tags */}
-            {profile.category && (
-              <div className="mt-2">
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <span className="text-xs font-medium text-muted-foreground">Ondersteuning bij</span>
-                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-primary/10 text-primary">
-                    {profile.category.name}
-                  </span>
-                  {profile.offeredServices && profile.offeredServices.slice(0, 3).map((service, index) => (
-                    <span 
-                      key={index}
-                      className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-muted text-muted-foreground"
-                    >
-                      {service}
-                    </span>
-                  ))}
-                  {profile.offeredServices && profile.offeredServices.length > 3 && (
-                    <span className="text-xs text-muted-foreground">
-                      ...
-                    </span>
-                  )}
-                </div>
-              </div>
-            )}
           </div>
 
           {/* Profile image */}
