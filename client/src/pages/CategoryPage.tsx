@@ -303,25 +303,6 @@ export default function CategoryPage() {
         </div>
       </section>
 
-      {/* Locations footer section */}
-      {!locationSlug && locations.length > 0 && (
-        <section className="py-12 bg-muted/30 border-t border-border">
-          <div className="container mx-auto px-4">
-            <h2 className="text-lg font-semibold mb-4">
-              {category?.name || "Tuinmannen"} per locatie
-            </h2>
-            <div className="flex flex-wrap gap-2">
-              {locations.map((loc) => (
-                <Link key={loc.id} href={`/zoek/${categorySlug}/${loc.slug}`}>
-                  <Button variant="ghost" size="sm" className="rounded-full hover:bg-primary/10 hover:text-primary" data-testid={`button-loc-${loc.slug}`}>
-                    {loc.name}
-                  </Button>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
     </Layout>
   );
 }
