@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/breadcrumb";
 import { ChevronLeft, ChevronRight, Leaf, MapPin, ArrowRight, List, Map } from "lucide-react";
 import type { Category, Location, ProfileWithRelations } from "@shared/schema";
+import { specializationLabels } from "@shared/schema";
 import { siteConfig } from "@/lib/theme.config";
 
 export default function CategoryPage() {
@@ -354,7 +355,7 @@ function SearchResultCard({ profile }: { profile: ProfileWithRelations }) {
                       key={index}
                       className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-muted text-muted-foreground"
                     >
-                      {spec.toLowerCase().replace(/_/g, " ")}
+                      {specializationLabels[spec] || spec.toLowerCase().replace(/_/g, " ")}
                     </span>
                   ))}
                   {profile.specializations.length > 5 && (
