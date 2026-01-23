@@ -99,22 +99,29 @@ export const locations = pgTable("locations", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-// Businesses Table (Account holders)
-export const businesses = pgTable("businesses", {
+// Accounts Table (Account holders - login, VAT, billing address)
+export const accounts = pgTable("accounts", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  accountId: varchar("account_id").notNull().unique(),
+  authUserId: varchar("auth_user_id").notNull().unique(), // Supabase Auth user UUID
   email: text("email").notNull(),
   role: accountRoleEnum("role").default("BUSINESS").notNull(),
+  // VAT and billing info for Belgian B2B
+  vatNumber: text("vat_number"), // Belgian VAT format: BE0123456789
+  companyName: text("company_name"),
+  billingStreet: text("billing_street"),
+  billingNumber: text("billing_number"),
+  billingPostcode: text("billing_postcode"),
+  billingCity: text("billing_city"),
   emailVerified: boolean("email_verified").default(false),
   emailVerifiedAt: timestamp("email_verified_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-// Profiles Table
+// Profiles Table (service listings belonging to an account)
 export const profiles = pgTable("profiles", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  businessId: varchar("business_id").notNull().references(() => businesses.id),
+  accountId: varchar("account_id").notNull().references(() => accounts.id),
   slug: text("slug").notNull().unique(),
   name: text("name").notNull(),
   email: text("email").notNull(),
@@ -199,7 +206,7 @@ export const subscriptionPlans = pgTable("subscription_plans", {
 // Subscription Items Table
 export const subscriptionItems = pgTable("subscription_items", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  businessId: varchar("business_id").notNull().references(() => businesses.id),
+  accountId: varchar("account_id").notNull().references(() => accounts.id),
   subscriptionPlanId: varchar("subscription_plan_id").references(() => subscriptionPlans.id),
   mollieSubscriptionId: text("mollie_subscription_id"),
   mollieCustomerId: text("mollie_customer_id"),
@@ -252,7 +259,7 @@ export const contactRequests = pgTable("contact_requests", {
 // Insert Schemas
 export const insertCategorySchema = createInsertSchema(categories).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertLocationSchema = createInsertSchema(locations).omit({ id: true, createdAt: true, updatedAt: true });
-export const insertBusinessSchema = createInsertSchema(businesses).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertAccountSchema = createInsertSchema(accounts).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertProfileSchema = createInsertSchema(profiles).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertProfileStatusHistorySchema = createInsertSchema(profileStatusHistory).omit({ id: true, createdAt: true });
 export const insertOfficeSchema = createInsertSchema(offices).omit({ id: true, createdAt: true, updatedAt: true });
@@ -269,12 +276,12 @@ export type InsertCategory = z.infer<typeof insertCategorySchema>;
 export type Location = typeof locations.$inferSelect;
 export type InsertLocation = z.infer<typeof insertLocationSchema>;
 
-export type Business = typeof businesses.$inferSelect;
-export type InsertBusiness = z.infer<typeof insertBusinessSchema>;
+export type Account = typeof accounts.$inferSelect;
+export type InsertAccount = z.infer<typeof insertAccountSchema>;
 
-// Legacy aliases (deprecated - use Business instead)
-export type Gardener = Business;
-export type InsertGardener = InsertBusiness;
+// Legacy aliases for backwards compatibility
+export type Business = Account;
+export type InsertBusiness = InsertAccount;
 
 export type Profile = typeof profiles.$inferSelect;
 export type InsertProfile = z.infer<typeof insertProfileSchema>;
