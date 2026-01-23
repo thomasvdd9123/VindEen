@@ -55,7 +55,7 @@ export function SearchBox({
     countParams.set("mainCategory", selectedMainCategory);
   }
   if (selectedSpecialization && selectedSpecialization !== "all") {
-    countParams.set("specialization", selectedSpecialization);
+    countParams.set("spec", selectedSpecialization);
   }
   // Find location slug for count
   const selectedLocation = locations.find(
@@ -122,7 +122,7 @@ export function SearchBox({
     const params = new URLSearchParams();
     if (keyword) params.set("q", keyword);
     if (selectedSpecialization && selectedSpecialization !== "all") {
-      params.set("specialization", selectedSpecialization);
+      params.set("spec", selectedSpecialization);
     }
 
     if (params.toString()) {
