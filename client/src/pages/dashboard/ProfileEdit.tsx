@@ -607,55 +607,87 @@ export default function ProfileEdit() {
           </CardHeader>
           <CardContent>
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Bedrijfsnaam <span className="text-destructive">*</span></FormLabel>
-                      <FormControl>
-                        <Input placeholder="Jouw bedrijfsnaam" {...field} data-testid="input-name" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                
+                {/* ============================================ */}
+                {/* SECTION 1: BEDRIJFSGEGEVENS & CONTACTGEGEVENS */}
+                {/* ============================================ */}
+                <div className="space-y-6">
+                  <div className="border-b pb-2">
+                    <h3 className="text-lg font-semibold">Bedrijfsgegevens</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Basisgegevens en contactinformatie van je bedrijf
+                    </p>
+                  </div>
 
-                <FormField
-                  control={form.control}
-                  name="title"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Functietitel</FormLabel>
-                      <FormControl>
-                        <Input placeholder="bv. Tuinarchitect & ontwerper" {...field} data-testid="input-title" />
-                      </FormControl>
-                      <FormDescription>Een korte titel die je specialisatie beschrijft</FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
-                    name="categoryId"
+                    name="name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Categorie <span className="text-destructive">*</span></FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
+                        <FormLabel>Bedrijfsnaam <span className="text-destructive">*</span></FormLabel>
+                        <FormControl>
+                          <Input placeholder="Jouw bedrijfsnaam" {...field} data-testid="input-name" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="title"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Functietitel</FormLabel>
+                        <FormControl>
+                          <Input placeholder="bv. Tuinarchitect & ontwerper" {...field} data-testid="input-title" />
+                        </FormControl>
+                        <FormDescription>Een korte titel die je specialisatie beschrijft</FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Contact email <span className="text-destructive">*</span></FormLabel>
                           <FormControl>
-                            <SelectTrigger data-testid="select-category">
-                              <SelectValue placeholder="Selecteer categorie" />
-                            </SelectTrigger>
+                            <Input type="email" placeholder="email@voorbeeld.be" {...field} data-testid="input-email" />
                           </FormControl>
-                          <SelectContent>
-                            {categories.map((cat) => (
-                              <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="telnr"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Telefoonnummer</FormLabel>
+                          <FormControl>
+                            <Input placeholder="+32 xxx xx xx xx" {...field} data-testid="input-phone" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <FormField
+                    control={form.control}
+                    name="website"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Website</FormLabel>
+                        <FormControl>
+                          <Input placeholder="https://www.jouwwebsite.be" {...field} data-testid="input-website" />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -666,11 +698,11 @@ export default function ProfileEdit() {
                     name="locationId"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Locatie <span className="text-destructive">*</span></FormLabel>
+                        <FormLabel>Regio <span className="text-destructive">*</span></FormLabel>
                         <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
                             <SelectTrigger data-testid="select-location">
-                              <SelectValue placeholder="Selecteer locatie" />
+                              <SelectValue placeholder="Selecteer regio" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -679,290 +711,46 @@ export default function ProfileEdit() {
                             ))}
                           </SelectContent>
                         </Select>
+                        <FormDescription>De regio waarin je hoofdzakelijk actief bent</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                 </div>
 
-                <FormField
-                  control={form.control}
-                  name="hideAddress"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                      <div className="space-y-0.5">
-                        <FormLabel className="text-base">Adres verbergen</FormLabel>
-                        <FormDescription>
-                          Verberg je exacte adres op je profiel. Je stad blijft altijd zichtbaar.
-                        </FormDescription>
-                      </div>
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                          data-testid="switch-hide-address"
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="introduction"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Introductie <span className="text-destructive">*</span></FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          placeholder="Schrijf een korte introductie over je bedrijf..." 
-                          className="min-h-[100px]"
-                          {...field} 
-                          data-testid="input-introduction"
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        Dit is het eerste wat bezoekers zien op je profielpagina
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Uitgebreide beschrijving</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          placeholder="Uitgebreide beschrijving van je diensten, ervaring, etc..." 
-                          className="min-h-[150px]"
-                          {...field} 
-                          data-testid="input-description"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Contact email <span className="text-destructive">*</span></FormLabel>
-                        <FormControl>
-                          <Input type="email" placeholder="email@voorbeeld.be" {...field} data-testid="input-email" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="telnr"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Telefoonnummer</FormLabel>
-                        <FormControl>
-                          <Input placeholder="+32 xxx xx xx xx" {...field} data-testid="input-phone" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <FormField
-                  control={form.control}
-                  name="website"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Website</FormLabel>
-                      <FormControl>
-                        <Input placeholder="https://www.jouwwebsite.be" {...field} data-testid="input-website" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {/* Services Selection */}
-                <FormField
-                  control={form.control}
-                  name="offeredServices"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Aangeboden diensten</FormLabel>
-                      <FormDescription className="mb-2">
-                        Selecteer de diensten die je aanbiedt
-                      </FormDescription>
-                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                        {AVAILABLE_SERVICES.map((service) => (
-                          <div key={service} className="flex items-center space-x-2">
-                            <Checkbox
-                              id={`service-${service}`}
-                              checked={field.value?.includes(service) || false}
-                              onCheckedChange={(checked) => {
-                                const current = field.value || [];
-                                if (checked) {
-                                  field.onChange([...current, service]);
-                                } else {
-                                  field.onChange(current.filter((s) => s !== service));
-                                }
-                              }}
-                              data-testid={`checkbox-service-${service.toLowerCase().replace(/\s/g, '-')}`}
-                            />
-                            <label
-                              htmlFor={`service-${service}`}
-                              className="text-sm cursor-pointer"
-                            >
-                              {service}
-                            </label>
-                          </div>
-                        ))}
-                      </div>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {/* Main Categories Selection */}
-                <FormField
-                  control={form.control}
-                  name="mainCategories"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Hoofdcategorieën</FormLabel>
-                      <FormDescription className="mb-2">
-                        Selecteer in welke categorieën je actief bent (je kunt beide selecteren)
-                      </FormDescription>
-                      <div className="flex flex-wrap gap-4">
-                        {Object.entries(mainCategoryLabels).map(([key, label]) => (
-                          <div key={key} className="flex items-center space-x-2">
-                            <Checkbox
-                              id={`main-cat-${key}`}
-                              checked={field.value?.includes(key) || false}
-                              onCheckedChange={(checked) => {
-                                const current = field.value || [];
-                                if (checked) {
-                                  field.onChange([...current, key]);
-                                } else {
-                                  field.onChange(current.filter((c) => c !== key));
-                                  // Also remove specializations from this category
-                                  const specs = form.getValues("specializations") || [];
-                                  const categorySpecs = specializationsByCategory[key] || [];
-                                  form.setValue("specializations", specs.filter(s => !categorySpecs.includes(s)));
-                                }
-                              }}
-                              data-testid={`checkbox-main-cat-${key.toLowerCase()}`}
-                            />
-                            <label htmlFor={`main-cat-${key}`} className="text-sm font-medium cursor-pointer">
-                              {label}
-                            </label>
-                          </div>
-                        ))}
-                      </div>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {/* Specializations Selection */}
-                <FormField
-                  control={form.control}
-                  name="specializations"
-                  render={({ field }) => {
-                    const selectedMainCategories = form.watch("mainCategories") || [];
-                    const availableSpecs = selectedMainCategories.flatMap(
-                      cat => specializationsByCategory[cat] || []
-                    );
-                    
-                    return (
-                      <FormItem>
-                        <FormLabel>Specialisaties</FormLabel>
-                        <FormDescription className="mb-2">
-                          Selecteer je specialisaties (selecteer eerst een hoofdcategorie)
-                        </FormDescription>
-                        {selectedMainCategories.length === 0 ? (
-                          <p className="text-sm text-muted-foreground italic">
-                            Selecteer eerst een hoofdcategorie om specialisaties te zien
-                          </p>
-                        ) : (
-                          <div className="space-y-4">
-                            {selectedMainCategories.map(cat => (
-                              <div key={cat}>
-                                <p className="text-sm font-medium text-muted-foreground mb-2">
-                                  {mainCategoryLabels[cat]}
-                                </p>
-                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                                  {(specializationsByCategory[cat] || []).map((spec) => (
-                                    <div key={spec} className="flex items-center space-x-2">
-                                      <Checkbox
-                                        id={`spec-${spec}`}
-                                        checked={field.value?.includes(spec) || false}
-                                        onCheckedChange={(checked) => {
-                                          const current = field.value || [];
-                                          if (checked) {
-                                            field.onChange([...current, spec]);
-                                          } else {
-                                            field.onChange(current.filter((s) => s !== spec));
-                                          }
-                                        }}
-                                        data-testid={`checkbox-spec-${spec.toLowerCase()}`}
-                                      />
-                                      <label
-                                        htmlFor={`spec-${spec}`}
-                                        className="text-sm cursor-pointer"
-                                      >
-                                        {specializationLabels[spec] || spec}
-                                      </label>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                        <FormMessage />
-                      </FormItem>
-                    );
-                  }}
-                />
-
-                {/* Office Address */}
-                <div className="space-y-4">
-                  <div>
-                    <h3 className="text-sm font-medium">Bedrijfsadres</h3>
+                {/* ============================================ */}
+                {/* SECTION 2: BEDRIJFSADRES */}
+                {/* ============================================ */}
+                <div className="space-y-6">
+                  <div className="border-b pb-2">
+                    <h3 className="text-lg font-semibold">Bedrijfsadres</h3>
                     <p className="text-sm text-muted-foreground">
                       Het adres waar je bedrijf gevestigd is
                     </p>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="officeStreet"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Straat</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Kerkstraat" {...field} data-testid="input-office-street" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="sm:col-span-2">
+                      <FormField
+                        control={form.control}
+                        name="officeStreet"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Straat</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Kerkstraat" {...field} data-testid="input-office-street" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
                     <FormField
                       control={form.control}
                       name="officeNumber"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Huisnummer</FormLabel>
+                          <FormLabel>Nr.</FormLabel>
                           <FormControl>
                             <Input placeholder="12" {...field} data-testid="input-office-number" />
                           </FormControl>
@@ -971,7 +759,8 @@ export default function ProfileEdit() {
                       )}
                     />
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <FormField
                       control={form.control}
                       name="officePostcode"
@@ -985,20 +774,297 @@ export default function ProfileEdit() {
                         </FormItem>
                       )}
                     />
-                    <FormField
-                      control={form.control}
-                      name="officeTown"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Gemeente</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Gent" {...field} data-testid="input-office-town" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    <div className="sm:col-span-2">
+                      <FormField
+                        control={form.control}
+                        name="officeTown"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Gemeente</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Gent" {...field} data-testid="input-office-town" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
                   </div>
+
+                  <FormField
+                    control={form.control}
+                    name="hideAddress"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                        <div className="space-y-0.5">
+                          <FormLabel className="text-base">Adres verbergen</FormLabel>
+                          <FormDescription>
+                            Verberg je exacte adres op je profiel. Je gemeente blijft altijd zichtbaar.
+                          </FormDescription>
+                        </div>
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                            data-testid="switch-hide-address"
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                {/* ============================================ */}
+                {/* SECTION 3: INTRODUCTIE & BESCHRIJVING */}
+                {/* ============================================ */}
+                <div className="space-y-6">
+                  <div className="border-b pb-2">
+                    <h3 className="text-lg font-semibold">Introductie & Beschrijving</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Vertel bezoekers over je bedrijf en diensten
+                    </p>
+                  </div>
+
+                  <FormField
+                    control={form.control}
+                    name="introduction"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Korte introductie <span className="text-destructive">*</span></FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            placeholder="Schrijf een korte introductie over je bedrijf..." 
+                            className="min-h-[100px]"
+                            {...field} 
+                            data-testid="input-introduction"
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Dit is het eerste wat bezoekers zien op je profielpagina (max 300 tekens)
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Uitgebreide beschrijving</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            placeholder="Uitgebreide beschrijving van je diensten, ervaring, aanpak, etc..." 
+                            className="min-h-[150px]"
+                            {...field} 
+                            data-testid="input-description"
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Vertel meer over je ervaring, werkwijze en wat je onderscheidt
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                {/* ============================================ */}
+                {/* SECTION 4: CATEGORIEËN */}
+                {/* ============================================ */}
+                <div className="space-y-6">
+                  <div className="border-b pb-2">
+                    <h3 className="text-lg font-semibold">Categorieën</h3>
+                    <p className="text-sm text-muted-foreground">
+                      In welk type tuinwerk ben je gespecialiseerd?
+                    </p>
+                  </div>
+
+                  <FormField
+                    control={form.control}
+                    name="mainCategories"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Selecteer je hoofdcategorieën</FormLabel>
+                        <FormDescription className="mb-3">
+                          Je kunt beide categorieën selecteren als je in beide actief bent
+                        </FormDescription>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          {Object.entries(mainCategoryLabels).map(([key, label]) => {
+                            const isSelected = field.value?.includes(key) || false;
+                            const description = key === "TUINONDERHOUD" 
+                              ? "Onderhoud van bestaande tuinen: maaien, snoeien, hagen knippen, etc."
+                              : "Aanleg van nieuwe tuinen: terrassen, paden, vijvers, gazon, etc.";
+                            
+                            return (
+                              <div 
+                                key={key} 
+                                className={`relative rounded-lg border-2 p-4 cursor-pointer transition-colors ${
+                                  isSelected 
+                                    ? "border-primary bg-primary/5" 
+                                    : "border-muted hover:border-muted-foreground/50"
+                                }`}
+                                onClick={() => {
+                                  const current = field.value || [];
+                                  if (isSelected) {
+                                    field.onChange(current.filter((c) => c !== key));
+                                    // Also remove specializations from this category
+                                    const specs = form.getValues("specializations") || [];
+                                    const categorySpecs = specializationsByCategory[key] || [];
+                                    form.setValue("specializations", specs.filter(s => !categorySpecs.includes(s)));
+                                  } else {
+                                    field.onChange([...current, key]);
+                                  }
+                                }}
+                                data-testid={`card-main-cat-${key.toLowerCase()}`}
+                              >
+                                <div className="flex items-start gap-3">
+                                  <Checkbox
+                                    id={`main-cat-${key}`}
+                                    checked={isSelected}
+                                    className="mt-1"
+                                    data-testid={`checkbox-main-cat-${key.toLowerCase()}`}
+                                  />
+                                  <div className="flex-1">
+                                    <label htmlFor={`main-cat-${key}`} className="text-base font-medium cursor-pointer">
+                                      {label}
+                                    </label>
+                                    <p className="text-sm text-muted-foreground mt-1">
+                                      {description}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                {/* ============================================ */}
+                {/* SECTION 5: SPECIALISATIES (per categorie) */}
+                {/* ============================================ */}
+                <FormField
+                  control={form.control}
+                  name="specializations"
+                  render={({ field }) => {
+                    const selectedMainCategories = form.watch("mainCategories") || [];
+                    
+                    if (selectedMainCategories.length === 0) {
+                      return (
+                        <div className="space-y-6">
+                          <div className="border-b pb-2">
+                            <h3 className="text-lg font-semibold text-muted-foreground">Specialisaties</h3>
+                            <p className="text-sm text-muted-foreground">
+                              Selecteer eerst een hoofdcategorie hierboven
+                            </p>
+                          </div>
+                          <div className="rounded-lg border border-dashed p-6 text-center">
+                            <p className="text-muted-foreground">
+                              Selecteer eerst "Tuinonderhoud" en/of "Tuinaanleg" om je specialisaties te kiezen
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    }
+                    
+                    return (
+                      <div className="space-y-6">
+                        <div className="border-b pb-2">
+                          <h3 className="text-lg font-semibold">Specialisaties</h3>
+                          <p className="text-sm text-muted-foreground">
+                            Selecteer je specifieke specialisaties per categorie
+                          </p>
+                        </div>
+
+                        {selectedMainCategories.map(cat => (
+                          <div key={cat} className="space-y-3">
+                            <div className="flex items-center gap-2">
+                              <div className="h-2 w-2 rounded-full bg-primary" />
+                              <h4 className="font-medium">{mainCategoryLabels[cat]}</h4>
+                            </div>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pl-4 border-l-2 border-primary/20">
+                              {(specializationsByCategory[cat] || []).map((spec) => (
+                                <div key={spec} className="flex items-center space-x-2">
+                                  <Checkbox
+                                    id={`spec-${spec}`}
+                                    checked={field.value?.includes(spec) || false}
+                                    onCheckedChange={(checked) => {
+                                      const current = field.value || [];
+                                      if (checked) {
+                                        field.onChange([...current, spec]);
+                                      } else {
+                                        field.onChange(current.filter((s) => s !== spec));
+                                      }
+                                    }}
+                                    data-testid={`checkbox-spec-${spec.toLowerCase()}`}
+                                  />
+                                  <label
+                                    htmlFor={`spec-${spec}`}
+                                    className="text-sm cursor-pointer"
+                                  >
+                                    {specializationLabels[spec] || spec}
+                                  </label>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                        <FormMessage />
+                      </div>
+                    );
+                  }}
+                />
+
+                {/* ============================================ */}
+                {/* SECTION 6: EXTRA DIENSTEN */}
+                {/* ============================================ */}
+                <div className="space-y-6">
+                  <div className="border-b pb-2">
+                    <h3 className="text-lg font-semibold">Extra diensten</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Aanvullende diensten die je aanbiedt
+                    </p>
+                  </div>
+
+                  <FormField
+                    control={form.control}
+                    name="offeredServices"
+                    render={({ field }) => (
+                      <FormItem>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                          {AVAILABLE_SERVICES.map((service) => (
+                            <div key={service} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`service-${service}`}
+                                checked={field.value?.includes(service) || false}
+                                onCheckedChange={(checked) => {
+                                  const current = field.value || [];
+                                  if (checked) {
+                                    field.onChange([...current, service]);
+                                  } else {
+                                    field.onChange(current.filter((s) => s !== service));
+                                  }
+                                }}
+                                data-testid={`checkbox-service-${service.toLowerCase().replace(/\s/g, '-')}`}
+                              />
+                              <label
+                                htmlFor={`service-${service}`}
+                                className="text-sm cursor-pointer"
+                              >
+                                {service}
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
 
                 {/* Active/Inactive Toggle */}
