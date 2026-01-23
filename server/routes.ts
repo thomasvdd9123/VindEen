@@ -186,9 +186,9 @@ export async function registerRoutes(
   });
 
   // Get profiles by gardener (user's own profiles)
-  app.get("/api/my-profiles/:gardenerId", async (req, res) => {
+  app.get("/api/my-profiles/:businessId", async (req, res) => {
     try {
-      const profiles = await storage.getProfilesByGardenerId(req.params.gardenerId);
+      const profiles = await storage.getProfilesByBusinessId(req.params.businessId);
       res.json(profiles);
     } catch (error) {
       console.error("Error fetching user profiles:", error);
@@ -201,8 +201,8 @@ export async function registerRoutes(
     try {
       const profileData = req.body;
       
-      if (!profileData.gardenerId) {
-        return res.status(400).json({ error: "gardenerId is required" });
+      if (!profileData.businessId) {
+        return res.status(400).json({ error: "businessId is required" });
       }
       
       // Generate slug from name
@@ -222,7 +222,7 @@ export async function registerRoutes(
       }
       
       const profile = await storage.createProfile({
-        gardenerId: profileData.gardenerId,
+        businessId: profileData.businessId,
         slug,
         name: profileData.name,
         email: profileData.email,
@@ -236,9 +236,6 @@ export async function registerRoutes(
         locationId: profileData.locationId,
         isActive: true,
         isPublic: false,
-        isVerified: false,
-        verificationStatus: "PENDING",
-        isFeatured: false,
       });
       
       res.status(201).json(profile);
@@ -292,23 +289,23 @@ export async function registerRoutes(
     try {
       const { accountId, email } = req.body;
       
-      // Try to find existing gardener
-      let gardener = await storage.getGardenerByAccountId(accountId);
+      // Try to find existing business
+      let business = await storage.getBusinessByAccountId(accountId);
       
-      if (!gardener) {
-        // Create new gardener
-        gardener = await storage.createGardener({
+      if (!business) {
+        // Create new business
+        business = await storage.createBusiness({
           accountId,
           email,
-          role: "GARDENER",
+          role: "BUSINESS",
           emailVerified: true,
         });
       }
       
-      res.json(gardener);
+      res.json(business);
     } catch (error) {
-      console.error("Error getting/creating gardener:", error);
-      res.status(500).json({ error: "Failed to get or create gardener" });
+      console.error("Error getting/creating business:", error);
+      res.status(500).json({ error: "Failed to get or create business" });
     }
   });
 
@@ -356,10 +353,10 @@ export async function registerRoutes(
     }
   });
 
-  // Get contact requests for gardener
-  app.get("/api/contact-requests/:gardenerId", async (req, res) => {
+  // Get contact requests for profile
+  app.get("/api/contact-requests/:profileId", async (req, res) => {
     try {
-      const requests = await storage.getContactRequestsByGardenerId(req.params.gardenerId);
+      const requests = await storage.getContactRequestsByProfileId(req.params.profileId);
       res.json(requests);
     } catch (error) {
       console.error("Error fetching contact requests:", error);
@@ -378,17 +375,12 @@ export async function registerRoutes(
       const validatedData = contactFormSchema.parse(req.body);
 
       const contactRequest = await storage.createContactRequest({
-        gardenerId: profile.gardenerId,
         profileId: profile.id,
         visitorName: validatedData.visitorName,
         visitorEmail: validatedData.visitorEmail,
         telnr: validatedData.telnr || null,
         subject: validatedData.subject,
         message: validatedData.message,
-        status: "NEW",
-        gardenerReadAt: null,
-        adminNotified: false,
-        date: new Date(),
       });
 
       res.status(201).json({ success: true, id: contactRequest.id });
@@ -420,8 +412,8 @@ export async function registerRoutes(
       return { authorized: false, error: "Profiel niet gevonden" };
     }
 
-    const gardener = await storage.getGardenerByAccountId(user.id);
-    if (!gardener || gardener.id !== profile.gardenerId) {
+    const business = await storage.getBusinessByAccountId(user.id);
+    if (!business || business.id !== profile.businessId) {
       return { authorized: false, error: "Geen toegang tot dit profiel" };
     }
 
@@ -598,7 +590,7 @@ export async function registerRoutes(
       const [categories, locations, profilesResult] = await Promise.all([
         storage.getCategories(),
         storage.getLocations(),
-        storage.searchProfiles({ isPublic: true }),
+        storage.searchProfiles({ page: 1, limit: 1000 }),
       ]);
       const profiles = profilesResult.profiles;
 

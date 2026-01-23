@@ -2,7 +2,7 @@ import { supabaseAdmin } from "./lib/supabase";
 import type {
   Category, InsertCategory,
   Location, InsertLocation,
-  Gardener, InsertGardener,
+  Business, InsertBusiness,
   Profile, InsertProfile,
   Office, InsertOffice,
   Practical, InsertPractical,
@@ -10,6 +10,7 @@ import type {
   ProfileWithRelations,
   SearchParams,
   SubscriptionPlan,
+  ProfileStatusHistory, InsertProfileStatusHistory,
 } from "@shared/schema";
 import type { IStorage } from "./storage";
 
@@ -43,6 +44,7 @@ export class SupabaseStorage implements IStorage {
       .insert({
         name: category.name,
         slug: category.slug,
+        main_category: category.mainCategory,
         description: category.description,
         is_active: category.isActive ?? true,
         sort_order: category.sortOrder ?? 0,
@@ -85,10 +87,10 @@ export class SupabaseStorage implements IStorage {
         slug: location.slug,
         postcode: location.postcode,
         municipality: location.municipality,
+        province: location.province,
+        region: location.region,
         latitude: location.latitude,
         longitude: location.longitude,
-        region: location.region,
-        country: location.country ?? "België",
         is_active: location.isActive ?? true,
       })
       .select()
@@ -98,44 +100,44 @@ export class SupabaseStorage implements IStorage {
     return this.mapLocation(data);
   }
 
-  // Gardeners
-  async getGardener(id: string): Promise<Gardener | undefined> {
+  // Businesses (formerly Gardeners)
+  async getBusiness(id: string): Promise<Business | undefined> {
     const { data, error } = await supabaseAdmin
-      .from("gardeners")
+      .from("businesses")
       .select("*")
       .eq("id", id)
       .single();
     
     if (error && error.code !== "PGRST116") throw error;
-    return data ? this.mapGardener(data) : undefined;
+    return data ? this.mapBusiness(data) : undefined;
   }
 
-  async getGardenerByAccountId(accountId: string): Promise<Gardener | undefined> {
+  async getBusinessByAccountId(accountId: string): Promise<Business | undefined> {
     const { data, error } = await supabaseAdmin
-      .from("gardeners")
+      .from("businesses")
       .select("*")
       .eq("account_id", accountId)
       .single();
     
     if (error && error.code !== "PGRST116") throw error;
-    return data ? this.mapGardener(data) : undefined;
+    return data ? this.mapBusiness(data) : undefined;
   }
 
-  async createGardener(gardener: InsertGardener): Promise<Gardener> {
+  async createBusiness(business: InsertBusiness): Promise<Business> {
     const { data, error } = await supabaseAdmin
-      .from("gardeners")
+      .from("businesses")
       .insert({
-        account_id: gardener.accountId,
-        email: gardener.email,
-        role: gardener.role ?? "GARDENER",
-        email_verified: gardener.emailVerified ?? false,
-        email_verified_at: gardener.emailVerifiedAt,
+        account_id: business.accountId,
+        email: business.email,
+        role: business.role ?? "BUSINESS",
+        email_verified: business.emailVerified ?? false,
+        email_verified_at: business.emailVerifiedAt,
       })
       .select()
       .single();
     
     if (error) throw error;
-    return this.mapGardener(data);
+    return this.mapBusiness(data);
   }
 
   // Profiles
@@ -143,8 +145,7 @@ export class SupabaseStorage implements IStorage {
     const { data, error } = await supabaseAdmin
       .from("profiles")
       .select("*")
-      .eq("is_active", true)
-      .eq("is_public", true);
+      .eq("is_active", true);
     
     if (error) throw error;
     return (data || []).map(this.mapProfile);
@@ -189,6 +190,16 @@ export class SupabaseStorage implements IStorage {
     return this.mapProfileWithRelations(data);
   }
 
+  async getProfilesByBusinessId(businessId: string): Promise<Profile[]> {
+    const { data, error } = await supabaseAdmin
+      .from("profiles")
+      .select("*")
+      .eq("business_id", businessId);
+    
+    if (error) throw error;
+    return (data || []).map(d => this.mapProfile(d));
+  }
+
   async getFeaturedProfiles(): Promise<ProfileWithRelations[]> {
     const { data, error } = await supabaseAdmin
       .from("profiles")
@@ -201,7 +212,6 @@ export class SupabaseStorage implements IStorage {
       `)
       .eq("is_active", true)
       .eq("is_public", true)
-      .eq("is_featured", true)
       .limit(6);
     
     if (error) throw error;
@@ -229,6 +239,15 @@ export class SupabaseStorage implements IStorage {
       }
     }
 
+    // Filter by main category
+    if (params.mainCategory) {
+      const categories = await this.getCategories();
+      const matchingCategories = categories.filter(c => c.mainCategory === params.mainCategory);
+      if (matchingCategories.length > 0) {
+        query = query.in("category_id", matchingCategories.map(c => c.id));
+      }
+    }
+
     // Filter by location
     if (params.locationSlug) {
       const location = await this.getLocationBySlug(params.locationSlug);
@@ -237,25 +256,24 @@ export class SupabaseStorage implements IStorage {
       }
     }
 
-    // Filter by query (name, introduction, title)
-    if (params.query) {
-      query = query.or(`name.ilike.%${params.query}%,introduction.ilike.%${params.query}%,title.ilike.%${params.query}%`);
-    }
-
     // Filter by specializations
     if (params.specializations && params.specializations.length > 0) {
       query = query.overlaps("specializations", params.specializations);
+    }
+
+    // Search query
+    if (params.query) {
+      query = query.or(`name.ilike.%${params.query}%,description.ilike.%${params.query}%`);
     }
 
     const page = params.page || 1;
     const limit = params.limit || 12;
     const offset = (page - 1) * limit;
 
-    const { data, error, count } = await query
-      .range(offset, offset + limit - 1)
-      .order("is_featured", { ascending: false })
-      .order("created_at", { ascending: false });
+    query = query.range(offset, offset + limit - 1);
 
+    const { data, error, count } = await query;
+    
     if (error) throw error;
 
     const total = count || 0;
@@ -273,7 +291,7 @@ export class SupabaseStorage implements IStorage {
     const { data, error } = await supabaseAdmin
       .from("profiles")
       .insert({
-        gardener_id: profile.gardenerId,
+        business_id: profile.businessId,
         slug: profile.slug,
         name: profile.name,
         email: profile.email,
@@ -290,9 +308,6 @@ export class SupabaseStorage implements IStorage {
         image_urls: profile.imageUrls,
         is_active: profile.isActive ?? true,
         is_public: profile.isPublic ?? false,
-        is_verified: profile.isVerified ?? false,
-        verification_status: profile.verificationStatus ?? "PENDING",
-        is_featured: profile.isFeatured ?? false,
         hide_address: profile.hideAddress ?? false,
         seo_title: profile.seoTitle,
         seo_description: profile.seoDescription,
@@ -306,18 +321,8 @@ export class SupabaseStorage implements IStorage {
     return this.mapProfile(data);
   }
 
-  async getProfilesByGardenerId(gardenerId: string): Promise<Profile[]> {
-    const { data, error } = await supabaseAdmin
-      .from("profiles")
-      .select("*")
-      .eq("gardener_id", gardenerId);
-    
-    if (error) throw error;
-    return (data || []).map(d => this.mapProfile(d));
-  }
-
   async updateProfile(id: string, updates: Partial<InsertProfile>): Promise<Profile | undefined> {
-    const updateData: any = {};
+    const updateData: Record<string, unknown> = {};
     if (updates.name !== undefined) updateData.name = updates.name;
     if (updates.email !== undefined) updateData.email = updates.email;
     if (updates.telnr !== undefined) updateData.telnr = updates.telnr;
@@ -352,31 +357,55 @@ export class SupabaseStorage implements IStorage {
   }
 
   async deleteProfile(id: string): Promise<void> {
-    const { error } = await supabaseAdmin
-      .from("profiles")
-      .delete()
-      .eq("id", id);
+    // Delete related data first
+    await supabaseAdmin.from("offices").delete().eq("profile_id", id);
+    await supabaseAdmin.from("practicals").delete().eq("profile_id", id);
+    await supabaseAdmin.from("profile_status_history").delete().eq("profile_id", id);
     
+    const { error } = await supabaseAdmin.from("profiles").delete().eq("id", id);
     if (error) throw error;
   }
 
   async incrementProfileViewCount(id: string): Promise<void> {
-    const { error } = await supabaseAdmin.rpc('increment_view_count', { profile_id: id });
+    const { data } = await supabaseAdmin
+      .from("profiles")
+      .select("view_count")
+      .eq("id", id)
+      .single();
     
-    // Fallback if RPC doesn't exist - use regular update
-    if (error) {
-      const { data: profile } = await supabaseAdmin
-        .from("profiles")
-        .select("view_count")
-        .eq("id", id)
-        .single();
-      
-      const currentCount = profile?.view_count || 0;
+    if (data) {
       await supabaseAdmin
         .from("profiles")
-        .update({ view_count: currentCount + 1 })
+        .update({ view_count: (data.view_count || 0) + 1 })
         .eq("id", id);
     }
+  }
+
+  // Profile Status History
+  async getProfileStatusHistory(profileId: string): Promise<ProfileStatusHistory[]> {
+    const { data, error } = await supabaseAdmin
+      .from("profile_status_history")
+      .select("*")
+      .eq("profile_id", profileId)
+      .order("created_at", { ascending: false });
+    
+    if (error) throw error;
+    return (data || []).map(this.mapProfileStatusHistory);
+  }
+
+  async createProfileStatusHistory(entry: InsertProfileStatusHistory): Promise<ProfileStatusHistory> {
+    const { data, error } = await supabaseAdmin
+      .from("profile_status_history")
+      .insert({
+        profile_id: entry.profileId,
+        status: entry.status,
+        reason: entry.reason,
+      })
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return this.mapProfileStatusHistory(data);
   }
 
   // Offices
@@ -401,15 +430,38 @@ export class SupabaseStorage implements IStorage {
         town: office.town,
         municipality: office.municipality,
         postcode: office.postcode,
+        province: office.province,
         latitude: office.latitude,
         longitude: office.longitude,
-        country: office.country ?? "België",
       })
       .select()
       .single();
     
     if (error) throw error;
     return this.mapOffice(data);
+  }
+
+  async updateOffice(profileId: string, updates: Partial<InsertOffice>): Promise<Office | undefined> {
+    const updateData: Record<string, unknown> = {};
+    if (updates.street !== undefined) updateData.street = updates.street;
+    if (updates.number !== undefined) updateData.number = updates.number;
+    if (updates.town !== undefined) updateData.town = updates.town;
+    if (updates.municipality !== undefined) updateData.municipality = updates.municipality;
+    if (updates.postcode !== undefined) updateData.postcode = updates.postcode;
+    if (updates.province !== undefined) updateData.province = updates.province;
+    if (updates.latitude !== undefined) updateData.latitude = updates.latitude;
+    if (updates.longitude !== undefined) updateData.longitude = updates.longitude;
+    updateData.updated_at = new Date().toISOString();
+
+    const { data, error } = await supabaseAdmin
+      .from("offices")
+      .update(updateData)
+      .eq("profile_id", profileId)
+      .select()
+      .single();
+    
+    if (error && error.code !== "PGRST116") throw error;
+    return data ? this.mapOffice(data) : undefined;
   }
 
   // Practicals
@@ -429,8 +481,7 @@ export class SupabaseStorage implements IStorage {
       .from("practicals")
       .insert({
         profile_id: practical.profileId,
-        reachability: practical.reachability,
-        experience: practical.experience,
+        experience_years: practical.experienceYears,
         languages: practical.languages,
         tariff: practical.tariff,
         accepted_payment_methods: practical.acceptedPaymentMethods,
@@ -442,19 +493,36 @@ export class SupabaseStorage implements IStorage {
     return this.mapPractical(data);
   }
 
+  async updatePractical(profileId: string, updates: Partial<InsertPractical>): Promise<Practical | undefined> {
+    const updateData: Record<string, unknown> = {};
+    if (updates.experienceYears !== undefined) updateData.experience_years = updates.experienceYears;
+    if (updates.languages !== undefined) updateData.languages = updates.languages;
+    if (updates.tariff !== undefined) updateData.tariff = updates.tariff;
+    if (updates.acceptedPaymentMethods !== undefined) updateData.accepted_payment_methods = updates.acceptedPaymentMethods;
+    updateData.updated_at = new Date().toISOString();
+
+    const { data, error } = await supabaseAdmin
+      .from("practicals")
+      .update(updateData)
+      .eq("profile_id", profileId)
+      .select()
+      .single();
+    
+    if (error && error.code !== "PGRST116") throw error;
+    return data ? this.mapPractical(data) : undefined;
+  }
+
   // Contact Requests
   async createContactRequest(request: InsertContactRequest): Promise<ContactRequest> {
     const { data, error } = await supabaseAdmin
       .from("contact_requests")
       .insert({
-        gardener_id: request.gardenerId,
         profile_id: request.profileId,
         visitor_name: request.visitorName,
         visitor_email: request.visitorEmail,
         telnr: request.telnr,
         subject: request.subject,
         message: request.message,
-        status: request.status ?? "NEW",
       })
       .select()
       .single();
@@ -463,231 +531,183 @@ export class SupabaseStorage implements IStorage {
     return this.mapContactRequest(data);
   }
 
-  async getContactRequestsByGardenerId(gardenerId: string): Promise<ContactRequest[]> {
+  async getContactRequestsByProfileId(profileId: string): Promise<ContactRequest[]> {
     const { data, error } = await supabaseAdmin
       .from("contact_requests")
       .select("*")
-      .eq("gardener_id", gardenerId)
+      .eq("profile_id", profileId)
       .order("created_at", { ascending: false });
     
     if (error) throw error;
     return (data || []).map(this.mapContactRequest);
   }
 
+  // Subscription Plans
   async getSubscriptionPlans(): Promise<SubscriptionPlan[]> {
     const { data, error } = await supabaseAdmin
       .from("subscription_plans")
       .select("*")
       .eq("is_active", true)
-      .order("sort_order", { ascending: true });
+      .order("sort_order");
     
-    if (error) {
-      // If table doesn't exist, return static plans
-      console.log("Subscription plans table not found, using static plans");
-      return [
-        {
-          id: "1",
-          type: "BASIC",
-          name: "Basis",
-          price: 9.99,
-          molliepriceId: null,
-          mollieProductId: null,
-          generalInfo: "Perfect om te starten",
-          features: "Profiel zichtbaar in zoekresultaten,Contactformulier,Basis statistieken",
-          isActive: true,
-          sortOrder: 1,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-        {
-          id: "2",
-          type: "PROFESSIONAL",
-          name: "Professional",
-          price: 19.99,
-          molliepriceId: null,
-          mollieProductId: null,
-          generalInfo: "Meest gekozen",
-          features: "Alles van Basis,Uitgelichte vermelding,Onbeperkte foto uploads,Uitgebreide statistieken,Prioriteit in zoekresultaten",
-          isActive: true,
-          sortOrder: 2,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-        {
-          id: "3",
-          type: "PREMIUM",
-          name: "Premium",
-          price: 39.99,
-          molliepriceId: null,
-          mollieProductId: null,
-          generalInfo: "Maximale zichtbaarheid",
-          features: "Alles van Professional,Featured badge,Eerste positie in resultaten,Premium support,Maandelijks rapport",
-          isActive: true,
-          sortOrder: 3,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-      ];
-    }
+    if (error) throw error;
     return (data || []).map(this.mapSubscriptionPlan);
   }
 
-  private mapSubscriptionPlan(data: any): SubscriptionPlan {
+  // Mapping functions
+  private mapCategory(data: Record<string, unknown>): Category {
     return {
-      id: data.id,
-      type: data.type,
-      name: data.name,
-      price: data.price,
-      molliepriceId: data.mollie_price_id,
-      mollieProductId: data.mollie_product_id,
-      generalInfo: data.general_info,
-      features: data.features,
-      isActive: data.is_active,
-      sortOrder: data.sort_order,
-      createdAt: new Date(data.created_at),
-      updatedAt: new Date(data.updated_at),
+      id: data.id as string,
+      name: data.name as string,
+      slug: data.slug as string,
+      mainCategory: data.main_category as "TUINONDERHOUD" | "TUINAANLEG",
+      description: data.description as string | null,
+      isActive: data.is_active as boolean,
+      sortOrder: data.sort_order as number | null,
+      createdAt: new Date(data.created_at as string),
+      updatedAt: new Date(data.updated_at as string),
     };
   }
 
-  // Mapping functions (snake_case to camelCase)
-  private mapCategory(data: any): Category {
+  private mapLocation(data: Record<string, unknown>): Location {
     return {
-      id: data.id,
-      name: data.name,
-      slug: data.slug,
-      description: data.description,
-      isActive: data.is_active,
-      sortOrder: data.sort_order,
-      createdAt: new Date(data.created_at),
-      updatedAt: new Date(data.updated_at),
+      id: data.id as string,
+      name: data.name as string,
+      slug: data.slug as string,
+      postcode: data.postcode as string,
+      municipality: data.municipality as string,
+      province: data.province as Location["province"],
+      region: data.region as Location["region"],
+      latitude: data.latitude as number | null,
+      longitude: data.longitude as number | null,
+      isActive: data.is_active as boolean,
+      createdAt: new Date(data.created_at as string),
+      updatedAt: new Date(data.updated_at as string),
     };
   }
 
-  private mapLocation(data: any): Location {
+  private mapBusiness(data: Record<string, unknown>): Business {
     return {
-      id: data.id,
-      name: data.name,
-      slug: data.slug,
-      postcode: data.postcode,
-      municipality: data.municipality,
-      latitude: data.latitude,
-      longitude: data.longitude,
-      region: data.region,
-      country: data.country,
-      isActive: data.is_active,
-      createdAt: new Date(data.created_at),
-      updatedAt: new Date(data.updated_at),
+      id: data.id as string,
+      accountId: data.account_id as string,
+      email: data.email as string,
+      role: data.role as Business["role"],
+      emailVerified: data.email_verified as boolean | null,
+      emailVerifiedAt: data.email_verified_at ? new Date(data.email_verified_at as string) : null,
+      createdAt: new Date(data.created_at as string),
+      updatedAt: new Date(data.updated_at as string),
     };
   }
 
-  private mapGardener(data: any): Gardener {
+  private mapProfile(data: Record<string, unknown>): Profile {
     return {
-      id: data.id,
-      accountId: data.account_id,
-      email: data.email,
-      role: data.role,
-      emailVerified: data.email_verified,
-      emailVerifiedAt: data.email_verified_at ? new Date(data.email_verified_at) : null,
-      createdAt: new Date(data.created_at),
-      updatedAt: new Date(data.updated_at),
+      id: data.id as string,
+      businessId: data.business_id as string,
+      slug: data.slug as string,
+      name: data.name as string,
+      email: data.email as string,
+      telnr: data.telnr as string | null,
+      website: data.website as string | null,
+      hasWebsite: data.has_website as boolean,
+      description: data.description as string | null,
+      introduction: data.introduction as string | null,
+      title: data.title as string | null,
+      education: data.education as string | null,
+      specializations: data.specializations as string[] | null,
+      offeredServices: data.offered_services as string[] | null,
+      logoUrl: data.logo_url as string | null,
+      imageUrls: data.image_urls as string[] | null,
+      isActive: data.is_active as boolean,
+      isPublic: data.is_public as boolean,
+      hideAddress: (data.hide_address as boolean) ?? false,
+      viewCount: (data.view_count as number) ?? 0,
+      seoTitle: data.seo_title as string | null,
+      seoDescription: data.seo_description as string | null,
+      categoryId: data.category_id as string | null,
+      locationId: data.location_id as string | null,
+      createdAt: new Date(data.created_at as string),
+      updatedAt: new Date(data.updated_at as string),
     };
   }
 
-  private mapProfile(data: any): Profile {
+  private mapProfileStatusHistory(data: Record<string, unknown>): ProfileStatusHistory {
     return {
-      id: data.id,
-      gardenerId: data.gardener_id,
-      slug: data.slug,
-      name: data.name,
-      email: data.email,
-      telnr: data.telnr,
-      website: data.website,
-      hasWebsite: data.has_website,
-      description: data.description,
-      introduction: data.introduction,
-      title: data.title,
-      education: data.education,
-      specializations: data.specializations,
-      offeredServices: data.offered_services,
-      logoUrl: data.logo_url,
-      imageUrls: data.image_urls,
-      isActive: data.is_active,
-      isPublic: data.is_public,
-      isVerified: data.is_verified,
-      verificationStatus: data.verification_status,
-      verifiedAt: data.verified_at ? new Date(data.verified_at) : null,
-      verifiedBy: data.verified_by,
-      rejectionReason: data.rejection_reason,
-      isFeatured: data.is_featured,
-      hideAddress: data.hide_address ?? false,
-      viewCount: data.view_count ?? 0,
-      seoTitle: data.seo_title,
-      seoDescription: data.seo_description,
-      categoryId: data.category_id,
-      locationId: data.location_id,
-      createdAt: new Date(data.created_at),
-      updatedAt: new Date(data.updated_at),
+      id: data.id as string,
+      profileId: data.profile_id as string,
+      status: data.status as ProfileStatusHistory["status"],
+      reason: data.reason as string | null,
+      createdAt: new Date(data.created_at as string),
     };
   }
 
-  private mapOffice(data: any): Office {
+  private mapOffice(data: Record<string, unknown>): Office {
     return {
-      id: data.id,
-      profileId: data.profile_id,
-      street: data.street,
-      number: data.number,
-      town: data.town,
-      municipality: data.municipality,
-      postcode: data.postcode,
-      latitude: data.latitude,
-      longitude: data.longitude,
-      country: data.country,
-      createdAt: new Date(data.created_at),
-      updatedAt: new Date(data.updated_at),
+      id: data.id as string,
+      profileId: data.profile_id as string,
+      street: data.street as string,
+      number: data.number as string,
+      town: data.town as string,
+      municipality: data.municipality as string,
+      postcode: data.postcode as string,
+      province: data.province as Office["province"],
+      latitude: data.latitude as number | null,
+      longitude: data.longitude as number | null,
+      createdAt: new Date(data.created_at as string),
+      updatedAt: new Date(data.updated_at as string),
     };
   }
 
-  private mapPractical(data: any): Practical {
+  private mapPractical(data: Record<string, unknown>): Practical {
     return {
-      id: data.id,
-      profileId: data.profile_id,
-      reachability: data.reachability,
-      experience: data.experience,
-      languages: data.languages,
-      tariff: data.tariff,
-      acceptedPaymentMethods: data.accepted_payment_methods,
-      createdAt: new Date(data.created_at),
-      updatedAt: new Date(data.updated_at),
+      id: data.id as string,
+      profileId: data.profile_id as string,
+      experienceYears: data.experience_years as number | null,
+      languages: data.languages as Practical["languages"],
+      tariff: data.tariff as string | null,
+      acceptedPaymentMethods: data.accepted_payment_methods as string | null,
+      createdAt: new Date(data.created_at as string),
+      updatedAt: new Date(data.updated_at as string),
     };
   }
 
-  private mapContactRequest(data: any): ContactRequest {
+  private mapContactRequest(data: Record<string, unknown>): ContactRequest {
     return {
-      id: data.id,
-      gardenerId: data.gardener_id,
-      profileId: data.profile_id,
-      visitorName: data.visitor_name,
-      visitorEmail: data.visitor_email,
-      telnr: data.telnr,
-      subject: data.subject,
-      message: data.message,
-      status: data.status,
-      gardenerReadAt: data.gardener_read_at ? new Date(data.gardener_read_at) : null,
-      adminNotified: data.admin_notified,
-      date: new Date(data.date),
-      createdAt: new Date(data.created_at),
-      updatedAt: new Date(data.updated_at),
+      id: data.id as string,
+      profileId: data.profile_id as string,
+      visitorName: data.visitor_name as string,
+      visitorEmail: data.visitor_email as string,
+      telnr: data.telnr as string | null,
+      subject: data.subject as string,
+      message: data.message as string,
+      createdAt: new Date(data.created_at as string),
     };
   }
 
-  private mapProfileWithRelations(data: any): ProfileWithRelations {
+  private mapSubscriptionPlan(data: Record<string, unknown>): SubscriptionPlan {
+    return {
+      id: data.id as string,
+      type: data.type as SubscriptionPlan["type"],
+      name: data.name as string,
+      price: data.price as number,
+      molliepriceId: data.mollie_price_id as string | null,
+      mollieProductId: data.mollie_product_id as string | null,
+      generalInfo: data.general_info as string | null,
+      features: data.features as string | null,
+      isActive: data.is_active as boolean,
+      sortOrder: data.sort_order as number | null,
+      createdAt: new Date(data.created_at as string),
+      updatedAt: new Date(data.updated_at as string),
+    };
+  }
+
+  private mapProfileWithRelations(data: Record<string, unknown>): ProfileWithRelations {
     const profile = this.mapProfile(data);
     return {
       ...profile,
-      category: data.categories ? this.mapCategory(data.categories) : undefined,
-      location: data.locations ? this.mapLocation(data.locations) : undefined,
-      office: data.offices ? this.mapOffice(data.offices) : undefined,
-      practical: data.practicals ? this.mapPractical(data.practicals) : undefined,
+      category: data.categories ? this.mapCategory(data.categories as Record<string, unknown>) : undefined,
+      location: data.locations ? this.mapLocation(data.locations as Record<string, unknown>) : undefined,
+      office: data.offices ? this.mapOffice(data.offices as Record<string, unknown>) : undefined,
+      practical: data.practicals ? this.mapPractical(data.practicals as Record<string, unknown>) : undefined,
     };
   }
 }

@@ -373,8 +373,10 @@ export class MemStorage implements IStorage {
     const id = randomUUID();
     const newCategory: Category = {
       id,
-      ...category,
+      name: category.name,
+      slug: category.slug,
       mainCategory: category.mainCategory,
+      description: category.description ?? null,
       isActive: category.isActive ?? true,
       sortOrder: category.sortOrder ?? 0,
       createdAt: new Date(),
@@ -399,7 +401,14 @@ export class MemStorage implements IStorage {
     const id = randomUUID();
     const newLocation: Location = {
       id,
-      ...location,
+      name: location.name,
+      slug: location.slug,
+      postcode: location.postcode,
+      municipality: location.municipality,
+      province: location.province ?? null,
+      region: location.region ?? null,
+      latitude: location.latitude ?? null,
+      longitude: location.longitude ?? null,
       isActive: location.isActive ?? true,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -520,12 +529,29 @@ export class MemStorage implements IStorage {
     const id = randomUUID();
     const newProfile: Profile = {
       id,
-      ...profile,
+      businessId: profile.businessId,
+      slug: profile.slug,
+      name: profile.name,
+      email: profile.email,
+      telnr: profile.telnr ?? null,
+      website: profile.website ?? null,
       hasWebsite: profile.hasWebsite ?? false,
+      description: profile.description ?? null,
+      introduction: profile.introduction ?? null,
+      title: profile.title ?? null,
+      education: profile.education ?? null,
+      specializations: profile.specializations ?? null,
+      offeredServices: profile.offeredServices ?? null,
+      logoUrl: profile.logoUrl ?? null,
+      imageUrls: profile.imageUrls ?? null,
       isActive: profile.isActive ?? true,
       isPublic: profile.isPublic ?? false,
       hideAddress: profile.hideAddress ?? false,
       viewCount: profile.viewCount ?? 0,
+      seoTitle: profile.seoTitle ?? null,
+      seoDescription: profile.seoDescription ?? null,
+      categoryId: profile.categoryId ?? null,
+      locationId: profile.locationId ?? null,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -549,12 +575,14 @@ export class MemStorage implements IStorage {
   async deleteProfile(id: string): Promise<void> {
     this.profiles.delete(id);
     // Also delete related data
-    for (const [officeId, office] of this.offices.entries()) {
+    const officeEntries = Array.from(this.offices.entries());
+    for (const [officeId, office] of officeEntries) {
       if (office.profileId === id) {
         this.offices.delete(officeId);
       }
     }
-    for (const [practicalId, practical] of this.practicals.entries()) {
+    const practicalEntries = Array.from(this.practicals.entries());
+    for (const [practicalId, practical] of practicalEntries) {
       if (practical.profileId === id) {
         this.practicals.delete(practicalId);
       }
@@ -580,7 +608,9 @@ export class MemStorage implements IStorage {
     const id = randomUUID();
     const newEntry: ProfileStatusHistory = {
       id,
-      ...entry,
+      profileId: entry.profileId,
+      status: entry.status,
+      reason: entry.reason ?? null,
       createdAt: new Date(),
     };
     this.profileStatusHistory.set(id, newEntry);
@@ -596,7 +626,15 @@ export class MemStorage implements IStorage {
     const id = randomUUID();
     const newOffice: Office = {
       id,
-      ...office,
+      profileId: office.profileId,
+      street: office.street,
+      number: office.number,
+      town: office.town,
+      municipality: office.municipality,
+      postcode: office.postcode,
+      province: office.province ?? null,
+      latitude: office.latitude ?? null,
+      longitude: office.longitude ?? null,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -626,7 +664,11 @@ export class MemStorage implements IStorage {
     const id = randomUUID();
     const newPractical: Practical = {
       id,
-      ...practical,
+      profileId: practical.profileId,
+      experienceYears: practical.experienceYears ?? null,
+      languages: practical.languages ?? null,
+      tariff: practical.tariff ?? null,
+      acceptedPaymentMethods: practical.acceptedPaymentMethods ?? null,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -652,7 +694,12 @@ export class MemStorage implements IStorage {
     const id = randomUUID();
     const newRequest: ContactRequest = {
       id,
-      ...request,
+      profileId: request.profileId,
+      visitorName: request.visitorName,
+      visitorEmail: request.visitorEmail,
+      telnr: request.telnr ?? null,
+      subject: request.subject,
+      message: request.message,
       createdAt: new Date(),
     };
     this.contactRequests.set(id, newRequest);
