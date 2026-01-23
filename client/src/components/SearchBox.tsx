@@ -100,12 +100,12 @@ export function SearchBox({
   }, [cityQuery, locations]);
 
   const handleSearch = () => {
-    // Build the search URL - use tuinaanlegger as default category slug
+    // Build the search URL - use "alle" when no specific category selected
     const categorySlug = selectedMainCategory === "TUINONDERHOUD" 
       ? "tuinonderhoud" 
       : selectedMainCategory === "TUINAANLEG" 
         ? "tuinaanleg" 
-        : "tuinaanlegger";
+        : "alle";
     
     const locationMatch = locations.find(
       (loc) =>

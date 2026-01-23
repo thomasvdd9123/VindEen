@@ -30,9 +30,12 @@ export default function CategoryPage() {
   const queryParam = urlParams.get("q") || "";
   const specParam = urlParams.get("spec") || "";
 
+  // Check if we're showing all categories
+  const isAllCategories = categorySlug === "alle";
+  
   const { data: category, isLoading: categoryLoading } = useQuery<Category>({
     queryKey: ["/api/categories", categorySlug],
-    enabled: !!categorySlug,
+    enabled: !!categorySlug && !isAllCategories,
   });
 
   const { data: location, isLoading: locationLoading } = useQuery<Location>({
@@ -46,7 +49,8 @@ export default function CategoryPage() {
 
   // Build search params including all filters
   const searchParams = new URLSearchParams();
-  if (categorySlug) searchParams.set("category", categorySlug);
+  // Don't filter by category when showing all
+  if (categorySlug && !isAllCategories) searchParams.set("category", categorySlug);
   if (locationSlug) searchParams.set("location", locationSlug);
   if (queryParam) searchParams.set("q", queryParam);
   if (specParam) searchParams.set("spec", specParam);
@@ -68,11 +72,11 @@ export default function CategoryPage() {
   const profiles = profilesData?.profiles || [];
   const total = profilesData?.total || 0;
 
-  const isLoading = categoryLoading || (locationSlug && locationLoading) || profilesLoading;
+  const isLoading = (!isAllCategories && categoryLoading) || (locationSlug && locationLoading) || profilesLoading;
 
   const pageTitle = locationSlug && location
-    ? `${category?.name || "Tuinmannen"} in ${location.name}`
-    : category?.name || "Tuinmannen";
+    ? `${isAllCategories ? "Tuinmannen" : (category?.name || "Tuinmannen")} in ${location.name}`
+    : isAllCategories ? "Alle Tuinmannen" : (category?.name || "Tuinmannen");
 
   return (
     <Layout>
