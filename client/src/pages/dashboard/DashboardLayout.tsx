@@ -72,7 +72,7 @@ export function DashboardLayout({ children, title, description }: DashboardLayou
 
   return (
     <SidebarProvider style={style as React.CSSProperties}>
-      <div className="flex h-screen w-full bg-muted/30 overflow-hidden">
+      <div className="dashboard-layout flex h-screen w-full bg-muted/30 overflow-hidden">
         <Sidebar>
           <SidebarHeader className="border-b border-sidebar-border">
             <Link href="/" className="flex items-center gap-2 px-2 py-2">
