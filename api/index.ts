@@ -107,6 +107,42 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json(data || []);
     }
 
+    // GET /api/categories/grouped - MUST be before :slug route
+    if (method === "GET" && path === "/api/categories/grouped") {
+      const { data: categories, error } = await supabase
+        .from("categories")
+        .select("*")
+        .eq("is_active", true)
+        .order("sort_order", { ascending: true });
+      
+      if (error) throw error;
+
+      // Group categories by mainCategory
+      const grouped: Record<string, { key: string; name: string; slug: string; description: string | null }[]> = {
+        TUINONDERHOUD: [],
+        TUINAANLEG: [],
+      };
+      
+      for (const cat of categories || []) {
+        if (cat.main_category && grouped[cat.main_category]) {
+          grouped[cat.main_category].push({
+            key: cat.slug.toUpperCase().replace(/-/g, "_"),
+            name: cat.name,
+            slug: cat.slug,
+            description: cat.description,
+          });
+        }
+      }
+      
+      // Also return main category labels
+      const mainCategories = [
+        { key: "TUINONDERHOUD", name: "Tuinonderhoud", description: "Onderhoud van bestaande tuinen" },
+        { key: "TUINAANLEG", name: "Tuinaanleg", description: "Aanleg van nieuwe tuinen" },
+      ];
+      
+      return res.status(200).json({ mainCategories, specializations: grouped });
+    }
+
     // GET /api/categories/:slug
     if (method === "GET" && path.match(/^\/api\/categories\/[^/]+$/)) {
       const slug = path.split("/").pop();
@@ -240,6 +276,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const location = url.searchParams.get("location");
       const query = url.searchParams.get("query") || url.searchParams.get("q");
       const mainCategory = url.searchParams.get("mainCategory");
+      const spec = url.searchParams.get("spec");
       const page = parseInt(url.searchParams.get("page") || "1");
       const limit = parseInt(url.searchParams.get("limit") || "12");
       const offset = (page - 1) * limit;
@@ -288,6 +325,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           const categoryIds = cats.map(c => c.id);
           queryBuilder = queryBuilder.in("category_id", categoryIds);
         }
+      }
+
+      // Filter by specialization
+      if (spec) {
+        queryBuilder = queryBuilder.contains("specializations", [spec]);
       }
 
       if (query) {
