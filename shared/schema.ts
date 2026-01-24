@@ -4,7 +4,7 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 // Enums
-export const accountRoleEnum = pgEnum("account_role", ["ADMIN", "MODERATOR", "BUSINESS"]);
+export const accountRoleEnum = pgEnum("account_role", ["ADMIN", "MODERATOR", "GARDENER"]);
 export const verificationStatusEnum = pgEnum("verification_status", ["PENDING", "APPROVED", "REJECTED"]);
 export const subscriptionStatusEnum = pgEnum("subscription_status", ["ACTIVE", "EXPIRED", "CANCELLED"]);
 export const subscriptionTypeEnum = pgEnum("subscription_type", ["BRONZE", "SILVER", "GOLD", "BASIC", "PREMIUM"]);
@@ -104,7 +104,7 @@ export const accounts = pgTable("accounts", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   authUserId: varchar("auth_user_id").notNull().unique(), // Supabase Auth user UUID
   email: text("email").notNull(),
-  role: accountRoleEnum("role").default("BUSINESS").notNull(),
+  role: accountRoleEnum("role").default("GARDENER").notNull(),
   // VAT and billing info for Belgian B2B
   vatNumber: text("vat_number"), // Belgian VAT format: BE0123456789
   companyName: text("company_name"),

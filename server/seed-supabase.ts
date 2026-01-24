@@ -301,7 +301,7 @@ async function seed() {
       .insert({
         auth_user_id: crypto.randomUUID(),
         email: profileData.email,
-        role: "BUSINESS",
+        role: "GARDENER",
         email_verified: true,
         email_verified_at: new Date().toISOString(),
       })

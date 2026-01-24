@@ -342,7 +342,7 @@ export class MemStorage implements IStorage {
         id: accountId,
         authUserId: randomUUID(), // Would be Supabase Auth user ID in production
         email: profileData.email,
-        role: "BUSINESS",
+        role: "GARDENER",
         vatNumber: null,
         companyName: profileData.name,
         billingStreet: null,
@@ -503,7 +503,7 @@ export class MemStorage implements IStorage {
     const newAccount: Account = {
       id,
       ...account,
-      role: account.role ?? "BUSINESS",
+      role: account.role ?? "GARDENER",
       vatNumber: account.vatNumber ?? null,
       companyName: account.companyName ?? null,
       billingStreet: account.billingStreet ?? null,

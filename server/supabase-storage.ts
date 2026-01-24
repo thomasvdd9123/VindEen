@@ -129,7 +129,7 @@ export class SupabaseStorage implements IStorage {
       .insert({
         auth_user_id: account.authUserId,
         email: account.email,
-        role: account.role ?? "BUSINESS",
+        role: account.role ?? "GARDENER",
         email_verified: account.emailVerified ?? false,
         email_verified_at: account.emailVerifiedAt,
       })

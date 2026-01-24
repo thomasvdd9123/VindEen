@@ -248,7 +248,7 @@ export async function registerRoutes(
         .insert({
           auth_user_id: authUserId,
           email,
-          role: "BUSINESS",
+          role: "GARDENER",
           email_verified: true,
         })
         .select()
@@ -435,7 +435,7 @@ export async function registerRoutes(
         account = await storage.createAccount({
           authUserId: accountId,
           email,
-          role: "BUSINESS",
+          role: "GARDENER",
           emailVerified: true,
         });
       }
