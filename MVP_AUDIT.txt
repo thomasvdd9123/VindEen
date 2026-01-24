@@ -1,0 +1,390 @@
+================================================================================
+ZOEK-EEN-TUINMAN.BE - COMPLETE MVP AUDIT
+================================================================================
+Generated: January 2026
+Platform: Belgian B2B Directory for Gardening Professionals
+
+================================================================================
+SECTION 1: PAGES OVERVIEW
+================================================================================
+
+PAGE_ID	PAGE_NAME	URL_PATH	STATUS	LINES_OF_CODE	HAS_API_CALLS	SEO_TITLE	SEO_DESCRIPTION	SEO_STATUS	COPYWRITING_STATUS	UI_STATUS	MOBILE_STATUS	TESTED	NOTES
+P001	Home	/	DONE	214	YES	MISSING	MISSING	NEEDS_WORK	NEEDS_REVIEW	DONE	DONE	NOT_TESTED	Main landing page with search box and category cards
+P002	Category Search	/zoek/:category	DONE	392	YES	MISSING	MISSING	NEEDS_WORK	NEEDS_REVIEW	DONE	DONE	NOT_TESTED	Search results with filters, map view, specialization dropdown
+P003	Category+Location Search	/zoek/:category/:location	DONE	392	YES	MISSING	MISSING	NEEDS_WORK	NEEDS_REVIEW	DONE	DONE	NOT_TESTED	Same component as P002 with location filter
+P004	Profile Detail	/bedrijf/:slug	DONE	390	YES	MISSING	MISSING	NEEDS_WORK	NEEDS_REVIEW	DONE	DONE	NOT_TESTED	Business profile with contact form
+P005	Login	/login	DONE	179	NO	MISSING	MISSING	NEEDS_WORK	DONE	DONE	DONE	NOT_TESTED	Supabase auth login
+P006	Register	/registreren	DONE	296	NO	MISSING	MISSING	NEEDS_WORK	DONE	DONE	DONE	NOT_TESTED	Supabase auth registration
+P007	Forgot Password	/wachtwoord-vergeten	DONE	167	NO	MISSING	MISSING	NEEDS_WORK	DONE	DONE	DONE	NOT_TESTED	Password reset request
+P008	Password Reset	/wachtwoord-reset	DONE	266	NO	MISSING	MISSING	NEEDS_WORK	DONE	DONE	DONE	NOT_TESTED	Password reset confirmation
+P009	Onboarding Wizard	/onboarding	DONE	648	YES	MISSING	MISSING	NOT_NEEDED	DONE	DONE	DONE	NOT_TESTED	Multi-step profile creation wizard
+P010	Dashboard Home	/dashboard	DONE	129	NO	MISSING	MISSING	NOT_NEEDED	DONE	DONE	DONE	NOT_TESTED	Dashboard welcome screen
+P011	Dashboard Account	/dashboard/account	DONE	644	YES	MISSING	MISSING	NOT_NEEDED	DONE	DONE	DONE	NOT_TESTED	Account settings with VAT/billing
+P012	Dashboard Profiles	/dashboard/profielen	DONE	196	YES	MISSING	MISSING	NOT_NEEDED	DONE	DONE	DONE	NOT_TESTED	List of user's profiles
+P013	Profile Create	/dashboard/profielen/nieuw	DONE	766	YES	MISSING	MISSING	NOT_NEEDED	DONE	DONE	DONE	NOT_TESTED	Create new profile form
+P014	Profile Edit	/dashboard/profielen/:id/bewerken	DONE	1154	YES	MISSING	MISSING	NOT_NEEDED	DONE	DONE	DONE	NOT_TESTED	Edit existing profile form
+P015	Dashboard Contacts	/dashboard/contacten	DONE	273	YES	MISSING	MISSING	NOT_NEEDED	DONE	DONE	DONE	NOT_TESTED	Contact requests received
+P016	Dashboard Statistics	/dashboard/statistieken	DONE	225	YES	MISSING	MISSING	NOT_NEEDED	DONE	DONE	DONE	NOT_TESTED	View stats and analytics
+P017	FAQ	/faq	DONE	106	NO	MISSING	MISSING	NEEDS_WORK	DONE	DONE	DONE	NOT_TESTED	10 FAQs in accordion
+P018	Contact	/contact	DONE	218	NO	MISSING	MISSING	NEEDS_WORK	DONE	DONE	DONE	NOT_TESTED	Contact form for platform owner
+P019	About	/over-ons	DONE	157	NO	MISSING	MISSING	NEEDS_WORK	DONE	DONE	DONE	NOT_TESTED	About page with mission/values
+P020	Pricing	/prijzen	DONE	128	YES	MISSING	MISSING	NEEDS_WORK	DONE	DONE	DONE	NOT_TESTED	Subscription plans display
+P021	404 Not Found	*	DONE	48	NO	MISSING	MISSING	NOT_NEEDED	DONE	DONE	DONE	NOT_TESTED	Error page
+
+================================================================================
+SECTION 2: MISSING INFO PAGES (Referenced but not implemented)
+================================================================================
+
+PAGE_ID	PAGE_NAME	URL_PATH	STATUS	PRIORITY	NOTES
+M001	De tuinman	/info/de-tuinman	NOT_IMPLEMENTED	LOW	Linked from Home "Snel starten"
+M002	Goede tuinman vinden	/info/goede-tuinman-vinden	NOT_IMPLEMENTED	LOW	Linked from Home "Snel starten"
+M003	Hoe werkt tuinaanleg	/info/hoe-werkt-tuinaanleg	NOT_IMPLEMENTED	LOW	Linked from Home "Snel starten"
+M004	Tuinman vs Hovenier	/info/tuinman-vs-hovenier	NOT_IMPLEMENTED	LOW	Linked from Home "Snel starten"
+M005	Kosten & prijzen	/info/kosten-prijzen	NOT_IMPLEMENTED	LOW	Linked from Home "Snel starten"
+M006	Artikelen	/artikelen	NOT_IMPLEMENTED	LOW	Blog/articles section
+M007	Ervaringen	/ervaringen	NOT_IMPLEMENTED	LOW	Testimonials page
+M008	Privacy Policy	/privacy	NOT_IMPLEMENTED	MEDIUM	Required for GDPR compliance
+M009	Terms of Service	/algemene-voorwaarden	NOT_IMPLEMENTED	MEDIUM	Required for legal compliance
+M010	Cookie Policy	/cookies	NOT_IMPLEMENTED	MEDIUM	Required for GDPR compliance
+
+================================================================================
+SECTION 3: COMPONENTS OVERVIEW
+================================================================================
+
+COMP_ID	COMPONENT_NAME	FILE_PATH	STATUS	TESTED	NOTES
+C001	SearchBox	client/src/components/SearchBox.tsx	DONE	NOT_TESTED	Main search with autocomplete, category/location filters
+C002	ProfileCard	client/src/components/ProfileCard.tsx	DONE	NOT_TESTED	Profile preview card
+C003	ContactForm	client/src/components/ContactForm.tsx	DONE	NOT_TESTED	Contact form for profiles
+C004	SearchMap	client/src/components/SearchMap.tsx	DONE	NOT_TESTED	Leaflet map view for search results
+C005	UnderConstructionOverlay	client/src/components/UnderConstructionOverlay.tsx	DONE	NOT_TESTED	Client-side overlay (SEO safe)
+C006	Header	client/src/components/layout/Header.tsx	DONE	NOT_TESTED	Main navigation header
+C007	Footer	client/src/components/layout/Footer.tsx	DONE	NOT_TESTED	Footer with links
+C008	Layout	client/src/components/layout/Layout.tsx	DONE	NOT_TESTED	Main layout wrapper
+
+================================================================================
+SECTION 4: API ENDPOINTS - DEVELOPMENT SERVER
+================================================================================
+
+API_ID	METHOD	ENDPOINT	STATUS	VERCEL_PARITY	TESTED	NOTES
+A001	GET	/api/categories	DONE	YES	NOT_TESTED	List all categories
+A002	GET	/api/categories/grouped	DONE	YES	NOT_TESTED	Categories grouped by main category
+A003	GET	/api/categories/:slug	DONE	YES	NOT_TESTED	Get category by slug
+A004	GET	/api/locations	DONE	YES	NOT_TESTED	List all locations (572 municipalities)
+A005	GET	/api/locations/:slug	DONE	YES	NOT_TESTED	Get location by slug
+A006	GET	/api/profiles/featured	DONE	YES	NOT_TESTED	Get featured profiles
+A007	GET	/api/profiles/count	DONE	YES	NOT_TESTED	Count profiles with filters
+A008	GET	/api/profiles/search	DONE	YES	NOT_TESTED	Search profiles with filters
+A009	GET	/api/profiles/:slug	DONE	YES	NOT_TESTED	Get profile by slug
+A010	GET	/api/profiles/by-id/:id	DONE	YES	NOT_TESTED	Get profile by ID
+A011	POST	/api/accounts	DONE	YES	NOT_TESTED	Create/get account for auth user
+A012	GET	/api/accounts/:id	DONE	YES	NOT_TESTED	Get account by ID
+A013	GET	/api/accounts/by-auth/:authUserId	DONE	YES	NOT_TESTED	Get account by auth user ID
+A014	PATCH	/api/accounts/:id	DONE	YES	NOT_TESTED	Update account
+A015	GET	/api/my-profiles/:accountId	DONE	YES	NOT_TESTED	Get profiles for account
+A016	POST	/api/profiles	DONE	YES	NOT_TESTED	Create profile
+A017	PUT	/api/profiles/:id	DONE	YES	NOT_TESTED	Replace profile
+A018	PATCH	/api/profiles/:id	DONE	YES	NOT_TESTED	Update profile
+A019	DELETE	/api/profiles/:id	DONE	YES	NOT_TESTED	Delete profile
+A020	DELETE	/api/account/delete	DONE	UNKNOWN	NOT_TESTED	Delete account
+A021	POST	/api/contact-owner	DONE	UNKNOWN	NOT_TESTED	Contact platform owner
+A022	GET	/api/subscription-plans	DONE	YES	NOT_TESTED	List subscription plans
+A023	GET	/api/contact-requests/:profileId	DONE	UNKNOWN	NOT_TESTED	Get contact requests for profile
+A024	POST	/api/contact/:profileId	DONE	YES	NOT_TESTED	Submit contact request
+A025	POST	/api/profiles/:id/logo	DONE	UNKNOWN	NOT_TESTED	Upload profile logo
+A026	POST	/api/profiles/:id/photos	DONE	UNKNOWN	NOT_TESTED	Upload profile photos
+A027	DELETE	/api/profiles/:id/photos	DONE	UNKNOWN	NOT_TESTED	Delete profile photos
+A028	GET	/sitemap.xml	DONE	UNKNOWN	NOT_TESTED	Dynamic XML sitemap
+A029	GET	/robots.txt	DONE	UNKNOWN	NOT_TESTED	Robots.txt
+A030	POST	/api/admin/fix-profile-references	DONE	UNKNOWN	NOT_TESTED	Admin endpoint to fix profile data
+
+================================================================================
+SECTION 5: DATABASE TABLES
+================================================================================
+
+TABLE_ID	TABLE_NAME	STATUS	FIELDS_COUNT	NOTES
+T001	categories	DONE	9	Main categories (Tuinonderhoud/Tuinaanleg) with 16 specializations
+T002	locations	DONE	11	572 Belgian municipalities with postcodes, coordinates
+T003	accounts	DONE	11	Account holders with VAT, billing info
+T004	profiles	DONE	23	Service listings with specializations, verification
+T005	profile_status_history	DONE	4	Audit trail for verification status
+T006	offices	DONE	12	Business addresses
+T007	practicals	DONE	7	Experience, languages, tariff info
+T008	subscription_plans	DONE	11	Subscription tiers
+T009	subscription_items	DONE	17	Active subscriptions
+T010	payments	DONE	14	Payment records
+T011	contact_requests	DONE	7	Contact form submissions
+
+================================================================================
+SECTION 6: FEATURES STATUS
+================================================================================
+
+FEAT_ID	FEATURE_NAME	CATEGORY	STATUS	PRIORITY	TESTED	NOTES
+F001	Homepage Search	SEARCH	DONE	HIGH	NOT_TESTED	Autocomplete with municipalities
+F002	Category Filtering	SEARCH	DONE	HIGH	NOT_TESTED	Filter by Tuinonderhoud/Tuinaanleg
+F003	Location Filtering	SEARCH	DONE	HIGH	NOT_TESTED	Filter by municipality
+F004	Specialization Filtering	SEARCH	DONE	HIGH	NOT_TESTED	Filter by specialization dropdown
+F005	Map View	SEARCH	DONE	MEDIUM	NOT_TESTED	Leaflet map with markers
+F006	Profile Cards	SEARCH	DONE	HIGH	NOT_TESTED	Display search results
+F007	Profile Detail Page	PROFILE	DONE	HIGH	NOT_TESTED	Full profile view
+F008	Contact Form on Profile	PROFILE	DONE	HIGH	NOT_TESTED	Contact gardener
+F009	User Registration	AUTH	DONE	HIGH	NOT_TESTED	Supabase auth
+F010	User Login	AUTH	DONE	HIGH	NOT_TESTED	Supabase auth
+F011	Password Reset	AUTH	DONE	HIGH	NOT_TESTED	Email-based reset
+F012	Onboarding Wizard	DASHBOARD	DONE	HIGH	NOT_TESTED	Multi-step profile creation
+F013	Dashboard Navigation	DASHBOARD	DONE	HIGH	NOT_TESTED	Sidebar with Shadcn
+F014	Account Settings	DASHBOARD	DONE	HIGH	NOT_TESTED	VAT, billing address
+F015	Profile Management	DASHBOARD	DONE	HIGH	NOT_TESTED	Create, edit, delete profiles
+F016	Contact Requests View	DASHBOARD	DONE	MEDIUM	NOT_TESTED	View received contacts
+F017	Statistics View	DASHBOARD	DONE	LOW	NOT_TESTED	Basic stats placeholder
+F018	Logo Upload	DASHBOARD	DONE	MEDIUM	NOT_TESTED	Upload profile logo
+F019	Photo Gallery Upload	DASHBOARD	DONE	MEDIUM	NOT_TESTED	Upload work photos
+F020	Under Construction Overlay	MISC	DONE	HIGH	TESTED	Client-side, SEO-safe
+F021	Dynamic Sitemap	SEO	DONE	HIGH	NOT_TESTED	XML sitemap generation
+F022	Robots.txt	SEO	DONE	HIGH	NOT_TESTED	Search engine directives
+F023	Belgian Municipalities	DATA	DONE	HIGH	NOT_TESTED	572 municipalities with coordinates
+
+================================================================================
+SECTION 7: FEATURES NOT IMPLEMENTED (Post-MVP)
+================================================================================
+
+FEAT_ID	FEATURE_NAME	CATEGORY	PRIORITY	NOTES
+F101	Mollie Payments	PAYMENTS	HIGH	Payment integration not implemented
+F102	Subscription Management	PAYMENTS	HIGH	Subscribe/cancel/upgrade
+F103	Invoice Generation	PAYMENTS	HIGH	PDF invoice creation
+F104	Peppol Integration	PAYMENTS	HIGH	Required for B2B by Jan 2026
+F105	Email Notifications	EMAIL	HIGH	Resend integration not implemented
+F106	Contact Email Delivery	EMAIL	HIGH	Currently only saves to DB
+F107	Password Reset Email	EMAIL	HIGH	Needs Resend for production
+F108	Admin Panel	ADMIN	MEDIUM	Manage profiles, users
+F109	Profile Verification	ADMIN	MEDIUM	Admin approval workflow
+F110	Geo-radius Search	SEARCH	MEDIUM	Search within X km
+F111	Reviews/Ratings	PROFILE	LOW	Customer reviews
+F112	Profile Analytics	DASHBOARD	LOW	Detailed view stats
+F113	Social Media Links	PROFILE	LOW	FB, Instagram, LinkedIn
+F114	Multi-language	I18N	LOW	FR, DE support
+
+================================================================================
+SECTION 8: KNOWN BUGS
+================================================================================
+
+BUG_ID	SEVERITY	COMPONENT	DESCRIPTION	STATUS	NOTES
+B001	FIXED	Vercel API	Missing /api/categories/grouped endpoint	FIXED	Added to api/index.ts
+B002	FIXED	Vercel API	Missing spec filter on /api/profiles/search	FIXED	Added spec parameter
+B003	FIXED	Vercel API	Missing spec filter on /api/profiles/count	FIXED	Added spec parameter
+B004	FIXED	Vercel API	hideAddress column error on profile update	FIXED	Commented out from fieldMap
+B005	FIXED	Vercel API	offeredServices column error	FIXED	Commented out from fieldMap
+B006	LOW	Pricing Page	LSP error in Pricing.tsx	OPEN	Type mismatch, needs investigation
+B007	MEDIUM	Contact Form	Emails not sent (only saved to DB)	KNOWN	Needs Resend integration
+B008	MEDIUM	Password Reset	Email delivery not working	KNOWN	Needs Resend integration
+B009	LOW	Home Page	Quick start links point to non-existent pages	KNOWN	Info pages not implemented
+B010	LOW	Home Page	Ervaringen link points to non-existent page	KNOWN	Testimonials page not implemented
+
+================================================================================
+SECTION 9: SEO CHECKLIST
+================================================================================
+
+SEO_ID	ITEM	PAGE/SCOPE	STATUS	PRIORITY	NOTES
+S001	Page Title Tags	ALL_PUBLIC_PAGES	NOT_IMPLEMENTED	HIGH	No dynamic titles
+S002	Meta Descriptions	ALL_PUBLIC_PAGES	NOT_IMPLEMENTED	HIGH	No meta descriptions
+S003	Open Graph Tags	ALL_PUBLIC_PAGES	NOT_IMPLEMENTED	MEDIUM	No social sharing optimization
+S004	Twitter Cards	ALL_PUBLIC_PAGES	NOT_IMPLEMENTED	LOW	No Twitter card meta
+S005	Canonical URLs	ALL_PUBLIC_PAGES	NOT_IMPLEMENTED	MEDIUM	No canonical tags
+S006	Structured Data	PROFILE_PAGES	NOT_IMPLEMENTED	MEDIUM	No JSON-LD markup
+S007	Alt Text for Images	ALL_IMAGES	PARTIAL	MEDIUM	Some images missing alt
+S008	H1 Tags	ALL_PAGES	DONE	HIGH	Proper heading structure
+S009	Dynamic Sitemap	GLOBAL	DONE	HIGH	sitemap.xml implemented
+S010	Robots.txt	GLOBAL	DONE	HIGH	robots.txt implemented
+S011	URL Slugs	PROFILES/CATEGORIES	DONE	HIGH	SEO-friendly slugs
+S012	Mobile Responsiveness	GLOBAL	DONE	HIGH	Mobile-first design
+S013	Page Speed	GLOBAL	NOT_TESTED	MEDIUM	Needs lighthouse audit
+S014	Core Web Vitals	GLOBAL	NOT_TESTED	MEDIUM	Needs measurement
+
+================================================================================
+SECTION 10: COPYWRITING CHECKLIST
+================================================================================
+
+COPY_ID	PAGE/SECTION	ELEMENT	STATUS	PRIORITY	NOTES
+CW001	Home	Hero Title	NEEDS_REVIEW	HIGH	Current: site tagline
+CW002	Home	Hero Subtitle	NEEDS_REVIEW	HIGH	May need A/B testing
+CW003	Home	Quick Start Links	DONE	LOW	7 links defined
+CW004	Home	Category Cards	NEEDS_CONTENT	MEDIUM	Need compelling descriptions
+CW005	FAQ	Questions	DONE	MEDIUM	10 FAQs written
+CW006	FAQ	Answers	DONE	MEDIUM	All answers complete
+CW007	About	Mission Statement	DONE	LOW	Well written
+CW008	About	Values	DONE	LOW	4 values with descriptions
+CW009	Contact	Form Labels	DONE	LOW	Dutch labels
+CW010	Pricing	Plan Descriptions	NEEDS_DATA	HIGH	Depends on subscription_plans table data
+CW011	Login	Form Text	DONE	LOW	Standard login text
+CW012	Register	Form Text	DONE	LOW	Standard registration text
+CW013	Profile Page	Sections	DONE	MEDIUM	About, services, contact
+CW014	Search Results	Empty State	NEEDS_REVIEW	MEDIUM	Check empty state message
+CW015	Dashboard	Welcome Text	NEEDS_REVIEW	LOW	May need personalization
+CW016	Error Pages	404 Text	DONE	LOW	Simple error message
+CW017	Footer	Links	DONE	LOW	Navigation links
+CW018	Footer	Copyright	DONE	LOW	Dynamic year
+CW019	Header	Navigation	DONE	LOW	Main nav items
+CW020	Onboarding	Step Instructions	DONE	HIGH	Multi-step wizard text
+
+================================================================================
+SECTION 11: UI/STYLING CHECKLIST
+================================================================================
+
+UI_ID	COMPONENT/PAGE	ELEMENT	STATUS	PRIORITY	NOTES
+UI001	Global	Color Theme	DONE	HIGH	Green primary (#1B7340)
+UI002	Global	Typography	DONE	HIGH	Open Sans, Inter, Merriweather
+UI003	Global	Dark Mode	DONE	MEDIUM	Toggle available
+UI004	Global	Responsive Design	DONE	HIGH	Mobile-first
+UI005	Header	Navigation	DONE	HIGH	Clean, responsive
+UI006	Header	Logo	NEEDS_LOGO	MEDIUM	Currently text only
+UI007	Footer	Layout	DONE	LOW	Standard footer
+UI008	Home	Hero Section	DONE	HIGH	Gradient background
+UI009	Home	Card Grid	DONE	HIGH	3-column responsive
+UI010	Search	Filter Bar	DONE	HIGH	Category/location/spec
+UI011	Search	Results Grid	DONE	HIGH	Responsive cards
+UI012	Search	Map View	DONE	MEDIUM	Leaflet integration
+UI013	Profile	Layout	DONE	HIGH	Clean profile display
+UI014	Profile	Contact Form	DONE	HIGH	Form styling
+UI015	Dashboard	Sidebar	DONE	HIGH	Shadcn sidebar
+UI016	Dashboard	Forms	DONE	HIGH	Consistent form styling
+UI017	Auth	Login Form	DONE	HIGH	Clean form
+UI018	Auth	Register Form	DONE	HIGH	Clean form
+UI019	Onboarding	Wizard Steps	DONE	HIGH	Progress indicator
+UI020	Cards	Profile Cards	DONE	HIGH	Consistent card styling
+UI021	Buttons	All Variants	DONE	HIGH	Shadcn button variants
+UI022	Loading States	Skeletons	DONE	MEDIUM	Skeleton loaders
+UI023	Error States	Error Messages	DONE	MEDIUM	Toast notifications
+UI024	Empty States	No Results	NEEDS_REVIEW	MEDIUM	Check empty state design
+
+================================================================================
+SECTION 12: TESTING CHECKLIST
+================================================================================
+
+TEST_ID	TYPE	SCOPE	STATUS	PRIORITY	NOTES
+T001	E2E	Home Page Load	NOT_DONE	HIGH	Basic page load test
+T002	E2E	Search Flow	NOT_DONE	HIGH	Search and filter test
+T003	E2E	Profile View	NOT_DONE	HIGH	View profile test
+T004	E2E	Contact Form Submit	NOT_DONE	HIGH	Form submission test
+T005	E2E	User Registration	NOT_DONE	HIGH	Full registration flow
+T006	E2E	User Login	NOT_DONE	HIGH	Login flow test
+T007	E2E	Password Reset	NOT_DONE	HIGH	Reset flow test
+T008	E2E	Onboarding Wizard	NOT_DONE	HIGH	Complete wizard test
+T009	E2E	Dashboard Navigation	NOT_DONE	MEDIUM	Navigate dashboard
+T010	E2E	Profile Create	NOT_DONE	HIGH	Create new profile
+T011	E2E	Profile Edit	NOT_DONE	HIGH	Edit existing profile
+T012	E2E	Account Settings	NOT_DONE	MEDIUM	Update account info
+T013	E2E	Mobile Responsiveness	NOT_DONE	MEDIUM	Mobile viewport tests
+T014	API	GET /api/categories	NOT_DONE	HIGH	API endpoint test
+T015	API	GET /api/profiles/search	NOT_DONE	HIGH	Search API test
+T016	API	POST /api/contact	NOT_DONE	HIGH	Contact submission
+T017	API	Authentication Flow	NOT_DONE	HIGH	Auth API tests
+T018	UNIT	Schema Validation	NOT_DONE	MEDIUM	Zod schema tests
+T019	UNIT	Utility Functions	NOT_DONE	LOW	Helper function tests
+T020	PERF	Lighthouse Audit	NOT_DONE	MEDIUM	Performance metrics
+
+================================================================================
+SECTION 13: DEPLOYMENT CHECKLIST
+================================================================================
+
+DEPLOY_ID	ITEM	STATUS	PRIORITY	NOTES
+D001	Vercel Project Setup	DONE	HIGH	Connected to GitHub
+D002	Environment Variables	DONE	HIGH	Supabase keys configured
+D003	API Endpoint Parity	DONE	HIGH	Dev and Vercel APIs match
+D004	Database Connection	DONE	HIGH	Supabase PostgreSQL
+D005	Custom Domain	NOT_DONE	HIGH	zoek-een-tuinman.be
+D006	SSL Certificate	AUTO	HIGH	Handled by Vercel
+D007	Error Monitoring	NOT_DONE	MEDIUM	Sentry or similar
+D008	Analytics	NOT_DONE	MEDIUM	Google Analytics or Plausible
+D009	Uptime Monitoring	NOT_DONE	LOW	Health checks
+D010	Backup Strategy	NOT_DONE	MEDIUM	Database backups
+
+================================================================================
+SECTION 14: LEGAL/COMPLIANCE CHECKLIST
+================================================================================
+
+LEGAL_ID	ITEM	STATUS	PRIORITY	NOTES
+L001	Privacy Policy Page	NOT_DONE	HIGH	GDPR required
+L002	Terms of Service Page	NOT_DONE	HIGH	Legal requirement
+L003	Cookie Banner	NOT_DONE	HIGH	GDPR required
+L004	Cookie Policy Page	NOT_DONE	HIGH	GDPR required
+L005	Data Processing Agreement	NOT_DONE	MEDIUM	For B2B
+L006	VAT Compliance	PARTIAL	HIGH	VAT field in accounts
+L007	Invoice Requirements	NOT_DONE	HIGH	Belgian invoice rules
+L008	Peppol Readiness	NOT_DONE	HIGH	Required Jan 2026
+
+================================================================================
+SECTION 15: DATA OVERVIEW
+================================================================================
+
+DATA_ID	DATA_TYPE	COUNT	STATUS	NOTES
+D001	Categories	16	DONE	8 Tuinonderhoud + 8 Tuinaanleg specializations
+D002	Locations	572	DONE	All Belgian municipalities with postcodes
+D003	Sample Profiles	14	DONE	Test profiles for development
+D004	Subscription Plans	3	PENDING	Need to seed plans data
+D005	Provinces	11	DONE	Belgian provinces enum
+D006	Regions	3	DONE	Vlaanderen, Wallonië, Brussel
+D007	Languages	4	DONE	NL, FR, DE, EN
+
+================================================================================
+SECTION 16: CONFIGURATION FILES
+================================================================================
+
+CONFIG_ID	FILE	PURPOSE	STATUS	NOTES
+CF001	client/src/lib/theme.config.ts	Brand configuration	DONE	Central theming
+CF002	vercel.json	Vercel deployment	DONE	Rewrites and functions
+CF003	api/index.ts	Vercel serverless API	DONE	Production API
+CF004	server/routes.ts	Development API	DONE	Dev server routes
+CF005	shared/schema.ts	Database schema	DONE	Drizzle schema
+CF006	client/src/index.css	Global styles	DONE	Tailwind + custom
+CF007	tailwind.config.ts	Tailwind config	DONE	Theme colors
+CF008	vite.config.ts	Vite config	DONE	Build config
+CF009	drizzle.config.ts	Drizzle config	DONE	DB config
+
+================================================================================
+SECTION 17: THIRD-PARTY INTEGRATIONS
+================================================================================
+
+INT_ID	INTEGRATION	STATUS	PRIORITY	NOTES
+I001	Supabase Auth	DONE	HIGH	Authentication working
+I002	Supabase Database	DONE	HIGH	PostgreSQL backend
+I003	Leaflet Maps	DONE	MEDIUM	Map view component
+I004	Mollie Payments	NOT_DONE	HIGH	Payment processing
+I005	Resend Email	NOT_DONE	HIGH	Transactional emails
+I006	Peppol Invoicing	NOT_DONE	HIGH	B2B invoicing
+I007	Google Analytics	NOT_DONE	LOW	Usage tracking
+I008	Sentry	NOT_DONE	LOW	Error monitoring
+
+================================================================================
+SECTION 18: PRIORITY MATRIX FOR MVP LAUNCH
+================================================================================
+
+PRIORITY	CATEGORY	ITEMS_COUNT	NOTES
+BLOCKER	SEO	2	Page titles and meta descriptions
+BLOCKER	LEGAL	3	Privacy policy, terms, cookie consent
+HIGH	EMAIL	2	Contact emails, password reset
+HIGH	TESTING	10	Core flow E2E tests
+MEDIUM	PAYMENTS	4	Mollie integration (post-MVP OK)
+MEDIUM	UI	2	Logo, empty states
+LOW	CONTENT	6	Info pages, blog
+LOW	FEATURES	4	Reviews, analytics, multi-language
+
+================================================================================
+SECTION 19: RECOMMENDED MVP LAUNCH ACTIONS
+================================================================================
+
+ACTION_ID	ACTION	CATEGORY	EFFORT	IMPACT	NOTES
+ACT001	Add page titles and meta descriptions	SEO	LOW	HIGH	Critical for Google
+ACT002	Create privacy policy page	LEGAL	MEDIUM	HIGH	GDPR required
+ACT003	Create terms of service page	LEGAL	MEDIUM	HIGH	Legal requirement
+ACT004	Add cookie consent banner	LEGAL	MEDIUM	HIGH	GDPR required
+ACT005	Run E2E tests on core flows	TESTING	MEDIUM	HIGH	Verify functionality
+ACT006	Configure custom domain	DEPLOY	LOW	HIGH	Professional URL
+ACT007	Setup email integration	EMAIL	MEDIUM	HIGH	Enable contact flow
+ACT008	Review empty state messages	UI	LOW	MEDIUM	Better UX
+ACT009	Add logo image	UI	LOW	MEDIUM	Brand identity
+ACT010	Seed subscription plans	DATA	LOW	MEDIUM	Enable pricing page
+ACT011	Test Vercel production	TESTING	LOW	HIGH	Verify deployment
+ACT012	Remove quick start dead links	UI	LOW	LOW	Or implement pages
+
+================================================================================
+END OF AUDIT
+================================================================================
