@@ -354,7 +354,6 @@ export class SupabaseStorage implements IStorage {
         image_urls: profile.imageUrls,
         is_active: profile.isActive ?? true,
         is_public: profile.isPublic ?? false,
-        hide_address: profile.hideAddress ?? false,
         seo_title: profile.seoTitle,
         seo_description: profile.seoDescription,
         category_id: profile.categoryId,
@@ -388,7 +387,6 @@ export class SupabaseStorage implements IStorage {
     if (updates.locationId !== undefined) updateData.location_id = updates.locationId;
     if (updates.seoTitle !== undefined) updateData.seo_title = updates.seoTitle;
     if (updates.seoDescription !== undefined) updateData.seo_description = updates.seoDescription;
-    if (updates.hideAddress !== undefined) updateData.hide_address = updates.hideAddress;
     updateData.updated_at = new Date().toISOString();
 
     const { data, error } = await supabaseAdmin
@@ -673,7 +671,7 @@ export class SupabaseStorage implements IStorage {
       isPublic: data.is_public as boolean,
       isVerified: (data.is_verified as boolean) ?? false,
       verificationStatus: (data.verification_status as Profile["verificationStatus"]) ?? "PENDING",
-      hideAddress: (data.hide_address as boolean) ?? false,
+      hideAddress: false, // Column not in database yet
       viewCount: (data.view_count as number) ?? 0,
       seoTitle: data.seo_title as string | null,
       seoDescription: data.seo_description as string | null,
