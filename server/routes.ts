@@ -370,9 +370,10 @@ export async function registerRoutes(
         title: profileData.title || "",
         introduction: profileData.introduction || "",
         description: profileData.description || "",
+        specializations: profileData.specializations || [],
         categoryId: profileData.categoryId,
         locationId: profileData.locationId,
-        isActive: true,
+        isActive: profileData.isActive ?? true,
         isPublic: false,
       });
       
