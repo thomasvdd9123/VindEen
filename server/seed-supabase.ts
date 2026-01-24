@@ -3,13 +3,9 @@ import { supabaseAdmin } from "./lib/supabase";
 async function seed() {
   console.log("🌱 Seeding Supabase database...");
 
-  // Clear existing data in correct order (respect foreign keys)
-  console.log("Clearing existing data...");
-  await supabaseAdmin.from("practicals").delete().neq("id", "00000000-0000-0000-0000-000000000000");
-  await supabaseAdmin.from("offices").delete().neq("id", "00000000-0000-0000-0000-000000000000");
-  await supabaseAdmin.from("contact_requests").delete().neq("id", "00000000-0000-0000-0000-000000000000");
-  await supabaseAdmin.from("profiles").delete().neq("id", "00000000-0000-0000-0000-000000000000");
-  await supabaseAdmin.from("accounts").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+  // IMPORTANT: Only clear categories and locations (reference data)
+  // NEVER delete profiles, accounts, practicals, offices, contact_requests (user data)
+  console.log("Clearing reference data only (categories, locations)...");
   await supabaseAdmin.from("locations").delete().neq("id", "00000000-0000-0000-0000-000000000000");
   await supabaseAdmin.from("categories").delete().neq("id", "00000000-0000-0000-0000-000000000000");
 
