@@ -227,6 +227,25 @@ export class SupabaseStorage implements IStorage {
     return (data || []).map(d => this.mapProfile(d));
   }
 
+  // Debug methods
+  async getAllProfiles(): Promise<Profile[]> {
+    const { data, error } = await supabaseAdmin
+      .from("profiles")
+      .select("*");
+    
+    if (error) throw error;
+    return (data || []).map(d => this.mapProfile(d));
+  }
+
+  async getAccounts(): Promise<Account[]> {
+    const { data, error } = await supabaseAdmin
+      .from("accounts")
+      .select("*");
+    
+    if (error) throw error;
+    return (data || []).map(d => this.mapAccount(d));
+  }
+
   async getFeaturedProfiles(): Promise<ProfileWithRelations[]> {
     const { data, error } = await supabaseAdmin
       .from("profiles")
