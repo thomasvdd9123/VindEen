@@ -474,7 +474,9 @@ export default function ProfileEdit() {
   });
 
   useEffect(() => {
-    if (profile && Object.keys(specializationsByCategory).length > 0) {
+    // Only run when we have real data (not just default empty arrays)
+    const hasRealData = specializationsByCategory.TUINONDERHOUD?.length > 0 || specializationsByCategory.TUINAANLEG?.length > 0;
+    if (profile && hasRealData) {
       // Derive main categories from specializations
       const derivedMainCategories: string[] = [];
       const tuinonderhoudSpecs = specializationsByCategory.TUINONDERHOUD || [];
