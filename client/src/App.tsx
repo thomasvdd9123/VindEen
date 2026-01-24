@@ -4,6 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/lib/auth";
+import { UnderConstructionOverlay } from "@/components/UnderConstructionOverlay";
 import Home from "@/pages/Home";
 import CategoryPage from "@/pages/CategoryPage";
 import ProfilePage from "@/pages/ProfilePage";
@@ -58,6 +59,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <TooltipProvider>
+          <UnderConstructionOverlay />
           <Toaster />
           <Router />
         </TooltipProvider>
