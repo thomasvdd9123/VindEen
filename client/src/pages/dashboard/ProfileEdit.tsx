@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useLocation, useParams } from "wouter";
@@ -21,7 +21,19 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import type { Category, Location, Profile } from "@shared/schema";
-import { specializationLabels, specializationsByCategory, mainCategoryLabels } from "@shared/schema";
+
+// Types for grouped categories API response
+interface CategoryOption {
+  key: string;
+  name: string;
+  slug: string;
+  description: string | null;
+}
+
+interface GroupedCategoriesResponse {
+  mainCategories: { key: string; name: string; description: string }[];
+  specializations: Record<string, CategoryOption[]>;
+}
 
 // Calculate profile completeness from form values
 function calculateProfileCompleteness(formValues: ProfileFormData): { percentage: number; missing: string[] } {
@@ -403,6 +415,34 @@ export default function ProfileEdit() {
     queryKey: ["/api/locations"],
   });
 
+  // Fetch grouped categories from API
+  const { data: groupedCategories } = useQuery<GroupedCategoriesResponse>({
+    queryKey: ["/api/categories/grouped"],
+  });
+  
+  // Build lookup objects from API data (memoized to prevent unnecessary re-renders)
+  const mainCategoryLabels = useMemo(() => {
+    return groupedCategories?.mainCategories?.reduce((acc, cat) => {
+      acc[cat.key] = cat.name;
+      return acc;
+    }, {} as Record<string, string>) || { TUINONDERHOUD: "Tuinonderhoud", TUINAANLEG: "Tuinaanleg" };
+  }, [groupedCategories]);
+  
+  const specializationLabels = useMemo(() => {
+    return Object.values(groupedCategories?.specializations || {}).flat().reduce((acc, spec) => {
+      acc[spec.key] = spec.name;
+      return acc;
+    }, {} as Record<string, string>) || {};
+  }, [groupedCategories]);
+  
+  const specializationsByCategory = useMemo(() => {
+    return groupedCategories?.specializations 
+      ? Object.fromEntries(
+          Object.entries(groupedCategories.specializations).map(([key, specs]) => [key, specs.map(s => s.key)])
+        )
+      : { TUINONDERHOUD: [], TUINAANLEG: [] };
+  }, [groupedCategories]);
+
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
@@ -434,13 +474,16 @@ export default function ProfileEdit() {
   });
 
   useEffect(() => {
-    if (profile) {
+    if (profile && Object.keys(specializationsByCategory).length > 0) {
       // Derive main categories from specializations
       const derivedMainCategories: string[] = [];
-      if (profile.specializations?.some(s => specializationsByCategory.TUINONDERHOUD.includes(s))) {
+      const tuinonderhoudSpecs = specializationsByCategory.TUINONDERHOUD || [];
+      const tuinaanlegSpecs = specializationsByCategory.TUINAANLEG || [];
+      
+      if (profile.specializations?.some(s => tuinonderhoudSpecs.includes(s))) {
         derivedMainCategories.push("TUINONDERHOUD");
       }
-      if (profile.specializations?.some(s => specializationsByCategory.TUINAANLEG.includes(s))) {
+      if (profile.specializations?.some(s => tuinaanlegSpecs.includes(s))) {
         derivedMainCategories.push("TUINAANLEG");
       }
       
@@ -464,7 +507,7 @@ export default function ProfileEdit() {
         officePostcode: (profile as any).office?.postcode || "",
       });
     }
-  }, [profile, form]);
+  }, [profile, form, specializationsByCategory]);
 
   const updateProfileMutation = useMutation({
     mutationFn: async (data: ProfileFormData) => {

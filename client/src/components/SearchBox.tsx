@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -6,7 +6,19 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, MapPin } from "lucide-react";
 import type { Location } from "@shared/schema";
-import { mainCategoryLabels, specializationLabels, specializationsByCategory } from "@shared/schema";
+
+// Types for grouped categories API response
+interface CategoryOption {
+  key: string;
+  name: string;
+  slug: string;
+  description: string | null;
+}
+
+interface GroupedCategoriesResponse {
+  mainCategories: { key: string; name: string; description: string }[];
+  specializations: Record<string, CategoryOption[]>;
+}
 
 interface SearchBoxProps {
   locations: Location[];
@@ -34,6 +46,34 @@ export function SearchBox({
   const [keyword, setKeyword] = useState(initialQuery);
   const [filteredLocations, setFilteredLocations] = useState<Location[]>([]);
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
+
+  // Fetch grouped categories from API
+  const { data: groupedCategories } = useQuery<GroupedCategoriesResponse>({
+    queryKey: ["/api/categories/grouped"],
+  });
+  
+  // Build lookup objects from API data (memoized for performance)
+  const mainCategoryLabels = useMemo(() => {
+    return groupedCategories?.mainCategories?.reduce((acc, cat) => {
+      acc[cat.key] = cat.name;
+      return acc;
+    }, {} as Record<string, string>) || { TUINONDERHOUD: "Tuinonderhoud", TUINAANLEG: "Tuinaanleg" };
+  }, [groupedCategories]);
+  
+  const specializationLabels = useMemo(() => {
+    return Object.values(groupedCategories?.specializations || {}).flat().reduce((acc, spec) => {
+      acc[spec.key] = spec.name;
+      return acc;
+    }, {} as Record<string, string>) || {};
+  }, [groupedCategories]);
+  
+  const specializationsByCategory = useMemo(() => {
+    return groupedCategories?.specializations 
+      ? Object.fromEntries(
+          Object.entries(groupedCategories.specializations).map(([key, specs]) => [key, specs.map(s => s.key)])
+        )
+      : { TUINONDERHOUD: [], TUINAANLEG: [] };
+  }, [groupedCategories]);
 
   // Get available specializations based on selected main category
   const availableSpecializations = selectedMainCategory !== "all" 
