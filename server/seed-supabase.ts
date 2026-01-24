@@ -1,17 +1,24 @@
 import { supabaseAdmin } from "./lib/supabase";
+import { BELGIAN_MUNICIPALITIES } from "./data/belgian-municipalities";
 
 async function seed() {
   console.log("🌱 Seeding Supabase database...");
 
-  // IMPORTANT: Only clear categories and locations (reference data)
-  // NEVER delete profiles, accounts, practicals, offices, contact_requests (user data)
-  console.log("Clearing reference data only (categories, locations)...");
+  // ============================================================================
+  // SAFETY: ONLY clear reference data (categories, locations)
+  // NEVER delete user data (profiles, accounts, practicals, offices, contact_requests)
+  // ============================================================================
+  console.log("⚠️  Clearing reference data ONLY (categories, locations)...");
+  console.log("ℹ️  User data (profiles, accounts, etc.) will NOT be deleted.");
+  
   await supabaseAdmin.from("locations").delete().neq("id", "00000000-0000-0000-0000-000000000000");
   await supabaseAdmin.from("categories").delete().neq("id", "00000000-0000-0000-0000-000000000000");
 
-  // Seed Categories - All specializations grouped by main category
+  // ============================================================================
+  // Seed Categories - All 16 specializations grouped by main category
+  // ============================================================================
   const categoriesData = [
-    // TUINONDERHOUD specializations
+    // TUINONDERHOUD specializations (8)
     { name: "Gras maaien", slug: "gras-maaien", main_category: "TUINONDERHOUD", description: "Professioneel gazon maaien en onderhouden", sort_order: 1, is_active: true },
     { name: "Bomen snoeien", slug: "bomen-snoeien", main_category: "TUINONDERHOUD", description: "Vakkundige snoei van bomen", sort_order: 2, is_active: true },
     { name: "Struiken snoeien", slug: "struiken-snoeien", main_category: "TUINONDERHOUD", description: "Professioneel snoeien van struiken", sort_order: 3, is_active: true },
@@ -20,7 +27,7 @@ async function seed() {
     { name: "Bladeren ruimen", slug: "bladeren-ruimen", main_category: "TUINONDERHOUD", description: "Bladeren opruimen en composteren", sort_order: 6, is_active: true },
     { name: "Bemesting", slug: "bemesting", main_category: "TUINONDERHOUD", description: "Bemesting van gazon en planten", sort_order: 7, is_active: true },
     { name: "Gazononderhoud", slug: "gazononderhoud", main_category: "TUINONDERHOUD", description: "Volledig gazononderhoud en -verzorging", sort_order: 8, is_active: true },
-    // TUINAANLEG specializations
+    // TUINAANLEG specializations (8)
     { name: "Grasaanleg", slug: "grasaanleg", main_category: "TUINAANLEG", description: "Aanleg van gazons en grasmatten", sort_order: 9, is_active: true },
     { name: "Paden & terrassen", slug: "paden-terrassen", main_category: "TUINAANLEG", description: "Aanleg van paden en terrassen", sort_order: 10, is_active: true },
     { name: "Houten constructies", slug: "houten-constructies", main_category: "TUINAANLEG", description: "Houten constructies zoals pergola's en schuttingen", sort_order: 11, is_active: true },
@@ -42,39 +49,69 @@ async function seed() {
   }
   console.log(`✅ Inserted ${insertedCategories?.length} categories`);
 
-  // Seed Locations
-  const locationsData = [
-    { name: "Gent", slug: "gent", postcode: "9000", municipality: "Gent", region: "Oost-Vlaanderen", latitude: 51.0543, longitude: 3.7174, is_active: true },
-    { name: "Antwerpen", slug: "antwerpen", postcode: "2000", municipality: "Antwerpen", region: "Antwerpen", latitude: 51.2194, longitude: 4.4025, is_active: true },
-    { name: "Brussel", slug: "brussel", postcode: "1000", municipality: "Brussel", region: "Brussel", latitude: 50.8503, longitude: 4.3517, is_active: true },
-    { name: "Brugge", slug: "brugge", postcode: "8000", municipality: "Brugge", region: "West-Vlaanderen", latitude: 51.2093, longitude: 3.2247, is_active: true },
-    { name: "Leuven", slug: "leuven", postcode: "3000", municipality: "Leuven", region: "Vlaams-Brabant", latitude: 50.8798, longitude: 4.7005, is_active: true },
-    { name: "Mechelen", slug: "mechelen", postcode: "2800", municipality: "Mechelen", region: "Antwerpen", latitude: 51.0259, longitude: 4.4776, is_active: true },
-    { name: "Hasselt", slug: "hasselt", postcode: "3500", municipality: "Hasselt", region: "Limburg", latitude: 50.9307, longitude: 5.3378, is_active: true },
-    { name: "Kortrijk", slug: "kortrijk", postcode: "8500", municipality: "Kortrijk", region: "West-Vlaanderen", latitude: 50.8279, longitude: 3.2649, is_active: true },
-    { name: "Aalst", slug: "aalst", postcode: "9300", municipality: "Aalst", region: "Oost-Vlaanderen", latitude: 50.9364, longitude: 4.0355, is_active: true },
-    { name: "Oostende", slug: "oostende", postcode: "8400", municipality: "Oostende", region: "West-Vlaanderen", latitude: 51.2154, longitude: 2.9286, is_active: true },
-    { name: "Sint-Niklaas", slug: "sint-niklaas", postcode: "9100", municipality: "Sint-Niklaas", region: "Oost-Vlaanderen", latitude: 51.1562, longitude: 4.1437, is_active: true },
-    { name: "Roeselare", slug: "roeselare", postcode: "8800", municipality: "Roeselare", region: "West-Vlaanderen", latitude: 50.9444, longitude: 3.1257, is_active: true },
-    { name: "Genk", slug: "genk", postcode: "3600", municipality: "Genk", region: "Limburg", latitude: 50.9654, longitude: 5.5002, is_active: true },
-  ];
-
-  const { data: insertedLocations, error: locError } = await supabaseAdmin
-    .from("locations")
-    .insert(locationsData)
-    .select();
+  // ============================================================================
+  // Seed Locations - All 581 Belgian municipalities with postcodes and coordinates
+  // ============================================================================
+  console.log("📍 Inserting all Belgian municipalities...");
   
-  if (locError) {
-    console.error("Error inserting locations:", locError);
-    throw locError;
-  }
-  console.log(`✅ Inserted ${insertedLocations?.length} locations`);
+  // Map province enum to display name for region field
+  const provinceToRegion: Record<string, string> = {
+    "ANTWERPEN": "Antwerpen",
+    "LIMBURG": "Limburg",
+    "OOST_VLAANDEREN": "Oost-Vlaanderen",
+    "VLAAMS_BRABANT": "Vlaams-Brabant",
+    "WEST_VLAANDEREN": "West-Vlaanderen",
+    "BRABANT_WALLON": "Brabant Wallon",
+    "HAINAUT": "Henegouwen",
+    "LIEGE": "Luik",
+    "LUXEMBOURG": "Luxemburg",
+    "NAMUR": "Namen",
+    "BRUSSEL": "Brussel"
+  };
 
+  const locationsData = BELGIAN_MUNICIPALITIES.map(m => ({
+    name: m.name,
+    slug: m.slug,
+    postcode: m.postcode,
+    municipality: m.municipality,
+    region: provinceToRegion[m.province] || m.province,
+    latitude: m.latitude,
+    longitude: m.longitude,
+    is_active: true,
+  }));
+
+  // Insert in batches of 100 to avoid hitting limits
+  const batchSize = 100;
+  let totalInserted = 0;
+  
+  for (let i = 0; i < locationsData.length; i += batchSize) {
+    const batch = locationsData.slice(i, i + batchSize);
+    const { data: insertedBatch, error: locError } = await supabaseAdmin
+      .from("locations")
+      .insert(batch)
+      .select();
+    
+    if (locError) {
+      console.error(`Error inserting locations batch ${i / batchSize + 1}:`, locError);
+      throw locError;
+    }
+    totalInserted += insertedBatch?.length || 0;
+    console.log(`  📍 Inserted batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(locationsData.length / batchSize)} (${totalInserted} total)`);
+  }
+  console.log(`✅ Inserted ${totalInserted} Belgian municipalities`);
+
+  // Get all locations for reference
+  const { data: allLocations } = await supabaseAdmin.from("locations").select("*");
+  
   // Helper functions
   const getCategoryId = (slug: string) => insertedCategories?.find(c => c.slug === slug)?.id;
-  const getLocationId = (slug: string) => insertedLocations?.find(l => l.slug === slug)?.id;
+  const getLocationId = (slug: string) => allLocations?.find(l => l.slug === slug)?.id;
 
-  // Sample profiles
+  // ============================================================================
+  // Seed Sample Profiles (demo data - these have random auth_user_ids)
+  // ============================================================================
+  console.log("👤 Creating sample profiles...");
+  
   const sampleProfiles = [
     {
       name: "Groene Vingers Tuinen",
@@ -83,215 +120,115 @@ async function seed() {
       telnr: "+32 9 123 45 67",
       website: "https://groenevingers.be",
       has_website: true,
-      title: "Tuinaanleg & Onderhoud",
-      introduction: "Met meer dan 15 jaar ervaring creëren wij droomtuinen.",
-      description: "Groene Vingers Tuinen is gespecialiseerd in het ontwerpen en aanleggen van tuinen.",
-      specializations: ["TUINAANLEG", "ONDERHOUD", "BESTRATING"],
-      offered_services: ["Tuinontwerp", "Tuinaanleg", "Terrasaanleg", "Gazonaanleg"],
+      title: "Tuinaanleg & Onderhoud Oost-Vlaanderen",
+      introduction: "Met meer dan 15 jaar ervaring creëren wij droomtuinen in heel Oost-Vlaanderen.",
+      description: "Groene Vingers Tuinen is gespecialiseerd in het ontwerpen en aanleggen van tuinen. Van kleine stadstuinen tot grote landschapsprojecten, wij realiseren uw droomtuin met passie en vakmanschap.",
+      specializations: ["GRASAANLEG", "BEPLANTING", "BESTRATING"],
+      offered_services: ["Tuinontwerp", "Tuinaanleg", "Terrasaanleg", "Gazonaanleg", "Beplanting"],
       is_featured: true,
       is_verified: true,
-      categorySlug: "tuinaanlegger",
+      categorySlug: "grasaanleg",
       locationSlug: "gent",
       office: { street: "Korenmarkt", number: "15", town: "Gent", municipality: "Gent", postcode: "9000" },
-      practical: { reachability: "Oost-Vlaanderen", experience: "15+ jaar", languages: ["Nederlands", "Frans", "Engels"], tariff: "Op aanvraag" },
+      practical: { experience_years: 15, languages: ["NL", "FR", "EN"], target_audience: "Particulieren en bedrijven" },
     },
     {
-      name: "De Tuinarchitect",
-      slug: "de-tuinarchitect",
+      name: "De Tuinarchitect Antwerpen",
+      slug: "de-tuinarchitect-antwerpen",
       email: "contact@detuinarchitect.be",
       telnr: "+32 3 456 78 90",
       website: "https://detuinarchitect.be",
       has_website: true,
       title: "Tuinontwerp & Landschapsarchitectuur",
-      introduction: "Innovatieve tuinontwerpen die functionaliteit en esthetiek combineren.",
-      specializations: ["TUINAANLEG", "STIJLSPECIALIST", "ECOLOGISCH_TUINIEREN"],
-      offered_services: ["3D Tuinontwerp", "Beplantingsplan", "Verlichtingsplan"],
+      introduction: "Innovatieve tuinontwerpen die functionaliteit en esthetiek perfect combineren.",
+      description: "Als gediplomeerd tuinarchitect ontwerp ik tuinen die passen bij uw levensstijl. Van modern minimalistisch tot romantisch landelijk, elke tuin wordt op maat gemaakt.",
+      specializations: ["BEPLANTING", "PADEN_TERRASSEN", "VIJVERS"],
+      offered_services: ["3D Tuinontwerp", "Beplantingsplan", "Verlichtingsplan", "Begeleiding uitvoering"],
       is_featured: true,
       is_verified: true,
-      categorySlug: "tuinarchitect",
+      categorySlug: "beplanting",
       locationSlug: "antwerpen",
       office: { street: "Meir", number: "42", town: "Antwerpen", municipality: "Antwerpen", postcode: "2000" },
-      practical: { reachability: "Heel Vlaanderen", experience: "12 jaar", languages: ["Nederlands", "Engels"], tariff: "€75-125/uur" },
+      practical: { experience_years: 12, languages: ["NL", "EN"], target_audience: "Particulieren" },
     },
     {
-      name: "Boomzorg Vlaanderen",
-      slug: "boomzorg-vlaanderen",
-      email: "info@boomzorg.be",
+      name: "Boomzorg West-Vlaanderen",
+      slug: "boomzorg-west-vlaanderen",
+      email: "info@boomzorg-wvl.be",
       telnr: "+32 50 123 456",
       has_website: false,
       title: "Gecertificeerd Boomverzorger",
-      introduction: "Professionele boomverzorging door gecertificeerde arboristen.",
-      specializations: ["BOOMVERZORGING", "SNOEIEN"],
-      offered_services: ["Snoeien", "Vellen", "Stronkverwijdering", "Boomonderzoek"],
+      introduction: "Professionele boomverzorging door gecertificeerde arboristen in West-Vlaanderen.",
+      description: "Boomzorg West-Vlaanderen biedt professionele boomverzorging aan. Onze gecertificeerde arboristen zorgen voor uw bomen met respect voor de natuur.",
+      specializations: ["BOMEN_SNOEIEN", "STRUIKEN_SNOEIEN"],
+      offered_services: ["Snoeien", "Vellen", "Stronkverwijdering", "Boomonderzoek", "ETW-gecertificeerd"],
       is_featured: true,
       is_verified: true,
-      categorySlug: "boomverzorger",
+      categorySlug: "bomen-snoeien",
       locationSlug: "brugge",
       office: { street: "Markt", number: "7", town: "Brugge", municipality: "Brugge", postcode: "8000" },
-      practical: { reachability: "West-Vlaanderen", experience: "20 jaar", languages: ["Nederlands", "Frans"], tariff: "Op basis van offerte" },
+      practical: { experience_years: 20, languages: ["NL", "FR"], target_audience: "Particulieren, gemeenten en bedrijven" },
     },
     {
-      name: "Tuinonderhoud Plus",
-      slug: "tuinonderhoud-plus",
-      email: "hello@tuinonderhoudplus.be",
+      name: "Tuinonderhoud Leuven",
+      slug: "tuinonderhoud-leuven",
+      email: "hello@tuinonderhoudleuven.be",
       telnr: "+32 16 789 012",
-      website: "https://tuinonderhoudplus.be",
+      website: "https://tuinonderhoudleuven.be",
       has_website: true,
-      title: "Hovenier",
-      introduction: "Betrouwbaar tuinonderhoud het hele jaar door.",
-      specializations: ["ONDERHOUD", "GAZONSPECIALIST", "SNOEIEN"],
-      offered_services: ["Grasmaaien", "Hagen knippen", "Onkruid verwijderen"],
+      title: "Professioneel Tuinonderhoud Vlaams-Brabant",
+      introduction: "Uw tuin in topconditie, het hele jaar door.",
+      description: "Wij verzorgen alle aspecten van tuinonderhoud: grasmaaien, snoeien, onkruidbestrijding en seizoensgebonden werkzaamheden.",
+      specializations: ["GRAS_MAAIEN", "HAGEN_KNIPPEN", "ONKRUID_VERWIJDEREN"],
+      offered_services: ["Grasmaaien", "Hagen knippen", "Onkruidbestrijding", "Bladruimen", "Winterklaar maken"],
       is_featured: false,
       is_verified: true,
-      categorySlug: "hovenier",
+      categorySlug: "gras-maaien",
       locationSlug: "leuven",
-      office: { street: "Bondgenotenlaan", number: "88", town: "Leuven", municipality: "Leuven", postcode: "3000" },
-      practical: { reachability: "Vlaams-Brabant", experience: "8 jaar", languages: ["Nederlands"], tariff: "€35/uur" },
+      office: { street: "Grote Markt", number: "1", town: "Leuven", municipality: "Leuven", postcode: "3000" },
+      practical: { experience_years: 8, languages: ["NL"], target_audience: "Particulieren" },
     },
     {
-      name: "Eco Tuinen",
-      slug: "eco-tuinen",
-      email: "info@ecotuinen.be",
+      name: "Bestrating & Terrassen Limburg",
+      slug: "bestrating-terrassen-limburg",
+      email: "info@bestratinglimburg.be",
       telnr: "+32 11 234 567",
-      website: "https://ecotuinen.be",
+      website: "https://bestratinglimburg.be",
       has_website: true,
-      title: "Ecologische Tuinaanleg",
-      introduction: "Duurzame tuinen die bijdragen aan de biodiversiteit.",
-      specializations: ["ECOLOGISCH_TUINIEREN", "TUINAANLEG", "VIJVERS"],
-      offered_services: ["Ecologische tuinaanleg", "Insectenhotels", "Natuurlijke vijvers"],
+      title: "Specialist in Bestrating en Terrassen",
+      introduction: "Vakkundige aanleg van opritten, terrassen en tuinpaden in heel Limburg.",
+      description: "Met oog voor detail en kwaliteit leggen wij uw terras, oprit of tuinpad aan. Van klinkers tot natuursteen, wij werken met de beste materialen.",
+      specializations: ["BESTRATING", "PADEN_TERRASSEN", "AFSLUITINGEN"],
+      offered_services: ["Terrasaanleg", "Opritten", "Tuinpaden", "Afsluitingen", "Drainage"],
       is_featured: true,
       is_verified: true,
-      categorySlug: "tuinaanlegger",
+      categorySlug: "bestrating",
       locationSlug: "hasselt",
-      office: { street: "Kolonel Dusartplein", number: "12", town: "Hasselt", municipality: "Hasselt", postcode: "3500" },
-      practical: { reachability: "Limburg", experience: "10 jaar", languages: ["Nederlands", "Duits"], tariff: "Op aanvraag" },
+      office: { street: "Kolonel Dusartplein", number: "25", town: "Hasselt", municipality: "Hasselt", postcode: "3500" },
+      practical: { experience_years: 18, languages: ["NL", "FR"], target_audience: "Particulieren en projectontwikkelaars" },
     },
     {
-      name: "Gazon Expert",
-      slug: "gazon-expert",
-      email: "contact@gazonexpert.be",
+      name: "Gazonspecialist Kortrijk",
+      slug: "gazonspecialist-kortrijk",
+      email: "gazon@kortrijk.be",
       telnr: "+32 56 345 678",
       has_website: false,
-      title: "Gazonspecialist",
-      introduction: "Het perfecte gazon begint hier.",
-      specializations: ["GAZONSPECIALIST", "ONDERHOUD"],
-      offered_services: ["Gazonaanleg", "Gazonrenovatie", "Verticuteren", "Bemesting"],
+      title: "Gazonaanleg en -onderhoud",
+      introduction: "Voor een perfect gazon het hele jaar door.",
+      description: "Gespecialiseerd in gazonaanleg en -onderhoud. Van graszoden tot robotmaaiers, wij zorgen voor een strak en gezond gazon.",
+      specializations: ["GRASAANLEG", "GAZONONDERHOUD", "BEMESTING"],
+      offered_services: ["Gazonaanleg", "Graszoden", "Robotmaaiers", "Bemesting", "Beluchten", "Doorzaaien"],
       is_featured: false,
       is_verified: true,
-      categorySlug: "gazonspecialist",
+      categorySlug: "grasaanleg",
       locationSlug: "kortrijk",
-      office: { street: "Grote Markt", number: "1", town: "Kortrijk", municipality: "Kortrijk", postcode: "8500" },
-      practical: { reachability: "West-Vlaanderen", experience: "6 jaar", languages: ["Nederlands", "Frans"], tariff: "€40/uur" },
-    },
-    {
-      name: "Waterwereld Vijvers",
-      slug: "waterwereld-vijvers",
-      email: "info@waterwereldvijvers.be",
-      telnr: "+32 9 876 543",
-      website: "https://waterwereldvijvers.be",
-      has_website: true,
-      title: "Vijverspecialist",
-      introduction: "Complete vijveraanleg en -onderhoud.",
-      specializations: ["VIJVERS", "TUINAANLEG"],
-      offered_services: ["Vijveraanleg", "Vijveronderhoud", "Zwemvijvers"],
-      is_featured: true,
-      is_verified: true,
-      categorySlug: "vijverspecialist",
-      locationSlug: "aalst",
-      office: { street: "Hopmarkt", number: "22", town: "Aalst", municipality: "Aalst", postcode: "9300" },
-      practical: { reachability: "Oost-Vlaanderen", experience: "18 jaar", languages: ["Nederlands"], tariff: "Op offerte" },
-    },
-    {
-      name: "Hekwerk & Meer",
-      slug: "hekwerk-en-meer",
-      email: "contact@hekwerkmeer.be",
-      telnr: "+32 3 111 222",
-      has_website: false,
-      title: "Afsluitingen specialist",
-      introduction: "Professionele plaatsing van hekwerk en afsluitingen.",
-      specializations: ["AFSLUITINGEN", "BESTRATING"],
-      offered_services: ["Houten afsluitingen", "Metalen hekwerk", "Poorten"],
-      is_featured: false,
-      is_verified: true,
-      categorySlug: "tuinaanlegger",
-      locationSlug: "mechelen",
-      office: { street: "Bruul", number: "55", town: "Mechelen", municipality: "Mechelen", postcode: "2800" },
-      practical: { reachability: "Antwerpen", experience: "14 jaar", languages: ["Nederlands"], tariff: "Op basis van offerte" },
-    },
-    {
-      name: "Snoei Service",
-      slug: "snoei-service",
-      email: "info@snoeiservice.be",
-      telnr: "+32 59 444 555",
-      has_website: false,
-      title: "Snoeiwerk specialist",
-      introduction: "Vakkundig snoeien van hagen, struiken en fruitbomen.",
-      specializations: ["SNOEIEN", "ONDERHOUD", "BOOMVERZORGING"],
-      offered_services: ["Hagen snoeien", "Fruitbomen snoeien", "Struiken snoeien"],
-      is_featured: false,
-      is_verified: true,
-      categorySlug: "hovenier",
-      locationSlug: "oostende",
-      office: { street: "Kapellestraat", number: "10", town: "Oostende", municipality: "Oostende", postcode: "8400" },
-      practical: { reachability: "West-Vlaanderen", experience: "11 jaar", languages: ["Nederlands", "Frans"], tariff: "€45/uur" },
-    },
-    {
-      name: "Bestratingen Van Damme",
-      slug: "bestratingen-van-damme",
-      email: "info@bestratingenvandamme.be",
-      telnr: "+32 3 666 777",
-      website: "https://bestratingenvandamme.be",
-      has_website: true,
-      title: "Bestratingsspecialist",
-      introduction: "Professionele terrassen, opritten en tuinpaden.",
-      specializations: ["BESTRATING", "TUINAANLEG"],
-      offered_services: ["Terrassen", "Opritten", "Tuinpaden"],
-      is_featured: true,
-      is_verified: true,
-      categorySlug: "tuinaanlegger",
-      locationSlug: "sint-niklaas",
-      office: { street: "Stationsstraat", number: "100", town: "Sint-Niklaas", municipality: "Sint-Niklaas", postcode: "9100" },
-      practical: { reachability: "Oost-Vlaanderen", experience: "25 jaar", languages: ["Nederlands"], tariff: "Op offerte" },
-    },
-    {
-      name: "Groene Dromen",
-      slug: "groene-dromen",
-      email: "hello@groenedromen.be",
-      telnr: "+32 51 888 999",
-      website: "https://groenedromen.be",
-      has_website: true,
-      title: "Tuinarchitect & Designer",
-      introduction: "Creatieve tuinontwerpen die uw dromen werkelijkheid maken.",
-      specializations: ["STIJLSPECIALIST", "TUINAANLEG", "ECOLOGISCH_TUINIEREN"],
-      offered_services: ["Tuinontwerp", "3D visualisatie", "Beplantingsadvies"],
-      is_featured: false,
-      is_verified: true,
-      categorySlug: "tuinarchitect",
-      locationSlug: "roeselare",
-      office: { street: "Ooststraat", number: "33", town: "Roeselare", municipality: "Roeselare", postcode: "8800" },
-      practical: { reachability: "West-Vlaanderen", experience: "9 jaar", languages: ["Nederlands", "Engels"], tariff: "€85/uur" },
-    },
-    {
-      name: "Limburgse Tuinen",
-      slug: "limburgse-tuinen",
-      email: "info@limburgsetuinen.be",
-      telnr: "+32 89 123 456",
-      has_website: false,
-      title: "Tuinaanleg & Onderhoud Limburg",
-      introduction: "Uw lokale partner voor alle tuinwerken in Limburg.",
-      specializations: ["TUINAANLEG", "ONDERHOUD", "GAZONSPECIALIST"],
-      offered_services: ["Tuinaanleg", "Tuinonderhoud", "Gazonaanleg"],
-      is_featured: false,
-      is_verified: true,
-      categorySlug: "tuinaanlegger",
-      locationSlug: "genk",
-      office: { street: "Europalaan", number: "5", town: "Genk", municipality: "Genk", postcode: "3600" },
-      practical: { reachability: "Limburg", experience: "7 jaar", languages: ["Nederlands"], tariff: "€38/uur" },
+      office: { street: "Grote Markt", number: "54", town: "Kortrijk", municipality: "Kortrijk", postcode: "8500" },
+      practical: { experience_years: 10, languages: ["NL"], target_audience: "Particulieren en sportclubs" },
     },
   ];
 
   for (const profileData of sampleProfiles) {
-    // Create account
+    // Create account (demo accounts with random auth_user_id)
     const { data: account, error: accountError } = await supabaseAdmin
       .from("accounts")
       .insert({
@@ -353,7 +290,6 @@ async function seed() {
           town: profileData.office.town,
           municipality: profileData.office.municipality,
           postcode: profileData.office.postcode,
-          country: "België",
         });
 
       if (officeError) console.error(`Error creating office for ${profileData.name}:`, officeError);
@@ -365,10 +301,9 @@ async function seed() {
         .from("practicals")
         .insert({
           profile_id: profile.id,
-          reachability: profileData.practical.reachability,
-          experience: profileData.practical.experience,
+          experience_years: profileData.practical.experience_years,
           languages: profileData.practical.languages,
-          tariff: profileData.practical.tariff,
+          target_audience: profileData.practical.target_audience,
         });
 
       if (practicalError) console.error(`Error creating practical for ${profileData.name}:`, practicalError);
@@ -378,6 +313,9 @@ async function seed() {
   }
 
   console.log(`\n✅ Seeding complete!`);
+  console.log(`   - ${insertedCategories?.length} categories`);
+  console.log(`   - ${totalInserted} locations (Belgian municipalities)`);
+  console.log(`   - ${sampleProfiles.length} sample profiles with offices and practicals`);
   process.exit(0);
 }
 
