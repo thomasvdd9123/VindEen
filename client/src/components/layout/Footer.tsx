@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import { Leaf, Mail, Phone, MapPin } from "lucide-react";
+import { Leaf, ExternalLink } from "lucide-react";
 import { siteConfig } from "@/lib/theme.config";
 
 export function Footer() {
@@ -20,10 +20,7 @@ export function Footer() {
   ];
 
   const infoLinks = [
-    { href: "/over-ons", label: "Over ons" },
     { href: "/prijzen", label: "Prijzen" },
-    { href: "/faq", label: "FAQ" },
-    { href: "/contact", label: "Contact" },
     { href: "/privacy", label: "Privacybeleid" },
     { href: "/voorwaarden", label: "Algemene voorwaarden" },
   ];
@@ -42,12 +39,6 @@ export function Footer() {
             <p className="text-sm text-muted-foreground">
               {siteConfig.description}
             </p>
-            <div className="flex flex-col gap-2 text-sm text-muted-foreground">
-              <a href={`mailto:${siteConfig.email}`} className="flex items-center gap-2 hover:text-foreground transition-colors" data-testid="link-email">
-                <Mail className="h-4 w-4" />
-                {siteConfig.email}
-              </a>
-            </div>
           </div>
 
           <div>
@@ -107,9 +98,16 @@ export function Footer() {
             <p className="text-sm text-muted-foreground">
               © {currentYear} {siteConfig.name}. Alle rechten voorbehouden.
             </p>
-            <p className="text-sm text-muted-foreground">
-              Made in {siteConfig.country}
-            </p>
+            <a 
+              href={siteConfig.parentCompany.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+              data-testid="link-parent-company"
+            >
+              Een project van {siteConfig.parentCompany.name}
+              <ExternalLink className="h-3 w-3" />
+            </a>
           </div>
         </div>
       </div>

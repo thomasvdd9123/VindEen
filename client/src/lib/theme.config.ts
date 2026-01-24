@@ -15,8 +15,14 @@ export const siteConfig = {
   // URLs
   baseUrl: "https://www.zoek-een-tuinman.be",
   
-  // Contact
-  email: "info@zoek-een-tuinman.be",
+  // Parent Company
+  parentCompany: {
+    name: "Zoek Lokaal",
+    url: "https://zoek-lokaal.be",
+  },
+  
+  // Contact (not displayed - users contact gardeners directly)
+  email: "info@zoek-lokaal.be",
   
   // Social
   social: {
