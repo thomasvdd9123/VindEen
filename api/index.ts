@@ -170,11 +170,65 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // GET /api/profiles/count
     if (method === "GET" && path === "/api/profiles/count") {
-      const { count, error } = await supabase
+      const category = url.searchParams.get("category");
+      const location = url.searchParams.get("location");
+      const query = url.searchParams.get("q");
+      const mainCategory = url.searchParams.get("mainCategory");
+      const spec = url.searchParams.get("spec");
+
+      let queryBuilder = supabase
         .from("profiles")
         .select("*", { count: "exact", head: true })
         .eq("is_active", true)
         .eq("is_public", true);
+
+      // Filter by category slug
+      if (category) {
+        const { data: cat } = await supabase
+          .from("categories")
+          .select("id")
+          .eq("slug", category)
+          .single();
+        if (cat) {
+          queryBuilder = queryBuilder.eq("category_id", cat.id);
+        }
+      }
+
+      // Filter by location slug
+      if (location) {
+        const { data: loc } = await supabase
+          .from("locations")
+          .select("id")
+          .eq("slug", location)
+          .single();
+        if (loc) {
+          queryBuilder = queryBuilder.eq("location_id", loc.id);
+        }
+      }
+
+      // Filter by main category (TUINONDERHOUD or TUINAANLEG)
+      if (mainCategory) {
+        const { data: cats } = await supabase
+          .from("categories")
+          .select("id")
+          .eq("main_category", mainCategory);
+        if (cats && cats.length > 0) {
+          const categoryIds = cats.map(c => c.id);
+          queryBuilder = queryBuilder.in("category_id", categoryIds);
+        }
+      }
+
+      // Filter by specialization
+      if (spec) {
+        queryBuilder = queryBuilder.contains("specializations", [spec]);
+      }
+
+      // Filter by search query
+      if (query) {
+        queryBuilder = queryBuilder.or(`name.ilike.%${query}%,introduction.ilike.%${query}%,title.ilike.%${query}%`);
+      }
+
+      const { count, error } = await queryBuilder;
       
       if (error) throw error;
       return res.status(200).json({ total: count || 0 });
