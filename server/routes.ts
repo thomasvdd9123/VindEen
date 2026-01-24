@@ -62,6 +62,41 @@ export async function registerRoutes(
     }
   });
 
+  // Categories grouped by main category (for filtering/forms)
+  app.get("/api/categories/grouped", async (req, res) => {
+    try {
+      const categories = await storage.getCategories();
+      
+      // Group categories by mainCategory
+      const grouped: Record<string, { key: string; name: string; slug: string; description: string | null }[]> = {
+        TUINONDERHOUD: [],
+        TUINAANLEG: [],
+      };
+      
+      for (const cat of categories) {
+        if (cat.mainCategory && grouped[cat.mainCategory]) {
+          grouped[cat.mainCategory].push({
+            key: cat.slug.toUpperCase().replace(/-/g, "_"),
+            name: cat.name,
+            slug: cat.slug,
+            description: cat.description,
+          });
+        }
+      }
+      
+      // Also return main category labels
+      const mainCategories = [
+        { key: "TUINONDERHOUD", name: "Tuinonderhoud", description: "Onderhoud van bestaande tuinen" },
+        { key: "TUINAANLEG", name: "Tuinaanleg", description: "Aanleg van nieuwe tuinen" },
+      ];
+      
+      res.json({ mainCategories, specializations: grouped });
+    } catch (error) {
+      console.error("Error fetching grouped categories:", error);
+      res.status(500).json({ error: "Failed to fetch grouped categories" });
+    }
+  });
+
   app.get("/api/categories/:slug", async (req, res) => {
     try {
       const category = await storage.getCategoryBySlug(req.params.slug);

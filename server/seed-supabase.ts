@@ -13,14 +13,26 @@ async function seed() {
   await supabaseAdmin.from("locations").delete().neq("id", "00000000-0000-0000-0000-000000000000");
   await supabaseAdmin.from("categories").delete().neq("id", "00000000-0000-0000-0000-000000000000");
 
-  // Seed Categories
+  // Seed Categories - All specializations grouped by main category
   const categoriesData = [
-    { name: "Tuinaanlegger", slug: "tuinaanlegger", description: "Specialisten in het aanleggen van tuinen", sort_order: 1, is_active: true },
-    { name: "Tuinarchitect", slug: "tuinarchitect", description: "Ontwerpers van tuinen en buitenruimtes", sort_order: 2, is_active: true },
-    { name: "Hovenier", slug: "hovenier", description: "Professionals in tuinonderhoud", sort_order: 3, is_active: true },
-    { name: "Boomverzorger", slug: "boomverzorger", description: "Experts in boomverzorging en -snoei", sort_order: 4, is_active: true },
-    { name: "Gazonspecialist", slug: "gazonspecialist", description: "Specialisten in gazonaanleg en -onderhoud", sort_order: 5, is_active: true },
-    { name: "Vijverspecialist", slug: "vijverspecialist", description: "Experts in vijvers en waterpartijen", sort_order: 6, is_active: true },
+    // TUINONDERHOUD specializations
+    { name: "Gras maaien", slug: "gras-maaien", main_category: "TUINONDERHOUD", description: "Professioneel gazon maaien en onderhouden", sort_order: 1, is_active: true },
+    { name: "Bomen snoeien", slug: "bomen-snoeien", main_category: "TUINONDERHOUD", description: "Vakkundige snoei van bomen", sort_order: 2, is_active: true },
+    { name: "Struiken snoeien", slug: "struiken-snoeien", main_category: "TUINONDERHOUD", description: "Professioneel snoeien van struiken", sort_order: 3, is_active: true },
+    { name: "Hagen knippen", slug: "hagen-knippen", main_category: "TUINONDERHOUD", description: "Hagen knippen en vormgeven", sort_order: 4, is_active: true },
+    { name: "Onkruid verwijderen", slug: "onkruid-verwijderen", main_category: "TUINONDERHOUD", description: "Onkruidbestrijding en -preventie", sort_order: 5, is_active: true },
+    { name: "Bladeren ruimen", slug: "bladeren-ruimen", main_category: "TUINONDERHOUD", description: "Bladeren opruimen en composteren", sort_order: 6, is_active: true },
+    { name: "Bemesting", slug: "bemesting", main_category: "TUINONDERHOUD", description: "Bemesting van gazon en planten", sort_order: 7, is_active: true },
+    { name: "Gazononderhoud", slug: "gazononderhoud", main_category: "TUINONDERHOUD", description: "Volledig gazononderhoud en -verzorging", sort_order: 8, is_active: true },
+    // TUINAANLEG specializations
+    { name: "Grasaanleg", slug: "grasaanleg", main_category: "TUINAANLEG", description: "Aanleg van gazons en grasmatten", sort_order: 9, is_active: true },
+    { name: "Paden & terrassen", slug: "paden-terrassen", main_category: "TUINAANLEG", description: "Aanleg van paden en terrassen", sort_order: 10, is_active: true },
+    { name: "Houten constructies", slug: "houten-constructies", main_category: "TUINAANLEG", description: "Houten constructies zoals pergola's en schuttingen", sort_order: 11, is_active: true },
+    { name: "Afsluitingen & hekwerk", slug: "afsluitingen", main_category: "TUINAANLEG", description: "Plaatsen van afsluitingen en hekwerk", sort_order: 12, is_active: true },
+    { name: "Vijvers & waterpartijen", slug: "vijvers", main_category: "TUINAANLEG", description: "Aanleg van vijvers en waterpartijen", sort_order: 13, is_active: true },
+    { name: "Bestrating", slug: "bestrating", main_category: "TUINAANLEG", description: "Bestrating en verharding", sort_order: 14, is_active: true },
+    { name: "Beplanting", slug: "beplanting", main_category: "TUINAANLEG", description: "Aanplanten van bomen, struiken en planten", sort_order: 15, is_active: true },
+    { name: "Irrigatiesystemen", slug: "irrigatie", main_category: "TUINAANLEG", description: "Aanleg van irrigatie- en beregeningssystemen", sort_order: 16, is_active: true },
   ];
 
   const { data: insertedCategories, error: catError } = await supabaseAdmin
