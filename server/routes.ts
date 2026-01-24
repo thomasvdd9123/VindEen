@@ -803,6 +803,118 @@ export async function registerRoutes(
     }
   });
 
+  // ============================================================================
+  // Admin: Fix profiles missing category_id and location_id
+  // ============================================================================
+  app.post("/api/admin/fix-profile-references", async (req, res) => {
+    try {
+      // Get all categories and locations
+      const { data: categories } = await supabaseAdmin.from("categories").select("*");
+      const { data: locations } = await supabaseAdmin.from("locations").select("*");
+      const { data: profiles } = await supabaseAdmin.from("profiles").select("*");
+
+      if (!categories || !locations || !profiles) {
+        return res.status(500).json({ error: "Failed to fetch data" });
+      }
+
+      // Map specialization enum to category slug
+      const specToCategorySlug: Record<string, string> = {
+        "GRAS_MAAIEN": "gras-maaien",
+        "BOMEN_SNOEIEN": "bomen-snoeien",
+        "STRUIKEN_SNOEIEN": "struiken-snoeien",
+        "HAGEN_KNIPPEN": "hagen-knippen",
+        "ONKRUID_VERWIJDEREN": "onkruid-verwijderen",
+        "BLADEREN_RUIMEN": "bladeren-ruimen",
+        "BEMESTING": "bemesting",
+        "GAZONONDERHOUD": "gazononderhoud",
+        "GRASAANLEG": "grasaanleg",
+        "PADEN_TERRASSEN": "paden-terrassen",
+        "HOUTEN_CONSTRUCTIES": "houten-constructies",
+        "AFSLUITINGEN": "afsluitingen",
+        "VIJVERS": "vijvers",
+        "BESTRATING": "bestrating",
+        "BEPLANTING": "beplanting",
+        "IRRIGATIE": "irrigatie",
+      };
+
+      // Map profile name patterns to location slugs
+      const profileToLocation: Record<string, string> = {
+        "Groene Vingers Tuinen": "gent",
+        "De Tuinarchitect Antwerpen": "antwerpen",
+        "Bestrating & Terrassen Limburg": "hasselt",
+        "Vijver & Waterpartijen Mechelen": "mechelen",
+        "Houten Constructies Brugge": "brugge",
+        "Houten Tuinconstructies Brugge": "brugge",
+        "Irrigatie Specialist Aalst": "aalst",
+        "Irrigatie Systemen Aalst": "aalst",
+        "Boomzorg West-Vlaanderen": "kortrijk",
+        "Tuinonderhoud Leuven": "leuven",
+        "Gazon Expert Oostende": "oostende",
+        "Gazonspecialist Oostende": "oostende",
+        "Gazonspecialist Kortrijk": "kortrijk",
+        "Hagenknippers Roeselare": "roeselare",
+        "Eco-Onkruidbestrijding Genk": "genk",
+        "Onkruidvrij Genk": "genk",
+        "Bladgoud Brussel": "brussel",
+        "Seizoensonderhoud Brussel": "brussel",
+      };
+
+      let updated = 0;
+      for (const profile of profiles) {
+        let needsUpdate = false;
+        const updateData: { category_id?: string; location_id?: string } = {};
+
+        // Fix category_id if missing and profile has specializations
+        if (!profile.category_id && profile.specializations?.length > 0) {
+          const firstSpec = profile.specializations[0] as string;
+          const categorySlug = specToCategorySlug[firstSpec];
+          if (categorySlug) {
+            const category = categories.find(c => c.slug === categorySlug);
+            if (category) {
+              updateData.category_id = category.id;
+              needsUpdate = true;
+            }
+          }
+        }
+
+        // Fix location_id if missing
+        if (!profile.location_id) {
+          const locationSlug = profileToLocation[profile.name];
+          if (locationSlug) {
+            const location = locations.find(l => l.slug === locationSlug);
+            if (location) {
+              updateData.location_id = location.id;
+              needsUpdate = true;
+            }
+          }
+        }
+
+        if (needsUpdate) {
+          const { error } = await supabaseAdmin
+            .from("profiles")
+            .update(updateData)
+            .eq("id", profile.id);
+          
+          if (!error) {
+            updated++;
+            console.log(`✅ Updated profile: ${profile.name}`, updateData);
+          } else {
+            console.error(`❌ Failed to update profile: ${profile.name}`, error);
+          }
+        }
+      }
+
+      res.json({ 
+        success: true, 
+        message: `Updated ${updated} profiles with missing category_id/location_id`,
+        updated 
+      });
+    } catch (error) {
+      console.error("Error fixing profile references:", error);
+      res.status(500).json({ error: "Failed to fix profile references" });
+    }
+  });
+
   // Robots.txt
   app.get("/robots.txt", (req, res) => {
     const baseUrl = "https://www.zoek-een-tuinman.be";
