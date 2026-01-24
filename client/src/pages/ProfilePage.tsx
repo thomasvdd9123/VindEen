@@ -249,26 +249,6 @@ export default function ProfilePage() {
               </Card>
             )}
 
-            {profile.offeredServices && profile.offeredServices.length > 0 && (
-              <Card data-testid="card-profile-services">
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <Briefcase className="h-5 w-5 text-primary" />
-                    Aangeboden diensten
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {profile.offeredServices.map((service, i) => (
-                      <li key={i} className="flex items-center gap-2 text-muted-foreground">
-                        <CheckCircle className="h-4 w-4 text-primary shrink-0" />
-                        {service}
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
-            )}
 
             {profile.education && (
               <Card data-testid="card-profile-education">

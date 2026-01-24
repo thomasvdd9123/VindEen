@@ -349,7 +349,6 @@ export class SupabaseStorage implements IStorage {
         title: profile.title,
         education: profile.education,
         specializations: profile.specializations,
-        offered_services: profile.offeredServices,
         logo_url: profile.logoUrl,
         image_urls: profile.imageUrls,
         is_active: profile.isActive ?? true,
@@ -378,7 +377,6 @@ export class SupabaseStorage implements IStorage {
     if (updates.title !== undefined) updateData.title = updates.title;
     if (updates.education !== undefined) updateData.education = updates.education;
     if (updates.specializations !== undefined) updateData.specializations = updates.specializations;
-    if (updates.offeredServices !== undefined) updateData.offered_services = updates.offeredServices;
     if (updates.logoUrl !== undefined) updateData.logo_url = updates.logoUrl;
     if (updates.imageUrls !== undefined) updateData.image_urls = updates.imageUrls;
     if (updates.isActive !== undefined) updateData.is_active = updates.isActive;
@@ -664,14 +662,12 @@ export class SupabaseStorage implements IStorage {
       title: data.title as string | null,
       education: data.education as string | null,
       specializations: data.specializations as string[] | null,
-      offeredServices: data.offered_services as string[] | null,
       logoUrl: data.logo_url as string | null,
       imageUrls: data.image_urls as string[] | null,
       isActive: data.is_active as boolean,
       isPublic: data.is_public as boolean,
       isVerified: (data.is_verified as boolean) ?? false,
       verificationStatus: (data.verification_status as Profile["verificationStatus"]) ?? "PENDING",
-      hideAddress: false, // Column not in database yet
       viewCount: (data.view_count as number) ?? 0,
       seoTitle: data.seo_title as string | null,
       seoDescription: data.seo_description as string | null,
