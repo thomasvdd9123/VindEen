@@ -16,7 +16,7 @@ const fieldMap: Record<string, string> = {
   isActive: "is_active",
   isPublic: "is_public",
   isVerified: "is_verified",
-  hideAddress: "hide_address",
+  // hideAddress: "hide_address", // Column doesn't exist in database
   viewCount: "view_count",
   verificationStatus: "verification_status",
   verifiedAt: "verified_at",
@@ -24,7 +24,7 @@ const fieldMap: Record<string, string> = {
   rejectionReason: "rejection_reason",
   seoTitle: "seo_title",
   seoDescription: "seo_description",
-  offeredServices: "offered_services",
+  // offeredServices: "offered_services", // Column doesn't exist in database
   createdAt: "created_at",
   updatedAt: "updated_at",
   sortOrder: "sort_order",
