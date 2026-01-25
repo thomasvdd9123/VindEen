@@ -16,7 +16,7 @@ const fieldMap: Record<string, string> = {
   isActive: "is_active",
   isPublic: "is_public",
   isVerified: "is_verified",
-  // hideAddress: "hide_address", // Column doesn't exist in database
+  hideAddress: "hide_address",
   viewCount: "view_count",
   verificationStatus: "verification_status",
   verifiedAt: "verified_at",
@@ -46,9 +46,7 @@ const fieldMap: Record<string, string> = {
 
 // Fields that should be ignored (don't exist in database)
 const ignoreFields = new Set([
-  "hideAddress",
   "offeredServices",
-  "hide_address",
   "offered_services",
 ]);
 
