@@ -23,8 +23,14 @@ import {
   ArrowRight, 
   ArrowLeft, 
   Check,
-  Loader2
+  Loader2,
+  CreditCard,
+  BadgePercent,
+  Clock,
+  Shield
 } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 import type { Category, Location } from "@shared/schema";
 
 const BELGIAN_PROVINCES = [
@@ -74,6 +80,39 @@ const steps = [
   { id: 1, title: "Persoonlijk", icon: User },
   { id: 2, title: "Bedrijf", icon: Building2 },
   { id: 3, title: "Profiel", icon: Briefcase },
+  { id: 4, title: "Betaling", icon: CreditCard },
+];
+
+// Pricing plans: 1 year, 2 years (5% discount), 3 years (10% discount)
+const BASE_YEARLY_PRICE = 156;
+const pricingPlans = [
+  { 
+    id: "1year", 
+    years: 1, 
+    discount: 0, 
+    totalPrice: BASE_YEARLY_PRICE,
+    pricePerYear: BASE_YEARLY_PRICE,
+    label: "1 jaar",
+    popular: false
+  },
+  { 
+    id: "2year", 
+    years: 2, 
+    discount: 5, 
+    totalPrice: Math.round(BASE_YEARLY_PRICE * 2 * 0.95 * 100) / 100,
+    pricePerYear: Math.round(BASE_YEARLY_PRICE * 0.95 * 100) / 100,
+    label: "2 jaar",
+    popular: true
+  },
+  { 
+    id: "3year", 
+    years: 3, 
+    discount: 10, 
+    totalPrice: Math.round(BASE_YEARLY_PRICE * 3 * 0.90 * 100) / 100,
+    pricePerYear: Math.round(BASE_YEARLY_PRICE * 0.90 * 100) / 100,
+    label: "3 jaar",
+    popular: false
+  },
 ];
 
 function OnboardingContent() {
@@ -82,6 +121,9 @@ function OnboardingContent() {
   const { user, updateUserMetadata, getUserMetadata } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState("2year"); // Default to popular option
+  const [createdProfileId, setCreatedProfileId] = useState<string | null>(null);
+  const [createdAccountId, setCreatedAccountId] = useState<string | null>(null);
 
   const metadata = getUserMetadata();
 
@@ -195,12 +237,10 @@ function OnboardingContent() {
   const handleProfileSubmit = async (data: ProfileFormData) => {
     setIsSubmitting(true);
     try {
-      await createProfileMutation.mutateAsync(data);
-      toast({
-        title: "Welkom!",
-        description: "Je account en profiel zijn succesvol aangemaakt.",
-      });
-      setLocation("/dashboard");
+      const result = await createProfileMutation.mutateAsync(data) as { id: string; accountId: string };
+      setCreatedProfileId(result.id);
+      setCreatedAccountId(result.accountId);
+      setCurrentStep(4); // Go to payment step
     } catch (error: any) {
       toast({ 
         title: "Fout", 
@@ -208,6 +248,50 @@ function OnboardingContent() {
         variant: "destructive" 
       });
     } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handlePaymentSubmit = async () => {
+    setIsSubmitting(true);
+    try {
+      const plan = pricingPlans.find(p => p.id === selectedPlan);
+      if (!plan || !createdAccountId) {
+        throw new Error("Geen abonnement geselecteerd");
+      }
+
+      // Create a pending subscription (mock - will be updated when payment provider is integrated)
+      const startDate = new Date();
+      const endDate = new Date();
+      endDate.setFullYear(endDate.getFullYear() + plan.years);
+
+      await apiRequest("POST", "/api/subscriptions", {
+        accountId: createdAccountId,
+        planId: selectedPlan,
+        years: plan.years,
+        totalAmount: plan.totalPrice,
+      });
+
+      toast({
+        title: "Bijna klaar!",
+        description: "Je wordt doorgestuurd naar de betaalpagina...",
+      });
+
+      // For now, simulate successful payment and redirect to dashboard
+      // In production, this would redirect to Stripe/Mollie
+      setTimeout(() => {
+        toast({
+          title: "Welkom!",
+          description: "Je account en profiel zijn succesvol aangemaakt. Betaling wordt later verwerkt.",
+        });
+        setLocation("/dashboard");
+      }, 1500);
+    } catch (error: any) {
+      toast({ 
+        title: "Fout", 
+        description: error.message || "Kon abonnement niet aanmaken", 
+        variant: "destructive" 
+      });
       setIsSubmitting(false);
     }
   };
@@ -622,14 +706,136 @@ function OnboardingContent() {
                         >
                           Later doen
                         </Button>
-                        <Button type="submit" disabled={isSubmitting} className="gap-2" data-testid="button-finish">
-                          {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-                          Profiel aanmaken
+                        <Button type="submit" disabled={isSubmitting} className="gap-2" data-testid="button-next-payment">
+                          {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                          Volgende
+                          <ArrowRight className="h-4 w-4" />
                         </Button>
                       </div>
                     </div>
                   </form>
                 </Form>
+              </CardContent>
+            </Card>
+          )}
+
+          {currentStep === 4 && (
+            <Card data-testid="card-step-payment">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CreditCard className="h-5 w-5" />
+                  Kies je abonnement
+                </CardTitle>
+                <CardDescription>
+                  Selecteer de duur van je abonnement. Hoe langer je kiest, hoe meer je bespaart.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <RadioGroup 
+                  value={selectedPlan} 
+                  onValueChange={setSelectedPlan}
+                  className="space-y-3"
+                >
+                  {pricingPlans.map((plan) => (
+                    <div key={plan.id} className="relative">
+                      <Label
+                        htmlFor={plan.id}
+                        className={`flex items-center justify-between p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                          selectedPlan === plan.id 
+                            ? "border-primary bg-primary/5" 
+                            : "border-border hover:border-primary/50"
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <RadioGroupItem value={plan.id} id={plan.id} data-testid={`radio-plan-${plan.id}`} />
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-semibold">{plan.label}</span>
+                              {plan.popular && (
+                                <span className="text-xs bg-primary text-primary-foreground px-2 py-0.5 rounded-full">
+                                  Populair
+                                </span>
+                              )}
+                              {plan.discount > 0 && (
+                                <span className="text-xs text-green-600 dark:text-green-400 flex items-center gap-1">
+                                  <BadgePercent className="h-3 w-3" />
+                                  {plan.discount}% korting
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-sm text-muted-foreground">
+                              €{plan.pricePerYear.toFixed(2)}/jaar
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-bold text-lg">€{plan.totalPrice.toFixed(2)}</div>
+                          {plan.discount > 0 && (
+                            <div className="text-xs text-muted-foreground line-through">
+                              €{(BASE_YEARLY_PRICE * plan.years).toFixed(2)}
+                            </div>
+                          )}
+                        </div>
+                      </Label>
+                    </div>
+                  ))}
+                </RadioGroup>
+
+                <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+                  <h4 className="font-medium flex items-center gap-2">
+                    <Shield className="h-4 w-4 text-primary" />
+                    Inbegrepen in elk abonnement
+                  </h4>
+                  <ul className="text-sm text-muted-foreground space-y-1">
+                    <li className="flex items-center gap-2">
+                      <Check className="h-3 w-3 text-primary" />
+                      Profiel zichtbaar in zoekresultaten
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-3 w-3 text-primary" />
+                      Onbeperkt contactaanvragen ontvangen
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-3 w-3 text-primary" />
+                      Dashboard met statistieken
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-3 w-3 text-primary" />
+                      Klantenservice via email
+                    </li>
+                  </ul>
+                </div>
+
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Clock className="h-4 w-4" />
+                  <span>Je abonnement wordt actief na betaling</span>
+                </div>
+
+                <div className="pt-4 flex justify-between">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => setCurrentStep(3)}
+                    className="gap-2"
+                    data-testid="button-back"
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                    Terug
+                  </Button>
+                  <Button 
+                    onClick={handlePaymentSubmit} 
+                    disabled={isSubmitting} 
+                    className="gap-2" 
+                    data-testid="button-pay"
+                  >
+                    {isSubmitting ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <CreditCard className="h-4 w-4" />
+                    )}
+                    Betalen - €{pricingPlans.find(p => p.id === selectedPlan)?.totalPrice.toFixed(2)}
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           )}

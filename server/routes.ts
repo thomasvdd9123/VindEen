@@ -492,6 +492,61 @@ export async function registerRoutes(
     }
   });
 
+  // Create subscription (mock - will be updated for Stripe/Mollie)
+  app.post("/api/subscriptions", async (req, res) => {
+    try {
+      const { accountId, planId, years, totalAmount, status } = req.body;
+      
+      if (!accountId) {
+        return res.status(400).json({ error: "Account ID is required" });
+      }
+
+      // Calculate dates
+      const startDate = new Date();
+      const endDate = new Date();
+      endDate.setFullYear(endDate.getFullYear() + (years || 1));
+
+      // Create subscription item (mock - in production, status would be PENDING until payment confirmed)
+      const subscriptionItem = await storage.createSubscriptionItem({
+        accountId,
+        subscriptionPlanId: planId || null,
+        startDate,
+        endDate,
+        status: "ACTIVE", // For mock flow, set as active immediately
+        paymentFrequency: "YEARLY",
+        autoRenew: true,
+      });
+
+      console.log(`Created subscription for account ${accountId}:`, {
+        id: subscriptionItem.id,
+        years,
+        totalAmount,
+        status: subscriptionItem.status,
+      });
+
+      res.json({
+        success: true,
+        subscriptionId: subscriptionItem.id,
+        message: "Subscription created - awaiting payment",
+      });
+    } catch (error) {
+      console.error("Error creating subscription:", error);
+      res.status(500).json({ error: "Failed to create subscription" });
+    }
+  });
+
+  // Get subscriptions for account
+  app.get("/api/subscriptions/:accountId", async (req, res) => {
+    try {
+      const { accountId } = req.params;
+      const subscriptions = await storage.getSubscriptionItemsByAccountId(accountId);
+      res.json(subscriptions);
+    } catch (error) {
+      console.error("Error fetching subscriptions:", error);
+      res.status(500).json({ error: "Failed to fetch subscriptions" });
+    }
+  });
+
   // Get contact requests for profile
   app.get("/api/contact-requests/:profileId", async (req, res) => {
     try {

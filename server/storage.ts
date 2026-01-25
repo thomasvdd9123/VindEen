@@ -10,6 +10,7 @@ import type {
   ProfileWithRelations,
   SearchParams,
   SubscriptionPlan,
+  SubscriptionItem, InsertSubscriptionItem,
   ProfileStatusHistory, InsertProfileStatusHistory,
 } from "@shared/schema";
 import { supabaseStorage } from "./supabase-storage";
@@ -63,6 +64,10 @@ export interface IStorage {
 
   // Subscription Plans
   getSubscriptionPlans(): Promise<SubscriptionPlan[]>;
+
+  // Subscription Items
+  createSubscriptionItem(item: InsertSubscriptionItem): Promise<SubscriptionItem>;
+  getSubscriptionItemsByAccountId(accountId: string): Promise<SubscriptionItem[]>;
 }
 
 export class MemStorage implements IStorage {
@@ -807,6 +812,37 @@ export class MemStorage implements IStorage {
 
   // Subscription Plans
   async getSubscriptionPlans(): Promise<SubscriptionPlan[]> {
+    return [];
+  }
+
+  // Subscription Items (MemStorage stub - uses Supabase in production)
+  async createSubscriptionItem(item: InsertSubscriptionItem): Promise<SubscriptionItem> {
+    const id = randomUUID();
+    const subscriptionItem: SubscriptionItem = {
+      id,
+      accountId: item.accountId,
+      subscriptionPlanId: item.subscriptionPlanId || null,
+      mollieSubscriptionId: null,
+      mollieCustomerId: null,
+      molliePaymentId: null,
+      startDate: item.startDate,
+      endDate: item.endDate,
+      currentPeriodStart: null,
+      currentPeriodEnd: null,
+      autoRenew: item.autoRenew ?? true,
+      paymentFrequency: item.paymentFrequency || "YEARLY",
+      status: item.status || "ACTIVE",
+      mailInvoice: true,
+      gracePeriodUntil: null,
+      cancelAtPeriodEnd: false,
+      canceledAt: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    return subscriptionItem;
+  }
+
+  async getSubscriptionItemsByAccountId(accountId: string): Promise<SubscriptionItem[]> {
     return [];
   }
 

@@ -10,6 +10,7 @@ import type {
   ProfileWithRelations,
   SearchParams,
   SubscriptionPlan,
+  SubscriptionItem, InsertSubscriptionItem,
   ProfileStatusHistory, InsertProfileStatusHistory,
 } from "@shared/schema";
 import type { IStorage } from "./storage";
@@ -597,6 +598,37 @@ export class SupabaseStorage implements IStorage {
     return (data || []).map(this.mapSubscriptionPlan);
   }
 
+  // Subscription Items
+  async createSubscriptionItem(item: InsertSubscriptionItem): Promise<SubscriptionItem> {
+    const { data, error } = await supabaseAdmin
+      .from("subscription_items")
+      .insert({
+        account_id: item.accountId,
+        subscription_plan_id: item.subscriptionPlanId,
+        start_date: item.startDate,
+        end_date: item.endDate,
+        status: item.status || "PENDING",
+        payment_frequency: item.paymentFrequency || "YEARLY",
+        auto_renew: item.autoRenew ?? true,
+      })
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return this.mapSubscriptionItem(data);
+  }
+
+  async getSubscriptionItemsByAccountId(accountId: string): Promise<SubscriptionItem[]> {
+    const { data, error } = await supabaseAdmin
+      .from("subscription_items")
+      .select("*")
+      .eq("account_id", accountId)
+      .order("created_at", { ascending: false });
+    
+    if (error) throw error;
+    return (data || []).map(this.mapSubscriptionItem);
+  }
+
   // Mapping functions
   private mapCategory(data: Record<string, unknown>): Category {
     return {
@@ -744,6 +776,30 @@ export class SupabaseStorage implements IStorage {
       features: data.features as string | null,
       isActive: data.is_active as boolean,
       sortOrder: data.sort_order as number | null,
+      createdAt: new Date(data.created_at as string),
+      updatedAt: new Date(data.updated_at as string),
+    };
+  }
+
+  private mapSubscriptionItem(data: Record<string, unknown>): SubscriptionItem {
+    return {
+      id: data.id as string,
+      accountId: data.account_id as string,
+      subscriptionPlanId: data.subscription_plan_id as string | null,
+      mollieSubscriptionId: data.mollie_subscription_id as string | null,
+      mollieCustomerId: data.mollie_customer_id as string | null,
+      molliePaymentId: data.mollie_payment_id as string | null,
+      startDate: new Date(data.start_date as string),
+      endDate: new Date(data.end_date as string),
+      currentPeriodStart: data.current_period_start ? new Date(data.current_period_start as string) : null,
+      currentPeriodEnd: data.current_period_end ? new Date(data.current_period_end as string) : null,
+      autoRenew: data.auto_renew as boolean | null,
+      paymentFrequency: data.payment_frequency as SubscriptionItem["paymentFrequency"],
+      status: data.status as SubscriptionItem["status"],
+      mailInvoice: data.mail_invoice as boolean | null,
+      gracePeriodUntil: data.grace_period_until ? new Date(data.grace_period_until as string) : null,
+      cancelAtPeriodEnd: data.cancel_at_period_end as boolean | null,
+      canceledAt: data.canceled_at ? new Date(data.canceled_at as string) : null,
       createdAt: new Date(data.created_at as string),
       updatedAt: new Date(data.updated_at as string),
     };
