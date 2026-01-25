@@ -267,6 +267,7 @@ function OnboardingContent() {
 
       await apiRequest("POST", "/api/subscriptions", {
         accountId: createdAccountId,
+        profileId: createdProfileId,
         planId: selectedPlan,
         years: plan.years,
         totalAmount: plan.totalPrice,

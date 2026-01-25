@@ -629,6 +629,22 @@ export class SupabaseStorage implements IStorage {
     return (data || []).map(this.mapSubscriptionItem);
   }
 
+  async getSubscriptionItemByProfileId(profileId: string): Promise<SubscriptionItem | null> {
+    const { data, error } = await supabaseAdmin
+      .from("subscription_items")
+      .select("*")
+      .eq("profile_id", profileId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single();
+    
+    if (error) {
+      if (error.code === "PGRST116") return null; // No rows found
+      throw error;
+    }
+    return data ? this.mapSubscriptionItem(data) : null;
+  }
+
   // Mapping functions
   private mapCategory(data: Record<string, unknown>): Category {
     return {
@@ -785,6 +801,7 @@ export class SupabaseStorage implements IStorage {
     return {
       id: data.id as string,
       accountId: data.account_id as string,
+      profileId: data.profile_id as string | null,
       subscriptionPlanId: data.subscription_plan_id as string | null,
       mollieSubscriptionId: data.mollie_subscription_id as string | null,
       mollieCustomerId: data.mollie_customer_id as string | null,

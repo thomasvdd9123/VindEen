@@ -496,6 +496,7 @@ export async function registerRoutes(
   // Extended schema for API request (includes years for date calculation)
   const createSubscriptionApiSchema = insertSubscriptionItemSchema.pick({
     accountId: true,
+    profileId: true,
     subscriptionPlanId: true,
     autoRenew: true,
     paymentFrequency: true,
@@ -515,7 +516,7 @@ export async function registerRoutes(
         });
       }
 
-      const { accountId, subscriptionPlanId, years, totalAmount, autoRenew, paymentFrequency } = validationResult.data;
+      const { accountId, profileId, subscriptionPlanId, years, totalAmount, autoRenew, paymentFrequency } = validationResult.data;
 
       // Calculate dates based on validated years
       const startDate = new Date();
@@ -525,6 +526,7 @@ export async function registerRoutes(
       // Create subscription item (mock - in production, status would be PENDING until payment confirmed)
       const subscriptionItem = await storage.createSubscriptionItem({
         accountId,
+        profileId: profileId || null,
         subscriptionPlanId: subscriptionPlanId || null,
         startDate,
         endDate,
@@ -560,6 +562,18 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error fetching subscriptions:", error);
       res.status(500).json({ error: "Failed to fetch subscriptions" });
+    }
+  });
+
+  // Get subscription for a specific profile
+  app.get("/api/subscriptions/profile/:profileId", async (req, res) => {
+    try {
+      const { profileId } = req.params;
+      const subscription = await storage.getSubscriptionItemByProfileId(profileId);
+      res.json(subscription);
+    } catch (error) {
+      console.error("Error fetching profile subscription:", error);
+      res.status(500).json({ error: "Failed to fetch subscription" });
     }
   });
 

@@ -206,6 +206,7 @@ export const subscriptionPlans = pgTable("subscription_plans", {
 export const subscriptionItems = pgTable("subscription_items", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   accountId: varchar("account_id").notNull().references(() => accounts.id),
+  profileId: varchar("profile_id").references(() => profiles.id),
   subscriptionPlanId: varchar("subscription_plan_id").references(() => subscriptionPlans.id),
   mollieSubscriptionId: text("mollie_subscription_id"),
   mollieCustomerId: text("mollie_customer_id"),

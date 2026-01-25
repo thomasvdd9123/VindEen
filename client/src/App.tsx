@@ -19,6 +19,7 @@ import DashboardAccount from "@/pages/dashboard/Account";
 import DashboardProfiles from "@/pages/dashboard/Profiles";
 import ProfileCreate from "@/pages/dashboard/ProfileCreate";
 import ProfileEdit from "@/pages/dashboard/ProfileEdit";
+import ProfilePayment from "@/pages/dashboard/ProfilePayment";
 import DashboardContacts from "@/pages/dashboard/Contacts";
 import DashboardStatistics from "@/pages/dashboard/Statistics";
 import FAQ from "@/pages/FAQ";
@@ -45,6 +46,7 @@ function Router() {
       <Route path="/dashboard/profielen" component={DashboardProfiles} />
       <Route path="/dashboard/profielen/nieuw" component={ProfileCreate} />
       <Route path="/dashboard/profielen/:id/bewerken" component={ProfileEdit} />
+      <Route path="/dashboard/profielen/:id/betalen" component={ProfilePayment} />
       <Route path="/dashboard/contacten" component={DashboardContacts} />
       <Route path="/dashboard/statistieken" component={DashboardStatistics} />
       <Route path="/faq" component={FAQ} />

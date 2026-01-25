@@ -68,6 +68,7 @@ export interface IStorage {
   // Subscription Items
   createSubscriptionItem(item: InsertSubscriptionItem): Promise<SubscriptionItem>;
   getSubscriptionItemsByAccountId(accountId: string): Promise<SubscriptionItem[]>;
+  getSubscriptionItemByProfileId(profileId: string): Promise<SubscriptionItem | null>;
 }
 
 export class MemStorage implements IStorage {
@@ -823,6 +824,7 @@ export class MemStorage implements IStorage {
     const subscriptionItem: SubscriptionItem = {
       id,
       accountId: item.accountId,
+      profileId: item.profileId || null,
       subscriptionPlanId: item.subscriptionPlanId || null,
       mollieSubscriptionId: null,
       mollieCustomerId: null,
@@ -849,6 +851,13 @@ export class MemStorage implements IStorage {
     return Array.from(this.subscriptionItems.values())
       .filter((item) => item.accountId === accountId)
       .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+
+  async getSubscriptionItemByProfileId(profileId: string): Promise<SubscriptionItem | null> {
+    const items = Array.from(this.subscriptionItems.values())
+      .filter((item) => item.profileId === profileId)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    return items[0] || null;
   }
 
   // Helper to enrich profile with relations

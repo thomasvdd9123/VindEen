@@ -17,8 +17,11 @@ import {
   XCircle,
   Leaf,
   Loader2,
+  CreditCard,
+  Calendar,
+  AlertTriangle,
 } from "lucide-react";
-import type { Profile } from "@shared/schema";
+import type { Profile, SubscriptionItem } from "@shared/schema";
 
 export default function DashboardProfiles() {
   const { user } = useAuth();
@@ -122,14 +125,32 @@ export default function DashboardProfiles() {
 }
 
 function ProfileCard({ profile, onDelete }: { profile: Profile; onDelete: (id: string, name: string) => void }) {
+  // Fetch subscription status for this profile
+  const { data: subscription } = useQuery<SubscriptionItem | null>({
+    queryKey: ["/api/subscriptions/profile", profile.id],
+    staleTime: 1000 * 60 * 5,
+  });
+
   const statusConfig: Record<string, { label: string; icon: any; variant: "default" | "secondary" | "destructive" | "outline" }> = {
     APPROVED: { label: "Goedgekeurd", icon: CheckCircle, variant: "default" },
     PENDING: { label: "In behandeling", icon: Clock, variant: "secondary" },
     REJECTED: { label: "Afgewezen", icon: XCircle, variant: "destructive" },
   };
 
+  const subscriptionConfig: Record<string, { label: string; icon: any; variant: "default" | "secondary" | "destructive" | "outline" }> = {
+    ACTIVE: { label: "Actief abonnement", icon: CreditCard, variant: "default" },
+    EXPIRED: { label: "Verlopen", icon: AlertTriangle, variant: "destructive" },
+    CANCELLED: { label: "Opgezegd", icon: XCircle, variant: "secondary" },
+  };
+
   const status = statusConfig[profile.verificationStatus || "PENDING"] || statusConfig.PENDING;
   const StatusIcon = status.icon;
+
+  // Determine subscription display
+  const subStatus = subscription?.status ? subscriptionConfig[subscription.status] : null;
+  const SubIcon = subStatus?.icon;
+  const endDate = subscription?.endDate ? new Date(subscription.endDate) : null;
+  const isExpiringSoon = endDate && endDate.getTime() - Date.now() < 30 * 24 * 60 * 60 * 1000; // 30 days
 
   return (
     <Card data-testid={`card-profile-${profile.id}`}>
@@ -153,17 +174,52 @@ function ProfileCard({ profile, onDelete }: { profile: Profile; onDelete: (id: s
                   <p className="text-sm text-muted-foreground">{profile.title}</p>
                 )}
               </div>
-              <Badge variant={status.variant} className="gap-1 shrink-0">
-                <StatusIcon className="h-3 w-3" />
-                {status.label}
-              </Badge>
+              <div className="flex flex-col gap-1 items-end shrink-0">
+                <Badge variant={status.variant} className="gap-1">
+                  <StatusIcon className="h-3 w-3" />
+                  {status.label}
+                </Badge>
+                {/* Subscription status badge */}
+                {subscription && subStatus ? (
+                  <Badge 
+                    variant={isExpiringSoon ? "destructive" : subStatus.variant} 
+                    className="gap-1"
+                    data-testid={`badge-subscription-${profile.id}`}
+                  >
+                    {SubIcon && <SubIcon className="h-3 w-3" />}
+                    {isExpiringSoon ? "Verloopt binnenkort" : subStatus.label}
+                  </Badge>
+                ) : (
+                  <Badge variant="outline" className="gap-1 border-amber-500 text-amber-600">
+                    <AlertTriangle className="h-3 w-3" />
+                    Niet betaald
+                  </Badge>
+                )}
+              </div>
             </div>
+
+            {/* Subscription info row */}
+            {subscription && endDate && (
+              <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
+                <Calendar className="h-3 w-3" />
+                <span>Abonnement geldig t/m {endDate.toLocaleDateString("nl-BE", { day: "numeric", month: "long", year: "numeric" })}</span>
+              </div>
+            )}
 
             <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
               {profile.introduction || "Geen introductie ingesteld"}
             </p>
 
             <div className="flex flex-wrap gap-2">
+              {/* Show payment button if no subscription */}
+              {!subscription && (
+                <Link href={`/dashboard/profielen/${profile.id}/betalen`}>
+                  <Button size="sm" className="gap-1" data-testid={`button-pay-${profile.id}`}>
+                    <CreditCard className="h-3.5 w-3.5" />
+                    Betalen
+                  </Button>
+                </Link>
+              )}
               <Link href={`/bedrijf/${profile.slug}`}>
                 <Button variant="outline" size="sm" className="gap-1" data-testid={`button-view-${profile.id}`}>
                   <Eye className="h-3.5 w-3.5" />

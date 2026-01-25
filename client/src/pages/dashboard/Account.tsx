@@ -11,12 +11,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/lib/auth";
-import { Loader2, Save, Mail, Trash2, AlertTriangle } from "lucide-react";
+import { Loader2, Save, Mail, Trash2, AlertTriangle, CreditCard, Calendar, CheckCircle, XCircle, Clock } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { supabase } from "@/lib/supabase";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { Account } from "@shared/schema";
+import type { Account, SubscriptionItem } from "@shared/schema";
+import { Badge } from "@/components/ui/badge";
 
 const accountSchema = z.object({
   firstName: z.string().min(2, "Voornaam is verplicht"),
