@@ -27,7 +27,11 @@ import {
   CreditCard,
   BadgePercent,
   Clock,
-  Shield
+  Shield,
+  Camera,
+  Upload,
+  X,
+  ImageIcon
 } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
@@ -80,7 +84,8 @@ const steps = [
   { id: 1, title: "Persoonlijk", icon: User },
   { id: 2, title: "Bedrijf", icon: Building2 },
   { id: 3, title: "Profiel", icon: Briefcase },
-  { id: 4, title: "Betaling", icon: CreditCard },
+  { id: 4, title: "Foto's", icon: Camera },
+  { id: 5, title: "Betaling", icon: CreditCard },
 ];
 
 // Pricing plans: 1 year, 2 years (5% discount), 3 years (10% discount)
@@ -124,6 +129,13 @@ function OnboardingContent() {
   const [selectedPlan, setSelectedPlan] = useState("2year"); // Default to popular option
   const [createdProfileId, setCreatedProfileId] = useState<string | null>(null);
   const [createdAccountId, setCreatedAccountId] = useState<string | null>(null);
+  
+  // Photo upload state
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [extraFiles, setExtraFiles] = useState<File[]>([]);
+  const [extraPreviews, setExtraPreviews] = useState<string[]>([]);
+  const [isUploadingPhotos, setIsUploadingPhotos] = useState(false);
 
   const metadata = getUserMetadata();
 
@@ -240,7 +252,7 @@ function OnboardingContent() {
       const result = await createProfileMutation.mutateAsync(data) as { id: string; accountId: string };
       setCreatedProfileId(result.id);
       setCreatedAccountId(result.accountId);
-      setCurrentStep(4); // Go to payment step
+      setCurrentStep(4); // Go to photos step
     } catch (error: any) {
       toast({ 
         title: "Fout", 
@@ -250,6 +262,95 @@ function OnboardingContent() {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  // Handle logo file selection
+  const handleLogoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setLogoFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => setLogoPreview(reader.result as string);
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Handle extra images selection
+  const handleExtraImagesSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    const maxFiles = 5 - extraFiles.length;
+    const newFiles = files.slice(0, maxFiles);
+    
+    setExtraFiles(prev => [...prev, ...newFiles]);
+    
+    newFiles.forEach(file => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setExtraPreviews(prev => [...prev, reader.result as string]);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  // Remove extra image
+  const removeExtraImage = (index: number) => {
+    setExtraFiles(prev => prev.filter((_, i) => i !== index));
+    setExtraPreviews(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Handle photos upload and proceed to payment
+  const handlePhotosSubmit = async () => {
+    if (!createdProfileId) {
+      toast({ title: "Fout", description: "Profiel niet gevonden", variant: "destructive" });
+      return;
+    }
+
+    setIsUploadingPhotos(true);
+    try {
+      // Upload logo if selected
+      if (logoFile) {
+        const logoFormData = new FormData();
+        logoFormData.append("file", logoFile);
+        logoFormData.append("type", "profile");
+        await fetch(`/api/profiles/${createdProfileId}/upload`, {
+          method: "POST",
+          body: logoFormData,
+        });
+      }
+
+      // Upload extra images if any
+      for (const file of extraFiles) {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("type", "extra");
+        await fetch(`/api/profiles/${createdProfileId}/upload`, {
+          method: "POST",
+          body: formData,
+        });
+      }
+
+      queryClient.invalidateQueries({ queryKey: ["/api/my-profiles"] });
+      
+      toast({
+        title: "Foto's geüpload!",
+        description: "Je foto's zijn succesvol opgeslagen.",
+      });
+
+      setCurrentStep(5); // Go to payment step
+    } catch (error: any) {
+      toast({
+        title: "Upload mislukt",
+        description: error.message || "Kon foto's niet uploaden",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploadingPhotos(false);
+    }
+  };
+
+  // Skip photos and go directly to payment
+  const handleSkipPhotos = () => {
+    setCurrentStep(5);
   };
 
   const handlePaymentSubmit = async () => {
@@ -721,6 +822,134 @@ function OnboardingContent() {
           )}
 
           {currentStep === 4 && (
+            <Card data-testid="card-step-photos">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Camera className="h-5 w-5" />
+                  Voeg foto's toe
+                </CardTitle>
+                <CardDescription>
+                  Upload je logo en extra foto's om je profiel aantrekkelijker te maken voor klanten.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Logo upload */}
+                <div>
+                  <Label className="text-sm font-medium mb-2 block">Bedrijfslogo</Label>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    Upload je logo. Dit wordt weergegeven op je profiel en in zoekresultaten.
+                  </p>
+                  <div className="flex items-start gap-4">
+                    <div className="w-24 h-24 border-2 border-dashed rounded-lg flex items-center justify-center bg-muted/50 overflow-hidden">
+                      {logoPreview ? (
+                        <img src={logoPreview} alt="Logo preview" className="w-full h-full object-cover" />
+                      ) : (
+                        <ImageIcon className="h-8 w-8 text-muted-foreground" />
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleLogoSelect}
+                        className="hidden"
+                        id="logo-upload"
+                        data-testid="input-logo"
+                      />
+                      <Label htmlFor="logo-upload" className="cursor-pointer">
+                        <Button type="button" variant="outline" size="sm" className="gap-2" asChild>
+                          <span>
+                            <Upload className="h-4 w-4" />
+                            {logoFile ? "Wijzig logo" : "Upload logo"}
+                          </span>
+                        </Button>
+                      </Label>
+                      {logoFile && (
+                        <p className="text-xs text-muted-foreground mt-2">{logoFile.name}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Extra images upload */}
+                <div>
+                  <Label className="text-sm font-medium mb-2 block">Extra foto's (optioneel)</Label>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    Voeg foto's toe van je werk, team of materiaal. Max 5 foto's.
+                  </p>
+                  
+                  <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
+                    {extraPreviews.map((preview, index) => (
+                      <div key={index} className="relative aspect-square rounded-lg overflow-hidden border group">
+                        <img src={preview} alt={`Extra ${index + 1}`} className="w-full h-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => removeExtraImage(index)}
+                          className="absolute top-1 right-1 p-1 bg-destructive text-destructive-foreground rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                          data-testid={`button-remove-image-${index}`}
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
+                    
+                    {extraFiles.length < 5 && (
+                      <label className="aspect-square border-2 border-dashed rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 transition-colors bg-muted/50">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          onChange={handleExtraImagesSelect}
+                          className="hidden"
+                          data-testid="input-extra-images"
+                        />
+                        <Upload className="h-5 w-5 text-muted-foreground mb-1" />
+                        <span className="text-xs text-muted-foreground">Toevoegen</span>
+                      </label>
+                    )}
+                  </div>
+                </div>
+
+                <div className="pt-4 flex justify-between">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => setCurrentStep(3)}
+                    className="gap-2"
+                    data-testid="button-back"
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                    Terug
+                  </Button>
+                  <div className="flex gap-2">
+                    <Button 
+                      type="button" 
+                      variant="ghost"
+                      onClick={handleSkipPhotos}
+                      data-testid="button-skip-photos"
+                    >
+                      Overslaan
+                    </Button>
+                    <Button 
+                      onClick={handlePhotosSubmit}
+                      disabled={isUploadingPhotos}
+                      className="gap-2"
+                      data-testid="button-next-payment"
+                    >
+                      {isUploadingPhotos ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <ArrowRight className="h-4 w-4" />
+                      )}
+                      {logoFile || extraFiles.length > 0 ? "Uploaden & doorgaan" : "Volgende"}
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {currentStep === 5 && (
             <Card data-testid="card-step-payment">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -816,7 +1045,7 @@ function OnboardingContent() {
                   <Button 
                     type="button" 
                     variant="outline" 
-                    onClick={() => setCurrentStep(3)}
+                    onClick={() => setCurrentStep(4)}
                     className="gap-2"
                     data-testid="button-back"
                   >
