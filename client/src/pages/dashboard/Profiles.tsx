@@ -25,22 +25,29 @@ export default function DashboardProfiles() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [accountId, setAccountId] = useState<string | null>(null);
+  const [isLoadingAccount, setIsLoadingAccount] = useState(true);
 
   useEffect(() => {
     if (user?.id) {
+      setIsLoadingAccount(true);
       apiRequest("POST", "/api/accounts", {
         authUserId: user.id,
         email: user.email,
       }).then((response) => {
         setAccountId((response as { id: string }).id);
-      }).catch(console.error);
+      }).catch(console.error)
+      .finally(() => setIsLoadingAccount(false));
+    } else {
+      setIsLoadingAccount(false);
     }
   }, [user?.id, user?.email]);
 
-  const { data: profiles = [], isLoading } = useQuery<Profile[]>({
+  const { data: profiles = [], isLoading: isLoadingProfiles } = useQuery<Profile[]>({
     queryKey: ["/api/my-profiles", accountId],
     enabled: !!accountId,
   });
+
+  const isLoading = isLoadingAccount || isLoadingProfiles;
 
   const deleteMutation = useMutation({
     mutationFn: async (profileId: string) => {
