@@ -22,7 +22,10 @@ export function Header() {
 
   const handleSignOut = async () => {
     await signOut();
-    window.location.href = "/";
+    // Small delay to ensure session is fully cleared before redirect
+    setTimeout(() => {
+      window.location.href = "/";
+    }, 100);
   };
 
   return (

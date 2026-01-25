@@ -139,9 +139,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = useCallback(async () => {
     if (!isSupabaseConfigured) return;
-    await supabase.auth.signOut();
+    // Clear state first to prevent race conditions
     setUser(null);
     setSession(null);
+    // Sign out with global scope to clear all sessions
+    await supabase.auth.signOut({ scope: 'global' });
   }, []);
 
   const resetPassword = useCallback(async (email: string) => {
