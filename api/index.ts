@@ -1035,25 +1035,40 @@ Sitemap: ${SITEMAP_BASE_URL}/sitemap.xml
 
     // POST /api/mollie/create-payment
     if (method === "POST" && path === "/api/mollie/create-payment") {
-      const { profileId, accountId, planId } = req.body;
-      
-      if (!profileId || !accountId || !planId) {
-        return res.status(400).json({ error: "Missing required fields: profileId, accountId, planId" });
-      }
+      try {
+        const { profileId, accountId, planId } = req.body;
+        
+        console.log("Create payment request:", { profileId, accountId, planId });
+        
+        if (!profileId || !accountId || !planId) {
+          return res.status(400).json({ error: "Missing required fields: profileId, accountId, planId" });
+        }
 
-      if (!PRICING_PLANS[planId]) {
-        return res.status(400).json({ error: "Invalid plan selected" });
-      }
+        if (!PRICING_PLANS[planId]) {
+          return res.status(400).json({ error: "Invalid plan selected" });
+        }
 
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("id, name")
-        .eq("id", profileId)
-        .single();
+        // Check Mollie API key early
+        const mollieApiKey = process.env.MOLLIE_API_KEY;
+        if (!mollieApiKey) {
+          console.error("MOLLIE_API_KEY not configured");
+          return res.status(500).json({ error: "Payment service not configured" });
+        }
 
-      if (!profile) {
-        return res.status(404).json({ error: "Profile not found" });
-      }
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles")
+          .select("id, name")
+          .eq("id", profileId)
+          .single();
+
+        if (profileError) {
+          console.error("Profile lookup error:", profileError);
+          return res.status(500).json({ error: "Database error looking up profile" });
+        }
+
+        if (!profile) {
+          return res.status(404).json({ error: "Profile not found" });
+        }
 
       const plan = PRICING_PLANS[planId];
 
@@ -1110,11 +1125,6 @@ Sitemap: ${SITEMAP_BASE_URL}/sitemap.xml
       }
 
       // Create Mollie payment
-      const mollieApiKey = process.env.MOLLIE_API_KEY;
-      if (!mollieApiKey) {
-        return res.status(500).json({ error: "Mollie API key not configured" });
-      }
-
       const baseUrl = "https://www.zoek-een-tuinman.be";
       const mollieResponse = await fetch("https://api.mollie.com/v2/payments", {
         method: "POST",
@@ -1160,6 +1170,10 @@ Sitemap: ${SITEMAP_BASE_URL}/sitemap.xml
         paymentId: molliePayment.id,
         subscriptionId: subscriptionItem.id,
       });
+      } catch (paymentError: any) {
+        console.error("Payment creation error:", paymentError);
+        return res.status(500).json({ error: paymentError.message || "Payment creation failed" });
+      }
     }
 
     // POST /api/mollie/webhook
