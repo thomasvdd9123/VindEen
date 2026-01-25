@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { SEO } from "@/components/SEO";
 import { siteConfig } from "@/lib/theme.config";
 import { Link } from "wouter";
 import { Users, Target, Shield, Leaf } from "lucide-react";
@@ -32,6 +33,11 @@ const values = [
 export default function About() {
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      <SEO
+        title="Over ons"
+        description="Leer meer over Zoek-een-tuinman.be. Wij verbinden tuinprofessionals met klanten in heel België."
+        canonical="/over-ons"
+      />
       <Header />
       <main className="flex-1">
         <div className="bg-primary/5 border-b">

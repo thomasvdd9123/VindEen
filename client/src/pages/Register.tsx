@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Link, useLocation } from "wouter";
 import { z } from "zod";
 import { Layout } from "@/components/layout/Layout";
+import { SEO } from "@/components/SEO";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -123,6 +124,11 @@ export default function Register() {
 
   return (
     <Layout>
+      <SEO
+        title="Registreren als tuinman"
+        description="Registreer je gratis als tuinman op Zoek-een-tuinman.be en bereik duizenden potentiële klanten in België."
+        noindex={true}
+      />
       <div className="min-h-[calc(100vh-200px)] py-12 px-4">
         <div className="max-w-4xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">

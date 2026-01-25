@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { SEO } from "@/components/SEO";
 import { useQuery } from "@tanstack/react-query";
 import { Check, Loader2, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -16,6 +17,11 @@ export default function Pricing() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      <SEO
+        title="Prijzen en abonnementen"
+        description="Bekijk de prijzen voor een vermelding op Zoek-een-tuinman.be. Kies het abonnement dat bij jou past."
+        canonical="/prijzen"
+      />
       <Header />
       <main className="flex-1">
         <div className="bg-primary/5 border-b">

@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { SEO } from "@/components/SEO";
 import { siteConfig } from "@/lib/theme.config";
 import { useToast } from "@/hooks/use-toast";
 import { Mail, Phone, MapPin, Send, Loader2 } from "lucide-react";
@@ -67,6 +68,11 @@ export default function Contact() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      <SEO
+        title="Contact"
+        description="Neem contact op met Zoek-een-tuinman.be. Heb je vragen of feedback? We helpen je graag verder."
+        canonical="/contact"
+      />
       <Header />
       <main className="flex-1">
         <div className="bg-primary/5 border-b">

@@ -747,11 +747,22 @@ export async function registerRoutes(
 
   const allSpecializations = Object.entries(specializationSlugs);
 
-  // robots.txt
+  // robots.txt - SEO optimized with blocked paths
   app.get("/robots.txt", (req, res) => {
     const robotsTxt = `User-agent: *
 Allow: /
 
+# Block non-indexable paths
+Disallow: /login
+Disallow: /registreren
+Disallow: /wachtwoord-vergeten
+Disallow: /wachtwoord-reset
+Disallow: /onboarding
+Disallow: /dashboard
+Disallow: /dashboard/*
+Disallow: /api/
+
+# Sitemap location
 Sitemap: ${SITEMAP_BASE_URL}/sitemap.xml
 `;
     res.set("Content-Type", "text/plain");
@@ -1118,18 +1129,6 @@ Sitemap: ${SITEMAP_BASE_URL}/sitemap.xml
       console.error("Error fixing profile references:", error);
       res.status(500).json({ error: "Failed to fix profile references" });
     }
-  });
-
-  // Robots.txt
-  app.get("/robots.txt", (req, res) => {
-    const baseUrl = "https://www.zoek-een-tuinman.be";
-    const robots = `User-agent: *
-Allow: /
-
-Sitemap: ${baseUrl}/sitemap.xml
-`;
-    res.set("Content-Type", "text/plain");
-    res.send(robots);
   });
 
   return httpServer;

@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { SEO } from "@/components/SEO";
 import { siteConfig } from "@/lib/theme.config";
 
 const faqs = [
@@ -50,6 +51,11 @@ const faqs = [
 export default function FAQ() {
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      <SEO
+        title="Veelgestelde vragen (FAQ)"
+        description="Antwoorden op veelgestelde vragen over Zoek-een-tuinman.be. Leer hoe je je registreert, profiel beheert en contactaanvragen ontvangt."
+        canonical="/faq"
+      />
       <Header />
       <main className="flex-1">
         <div className="bg-primary/5 border-b">

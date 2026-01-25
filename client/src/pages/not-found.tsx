@@ -1,11 +1,17 @@
 import { Link } from "wouter";
 import { Layout } from "@/components/layout/Layout";
+import { SEO } from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 import { Leaf, Search, Home } from "lucide-react";
 
 export default function NotFound() {
   return (
     <Layout>
+      <SEO
+        title="Pagina niet gevonden (404)"
+        description="De pagina die je zoekt bestaat niet of is verplaatst."
+        noindex={true}
+      />
       <div className="min-h-[calc(100vh-300px)] flex items-center justify-center py-16 px-4">
         <div className="text-center max-w-md">
           <div className="flex justify-center mb-6">

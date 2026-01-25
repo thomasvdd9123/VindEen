@@ -118,7 +118,7 @@ export default function ProfilePage() {
     .slice(0, 2);
 
   const office = profile.office;
-  const locationName = office?.city || profile.location?.name || "";
+  const locationName = office?.municipality || office?.town || profile.location?.name || "";
   
   const seoTitle = locationName 
     ? `${profile.name} - Tuinman in ${locationName}`

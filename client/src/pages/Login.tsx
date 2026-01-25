@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Link, useLocation } from "wouter";
 import { z } from "zod";
 import { Layout } from "@/components/layout/Layout";
+import { SEO } from "@/components/SEO";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -83,6 +84,11 @@ export default function Login() {
 
   return (
     <Layout>
+      <SEO
+        title="Inloggen"
+        description="Log in op je Zoek-een-tuinman.be account om je profiel te beheren."
+        noindex={true}
+      />
       <div className="min-h-[calc(100vh-200px)] flex items-center justify-center py-12 px-4">
         <Card className="w-full max-w-md" data-testid="card-login">
           <CardHeader className="text-center">
