@@ -603,7 +603,7 @@ export class SupabaseStorage implements IStorage {
     const { data, error } = await supabaseAdmin
       .from("subscription_items")
       .insert({
-        account_id: item.accountId,
+        gardener_id: item.accountId,
         profile_id: item.profileId,
         subscription_plan_id: item.subscriptionPlanId,
         start_date: item.startDate,
@@ -629,7 +629,7 @@ export class SupabaseStorage implements IStorage {
     const { data, error } = await supabaseAdmin
       .from("subscription_items")
       .select("*")
-      .eq("account_id", accountId)
+      .eq("gardener_id", accountId)
       .order("created_at", { ascending: false });
     
     if (error) throw error;
@@ -860,7 +860,7 @@ export class SupabaseStorage implements IStorage {
   private mapSubscriptionItem(data: Record<string, unknown>): SubscriptionItem {
     return {
       id: data.id as string,
-      accountId: data.account_id as string,
+      accountId: (data.gardener_id || data.account_id) as string,
       profileId: data.profile_id as string | null,
       subscriptionPlanId: data.subscription_plan_id as string | null,
       mollieSubscriptionId: data.mollie_subscription_id as string | null,

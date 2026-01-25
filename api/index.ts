@@ -1092,7 +1092,7 @@ Sitemap: ${SITEMAP_BASE_URL}/sitemap.xml
         const { data, error } = await supabase
           .from("subscription_items")
           .insert({
-            account_id: accountId,
+            gardener_id: accountId,
             profile_id: profileId,
             start_date: startDate.toISOString(),
             end_date: endDate.toISOString(),
