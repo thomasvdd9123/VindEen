@@ -7,9 +7,29 @@ import { MapPin, Phone, Globe, Star, CheckCircle, ArrowRight } from "lucide-reac
 import type { ProfileWithRelations } from "@shared/schema";
 import { specializationLabels } from "@shared/schema";
 
-// Convert specialization key to URL slug (e.g., GRAS_MAAIEN -> gras-maaien)
-function getSpecializationSlug(spec: string): string {
-  return spec.toLowerCase().replace(/_/g, "-");
+// Canonical specialization key -> URL slug mapping (must match CategoryPage)
+const specializationSlugMap: Record<string, string> = {
+  GRAS_MAAIEN: "gras-maaien",
+  SNOEIEN_BOMEN: "bomen-snoeien",
+  SNOEIEN_STRUIKEN: "struiken-snoeien",
+  HAAG_KNIPPEN: "hagen-knippen",
+  ONKRUID_VERWIJDEREN: "onkruid-verwijderen",
+  BLADEREN_RUIMEN: "bladeren-ruimen",
+  BEMESTING: "bemesting",
+  GAZONONDERHOUD: "gazononderhoud",
+  GRASAANLEG: "grasaanleg",
+  PADEN_TERRASSEN: "paden-terrassen",
+  HOUTEN_CONSTRUCTIES: "houten-constructies",
+  AFSLUITINGEN: "afsluitingen",
+  VIJVERS: "vijvers",
+  BESTRATING: "bestrating",
+  BEPLANTING: "beplanting",
+  IRRIGATIE: "irrigatie",
+};
+
+// Get URL slug for a specialization key
+function getSpecializationSlug(spec: string): string | null {
+  return specializationSlugMap[spec] || null;
 }
 
 interface ProfileCardProps {
@@ -72,17 +92,25 @@ export function ProfileCard({ profile }: ProfileCardProps) {
 
             {profile.specializations && profile.specializations.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mt-3">
-                {profile.specializations.slice(0, 3).map((spec) => (
-                  <Link key={spec} href={`/zoek/${getSpecializationSlug(spec)}`}>
+                {profile.specializations.slice(0, 3).map((spec) => {
+                  const slug = getSpecializationSlug(spec);
+                  const badge = (
                     <Badge 
                       variant="outline" 
-                      className="text-xs font-normal cursor-pointer"
+                      className={`text-xs font-normal ${slug ? 'cursor-pointer' : ''}`}
                       data-testid={`badge-spec-${spec.toLowerCase()}`}
                     >
                       {specializationLabels[spec] || spec}
                     </Badge>
-                  </Link>
-                ))}
+                  );
+                  return slug ? (
+                    <Link key={spec} href={`/zoek/${slug}`}>
+                      {badge}
+                    </Link>
+                  ) : (
+                    <span key={spec}>{badge}</span>
+                  );
+                })}
                 {profile.specializations.length > 3 && (
                   <Badge variant="outline" className="text-xs font-normal">
                     +{profile.specializations.length - 3}
