@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,6 +28,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { siteConfig } from "@/lib/theme.config";
+import { queryClient } from "@/lib/queryClient";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -45,6 +47,36 @@ const sidebarLinks = [
 export function DashboardLayout({ children, title, description }: DashboardLayoutProps) {
   const [location] = useLocation();
   const { user, signOut, loading, isConfigured } = useAuth();
+
+  // Prefetch all dashboard data when user enters dashboard
+  useEffect(() => {
+    if (user?.id) {
+      // Prefetch account data
+      queryClient.prefetchQuery({
+        queryKey: ["/api/accounts/by-auth", user.id],
+        staleTime: 1000 * 60 * 5,
+      });
+      
+      // Fetch account first, then prefetch related data
+      fetch(`/api/accounts/by-auth/${user.id}`)
+        .then(res => res.json())
+        .then((account: { id: string }) => {
+          if (account?.id) {
+            // Prefetch profiles
+            queryClient.prefetchQuery({
+              queryKey: ["/api/my-profiles", account.id],
+              staleTime: 1000 * 60 * 5,
+            });
+            // Prefetch contact requests (for all profiles)
+            queryClient.prefetchQuery({
+              queryKey: ["/api/contact-requests", account.id],
+              staleTime: 1000 * 60 * 5,
+            });
+          }
+        })
+        .catch(() => {}); // Silently fail prefetch
+    }
+  }, [user?.id]);
 
   const handleSignOut = async () => {
     await signOut();
