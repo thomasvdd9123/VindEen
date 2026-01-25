@@ -1006,6 +1006,245 @@ Sitemap: ${SITEMAP_BASE_URL}/sitemap.xml
       return res.send("google-site-verification: googlec82c9dc9a541d03e.html");
     }
 
+    // ============================================
+    // MOLLIE PAYMENT ROUTES
+    // ============================================
+
+    // Pricing plans
+    const PRICING_PLANS: Record<string, { years: number; price: number; label: string }> = {
+      "1-year": { years: 1, price: 149, label: "1 Jaar" },
+      "2-year": { years: 2, price: 249, label: "2 Jaar" },
+      "3-year": { years: 3, price: 349, label: "3 Jaar" },
+    };
+
+    // GET /api/subscriptions/profile/:profileId
+    if (method === "GET" && path.match(/^\/api\/subscriptions\/profile\/[^/]+$/)) {
+      const profileId = path.split("/").pop();
+      const { data, error } = await supabase
+        .from("subscription_items")
+        .select("*")
+        .eq("profile_id", profileId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
+      
+      if (error && error.code !== "PGRST116") throw error;
+      if (!data) return res.status(404).json({ error: "No subscription found" });
+      return res.status(200).json(toCamelCase(data));
+    }
+
+    // POST /api/mollie/create-payment
+    if (method === "POST" && path === "/api/mollie/create-payment") {
+      const { profileId, accountId, planId } = req.body;
+      
+      if (!profileId || !accountId || !planId) {
+        return res.status(400).json({ error: "Missing required fields: profileId, accountId, planId" });
+      }
+
+      if (!PRICING_PLANS[planId]) {
+        return res.status(400).json({ error: "Invalid plan selected" });
+      }
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("id, name")
+        .eq("id", profileId)
+        .single();
+
+      if (!profile) {
+        return res.status(404).json({ error: "Profile not found" });
+      }
+
+      const plan = PRICING_PLANS[planId];
+
+      // Check for existing subscription
+      const { data: existingSubscription } = await supabase
+        .from("subscription_items")
+        .select("*")
+        .eq("profile_id", profileId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
+
+      let subscriptionItem;
+      const startDate = new Date();
+      const endDate = new Date();
+      endDate.setFullYear(endDate.getFullYear() + plan.years);
+
+      if (existingSubscription) {
+        // Update existing subscription to PENDING
+        const { data, error } = await supabase
+          .from("subscription_items")
+          .update({
+            status: "PENDING",
+            years: plan.years,
+            total_amount: plan.price.toString(),
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", existingSubscription.id)
+          .select()
+          .single();
+        
+        if (error) throw error;
+        subscriptionItem = data;
+      } else {
+        // Create new subscription in PENDING status
+        const { data, error } = await supabase
+          .from("subscription_items")
+          .insert({
+            account_id: accountId,
+            profile_id: profileId,
+            start_date: startDate.toISOString(),
+            end_date: endDate.toISOString(),
+            years: plan.years,
+            total_amount: plan.price.toString(),
+            auto_renew: false,
+            payment_frequency: "YEARLY",
+            status: "PENDING",
+          })
+          .select()
+          .single();
+        
+        if (error) throw error;
+        subscriptionItem = data;
+      }
+
+      // Create Mollie payment
+      const mollieApiKey = process.env.MOLLIE_API_KEY;
+      if (!mollieApiKey) {
+        return res.status(500).json({ error: "Mollie API key not configured" });
+      }
+
+      const baseUrl = "https://www.zoek-een-tuinman.be";
+      const mollieResponse = await fetch("https://api.mollie.com/v2/payments", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${mollieApiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          amount: {
+            currency: "EUR",
+            value: plan.price.toFixed(2),
+          },
+          description: `Zoek-een-tuinman.be - ${plan.label} abonnement voor ${profile.name}`,
+          redirectUrl: `${baseUrl}/dashboard/profielen/${profileId}/betaling-status?payment_id=${subscriptionItem.id}`,
+          webhookUrl: `${baseUrl}/api/mollie/webhook`,
+          metadata: {
+            profileId,
+            accountId,
+            planId,
+            years: plan.years,
+          },
+        }),
+      });
+
+      if (!mollieResponse.ok) {
+        const errorData = await mollieResponse.json();
+        console.error("Mollie API error:", errorData);
+        return res.status(500).json({ error: "Failed to create payment" });
+      }
+
+      const molliePayment = await mollieResponse.json();
+
+      // Store Mollie payment ID
+      await supabase
+        .from("subscription_items")
+        .update({ mollie_payment_id: molliePayment.id })
+        .eq("id", subscriptionItem.id);
+
+      console.log(`Created Mollie payment ${molliePayment.id} for profile ${profileId}`);
+
+      return res.status(200).json({
+        paymentUrl: molliePayment._links.checkout.href,
+        paymentId: molliePayment.id,
+        subscriptionId: subscriptionItem.id,
+      });
+    }
+
+    // POST /api/mollie/webhook
+    if (method === "POST" && path === "/api/mollie/webhook") {
+      const { id: paymentId } = req.body;
+      
+      if (!paymentId) {
+        console.log("Mollie webhook: No payment ID received");
+        return res.status(200).send("OK");
+      }
+
+      console.log(`Mollie webhook received for payment: ${paymentId}`);
+
+      // Get payment from Mollie
+      const mollieApiKey = process.env.MOLLIE_API_KEY;
+      if (!mollieApiKey) {
+        console.error("Mollie API key not configured");
+        return res.status(200).send("OK");
+      }
+
+      const mollieResponse = await fetch(`https://api.mollie.com/v2/payments/${paymentId}`, {
+        headers: {
+          "Authorization": `Bearer ${mollieApiKey}`,
+        },
+      });
+
+      if (!mollieResponse.ok) {
+        console.error("Failed to fetch payment from Mollie");
+        return res.status(200).send("OK");
+      }
+
+      const payment = await mollieResponse.json();
+      const metadata = payment.metadata as { profileId: string; accountId: string; planId: string; years: number };
+
+      if (!metadata?.profileId) {
+        console.error("Mollie webhook: No profileId in payment metadata");
+        return res.status(200).send("OK");
+      }
+
+      // Find subscription by Mollie payment ID
+      const { data: subscription } = await supabase
+        .from("subscription_items")
+        .select("*")
+        .eq("mollie_payment_id", paymentId)
+        .single();
+      
+      if (!subscription) {
+        console.error(`Mollie webhook: No subscription found for payment ${paymentId}`);
+        return res.status(200).send("OK");
+      }
+
+      if (payment.status === "paid") {
+        // Payment successful - activate subscription
+        const startDate = new Date();
+        const endDate = new Date();
+        endDate.setFullYear(endDate.getFullYear() + metadata.years);
+
+        await supabase
+          .from("subscription_items")
+          .update({
+            status: "ACTIVE",
+            start_date: startDate.toISOString(),
+            end_date: endDate.toISOString(),
+            paid_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", subscription.id);
+
+        console.log(`Activated subscription ${subscription.id} for profile ${metadata.profileId}`);
+      } else if (["failed", "canceled", "expired"].includes(payment.status)) {
+        // Payment failed
+        await supabase
+          .from("subscription_items")
+          .update({
+            status: "CANCELLED",
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", subscription.id);
+
+        console.log(`Cancelled subscription ${subscription.id} due to payment status: ${payment.status}`);
+      }
+
+      return res.status(200).send("OK");
+    }
+
     return res.status(404).json({ error: "Not found" });
   } catch (error: any) {
     console.error("API Error:", error);
