@@ -142,8 +142,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Clear state first to prevent race conditions
     setUser(null);
     setSession(null);
-    // Sign out with global scope to clear all sessions
-    await supabase.auth.signOut({ scope: 'global' });
+    try {
+      // Sign out with local scope (more reliable in production)
+      await supabase.auth.signOut({ scope: 'local' });
+    } catch (error) {
+      console.error("Sign out error:", error);
+    }
+    // Force clear localStorage auth data
+    localStorage.removeItem('sb-xukahojkfudtymnwukfk-auth-token');
   }, []);
 
   const resetPassword = useCallback(async (email: string) => {

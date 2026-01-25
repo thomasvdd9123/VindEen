@@ -604,17 +604,24 @@ export class SupabaseStorage implements IStorage {
       .from("subscription_items")
       .insert({
         account_id: item.accountId,
+        profile_id: item.profileId,
         subscription_plan_id: item.subscriptionPlanId,
         start_date: item.startDate,
         end_date: item.endDate,
         status: item.status || "PENDING",
         payment_frequency: item.paymentFrequency || "YEARLY",
         auto_renew: item.autoRenew ?? true,
+        years: item.years || 1,
+        total_amount: item.totalAmount,
+        mollie_payment_id: item.molliePaymentId,
       })
       .select()
       .single();
     
-    if (error) throw error;
+    if (error) {
+      console.error("Error creating subscription item:", error);
+      throw error;
+    }
     return this.mapSubscriptionItem(data);
   }
 
