@@ -46,6 +46,7 @@ export function SearchBox({
   const [keyword, setKeyword] = useState(initialQuery);
   const [filteredLocations, setFilteredLocations] = useState<Location[]>([]);
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
+  const [isUserTyping, setIsUserTyping] = useState(false); // Track if user is actively typing
 
   // Fetch grouped categories from API
   const { data: groupedCategories } = useQuery<GroupedCategoriesResponse>({
@@ -122,9 +123,9 @@ export function SearchBox({
 
   const totalCount = searchData?.total || 0;
 
-  // Filter locations based on input
+  // Filter locations based on input - only show dropdown if user is actively typing
   useEffect(() => {
-    if (cityQuery.length > 0) {
+    if (cityQuery.length > 0 && isUserTyping) {
       const filtered = locations.filter(
         (loc) =>
           loc.name.toLowerCase().includes(cityQuery.toLowerCase()) ||
@@ -137,7 +138,7 @@ export function SearchBox({
       setFilteredLocations([]);
       setShowLocationDropdown(false);
     }
-  }, [cityQuery, locations]);
+  }, [cityQuery, locations, isUserTyping]);
 
   const handleSearch = () => {
     // Build the search URL - use "alle" when no specific category selected
@@ -175,6 +176,12 @@ export function SearchBox({
   const selectLocation = (loc: Location) => {
     setCityQuery(loc.name);
     setShowLocationDropdown(false);
+    setIsUserTyping(false); // Stop showing dropdown after selection
+  };
+
+  const handleCityInputChange = (value: string) => {
+    setCityQuery(value);
+    setIsUserTyping(true); // User is typing, show dropdown
   };
 
   if (variant === "compact") {
@@ -187,7 +194,7 @@ export function SearchBox({
                 type="text"
                 placeholder="Postcode of stad"
                 value={cityQuery}
-                onChange={(e) => setCityQuery(e.target.value)}
+                onChange={(e) => handleCityInputChange(e.target.value)}
                 className="w-full"
                 data-testid="input-city-compact"
               />
@@ -266,10 +273,10 @@ export function SearchBox({
               type="text"
               placeholder="Postcode of stad (bv. 9000, Gent)"
               value={cityQuery}
-              onChange={(e) => setCityQuery(e.target.value)}
+              onChange={(e) => handleCityInputChange(e.target.value)}
               className="w-full h-11 text-base pl-4"
               data-testid="input-city-hero"
-              onFocus={() => cityQuery.length >= 2 && setShowLocationDropdown(true)}
+              onFocus={() => isUserTyping && cityQuery.length >= 2 && setShowLocationDropdown(true)}
               onBlur={() => setTimeout(() => setShowLocationDropdown(false), 200)}
             />
             {showLocationDropdown && (
