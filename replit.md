@@ -149,7 +149,16 @@ SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 VITE_SUPABASE_URL=
 VITE_SUPABASE_ANON_KEY=
+MOLLIE_API_KEY=           # Payment processing
+RESEND_API_KEY=           # Email notifications
+SESSION_SECRET=           # Session encryption
 ```
+
+## Email (Resend)
+- **Note**: Using Resend directly (not via Replit integration) for Vercel compatibility
+- Sends payment confirmation emails when subscriptions are activated
+- **Domain verification required**: Add `zoek-een-tuinman.be` in Resend dashboard and configure DNS records
+- Sender address: `noreply@zoek-een-tuinman.be`
 
 ## Next Steps (Post-MVP)
 1. ~~Supabase database integration~~ (DONE - using production Supabase)
