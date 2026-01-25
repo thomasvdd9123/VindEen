@@ -6,6 +6,7 @@ import { z } from "zod";
 import multer from "multer";
 import { supabaseAdmin } from "./lib/supabase";
 import { createMolliePayment, getMolliePayment, isPaymentPaid, isPaymentFailed, PRICING_PLANS, PlanId } from "./lib/mollie";
+import { sendPaymentConfirmationEmail } from "./lib/resend";
 
 const BUCKET_NAME = "uploads";
 
@@ -707,6 +708,25 @@ export async function registerRoutes(
         });
 
         console.log(`Activated subscription ${subscription.id} for profile ${metadata.profileId}`);
+
+        // Send payment confirmation email
+        try {
+          const profile = await storage.getProfileById(metadata.profileId);
+          const account = await storage.getAccountByProfileId(metadata.profileId);
+          
+          if (account?.email && profile) {
+            const plan = PRICING_PLANS[metadata.planId as PlanId];
+            await sendPaymentConfirmationEmail({
+              to: account.email,
+              profileName: profile.name,
+              amount: plan?.price.toString() || payment.amount?.value || "0",
+              years: metadata.years,
+              endDate,
+            });
+          }
+        } catch (emailError) {
+          console.error("Failed to send confirmation email:", emailError);
+        }
       } else if (isPaymentFailed(payment.status)) {
         // Payment failed
         await storage.updateSubscriptionItem(subscription.id, {

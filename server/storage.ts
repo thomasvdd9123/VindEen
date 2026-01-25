@@ -29,6 +29,7 @@ export interface IStorage {
   // Accounts (login, VAT, billing)
   getAccount(id: string): Promise<Account | undefined>;
   getAccountByAuthUserId(authUserId: string): Promise<Account | undefined>;
+  getAccountByProfileId(profileId: string): Promise<Account | undefined>;
   createAccount(account: InsertAccount): Promise<Account>;
   updateAccount(id: string, updates: Partial<InsertAccount>): Promise<Account | undefined>;
 
@@ -507,6 +508,12 @@ export class MemStorage implements IStorage {
 
   async getAccountByAuthUserId(authUserId: string): Promise<Account | undefined> {
     return Array.from(this.accounts.values()).find((a) => a.authUserId === authUserId);
+  }
+
+  async getAccountByProfileId(profileId: string): Promise<Account | undefined> {
+    const profile = Array.from(this.profiles.values()).find((p) => p.id === profileId);
+    if (!profile?.accountId) return undefined;
+    return this.accounts.get(profile.accountId);
   }
 
   async createAccount(account: InsertAccount): Promise<Account> {

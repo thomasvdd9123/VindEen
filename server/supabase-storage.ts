@@ -124,6 +124,19 @@ export class SupabaseStorage implements IStorage {
     return data ? this.mapAccount(data) : undefined;
   }
 
+  async getAccountByProfileId(profileId: string): Promise<Account | undefined> {
+    // First get the profile to find the account_id
+    const { data: profile, error: profileError } = await supabaseAdmin
+      .from("profiles")
+      .select("account_id")
+      .eq("id", profileId)
+      .single();
+    
+    if (profileError || !profile?.account_id) return undefined;
+    
+    return this.getAccount(profile.account_id);
+  }
+
   async createAccount(account: InsertAccount): Promise<Account> {
     const { data, error } = await supabaseAdmin
       .from("accounts")

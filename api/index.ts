@@ -1311,6 +1311,108 @@ Sitemap: ${SITEMAP_BASE_URL}/sitemap.xml
           .eq("id", subscription.id);
 
         console.log(`Activated subscription ${subscription.id} for profile ${metadata.profileId}`);
+
+        // Send payment confirmation email
+        const resendApiKey = process.env.RESEND_API_KEY;
+        if (resendApiKey) {
+          try {
+            // Get profile and account info
+            const { data: profile } = await supabase
+              .from("profiles")
+              .select("name, account_id")
+              .eq("id", metadata.profileId)
+              .single();
+            
+            if (profile?.account_id) {
+              const { data: account } = await supabase
+                .from("accounts")
+                .select("email")
+                .eq("id", profile.account_id)
+                .single();
+              
+              if (account?.email && profile?.name) {
+                const formattedEndDate = endDate.toLocaleDateString("nl-BE", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                });
+
+                await fetch("https://api.resend.com/emails", {
+                  method: "POST",
+                  headers: {
+                    "Authorization": `Bearer ${resendApiKey}`,
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({
+                    from: "Zoek-een-tuinman.be <noreply@zoek-een-tuinman.be>",
+                    to: [account.email],
+                    subject: `Betalingsbevestiging - ${profile.name}`,
+                    html: `
+                      <!DOCTYPE html>
+                      <html>
+                      <head>
+                        <meta charset="utf-8">
+                        <style>
+                          body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; }
+                          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                          .header { background: #1B7340; color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+                          .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px; }
+                          .details { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; }
+                          .detail-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; }
+                          .detail-row:last-child { border-bottom: none; }
+                          .label { color: #666; }
+                          .value { font-weight: bold; }
+                          .footer { text-align: center; margin-top: 20px; color: #666; font-size: 14px; }
+                        </style>
+                      </head>
+                      <body>
+                        <div class="container">
+                          <div class="header">
+                            <h1 style="margin: 0;">Betaling Geslaagd!</h1>
+                          </div>
+                          <div class="content">
+                            <p>Beste klant,</p>
+                            <p>Hartelijk dank voor uw betaling. Uw profiel is nu actief op Zoek-een-tuinman.be!</p>
+                            
+                            <div class="details">
+                              <div class="detail-row">
+                                <span class="label">Profiel:</span>
+                                <span class="value">${profile.name}</span>
+                              </div>
+                              <div class="detail-row">
+                                <span class="label">Bedrag:</span>
+                                <span class="value">€${payment.amount?.value || "0"}</span>
+                              </div>
+                              <div class="detail-row">
+                                <span class="label">Periode:</span>
+                                <span class="value">${metadata.years} jaar</span>
+                              </div>
+                              <div class="detail-row">
+                                <span class="label">Geldig tot:</span>
+                                <span class="value">${formattedEndDate}</span>
+                              </div>
+                            </div>
+
+                            <p>Uw profiel is nu zichtbaar voor potentiële klanten. U kunt uw profiel beheren via uw dashboard.</p>
+                            
+                            <p>Met vriendelijke groeten,<br>Het Zoek-een-tuinman.be Team</p>
+                          </div>
+                          <div class="footer">
+                            <p>© ${new Date().getFullYear()} Zoek-een-tuinman.be - Alle rechten voorbehouden</p>
+                          </div>
+                        </div>
+                      </body>
+                      </html>
+                    `,
+                  }),
+                });
+                console.log(`Sent payment confirmation email to ${account.email}`);
+              }
+            }
+          } catch (emailError) {
+            console.error("Failed to send confirmation email:", emailError);
+          }
+        }
       } else if (["failed", "canceled", "expired"].includes(payment.status)) {
         // Payment failed
         await supabase
