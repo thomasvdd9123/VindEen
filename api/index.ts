@@ -44,11 +44,23 @@ const fieldMap: Record<string, string> = {
   billingCity: "billing_city",
 };
 
+// Fields that should be ignored (don't exist in database)
+const ignoreFields = new Set([
+  "hideAddress",
+  "offeredServices",
+  "hide_address",
+  "offered_services",
+]);
+
 function toSnakeCase(obj: Record<string, any>): Record<string, any> {
   const result: Record<string, any> = {};
   for (const key in obj) {
+    // Skip fields that don't exist in the database
+    if (ignoreFields.has(key)) continue;
     // Use mapping if exists, otherwise keep original key
     const snakeKey = fieldMap[key] || key;
+    // Also skip if the mapped key is in ignore list
+    if (ignoreFields.has(snakeKey)) continue;
     result[snakeKey] = obj[key];
   }
   return result;
