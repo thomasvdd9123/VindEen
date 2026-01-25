@@ -5,6 +5,7 @@ import { contactFormSchema, searchParamsSchema, insertSubscriptionItemSchema } f
 import { z } from "zod";
 import multer from "multer";
 import { supabaseAdmin } from "./lib/supabase";
+import { createMolliePayment, getMolliePayment, isPaymentPaid, isPaymentFailed, PRICING_PLANS, PlanId } from "./lib/mollie";
 
 const BUCKET_NAME = "uploads";
 
@@ -574,6 +575,217 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error fetching profile subscription:", error);
       res.status(500).json({ error: "Failed to fetch subscription" });
+    }
+  });
+
+  // ============================================
+  // MOLLIE PAYMENT ROUTES
+  // ============================================
+
+  // Create Mollie payment for profile subscription
+  app.post("/api/mollie/create-payment", async (req, res) => {
+    try {
+      const { profileId, accountId, planId } = req.body;
+      
+      if (!profileId || !accountId || !planId) {
+        return res.status(400).json({ error: "Missing required fields: profileId, accountId, planId" });
+      }
+
+      if (!PRICING_PLANS[planId as PlanId]) {
+        return res.status(400).json({ error: "Invalid plan selected" });
+      }
+
+      const profile = await storage.getProfileById(profileId);
+      if (!profile) {
+        return res.status(404).json({ error: "Profile not found" });
+      }
+
+      const plan = PRICING_PLANS[planId as PlanId];
+
+      // Create subscription with PENDING status first
+      const existingSubscription = await storage.getSubscriptionItemByProfileId(profileId);
+      let subscriptionItem;
+      
+      if (existingSubscription) {
+        // Update existing subscription to PENDING
+        subscriptionItem = await storage.updateSubscriptionItem(existingSubscription.id, {
+          status: "PENDING",
+          years: plan.years,
+          totalAmount: plan.price.toString(),
+        });
+      } else {
+        // Create new subscription in PENDING status
+        const startDate = new Date();
+        const endDate = new Date();
+        endDate.setFullYear(endDate.getFullYear() + plan.years);
+
+        subscriptionItem = await storage.createSubscriptionItem({
+          accountId,
+          profileId,
+          subscriptionPlanId: null,
+          startDate,
+          endDate,
+          years: plan.years,
+          totalAmount: plan.price.toString(),
+          autoRenew: false,
+          paymentFrequency: "YEARLY",
+          status: "PENDING",
+        });
+      }
+
+      // Determine the redirect URL based on environment
+      const baseUrl = process.env.REPLIT_DEV_DOMAIN 
+        ? `https://${process.env.REPLIT_DEV_DOMAIN}`
+        : "https://zoek-een-tuinman.be";
+
+      // Create Mollie payment
+      const payment = await createMolliePayment({
+        profileId,
+        accountId,
+        planId: planId as PlanId,
+        profileName: profile.name,
+        redirectUrl: `${baseUrl}/dashboard/profielen/${profileId}/betaling-status?payment_id=${subscriptionItem.id}`,
+      });
+
+      // Store Mollie payment ID in subscription for reference
+      await storage.updateSubscriptionItem(subscriptionItem.id, {
+        molliePaymentId: payment.id,
+      });
+
+      console.log(`Created Mollie payment ${payment.id} for profile ${profileId}`);
+
+      res.json({
+        paymentUrl: payment.getCheckoutUrl(),
+        paymentId: payment.id,
+        subscriptionId: subscriptionItem.id,
+      });
+    } catch (error: any) {
+      console.error("Error creating Mollie payment:", error);
+      res.status(500).json({ error: error.message || "Failed to create payment" });
+    }
+  });
+
+  // Mollie webhook - called by Mollie when payment status changes
+  app.post("/api/mollie/webhook", async (req, res) => {
+    try {
+      const { id: paymentId } = req.body;
+      
+      if (!paymentId) {
+        console.log("Mollie webhook: No payment ID received");
+        return res.status(200).send("OK");
+      }
+
+      console.log(`Mollie webhook received for payment: ${paymentId}`);
+
+      const payment = await getMolliePayment(paymentId);
+      const metadata = payment.metadata as { profileId: string; accountId: string; planId: string; years: number };
+
+      if (!metadata?.profileId) {
+        console.error("Mollie webhook: No profileId in payment metadata");
+        return res.status(200).send("OK");
+      }
+
+      // Find subscription by Mollie payment ID
+      const subscription = await storage.getSubscriptionItemByMolliePaymentId(paymentId);
+      
+      if (!subscription) {
+        console.error(`Mollie webhook: No subscription found for payment ${paymentId}`);
+        return res.status(200).send("OK");
+      }
+
+      if (isPaymentPaid(payment.status)) {
+        // Payment successful - activate subscription
+        const startDate = new Date();
+        const endDate = new Date();
+        endDate.setFullYear(endDate.getFullYear() + metadata.years);
+
+        await storage.updateSubscriptionItem(subscription.id, {
+          status: "ACTIVE",
+          startDate,
+          endDate,
+          paidAt: new Date(),
+        });
+
+        console.log(`Activated subscription ${subscription.id} for profile ${metadata.profileId}`);
+      } else if (isPaymentFailed(payment.status)) {
+        // Payment failed
+        await storage.updateSubscriptionItem(subscription.id, {
+          status: "CANCELLED",
+        });
+
+        console.log(`Cancelled subscription ${subscription.id} due to failed payment`);
+      }
+
+      res.status(200).send("OK");
+    } catch (error) {
+      console.error("Error processing Mollie webhook:", error);
+      res.status(200).send("OK"); // Always return 200 to Mollie
+    }
+  });
+
+  // Check payment status (for frontend polling)
+  app.get("/api/mollie/payment-status/:subscriptionId", async (req, res) => {
+    try {
+      const { subscriptionId } = req.params;
+      
+      const subscription = await storage.getSubscriptionItemById(subscriptionId);
+      if (!subscription) {
+        return res.status(404).json({ error: "Subscription not found" });
+      }
+
+      // If we have a Mollie payment ID, check its current status
+      if (subscription.molliePaymentId) {
+        try {
+          const payment = await getMolliePayment(subscription.molliePaymentId);
+          
+          // Update local status based on Mollie status
+          if (isPaymentPaid(payment.status) && subscription.status !== "ACTIVE") {
+            const metadata = payment.metadata as { years: number };
+            const startDate = new Date();
+            const endDate = new Date();
+            endDate.setFullYear(endDate.getFullYear() + (metadata?.years || 1));
+
+            await storage.updateSubscriptionItem(subscription.id, {
+              status: "ACTIVE",
+              startDate,
+              endDate,
+              paidAt: new Date(),
+            });
+
+            return res.json({
+              status: "ACTIVE",
+              paymentStatus: payment.status,
+              message: "Betaling geslaagd! Je profiel is nu actief.",
+            });
+          } else if (isPaymentFailed(payment.status)) {
+            await storage.updateSubscriptionItem(subscription.id, {
+              status: "CANCELLED",
+            });
+
+            return res.json({
+              status: "CANCELLED",
+              paymentStatus: payment.status,
+              message: "Betaling mislukt of geannuleerd.",
+            });
+          }
+
+          return res.json({
+            status: subscription.status,
+            paymentStatus: payment.status,
+            message: subscription.status === "PENDING" ? "Wachten op betaling..." : undefined,
+          });
+        } catch (mollieError) {
+          console.error("Error fetching Mollie payment:", mollieError);
+        }
+      }
+
+      res.json({
+        status: subscription.status,
+        message: subscription.status === "ACTIVE" ? "Je profiel is actief." : undefined,
+      });
+    } catch (error) {
+      console.error("Error checking payment status:", error);
+      res.status(500).json({ error: "Failed to check payment status" });
     }
   });
 

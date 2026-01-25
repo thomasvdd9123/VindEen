@@ -6,7 +6,7 @@ import { z } from "zod";
 // Enums
 export const accountRoleEnum = pgEnum("account_role", ["ADMIN", "MODERATOR", "GARDENER"]);
 export const verificationStatusEnum = pgEnum("verification_status", ["PENDING", "APPROVED", "REJECTED"]);
-export const subscriptionStatusEnum = pgEnum("subscription_status", ["ACTIVE", "EXPIRED", "CANCELLED"]);
+export const subscriptionStatusEnum = pgEnum("subscription_status", ["PENDING", "ACTIVE", "EXPIRED", "CANCELLED"]);
 export const subscriptionTypeEnum = pgEnum("subscription_type", ["BRONZE", "SILVER", "GOLD", "BASIC", "PREMIUM"]);
 export const paymentFrequencyEnum = pgEnum("payment_frequency", ["MONTHLY", "YEARLY"]);
 export const paymentStatusEnum = pgEnum("payment_status", ["PENDING", "PAID", "FAILED", "REFUNDED"]);
@@ -215,6 +215,9 @@ export const subscriptionItems = pgTable("subscription_items", {
   endDate: timestamp("end_date").notNull(),
   currentPeriodStart: timestamp("current_period_start"),
   currentPeriodEnd: timestamp("current_period_end"),
+  years: integer("years").default(1),
+  totalAmount: text("total_amount"),
+  paidAt: timestamp("paid_at"),
   autoRenew: boolean("auto_renew").default(true),
   paymentFrequency: paymentFrequencyEnum("payment_frequency").default("YEARLY"),
   status: subscriptionStatusEnum("status").default("ACTIVE").notNull(),

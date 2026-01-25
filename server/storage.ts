@@ -69,6 +69,9 @@ export interface IStorage {
   createSubscriptionItem(item: InsertSubscriptionItem): Promise<SubscriptionItem>;
   getSubscriptionItemsByAccountId(accountId: string): Promise<SubscriptionItem[]>;
   getSubscriptionItemByProfileId(profileId: string): Promise<SubscriptionItem | null>;
+  getSubscriptionItemById(id: string): Promise<SubscriptionItem | null>;
+  getSubscriptionItemByMolliePaymentId(molliePaymentId: string): Promise<SubscriptionItem | null>;
+  updateSubscriptionItem(id: string, updates: Partial<SubscriptionItem>): Promise<SubscriptionItem>;
 }
 
 export class MemStorage implements IStorage {
@@ -833,6 +836,9 @@ export class MemStorage implements IStorage {
       endDate: item.endDate,
       currentPeriodStart: null,
       currentPeriodEnd: null,
+      years: item.years || 1,
+      totalAmount: item.totalAmount || null,
+      paidAt: null,
       autoRenew: item.autoRenew ?? true,
       paymentFrequency: item.paymentFrequency || "YEARLY",
       status: item.status || "ACTIVE",
@@ -858,6 +864,24 @@ export class MemStorage implements IStorage {
       .filter((item) => item.profileId === profileId)
       .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
     return items[0] || null;
+  }
+
+  async getSubscriptionItemById(id: string): Promise<SubscriptionItem | null> {
+    return this.subscriptionItems.get(id) || null;
+  }
+
+  async getSubscriptionItemByMolliePaymentId(molliePaymentId: string): Promise<SubscriptionItem | null> {
+    const items = Array.from(this.subscriptionItems.values())
+      .filter((item) => item.molliePaymentId === molliePaymentId);
+    return items[0] || null;
+  }
+
+  async updateSubscriptionItem(id: string, updates: Partial<SubscriptionItem>): Promise<SubscriptionItem> {
+    const existing = this.subscriptionItems.get(id);
+    if (!existing) throw new Error("Subscription not found");
+    const updated = { ...existing, ...updates, updatedAt: new Date() };
+    this.subscriptionItems.set(id, updated);
+    return updated;
   }
 
   // Helper to enrich profile with relations

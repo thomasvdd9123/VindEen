@@ -17,7 +17,7 @@ import type { Profile, Account } from "@shared/schema";
 const BASE_YEARLY_PRICE = 156;
 const pricingPlans = [
   { 
-    id: "1year", 
+    id: "1-year", 
     years: 1, 
     discount: 0, 
     totalPrice: BASE_YEARLY_PRICE,
@@ -26,7 +26,7 @@ const pricingPlans = [
     popular: false
   },
   { 
-    id: "2year", 
+    id: "2-year", 
     years: 2, 
     discount: 5, 
     totalPrice: Math.round(BASE_YEARLY_PRICE * 2 * 0.95 * 100) / 100,
@@ -35,7 +35,7 @@ const pricingPlans = [
     popular: true
   },
   { 
-    id: "3year", 
+    id: "3-year", 
     years: 3, 
     discount: 10, 
     totalPrice: Math.round(BASE_YEARLY_PRICE * 3 * 0.90 * 100) / 100,
@@ -50,7 +50,7 @@ export default function ProfilePayment() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const { user } = useAuth();
-  const [selectedPlan, setSelectedPlan] = useState("2year");
+  const [selectedPlan, setSelectedPlan] = useState("2-year");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const profileId = params?.id;
@@ -77,27 +77,28 @@ export default function ProfilePayment() {
 
     setIsSubmitting(true);
     try {
-      const plan = pricingPlans.find(p => p.id === selectedPlan)!;
-
-      await apiRequest("POST", "/api/subscriptions", {
-        accountId: account.id,
-        profileId: profileId,
-        planId: selectedPlan,
-        years: plan.years,
-        totalAmount: plan.totalPrice,
+      const response = await fetch("/api/mollie/create-payment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          accountId: account.id,
+          profileId: profileId,
+          planId: selectedPlan,
+        }),
       });
 
-      toast({
-        title: "Betaling geslaagd!",
-        description: "Je abonnement is geactiveerd.",
-      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Payment failed");
+      }
 
-      queryClient.invalidateQueries({ queryKey: ["/api/subscriptions/profile", profileId] });
-      queryClient.invalidateQueries({ queryKey: ["/api/my-profiles"] });
+      const data = await response.json();
 
-      setTimeout(() => {
-        setLocation("/dashboard/profielen");
-      }, 1000);
+      if (data.paymentUrl) {
+        window.location.href = data.paymentUrl;
+      } else {
+        throw new Error("Geen betaal-URL ontvangen");
+      }
     } catch (error) {
       toast({
         title: "Betaling mislukt",

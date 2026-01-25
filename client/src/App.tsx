@@ -20,6 +20,7 @@ import DashboardProfiles from "@/pages/dashboard/Profiles";
 import ProfileCreate from "@/pages/dashboard/ProfileCreate";
 import ProfileEdit from "@/pages/dashboard/ProfileEdit";
 import ProfilePayment from "@/pages/dashboard/ProfilePayment";
+import PaymentStatus from "@/pages/dashboard/PaymentStatus";
 import DashboardContacts from "@/pages/dashboard/Contacts";
 import DashboardStatistics from "@/pages/dashboard/Statistics";
 import FAQ from "@/pages/FAQ";
@@ -47,6 +48,7 @@ function Router() {
       <Route path="/dashboard/profielen/nieuw" component={ProfileCreate} />
       <Route path="/dashboard/profielen/:id/bewerken" component={ProfileEdit} />
       <Route path="/dashboard/profielen/:id/betalen" component={ProfilePayment} />
+      <Route path="/dashboard/profielen/:id/betaling-status" component={PaymentStatus} />
       <Route path="/dashboard/contacten" component={DashboardContacts} />
       <Route path="/dashboard/statistieken" component={DashboardStatistics} />
       <Route path="/faq" component={FAQ} />

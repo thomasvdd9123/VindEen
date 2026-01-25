@@ -92,7 +92,7 @@ const steps = [
 const BASE_YEARLY_PRICE = 156;
 const pricingPlans = [
   { 
-    id: "1year", 
+    id: "1-year", 
     years: 1, 
     discount: 0, 
     totalPrice: BASE_YEARLY_PRICE,
@@ -101,7 +101,7 @@ const pricingPlans = [
     popular: false
   },
   { 
-    id: "2year", 
+    id: "2-year", 
     years: 2, 
     discount: 5, 
     totalPrice: Math.round(BASE_YEARLY_PRICE * 2 * 0.95 * 100) / 100,
@@ -110,7 +110,7 @@ const pricingPlans = [
     popular: true
   },
   { 
-    id: "3year", 
+    id: "3-year", 
     years: 3, 
     discount: 10, 
     totalPrice: Math.round(BASE_YEARLY_PRICE * 3 * 0.90 * 100) / 100,
@@ -126,7 +126,7 @@ function OnboardingContent() {
   const { user, updateUserMetadata, getUserMetadata } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState("2year"); // Default to popular option
+  const [selectedPlan, setSelectedPlan] = useState("2-year"); // Default to popular option
   const [createdProfileId, setCreatedProfileId] = useState<string | null>(null);
   const [createdAccountId, setCreatedAccountId] = useState<string | null>(null);
   
@@ -357,41 +357,41 @@ function OnboardingContent() {
     setIsSubmitting(true);
     try {
       const plan = pricingPlans.find(p => p.id === selectedPlan);
-      if (!plan || !createdAccountId) {
-        throw new Error("Geen abonnement geselecteerd");
+      if (!plan || !createdAccountId || !createdProfileId) {
+        throw new Error("Geen abonnement geselecteerd of profiel niet gevonden");
       }
 
-      // Create a pending subscription (mock - will be updated when payment provider is integrated)
-      const startDate = new Date();
-      const endDate = new Date();
-      endDate.setFullYear(endDate.getFullYear() + plan.years);
-
-      await apiRequest("POST", "/api/subscriptions", {
-        accountId: createdAccountId,
-        profileId: createdProfileId,
-        planId: selectedPlan,
-        years: plan.years,
-        totalAmount: plan.totalPrice,
+      // Create Mollie payment
+      const response = await fetch("/api/mollie/create-payment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          accountId: createdAccountId,
+          profileId: createdProfileId,
+          planId: selectedPlan,
+        }),
       });
 
-      toast({
-        title: "Bijna klaar!",
-        description: "Je wordt doorgestuurd naar de betaalpagina...",
-      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Payment failed");
+      }
 
-      // For now, simulate successful payment and redirect to dashboard
-      // In production, this would redirect to Stripe/Mollie
-      setTimeout(() => {
+      const data = await response.json();
+
+      if (data.paymentUrl) {
         toast({
-          title: "Welkom!",
-          description: "Je account en profiel zijn succesvol aangemaakt. Betaling wordt later verwerkt.",
+          title: "Doorsturen naar betaling...",
+          description: "Je wordt doorgestuurd naar Mollie.",
         });
-        setLocation("/dashboard");
-      }, 1500);
+        window.location.href = data.paymentUrl;
+      } else {
+        throw new Error("Geen betaal-URL ontvangen");
+      }
     } catch (error: any) {
       toast({ 
         title: "Fout", 
-        description: error.message || "Kon abonnement niet aanmaken", 
+        description: error.message || "Kon betaling niet starten", 
         variant: "destructive" 
       });
       setIsSubmitting(false);

@@ -645,6 +645,59 @@ export class SupabaseStorage implements IStorage {
     return data ? this.mapSubscriptionItem(data) : null;
   }
 
+  async getSubscriptionItemById(id: string): Promise<SubscriptionItem | null> {
+    const { data, error } = await supabaseAdmin
+      .from("subscription_items")
+      .select("*")
+      .eq("id", id)
+      .single();
+    
+    if (error) {
+      if (error.code === "PGRST116") return null;
+      throw error;
+    }
+    return data ? this.mapSubscriptionItem(data) : null;
+  }
+
+  async getSubscriptionItemByMolliePaymentId(molliePaymentId: string): Promise<SubscriptionItem | null> {
+    const { data, error } = await supabaseAdmin
+      .from("subscription_items")
+      .select("*")
+      .eq("mollie_payment_id", molliePaymentId)
+      .single();
+    
+    if (error) {
+      if (error.code === "PGRST116") return null;
+      throw error;
+    }
+    return data ? this.mapSubscriptionItem(data) : null;
+  }
+
+  async updateSubscriptionItem(id: string, updates: Partial<SubscriptionItem>): Promise<SubscriptionItem> {
+    const dbUpdates: Record<string, unknown> = {
+      updated_at: new Date().toISOString(),
+    };
+    
+    if (updates.status !== undefined) dbUpdates.status = updates.status;
+    if (updates.startDate !== undefined) dbUpdates.start_date = updates.startDate instanceof Date ? updates.startDate.toISOString() : updates.startDate;
+    if (updates.endDate !== undefined) dbUpdates.end_date = updates.endDate instanceof Date ? updates.endDate.toISOString() : updates.endDate;
+    if (updates.years !== undefined) dbUpdates.years = updates.years;
+    if (updates.totalAmount !== undefined) dbUpdates.total_amount = updates.totalAmount;
+    if (updates.paidAt !== undefined) dbUpdates.paid_at = updates.paidAt instanceof Date ? updates.paidAt.toISOString() : updates.paidAt;
+    if (updates.molliePaymentId !== undefined) dbUpdates.mollie_payment_id = updates.molliePaymentId;
+    if (updates.autoRenew !== undefined) dbUpdates.auto_renew = updates.autoRenew;
+    
+    const { data, error } = await supabaseAdmin
+      .from("subscription_items")
+      .update(dbUpdates)
+      .eq("id", id)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return this.mapSubscriptionItem(data);
+  }
+
   // Mapping functions
   private mapCategory(data: Record<string, unknown>): Category {
     return {
@@ -810,6 +863,9 @@ export class SupabaseStorage implements IStorage {
       endDate: new Date(data.end_date as string),
       currentPeriodStart: data.current_period_start ? new Date(data.current_period_start as string) : null,
       currentPeriodEnd: data.current_period_end ? new Date(data.current_period_end as string) : null,
+      years: data.years as number | null,
+      totalAmount: data.total_amount as string | null,
+      paidAt: data.paid_at ? new Date(data.paid_at as string) : null,
       autoRenew: data.auto_renew as boolean | null,
       paymentFrequency: data.payment_frequency as SubscriptionItem["paymentFrequency"],
       status: data.status as SubscriptionItem["status"],
