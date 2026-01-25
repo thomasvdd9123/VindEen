@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useParams, Link, useSearch } from "wouter";
 import { Layout } from "@/components/layout/Layout";
@@ -21,26 +21,82 @@ import type { Category, Location, ProfileWithRelations } from "@shared/schema";
 import { specializationLabels } from "@shared/schema";
 import { siteConfig } from "@/lib/theme.config";
 
+// Specialization slug mapping (URL slug -> display name and API key)
+const specializationMap: Record<string, { key: string; label: string }> = {
+  "gras-maaien": { key: "GRAS_MAAIEN", label: "Gras maaien" },
+  "bomen-snoeien": { key: "SNOEIEN_BOMEN", label: "Bomen snoeien" },
+  "struiken-snoeien": { key: "SNOEIEN_STRUIKEN", label: "Struiken snoeien" },
+  "hagen-knippen": { key: "HAAG_KNIPPEN", label: "Hagen knippen" },
+  "onkruid-verwijderen": { key: "ONKRUID_VERWIJDEREN", label: "Onkruid verwijderen" },
+  "bladeren-ruimen": { key: "BLADEREN_RUIMEN", label: "Bladeren ruimen" },
+  "bemesting": { key: "BEMESTING", label: "Bemesting" },
+  "gazononderhoud": { key: "GAZONONDERHOUD", label: "Gazononderhoud" },
+  "grasaanleg": { key: "GRASAANLEG", label: "Grasaanleg" },
+  "paden-terrassen": { key: "PADEN_TERRASSEN", label: "Paden & terrassen" },
+  "houten-constructies": { key: "HOUTEN_CONSTRUCTIES", label: "Houten constructies" },
+  "afsluitingen": { key: "AFSLUITINGEN", label: "Afsluitingen & hekwerk" },
+  "vijvers": { key: "VIJVERS", label: "Vijvers & waterpartijen" },
+  "bestrating": { key: "BESTRATING", label: "Bestrating" },
+  "beplanting": { key: "BEPLANTING", label: "Beplanting" },
+  "irrigatie": { key: "IRRIGATIE", label: "Irrigatiesystemen" },
+};
+
+// Check if a slug looks like a location (starts with digits like "9000-gent")
+function isLocationSlug(slug: string): boolean {
+  return /^\d{4}-/.test(slug);
+}
+
+// Parse location slug to extract postcode and city slug
+function parseLocationSlug(slug: string): { postcode: string; citySlug: string } | null {
+  const match = slug.match(/^(\d{4})-(.+)$/);
+  if (match) {
+    return { postcode: match[1], citySlug: match[2] };
+  }
+  return null;
+}
+
 export default function CategoryPage() {
   const [viewMode, setViewMode] = useState<"list" | "map">("list");
   const [currentPage, setCurrentPage] = useState(1);
-  const params = useParams<{ category: string; location?: string }>();
-  const categorySlug = params.category;
-  const locationSlug = params.location;
+  const params = useParams<{ locationOrSpec: string; specialization?: string }>();
   const searchString = useSearch();
   const urlParams = new URLSearchParams(searchString);
   const queryParam = urlParams.get("q") || "";
-  const specParam = urlParams.get("spec") || "";
 
-  // Check if we're showing all categories or main categories
-  const isAllCategories = categorySlug === "alle";
-  const isMainCategory = categorySlug === "tuinonderhoud" || categorySlug === "tuinaanleg";
-  const mainCategoryValue = isMainCategory ? categorySlug.toUpperCase() : undefined;
-  
-  const { data: category, isLoading: categoryLoading } = useQuery<Category>({
-    queryKey: ["/api/categories", categorySlug],
-    enabled: !!categorySlug && !isAllCategories && !isMainCategory,
-  });
+  // Parse URL to determine location and specialization
+  // New URL structure:
+  // /zoek/{postcode-city} - location only
+  // /zoek/{postcode-city}/{specialization} - location + specialization  
+  // /zoek/{specialization} - specialization only
+  const parsedUrl = useMemo(() => {
+    const firstParam = params.locationOrSpec || "";
+    const secondParam = params.specialization;
+    
+    if (isLocationSlug(firstParam)) {
+      // First param is location (e.g., "9000-gent")
+      const parsed = parseLocationSlug(firstParam);
+      return {
+        locationSlug: parsed?.citySlug || firstParam,
+        locationPostcode: parsed?.postcode,
+        fullLocationSlug: firstParam,
+        specializationSlug: secondParam || null,
+        specializationKey: secondParam ? specializationMap[secondParam]?.key : null,
+        specializationLabel: secondParam ? specializationMap[secondParam]?.label : null,
+      };
+    } else {
+      // First param is specialization (e.g., "gras-maaien")
+      return {
+        locationSlug: null,
+        locationPostcode: null,
+        fullLocationSlug: null,
+        specializationSlug: firstParam,
+        specializationKey: specializationMap[firstParam]?.key || null,
+        specializationLabel: specializationMap[firstParam]?.label || null,
+      };
+    }
+  }, [params.locationOrSpec, params.specialization]);
+
+  const { locationSlug, fullLocationSlug, specializationSlug, specializationKey, specializationLabel } = parsedUrl;
 
   const { data: location, isLoading: locationLoading } = useQuery<Location>({
     queryKey: ["/api/locations", locationSlug],
@@ -52,22 +108,16 @@ export default function CategoryPage() {
   });
 
   // Reset page when filters change
-  const filterKey = `${categorySlug}-${locationSlug}-${queryParam}-${specParam}`;
+  const filterKey = `${fullLocationSlug}-${specializationSlug}-${queryParam}`;
   useEffect(() => {
     setCurrentPage(1);
   }, [filterKey]);
   
-  // Build search params including all filters
+  // Build search params for API
   const searchParams = new URLSearchParams();
-  // Use mainCategory for main category slugs, category for specific category slugs
-  if (isMainCategory && mainCategoryValue) {
-    searchParams.set("mainCategory", mainCategoryValue);
-  } else if (categorySlug && !isAllCategories) {
-    searchParams.set("category", categorySlug);
-  }
   if (locationSlug) searchParams.set("location", locationSlug);
+  if (specializationKey) searchParams.set("spec", specializationKey);
   if (queryParam) searchParams.set("q", queryParam);
-  if (specParam) searchParams.set("spec", specParam);
   searchParams.set("page", currentPage.toString());
   
   // Build full URL with query string
@@ -85,22 +135,24 @@ export default function CategoryPage() {
   const profiles = profilesData?.profiles || [];
   const total = profilesData?.total || 0;
 
-  const isLoading = (!isAllCategories && !isMainCategory && categoryLoading) || (locationSlug && locationLoading) || profilesLoading;
+  const isLoading = (locationSlug && locationLoading) || profilesLoading;
 
-  // Get the display name for the category/main category
-  const mainCategoryLabels: Record<string, string> = {
-    tuinonderhoud: "Tuinonderhoud",
-    tuinaanleg: "Tuinaanleg",
-  };
-  const categoryDisplayName = isMainCategory 
-    ? mainCategoryLabels[categorySlug] 
-    : isAllCategories 
-      ? "Tuinmannen" 
-      : (category?.name || "Tuinmannen");
-
-  const pageTitle = locationSlug && location
-    ? `${categoryDisplayName} in ${location.name}`
-    : isAllCategories ? "Alle Tuinmannen" : categoryDisplayName;
+  // Build page title based on URL structure
+  const pageTitle = useMemo(() => {
+    const parts: string[] = [];
+    
+    if (specializationLabel) {
+      parts.push(specializationLabel);
+    } else {
+      parts.push("Tuinmannen");
+    }
+    
+    if (location?.name) {
+      parts.push(`in ${location.name}`);
+    }
+    
+    return parts.join(" ");
+  }, [specializationLabel, location?.name]);
 
   return (
     <Layout>
@@ -115,9 +167,8 @@ export default function CategoryPage() {
             <div className="max-w-4xl mx-auto">
               <SearchBox 
                 locations={locations}
-                initialCategory={isMainCategory ? mainCategoryValue : undefined}
-                initialSpecialization={specParam || undefined}
-                initialLocation={locationSlug}
+                initialSpecialization={specializationKey || undefined}
+                initialLocation={fullLocationSlug || undefined}
                 initialQuery={queryParam}
                 showCount={true}
               />
@@ -137,28 +188,40 @@ export default function CategoryPage() {
                 </BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator />
-              {locationSlug ? (
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link href="/" data-testid="breadcrumb-tuinman">Zoek een tuinman</Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              {/* Location breadcrumb (if present) */}
+              {fullLocationSlug && location && (
                 <>
-                  <BreadcrumbItem>
-                    <BreadcrumbLink asChild>
-                      <Link href={`/zoek/${categorySlug}`} data-testid="breadcrumb-category">
-                        {category?.name || categorySlug}
-                      </Link>
-                    </BreadcrumbLink>
-                  </BreadcrumbItem>
                   <BreadcrumbSeparator />
                   <BreadcrumbItem>
-                    <BreadcrumbPage data-testid="breadcrumb-location">
-                      {location?.name || locationSlug}
+                    {specializationSlug ? (
+                      <BreadcrumbLink asChild>
+                        <Link href={`/zoek/${fullLocationSlug}`} data-testid="breadcrumb-location">
+                          {location.name}
+                        </Link>
+                      </BreadcrumbLink>
+                    ) : (
+                      <BreadcrumbPage data-testid="breadcrumb-location">
+                        {location.name}
+                      </BreadcrumbPage>
+                    )}
+                  </BreadcrumbItem>
+                </>
+              )}
+              {/* Specialization breadcrumb (if present) */}
+              {specializationLabel && (
+                <>
+                  <BreadcrumbSeparator />
+                  <BreadcrumbItem>
+                    <BreadcrumbPage data-testid="breadcrumb-specialization">
+                      {specializationLabel}
                     </BreadcrumbPage>
                   </BreadcrumbItem>
                 </>
-              ) : (
-                <BreadcrumbItem>
-                  <BreadcrumbPage data-testid="breadcrumb-current">
-                    {category?.name || categorySlug}
-                  </BreadcrumbPage>
-                </BreadcrumbItem>
               )}
             </BreadcrumbList>
           </Breadcrumb>
@@ -249,23 +312,30 @@ export default function CategoryPage() {
             <div className="text-center py-16">
               <Leaf className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
               <h3 className="font-semibold text-xl mb-2">
-                Geen {category?.name?.toLowerCase() || "tuinmannen"} gevonden
+                Geen {specializationLabel?.toLowerCase() || "tuinmannen"} gevonden
                 {location && ` in ${location.name}`}
               </h3>
               <p className="text-muted-foreground mb-6 max-w-md mx-auto">
                 Er zijn momenteel geen professionals beschikbaar die aan je zoekcriteria voldoen. 
-                Probeer een andere locatie of categorie.
+                Probeer een andere locatie of dienst.
               </p>
               <div className="flex flex-wrap justify-center gap-3">
                 {!locationSlug && locations.slice(0, 4).map((loc) => (
-                  <Link key={loc.id} href={`/zoek/${categorySlug}/${loc.slug}`}>
+                  <Link key={loc.id} href={`/zoek/${loc.postcode}-${loc.slug}`}>
                     <Button variant="outline" size="sm" data-testid={`button-empty-loc-${loc.slug}`}>
                       {loc.name}
                     </Button>
                   </Link>
                 ))}
-                {locationSlug && (
-                  <Link href={`/zoek/${categorySlug}`}>
+                {locationSlug && specializationSlug && (
+                  <Link href={`/zoek/${fullLocationSlug}`}>
+                    <Button variant="outline" data-testid="button-search-all-services">
+                      Alle diensten in {location?.name}
+                    </Button>
+                  </Link>
+                )}
+                {locationSlug && !specializationSlug && (
+                  <Link href="/">
                     <Button variant="outline" data-testid="button-search-all-belgium">
                       Zoek in heel België
                     </Button>

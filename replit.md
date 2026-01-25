@@ -22,8 +22,7 @@ A SEO-optimized directory platform for Belgian businesses (inspired by vind-een-
 
 ## Key Features (MVP)
 - ✅ Homepage with hero, search, featured profiles
-- ✅ Dynamic category pages (/zoek/[category])
-- ✅ Dynamic location pages (/zoek/[category]/[location])
+- ✅ Dynamic search pages with new URL structure (location-first like competitor)
 - ✅ Profile detail pages (/bedrijf/[slug])
 - ✅ Contact form for profiles
 - ✅ Search and filtering with specialization filters
@@ -38,6 +37,33 @@ A SEO-optimized directory platform for Belgian businesses (inspired by vind-een-
 - ✅ Multi-step onboarding wizard for new signups (/onboarding)
 - ✅ Map view for search results with Leaflet
 - ✅ 572 Belgian municipalities with postcodes, coordinates for autocomplete search and SEO
+- ✅ Multi-sitemap structure for SEO (like competitor vind-een-psycholoog.be)
+
+## URL Structure (SEO-optimized, competitor-matching)
+```
+/zoek/{postcode}-{city}                    → Location only (e.g., /zoek/9000-gent)
+/zoek/{postcode}-{city}/{specialization}   → Location + Specialization (e.g., /zoek/9000-gent/gras-maaien)
+/zoek/{specialization}                     → Specialization only (e.g., /zoek/gras-maaien)
+/bedrijf/{slug}                            → Profile detail page
+```
+
+## Sitemap Structure
+Multi-sitemap architecture following competitor pattern:
+- `/sitemap.xml` - Main sitemap index (lists all sub-sitemaps)
+- `/sitemaps/site/sitemap.xml` - Homepage and auth pages
+- `/sitemaps/info/sitemap.xml` - Static info pages (FAQ, contact, pricing, etc.)
+- `/sitemaps/profiles/sitemap.xml` - All business profile pages
+- `/sitemaps/locations/sitemap.xml` - All 572 Belgian postcodes/cities
+- `/sitemaps/specializations/sitemap.xml` - All 16 specializations
+- `/sitemaps/location-specs/sitemap-{n}.xml` - Location × Specialization combos (9000+ URLs, paginated)
+
+### Google Search Console Setup
+1. Go to https://search.google.com/search-console
+2. Add property: `https://www.zoek-een-tuinman.be`
+3. Verify ownership (HTML file method is already set up: `/googlec82c9dc9a541d03e.html`)
+4. Go to "Sitemaps" in left menu
+5. Submit sitemap URL: `https://www.zoek-een-tuinman.be/sitemap.xml`
+6. Google will automatically discover all sub-sitemaps from the index
 
 ## Configuration
 

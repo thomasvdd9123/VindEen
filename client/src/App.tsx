@@ -30,8 +30,9 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
-      <Route path="/zoek/:category/:location" component={CategoryPage} />
-      <Route path="/zoek/:category" component={CategoryPage} />
+      {/* New URL structure: /zoek/{postcode-city}/{specialization} */}
+      <Route path="/zoek/:locationOrSpec/:specialization" component={CategoryPage} />
+      <Route path="/zoek/:locationOrSpec" component={CategoryPage} />
       <Route path="/bedrijf/:slug" component={ProfilePage} />
       <Route path="/login" component={Login} />
       <Route path="/registreren" component={Register} />

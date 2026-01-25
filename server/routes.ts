@@ -719,87 +719,292 @@ export async function registerRoutes(
     }
   });
 
-  // Sitemap XML
+  // ============================================================================
+  // SITEMAPS - Multi-sitemap structure like competitor
+  // ============================================================================
+
+  const SITEMAP_BASE_URL = "https://www.zoek-een-tuinman.be";
+  
+  // Specialization slugs for URLs (SPEC_KEY -> url-slug)
+  const specializationSlugs: Record<string, string> = {
+    GRAS_MAAIEN: "gras-maaien",
+    SNOEIEN_BOMEN: "bomen-snoeien",
+    SNOEIEN_STRUIKEN: "struiken-snoeien",
+    HAAG_KNIPPEN: "hagen-knippen",
+    ONKRUID_VERWIJDEREN: "onkruid-verwijderen",
+    BLADEREN_RUIMEN: "bladeren-ruimen",
+    BEMESTING: "bemesting",
+    GAZONONDERHOUD: "gazononderhoud",
+    GRASAANLEG: "grasaanleg",
+    PADEN_TERRASSEN: "paden-terrassen",
+    HOUTEN_CONSTRUCTIES: "houten-constructies",
+    AFSLUITINGEN: "afsluitingen",
+    VIJVERS: "vijvers",
+    BESTRATING: "bestrating",
+    BEPLANTING: "beplanting",
+    IRRIGATIE: "irrigatie",
+  };
+
+  const allSpecializations = Object.entries(specializationSlugs);
+
+  // robots.txt
+  app.get("/robots.txt", (req, res) => {
+    const robotsTxt = `User-agent: *
+Allow: /
+
+Sitemap: ${SITEMAP_BASE_URL}/sitemap.xml
+`;
+    res.set("Content-Type", "text/plain");
+    res.send(robotsTxt);
+  });
+
+  // Main sitemap index - lists all individual sitemaps
   app.get("/sitemap.xml", async (req, res) => {
     try {
-      const baseUrl = "https://www.zoek-een-tuinman.be";
       const today = new Date().toISOString().split("T")[0];
-
-      // Get all data for sitemap
-      const [categories, locations, profilesResult] = await Promise.all([
-        storage.getCategories(),
-        storage.getLocations(),
-        storage.searchProfiles({ page: 1, limit: 1000 }),
-      ]);
-      const profiles = profilesResult.profiles;
+      
+      // Calculate number of location-spec sitemaps needed (572 locations × 16 specs = 9152, split at 5000)
+      const locations = await storage.getLocations();
+      const totalLocationSpecs = locations.length * allSpecializations.length;
+      const locationSpecSitemapCount = Math.ceil(totalLocationSpecs / 5000);
 
       let xml = `<?xml version="1.0" encoding="UTF-8"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <sitemap>
+    <loc>${SITEMAP_BASE_URL}/sitemaps/site/sitemap.xml</loc>
+    <lastmod>${today}</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>${SITEMAP_BASE_URL}/sitemaps/info/sitemap.xml</loc>
+    <lastmod>${today}</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>${SITEMAP_BASE_URL}/sitemaps/profiles/sitemap.xml</loc>
+    <lastmod>${today}</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>${SITEMAP_BASE_URL}/sitemaps/locations/sitemap.xml</loc>
+    <lastmod>${today}</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>${SITEMAP_BASE_URL}/sitemaps/specializations/sitemap.xml</loc>
+    <lastmod>${today}</lastmod>
+  </sitemap>
+`;
+
+      // Add location-specialization sitemaps (split into multiple files)
+      for (let i = 1; i <= locationSpecSitemapCount; i++) {
+        xml += `  <sitemap>
+    <loc>${SITEMAP_BASE_URL}/sitemaps/location-specs/sitemap-${i}.xml</loc>
+    <lastmod>${today}</lastmod>
+  </sitemap>
+`;
+      }
+
+      xml += `</sitemapindex>`;
+
+      res.set("Content-Type", "application/xml");
+      res.send(xml);
+    } catch (error) {
+      console.error("Error generating sitemap index:", error);
+      res.status(500).send("Error generating sitemap index");
+    }
+  });
+
+  // Site sitemap - homepage and main pages
+  app.get("/sitemaps/site/sitemap.xml", (req, res) => {
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <!-- Static pages -->
   <url>
-    <loc>${baseUrl}/</loc>
+    <loc>${SITEMAP_BASE_URL}/</loc>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>${baseUrl}/faq</loc>
+    <loc>${SITEMAP_BASE_URL}/login</loc>
     <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
+    <priority>0.3</priority>
   </url>
   <url>
-    <loc>${baseUrl}/prijzen</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>${baseUrl}/over-ons</loc>
+    <loc>${SITEMAP_BASE_URL}/registreren</loc>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
   </url>
+</urlset>`;
+    res.set("Content-Type", "application/xml");
+    res.send(xml);
+  });
+
+  // Info sitemap - static informational pages
+  app.get("/sitemaps/info/sitemap.xml", (req, res) => {
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>${baseUrl}/contact</loc>
+    <loc>${SITEMAP_BASE_URL}/over-ons</loc>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
+  <url>
+    <loc>${SITEMAP_BASE_URL}/contact</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>${SITEMAP_BASE_URL}/faq</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>${SITEMAP_BASE_URL}/prijzen</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>${SITEMAP_BASE_URL}/hoe-werkt-het</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>${SITEMAP_BASE_URL}/voor-tuinmannen</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+</urlset>`;
+    res.set("Content-Type", "application/xml");
+    res.send(xml);
+  });
+
+  // Profiles sitemap - all business profile pages
+  app.get("/sitemaps/profiles/sitemap.xml", async (req, res) => {
+    try {
+      const today = new Date().toISOString().split("T")[0];
+      const { profiles } = await storage.searchProfiles({ page: 1, limit: 10000 });
+
+      let xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 `;
 
-      // Category pages
-      for (const category of categories) {
-        xml += `  <url>
-    <loc>${baseUrl}/zoek/${category.slug}</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-`;
-        // Category + Location combinations
-        for (const location of locations) {
-          xml += `  <url>
-    <loc>${baseUrl}/zoek/${category.slug}/${location.slug}</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-`;
-        }
-      }
-
-      // Profile pages
       for (const profile of profiles) {
         xml += `  <url>
-    <loc>${baseUrl}/bedrijf/${profile.slug}</loc>
+    <loc>${SITEMAP_BASE_URL}/bedrijf/${profile.slug}</loc>
     <lastmod>${today}</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
+    <priority>0.3</priority>
   </url>
 `;
       }
 
       xml += `</urlset>`;
-
       res.set("Content-Type", "application/xml");
       res.send(xml);
     } catch (error) {
-      console.error("Error generating sitemap:", error);
-      res.status(500).send("Error generating sitemap");
+      console.error("Error generating profiles sitemap:", error);
+      res.status(500).send("Error generating profiles sitemap");
+    }
+  });
+
+  // Locations sitemap - all postal code pages (e.g., /zoek/9000-gent)
+  app.get("/sitemaps/locations/sitemap.xml", async (req, res) => {
+    try {
+      const today = new Date().toISOString().split("T")[0];
+      const locations = await storage.getLocations();
+
+      let xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+`;
+
+      for (const loc of locations) {
+        // URL format: /zoek/{postcode}-{city-slug}
+        const locationSlug = `${loc.postcode}-${loc.slug}`;
+        xml += `  <url>
+    <loc>${SITEMAP_BASE_URL}/zoek/${locationSlug}</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+`;
+      }
+
+      xml += `</urlset>`;
+      res.set("Content-Type", "application/xml");
+      res.send(xml);
+    } catch (error) {
+      console.error("Error generating locations sitemap:", error);
+      res.status(500).send("Error generating locations sitemap");
+    }
+  });
+
+  // Specializations sitemap - all specialization-only pages (e.g., /zoek/gras-maaien)
+  app.get("/sitemaps/specializations/sitemap.xml", (req, res) => {
+    const today = new Date().toISOString().split("T")[0];
+
+    let xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+`;
+
+    for (const [, slug] of allSpecializations) {
+      xml += `  <url>
+    <loc>${SITEMAP_BASE_URL}/zoek/${slug}</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+`;
+    }
+
+    xml += `</urlset>`;
+    res.set("Content-Type", "application/xml");
+    res.send(xml);
+  });
+
+  // Location + Specialization sitemaps (paginated, 5000 per file)
+  // URL format: /zoek/{postcode}-{city}/{specialization}
+  app.get("/sitemaps/location-specs/sitemap-:page.xml", async (req, res) => {
+    try {
+      const page = parseInt(req.params.page) || 1;
+      const perPage = 5000;
+      const today = new Date().toISOString().split("T")[0];
+
+      const locations = await storage.getLocations();
+      
+      // Generate all combinations
+      const allCombos: { locationSlug: string; specSlug: string }[] = [];
+      for (const loc of locations) {
+        const locationSlug = `${loc.postcode}-${loc.slug}`;
+        for (const [, specSlug] of allSpecializations) {
+          allCombos.push({ locationSlug, specSlug });
+        }
+      }
+
+      // Paginate
+      const startIndex = (page - 1) * perPage;
+      const endIndex = startIndex + perPage;
+      const pageCombos = allCombos.slice(startIndex, endIndex);
+
+      if (pageCombos.length === 0) {
+        return res.status(404).send("Sitemap page not found");
+      }
+
+      let xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+`;
+
+      for (const combo of pageCombos) {
+        xml += `  <url>
+    <loc>${SITEMAP_BASE_URL}/zoek/${combo.locationSlug}/${combo.specSlug}</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+`;
+      }
+
+      xml += `</urlset>`;
+      res.set("Content-Type", "application/xml");
+      res.send(xml);
+    } catch (error) {
+      console.error("Error generating location-specs sitemap:", error);
+      res.status(500).send("Error generating location-specs sitemap");
     }
   });
 

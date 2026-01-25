@@ -755,93 +755,249 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json({ success: true });
     }
 
-    // GET /sitemap.xml
+    // ========================================================================
+    // SITEMAPS - Multi-sitemap structure for SEO
+    // ========================================================================
+    const SITEMAP_BASE_URL = "https://www.zoek-een-tuinman.be";
+    
+    const specializationSlugs: Record<string, string> = {
+      GRAS_MAAIEN: "gras-maaien",
+      SNOEIEN_BOMEN: "bomen-snoeien",
+      SNOEIEN_STRUIKEN: "struiken-snoeien",
+      HAAG_KNIPPEN: "hagen-knippen",
+      ONKRUID_VERWIJDEREN: "onkruid-verwijderen",
+      BLADEREN_RUIMEN: "bladeren-ruimen",
+      BEMESTING: "bemesting",
+      GAZONONDERHOUD: "gazononderhoud",
+      GRASAANLEG: "grasaanleg",
+      PADEN_TERRASSEN: "paden-terrassen",
+      HOUTEN_CONSTRUCTIES: "houten-constructies",
+      AFSLUITINGEN: "afsluitingen",
+      VIJVERS: "vijvers",
+      BESTRATING: "bestrating",
+      BEPLANTING: "beplanting",
+      IRRIGATIE: "irrigatie",
+    };
+    const allSpecializations = Object.entries(specializationSlugs);
+
+    // GET /robots.txt
+    if (method === "GET" && path === "/robots.txt") {
+      const robots = `User-agent: *
+Allow: /
+
+Sitemap: ${SITEMAP_BASE_URL}/sitemap.xml
+`;
+      res.setHeader("Content-Type", "text/plain");
+      return res.send(robots);
+    }
+
+    // GET /sitemap.xml - Main sitemap index
     if (method === "GET" && path === "/sitemap.xml") {
-      const baseUrl = "https://www.zoek-een-tuinman.be";
       const today = new Date().toISOString().split("T")[0];
-
-      const [categoriesRes, locationsRes, profilesRes] = await Promise.all([
-        supabase.from("categories").select("*"),
-        supabase.from("locations").select("*"),
-        supabase.from("profiles").select("*").eq("is_public", true),
-      ]);
-
-      const categories = categoriesRes.data || [];
-      const locations = locationsRes.data || [];
-      const profiles = profilesRes.data || [];
+      const { data: locations } = await supabase.from("locations").select("id");
+      const locationCount = locations?.length || 572;
+      const totalLocationSpecs = locationCount * allSpecializations.length;
+      const locationSpecSitemapCount = Math.ceil(totalLocationSpecs / 5000);
 
       let xml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>${baseUrl}/</loc>
-    <changefreq>daily</changefreq>
-    <priority>1.0</priority>
-  </url>
-  <url>
-    <loc>${baseUrl}/faq</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>${baseUrl}/prijzen</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>${baseUrl}/over-ons</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.4</priority>
-  </url>
-  <url>
-    <loc>${baseUrl}/contact</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-  </url>
-`;
-
-      for (const category of categories) {
-        xml += `  <url>
-    <loc>${baseUrl}/zoek/${category.slug}</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-`;
-        for (const location of locations) {
-          xml += `  <url>
-    <loc>${baseUrl}/zoek/${category.slug}/${location.slug}</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-`;
-        }
-      }
-
-      for (const profile of profiles) {
-        xml += `  <url>
-    <loc>${baseUrl}/bedrijf/${profile.slug}</loc>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <sitemap>
+    <loc>${SITEMAP_BASE_URL}/sitemaps/site/sitemap.xml</loc>
     <lastmod>${today}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
+  </sitemap>
+  <sitemap>
+    <loc>${SITEMAP_BASE_URL}/sitemaps/info/sitemap.xml</loc>
+    <lastmod>${today}</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>${SITEMAP_BASE_URL}/sitemaps/profiles/sitemap.xml</loc>
+    <lastmod>${today}</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>${SITEMAP_BASE_URL}/sitemaps/locations/sitemap.xml</loc>
+    <lastmod>${today}</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>${SITEMAP_BASE_URL}/sitemaps/specializations/sitemap.xml</loc>
+    <lastmod>${today}</lastmod>
+  </sitemap>
+`;
+      for (let i = 1; i <= locationSpecSitemapCount; i++) {
+        xml += `  <sitemap>
+    <loc>${SITEMAP_BASE_URL}/sitemaps/location-specs/sitemap-${i}.xml</loc>
+    <lastmod>${today}</lastmod>
+  </sitemap>
 `;
       }
-
-      xml += `</urlset>`;
-
+      xml += `</sitemapindex>`;
       res.setHeader("Content-Type", "application/xml");
       return res.send(xml);
     }
 
-    // GET /robots.txt
-    if (method === "GET" && path === "/robots.txt") {
-      const baseUrl = "https://www.zoek-een-tuinman.be";
-      const robots = `User-agent: *
-Allow: /
+    // GET /sitemaps/site/sitemap.xml
+    if (method === "GET" && path === "/sitemaps/site/sitemap.xml") {
+      const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>${SITEMAP_BASE_URL}/</loc>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>${SITEMAP_BASE_URL}/login</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>${SITEMAP_BASE_URL}/registreren</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+  </url>
+</urlset>`;
+      res.setHeader("Content-Type", "application/xml");
+      return res.send(xml);
+    }
 
-Sitemap: ${baseUrl}/sitemap.xml
+    // GET /sitemaps/info/sitemap.xml
+    if (method === "GET" && path === "/sitemaps/info/sitemap.xml") {
+      const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>${SITEMAP_BASE_URL}/over-ons</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>${SITEMAP_BASE_URL}/contact</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>${SITEMAP_BASE_URL}/faq</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>${SITEMAP_BASE_URL}/prijzen</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>${SITEMAP_BASE_URL}/hoe-werkt-het</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>${SITEMAP_BASE_URL}/voor-tuinmannen</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+</urlset>`;
+      res.setHeader("Content-Type", "application/xml");
+      return res.send(xml);
+    }
+
+    // GET /sitemaps/profiles/sitemap.xml
+    if (method === "GET" && path === "/sitemaps/profiles/sitemap.xml") {
+      const today = new Date().toISOString().split("T")[0];
+      const { data: profiles } = await supabase.from("profiles").select("slug").eq("is_public", true);
+      let xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 `;
-      res.setHeader("Content-Type", "text/plain");
-      return res.send(robots);
+      for (const profile of profiles || []) {
+        xml += `  <url>
+    <loc>${SITEMAP_BASE_URL}/bedrijf/${profile.slug}</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.3</priority>
+  </url>
+`;
+      }
+      xml += `</urlset>`;
+      res.setHeader("Content-Type", "application/xml");
+      return res.send(xml);
+    }
+
+    // GET /sitemaps/locations/sitemap.xml
+    if (method === "GET" && path === "/sitemaps/locations/sitemap.xml") {
+      const today = new Date().toISOString().split("T")[0];
+      const { data: locations } = await supabase.from("locations").select("slug, postcode");
+      let xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+`;
+      for (const loc of locations || []) {
+        xml += `  <url>
+    <loc>${SITEMAP_BASE_URL}/zoek/${loc.postcode}-${loc.slug}</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+`;
+      }
+      xml += `</urlset>`;
+      res.setHeader("Content-Type", "application/xml");
+      return res.send(xml);
+    }
+
+    // GET /sitemaps/specializations/sitemap.xml
+    if (method === "GET" && path === "/sitemaps/specializations/sitemap.xml") {
+      const today = new Date().toISOString().split("T")[0];
+      let xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+`;
+      for (const [, slug] of allSpecializations) {
+        xml += `  <url>
+    <loc>${SITEMAP_BASE_URL}/zoek/${slug}</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+`;
+      }
+      xml += `</urlset>`;
+      res.setHeader("Content-Type", "application/xml");
+      return res.send(xml);
+    }
+
+    // GET /sitemaps/location-specs/sitemap-{n}.xml
+    const locationSpecMatch = path.match(/^\/sitemaps\/location-specs\/sitemap-(\d+)\.xml$/);
+    if (method === "GET" && locationSpecMatch) {
+      const page = parseInt(locationSpecMatch[1]) || 1;
+      const perPage = 5000;
+      const today = new Date().toISOString().split("T")[0];
+      const { data: locations } = await supabase.from("locations").select("slug, postcode");
+
+      const allCombos: { locationSlug: string; specSlug: string }[] = [];
+      for (const loc of locations || []) {
+        const locationSlug = `${loc.postcode}-${loc.slug}`;
+        for (const [, specSlug] of allSpecializations) {
+          allCombos.push({ locationSlug, specSlug });
+        }
+      }
+
+      const startIndex = (page - 1) * perPage;
+      const endIndex = startIndex + perPage;
+      const pageCombos = allCombos.slice(startIndex, endIndex);
+
+      if (pageCombos.length === 0) {
+        return res.status(404).send("Sitemap page not found");
+      }
+
+      let xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+`;
+      for (const combo of pageCombos) {
+        xml += `  <url>
+    <loc>${SITEMAP_BASE_URL}/zoek/${combo.locationSlug}/${combo.specSlug}</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+`;
+      }
+      xml += `</urlset>`;
+      res.setHeader("Content-Type", "application/xml");
+      return res.send(xml);
     }
 
     // GET /googlec82c9dc9a541d03e.html (Google Search Console verification)

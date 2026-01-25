@@ -140,31 +140,63 @@ export function SearchBox({
     }
   }, [cityQuery, locations, isUserTyping]);
 
+  // Specialization key to URL slug mapping
+  const specKeyToSlug: Record<string, string> = {
+    GRAS_MAAIEN: "gras-maaien",
+    SNOEIEN_BOMEN: "bomen-snoeien",
+    SNOEIEN_STRUIKEN: "struiken-snoeien",
+    HAAG_KNIPPEN: "hagen-knippen",
+    ONKRUID_VERWIJDEREN: "onkruid-verwijderen",
+    BLADEREN_RUIMEN: "bladeren-ruimen",
+    BEMESTING: "bemesting",
+    GAZONONDERHOUD: "gazononderhoud",
+    GRASAANLEG: "grasaanleg",
+    PADEN_TERRASSEN: "paden-terrassen",
+    HOUTEN_CONSTRUCTIES: "houten-constructies",
+    AFSLUITINGEN: "afsluitingen",
+    VIJVERS: "vijvers",
+    BESTRATING: "bestrating",
+    BEPLANTING: "beplanting",
+    IRRIGATIE: "irrigatie",
+  };
+
   const handleSearch = () => {
-    // Build the search URL - use "alle" when no specific category selected
-    const categorySlug = selectedMainCategory === "TUINONDERHOUD" 
-      ? "tuinonderhoud" 
-      : selectedMainCategory === "TUINAANLEG" 
-        ? "tuinaanleg" 
-        : "alle";
+    // New URL structure:
+    // /zoek/{postcode-city} - location only
+    // /zoek/{postcode-city}/{specialization-slug} - location + specialization
+    // /zoek/{specialization-slug} - specialization only
     
     const locationMatch = locations.find(
       (loc) =>
         loc.name.toLowerCase() === cityQuery.toLowerCase() ||
         loc.postcode === cityQuery ||
-        loc.slug === cityQuery.toLowerCase()
+        loc.slug === cityQuery.toLowerCase() ||
+        // Also match full location slug format like "9000-gent"
+        `${loc.postcode}-${loc.slug}` === cityQuery.toLowerCase()
     );
 
-    let url = `/zoek/${categorySlug}`;
+    const specSlug = selectedSpecialization && selectedSpecialization !== "all" 
+      ? specKeyToSlug[selectedSpecialization] 
+      : null;
+
+    let url = "/";
+    
     if (locationMatch) {
-      url += `/${locationMatch.slug}`;
+      // Location-first URL: /zoek/{postcode}-{city}
+      url = `/zoek/${locationMatch.postcode}-${locationMatch.slug}`;
+      if (specSlug) {
+        url += `/${specSlug}`;
+      }
+    } else if (specSlug) {
+      // Specialization-only URL: /zoek/{specialization}
+      url = `/zoek/${specSlug}`;
+    } else {
+      // No location or specialization - go to homepage
+      url = "/";
     }
 
     const params = new URLSearchParams();
     if (keyword) params.set("q", keyword);
-    if (selectedSpecialization && selectedSpecialization !== "all") {
-      params.set("spec", selectedSpecialization);
-    }
 
     if (params.toString()) {
       url += `?${params.toString()}`;
