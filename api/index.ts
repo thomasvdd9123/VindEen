@@ -1176,6 +1176,74 @@ Sitemap: ${SITEMAP_BASE_URL}/sitemap.xml
       }
     }
 
+    // GET /api/mollie/payment-status/:subscriptionId
+    if (method === "GET" && path.match(/^\/api\/mollie\/payment-status\/[^/]+$/)) {
+      const subscriptionId = path.split("/").pop();
+      
+      const { data: subscription, error } = await supabase
+        .from("subscription_items")
+        .select("*")
+        .eq("id", subscriptionId)
+        .single();
+      
+      if (error || !subscription) {
+        return res.status(404).json({ error: "Subscription not found" });
+      }
+
+      // If we have a Mollie payment ID, check its current status
+      if (subscription.mollie_payment_id) {
+        const mollieApiKey = process.env.MOLLIE_API_KEY;
+        if (mollieApiKey) {
+          try {
+            const mollieResponse = await fetch(`https://api.mollie.com/v2/payments/${subscription.mollie_payment_id}`, {
+              headers: { "Authorization": `Bearer ${mollieApiKey}` },
+            });
+            
+            if (mollieResponse.ok) {
+              const payment = await mollieResponse.json();
+              
+              // Update local status based on Mollie status
+              if (payment.status === "paid" && subscription.status !== "ACTIVE") {
+                const metadata = payment.metadata as { years: number };
+                const startDate = new Date();
+                const endDate = new Date();
+                endDate.setFullYear(endDate.getFullYear() + (metadata?.years || 1));
+
+                await supabase
+                  .from("subscription_items")
+                  .update({
+                    status: "ACTIVE",
+                    start_date: startDate.toISOString(),
+                    end_date: endDate.toISOString(),
+                    paid_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString(),
+                  })
+                  .eq("id", subscription.id);
+
+                return res.status(200).json({
+                  status: "ACTIVE",
+                  mollieStatus: payment.status,
+                  message: "Payment successful - subscription activated",
+                });
+              }
+
+              return res.status(200).json({
+                status: subscription.status,
+                mollieStatus: payment.status,
+              });
+            }
+          } catch (mollieError) {
+            console.error("Error checking Mollie payment:", mollieError);
+          }
+        }
+      }
+
+      return res.status(200).json({
+        status: subscription.status,
+        mollieStatus: null,
+      });
+    }
+
     // POST /api/mollie/webhook
     if (method === "POST" && path === "/api/mollie/webhook") {
       const { id: paymentId } = req.body;
