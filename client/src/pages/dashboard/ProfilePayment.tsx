@@ -56,7 +56,7 @@ export default function ProfilePayment() {
   const profileId = params?.id;
 
   const { data: profile, isLoading: isLoadingProfile } = useQuery<Profile>({
-    queryKey: ["/api/profiles", profileId],
+    queryKey: ["/api/profiles/by-id", profileId],
     enabled: !!profileId,
   });
 
