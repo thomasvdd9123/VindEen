@@ -82,13 +82,11 @@ export function SearchBox({
     : [];
 
   // Reset specialization when main category changes
-  useEffect(() => {
-    if (selectedMainCategory === "all") {
-      setSelectedSpecialization("all");
-    } else if (!availableSpecializations.includes(selectedSpecialization)) {
-      setSelectedSpecialization("all");
-    }
-  }, [selectedMainCategory, availableSpecializations, selectedSpecialization]);
+  const handleMainCategoryChange = (value: string) => {
+    setSelectedMainCategory(value);
+    // Always reset specialization when category changes
+    setSelectedSpecialization("all");
+  };
 
   // Fetch total count for the button based on current filters
   const countParams = new URLSearchParams();
@@ -250,7 +248,7 @@ export function SearchBox({
             </div>
 
             {/* Main Category */}
-            <Select value={selectedMainCategory} onValueChange={setSelectedMainCategory}>
+            <Select value={selectedMainCategory} onValueChange={handleMainCategoryChange}>
               <SelectTrigger className="w-full sm:w-[180px]" data-testid="select-main-category-compact">
                 <SelectValue placeholder="Type werk" />
               </SelectTrigger>
@@ -347,7 +345,7 @@ export function SearchBox({
         {/* Row 2: Category and Specialization filters */}
         <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
           {/* Main Category filter */}
-          <Select value={selectedMainCategory} onValueChange={setSelectedMainCategory}>
+          <Select value={selectedMainCategory} onValueChange={handleMainCategoryChange}>
             <SelectTrigger className="w-full sm:w-[200px] h-10" data-testid="select-main-category-hero">
               <SelectValue placeholder="Type werk" />
             </SelectTrigger>
