@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import { DashboardLayout } from "./DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,27 +23,20 @@ import type { Profile } from "@shared/schema";
 export default function DashboardProfiles() {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [accountId, setAccountId] = useState<string | null>(null);
-  const [isLoadingAccount, setIsLoadingAccount] = useState(true);
 
-  useEffect(() => {
-    if (user?.id) {
-      setIsLoadingAccount(true);
-      apiRequest("POST", "/api/accounts", {
-        authUserId: user.id,
-        email: user.email,
-      }).then((response) => {
-        setAccountId((response as { id: string }).id);
-      }).catch(console.error)
-      .finally(() => setIsLoadingAccount(false));
-    } else {
-      setIsLoadingAccount(false);
-    }
-  }, [user?.id, user?.email]);
+  // Use useQuery for account to benefit from caching
+  const { data: account, isLoading: isLoadingAccount } = useQuery<{ id: string }>({
+    queryKey: ["/api/accounts/by-auth", user?.id],
+    enabled: !!user?.id,
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+  });
+
+  const accountId = account?.id || null;
 
   const { data: profiles = [], isLoading: isLoadingProfiles } = useQuery<Profile[]>({
     queryKey: ["/api/my-profiles", accountId],
     enabled: !!accountId,
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
   });
 
   const isLoading = isLoadingAccount || isLoadingProfiles;
