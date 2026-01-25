@@ -211,8 +211,8 @@ function ProfileCard({ profile, onDelete }: { profile: Profile; onDelete: (id: s
             </p>
 
             <div className="flex flex-wrap gap-2">
-              {/* Show payment button if no subscription */}
-              {!subscription && (
+              {/* Show payment button if no active subscription */}
+              {(!subscription || subscription.status !== "ACTIVE") && (
                 <Link href={`/dashboard/profielen/${profile.id}/betalen`}>
                   <Button size="sm" className="gap-1" data-testid={`button-pay-${profile.id}`}>
                     <CreditCard className="h-3.5 w-3.5" />
