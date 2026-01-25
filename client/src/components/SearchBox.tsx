@@ -179,7 +179,7 @@ export function SearchBox({
       ? specKeyToSlug[selectedSpecialization] 
       : null;
 
-    let url = "/";
+    let url = "/zoek/alle";
     
     if (locationMatch) {
       // Location-first URL: /zoek/{postcode}-{city}
@@ -190,10 +190,8 @@ export function SearchBox({
     } else if (specSlug) {
       // Specialization-only URL: /zoek/{specialization}
       url = `/zoek/${specSlug}`;
-    } else {
-      // No location or specialization - go to homepage
-      url = "/";
     }
+    // If nothing selected, url stays "/zoek/alle" to show all results
 
     const params = new URLSearchParams();
     if (keyword) params.set("q", keyword);

@@ -46,6 +46,11 @@ function isLocationSlug(slug: string): boolean {
   return /^\d{4}-/.test(slug);
 }
 
+// Check if slug is "alle" (show all results)
+function isShowAll(slug: string): boolean {
+  return slug === "alle";
+}
+
 // Parse location slug to extract postcode and city slug
 function parseLocationSlug(slug: string): { postcode: string; citySlug: string } | null {
   const match = slug.match(/^(\d{4})-(.+)$/);
@@ -65,6 +70,7 @@ export default function CategoryPage() {
 
   // Parse URL to determine location and specialization
   // New URL structure:
+  // /zoek/alle - show all results
   // /zoek/{postcode-city} - location only
   // /zoek/{postcode-city}/{specialization} - location + specialization  
   // /zoek/{specialization} - specialization only
@@ -72,7 +78,18 @@ export default function CategoryPage() {
     const firstParam = params.locationOrSpec || "";
     const secondParam = params.specialization;
     
-    if (isLocationSlug(firstParam)) {
+    if (isShowAll(firstParam)) {
+      // Show all results
+      return {
+        locationSlug: null,
+        locationPostcode: null,
+        fullLocationSlug: null,
+        specializationSlug: null,
+        specializationKey: null,
+        specializationLabel: null,
+        showAll: true,
+      };
+    } else if (isLocationSlug(firstParam)) {
       // First param is location (e.g., "9000-gent")
       const parsed = parseLocationSlug(firstParam);
       return {
@@ -82,6 +99,7 @@ export default function CategoryPage() {
         specializationSlug: secondParam || null,
         specializationKey: secondParam ? specializationMap[secondParam]?.key : null,
         specializationLabel: secondParam ? specializationMap[secondParam]?.label : null,
+        showAll: false,
       };
     } else {
       // First param is specialization (e.g., "gras-maaien")
@@ -92,11 +110,12 @@ export default function CategoryPage() {
         specializationSlug: firstParam,
         specializationKey: specializationMap[firstParam]?.key || null,
         specializationLabel: specializationMap[firstParam]?.label || null,
+        showAll: false,
       };
     }
   }, [params.locationOrSpec, params.specialization]);
 
-  const { locationSlug, fullLocationSlug, specializationSlug, specializationKey, specializationLabel } = parsedUrl;
+  const { locationSlug, fullLocationSlug, specializationSlug, specializationKey, specializationLabel, showAll } = parsedUrl;
 
   const { data: location, isLoading: locationLoading } = useQuery<Location>({
     queryKey: ["/api/locations", locationSlug],
@@ -139,6 +158,10 @@ export default function CategoryPage() {
 
   // Build page title based on URL structure
   const pageTitle = useMemo(() => {
+    if (showAll) {
+      return "Alle tuinmannen";
+    }
+    
     const parts: string[] = [];
     
     if (specializationLabel) {
@@ -152,7 +175,7 @@ export default function CategoryPage() {
     }
     
     return parts.join(" ");
-  }, [specializationLabel, location?.name]);
+  }, [showAll, specializationLabel, location?.name]);
 
   return (
     <Layout>
