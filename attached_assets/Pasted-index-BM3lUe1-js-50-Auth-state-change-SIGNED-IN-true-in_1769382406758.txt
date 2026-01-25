@@ -1,0 +1,88 @@
+index-BM3lUe1-.js:50 Auth state change: SIGNED_IN true
+index-BM3lUe1-.js:50 Auth state change: INITIAL_SESSION true
+index-BM3lUe1-.js:50 Initial session: true
+frame_ant.js:2  GET https://www.zoek-een-tuinman.be/api/subscriptions/profile/576853ae-1949-4be7-b746-cc9b4e199d5a 404 (Not Found)
+n @ frame_ant.js:2
+window.fetch @ frame_ant.js:2
+(anonymous) @ index-BM3lUe1-.js:8
+a @ index-BM3lUe1-.js:8
+T @ index-BM3lUe1-.js:8
+start @ index-BM3lUe1-.js:8
+fetch @ index-BM3lUe1-.js:8
+#d @ index-BM3lUe1-.js:8
+onSubscribe @ index-BM3lUe1-.js:8
+subscribe @ index-BM3lUe1-.js:8
+(anonymous) @ index-BM3lUe1-.js:8
+Rw @ index-BM3lUe1-.js:6
+af @ index-BM3lUe1-.js:8
+ic @ index-BM3lUe1-.js:8
+HT @ index-BM3lUe1-.js:8
+Ba @ index-BM3lUe1-.js:8
+T_ @ index-BM3lUe1-.js:8
+Lo @ index-BM3lUe1-.js:6
+(anonymous) @ index-BM3lUe1-.js:8
+setTimeout
+a @ index-BM3lUe1-.js:8
+d @ index-BM3lUe1-.js:8
+batch @ index-BM3lUe1-.js:8
+#s @ index-BM3lUe1-.js:8
+setData @ index-BM3lUe1-.js:8
+onSuccess @ index-BM3lUe1-.js:8
+b @ index-BM3lUe1-.js:8
+Promise.then
+T @ index-BM3lUe1-.js:8
+start @ index-BM3lUe1-.js:8
+fetch @ index-BM3lUe1-.js:8
+#d @ index-BM3lUe1-.js:8
+setOptions @ index-BM3lUe1-.js:8
+(anonymous) @ index-BM3lUe1-.js:8
+af @ index-BM3lUe1-.js:8
+ic @ index-BM3lUe1-.js:8
+HT @ index-BM3lUe1-.js:8
+Ba @ index-BM3lUe1-.js:8
+T_ @ index-BM3lUe1-.js:8
+Lo @ index-BM3lUe1-.js:6
+(anonymous) @ index-BM3lUe1-.js:8
+setTimeout
+a @ index-BM3lUe1-.js:8
+d @ index-BM3lUe1-.js:8
+batch @ index-BM3lUe1-.js:8
+#s @ index-BM3lUe1-.js:8
+setData @ index-BM3lUe1-.js:8
+onSuccess @ index-BM3lUe1-.js:8
+b @ index-BM3lUe1-.js:8
+Promise.then
+T @ index-BM3lUe1-.js:8
+start @ index-BM3lUe1-.js:8
+fetch @ index-BM3lUe1-.js:8
+fetchQuery @ index-BM3lUe1-.js:8
+prefetchQuery @ index-BM3lUe1-.js:8
+(anonymous) @ index-BM3lUe1-.js:102
+af @ index-BM3lUe1-.js:8
+ic @ index-BM3lUe1-.js:8
+(anonymous) @ index-BM3lUe1-.js:8
+V @ index-BM3lUe1-.js:1
+ie @ index-BM3lUe1-.js:1
+index-BM3lUe1-.js:50 Auth state change: SIGNED_IN true
+frame_ant.js:2  GET https://www.zoek-een-tuinman.be/api/subscriptions/profile/576853ae-1949-4be7-b746-cc9b4e199d5a 404 (Not Found)
+n @ frame_ant.js:2
+window.fetch @ frame_ant.js:2
+(anonymous) @ index-BM3lUe1-.js:8
+a @ index-BM3lUe1-.js:8
+T @ index-BM3lUe1-.js:8
+start @ index-BM3lUe1-.js:8
+fetch @ index-BM3lUe1-.js:8
+#d @ index-BM3lUe1-.js:8
+fetch @ index-BM3lUe1-.js:8
+refetch @ index-BM3lUe1-.js:8
+onFocus @ index-BM3lUe1-.js:8
+(anonymous) @ index-BM3lUe1-.js:8
+(anonymous) @ index-BM3lUe1-.js:8
+batch @ index-BM3lUe1-.js:8
+onFocus @ index-BM3lUe1-.js:8
+(anonymous) @ index-BM3lUe1-.js:8
+await in (anonymous)
+(anonymous) @ index-BM3lUe1-.js:8
+onFocus @ index-BM3lUe1-.js:8
+(anonymous) @ index-BM3lUe1-.js:8
+e @ index-BM3lUe1-.js:8

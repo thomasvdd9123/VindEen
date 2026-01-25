@@ -125,10 +125,17 @@ export default function DashboardProfiles() {
 }
 
 function ProfileCard({ profile, onDelete }: { profile: Profile; onDelete: (id: string, name: string) => void }) {
-  // Fetch subscription status for this profile
+  // Fetch subscription status for this profile (404 = no subscription, return null)
   const { data: subscription } = useQuery<SubscriptionItem | null>({
     queryKey: ["/api/subscriptions/profile", profile.id],
+    queryFn: async () => {
+      const response = await fetch(`/api/subscriptions/profile/${profile.id}`);
+      if (response.status === 404) return null;
+      if (!response.ok) throw new Error("Failed to fetch subscription");
+      return response.json();
+    },
     staleTime: 1000 * 60 * 5,
+    retry: false,
   });
 
   const statusConfig: Record<string, { label: string; icon: any; variant: "default" | "secondary" | "destructive" | "outline" }> = {
