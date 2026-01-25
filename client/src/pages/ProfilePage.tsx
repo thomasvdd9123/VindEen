@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useParams, Link } from "wouter";
 import { Layout } from "@/components/layout/Layout";
+import { SEO, generateLocalBusinessSchema, generateBreadcrumbSchema } from "@/components/SEO";
 import { ContactForm } from "@/components/ContactForm";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -116,8 +117,55 @@ export default function ProfilePage() {
     .toUpperCase()
     .slice(0, 2);
 
+  const office = profile.office;
+  const locationName = office?.city || profile.location?.name || "";
+  
+  const seoTitle = locationName 
+    ? `${profile.name} - Tuinman in ${locationName}`
+    : profile.name;
+  
+  const seoDescription = profile.description 
+    ? profile.description.slice(0, 155) + (profile.description.length > 155 ? "..." : "")
+    : `${profile.name} is een professionele tuinman${locationName ? ` in ${locationName}` : ""}. Bekijk het profiel, specialisaties en vraag direct een offerte aan.`;
+
+  const breadcrumbItems = [
+    { name: "Home", url: "/" },
+    { name: "Tuinmannen", url: "/zoek/alle" },
+  ];
+  if (profile.location) {
+    breadcrumbItems.push({ 
+      name: profile.location.name, 
+      url: `/zoek/${profile.location.postcode}-${profile.location.slug}` 
+    });
+  }
+  breadcrumbItems.push({ name: profile.name, url: `/bedrijf/${profile.slug}` });
+
+  const structuredData = [
+    generateLocalBusinessSchema({
+      name: profile.name,
+      description: profile.description || undefined,
+      slug: profile.slug,
+      profileImageUrl: profile.logoUrl,
+      phone: profile.telnr,
+      email: profile.email,
+      website: profile.website,
+      offices: office ? [office] : undefined,
+      experienceYears: profile.practical?.experienceYears,
+      specializations: profile.specializations || undefined,
+    }),
+    generateBreadcrumbSchema(breadcrumbItems),
+  ];
+
   return (
     <Layout>
+      <SEO
+        title={seoTitle}
+        description={seoDescription}
+        canonical={`/bedrijf/${profile.slug}`}
+        ogType="profile"
+        ogImage={profile.logoUrl || undefined}
+        structuredData={structuredData}
+      />
       <div className="bg-muted/30 border-b border-border">
         <div className="container mx-auto px-4 py-4">
           <Breadcrumb>

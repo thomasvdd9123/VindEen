@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { Layout } from "@/components/layout/Layout";
+import { SEO, generateOrganizationSchema, generateWebSiteSchema } from "@/components/SEO";
 import { SearchBox } from "@/components/SearchBox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -37,8 +38,20 @@ export default function Home() {
     queryKey: ["/api/locations"],
   });
 
+  const structuredData = [
+    generateOrganizationSchema(),
+    generateWebSiteSchema(),
+  ];
+
   return (
     <Layout>
+      <SEO
+        title="Vind de beste tuinmannen in België"
+        description="Zoek en vergelijk tuinmannen in jouw regio. Bekijk profielen, specialisaties en vraag gratis offertes aan. De grootste directory van tuinprofessionals in België."
+        canonical="/"
+        structuredData={structuredData}
+      />
+      
       {/* Hero Section with Search */}
       <section className="relative bg-gradient-to-b from-primary/5 via-muted/30 to-background">
         {/* Subtle pattern overlay */}

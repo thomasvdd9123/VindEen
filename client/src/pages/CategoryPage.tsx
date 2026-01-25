@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useParams, Link, useSearch } from "wouter";
 import { Layout } from "@/components/layout/Layout";
+import { SEO, generateSearchResultsSchema, generateBreadcrumbSchema } from "@/components/SEO";
 import { SearchBox } from "@/components/SearchBox";
 import { ProfileCard } from "@/components/ProfileCard";
 import { SearchMap } from "@/components/SearchMap";
@@ -179,8 +180,88 @@ export default function CategoryPage() {
     return parts.join(" ");
   }, [showAll, specializationLabel, location?.name]);
 
+  // SEO: Generate unique title and description for each location/specialization combo
+  const seoTitle = useMemo(() => {
+    if (showAll) {
+      return "Alle tuinmannen in België - Vind jouw tuinprofessional";
+    }
+    if (location && specializationLabel) {
+      return `${specializationLabel} in ${location.name} (${location.postcode}) - Tuinmannen`;
+    }
+    if (location) {
+      return `Tuinmannen in ${location.name} (${location.postcode}) - Vind lokale tuinprofessionals`;
+    }
+    if (specializationLabel) {
+      return `${specializationLabel} - Gespecialiseerde tuinmannen in België`;
+    }
+    return "Tuinmannen in België";
+  }, [showAll, location, specializationLabel]);
+
+  const seoDescription = useMemo(() => {
+    const resultText = total > 0 ? `${total} tuinmannen gevonden.` : "";
+    if (showAll) {
+      return `Bekijk alle tuinmannen in België. ${resultText} Vergelijk profielen, bekijk specialisaties en vraag gratis offertes aan.`;
+    }
+    if (location && specializationLabel) {
+      return `Zoek ${specializationLabel.toLowerCase()} in ${location.name}. ${resultText} Bekijk profielen van lokale tuinprofessionals en vraag direct een offerte aan.`;
+    }
+    if (location) {
+      return `Vind de beste tuinmannen in ${location.name} (${location.postcode}). ${resultText} Bekijk profielen, specialisaties en contacteer direct.`;
+    }
+    if (specializationLabel) {
+      return `Zoek tuinmannen gespecialiseerd in ${specializationLabel.toLowerCase()}. ${resultText} Vergelijk professionals in heel België.`;
+    }
+    return "Zoek en vergelijk tuinmannen in België.";
+  }, [showAll, location, specializationLabel, total]);
+
+  // Build canonical URL (without query params to avoid duplicates)
+  const canonicalUrl = useMemo(() => {
+    if (showAll) return "/zoek/alle";
+    if (fullLocationSlug && specializationSlug) {
+      return `/zoek/${fullLocationSlug}/${specializationSlug}`;
+    }
+    if (fullLocationSlug) return `/zoek/${fullLocationSlug}`;
+    if (specializationSlug) return `/zoek/${specializationSlug}`;
+    return "/zoek/alle";
+  }, [showAll, fullLocationSlug, specializationSlug]);
+
+  // Build breadcrumb items for structured data
+  const breadcrumbItems = useMemo(() => {
+    const items = [{ name: "Home", url: "/" }];
+    if (location) {
+      items.push({ name: location.name, url: `/zoek/${fullLocationSlug}` });
+    }
+    if (specializationLabel) {
+      const specUrl = location 
+        ? `/zoek/${fullLocationSlug}/${specializationSlug}`
+        : `/zoek/${specializationSlug}`;
+      items.push({ name: specializationLabel, url: specUrl });
+    }
+    return items;
+  }, [location, fullLocationSlug, specializationLabel, specializationSlug]);
+
+  const structuredData = useMemo(() => [
+    generateSearchResultsSchema({
+      location: location?.name,
+      specialization: specializationLabel || undefined,
+      totalResults: total,
+    }),
+    generateBreadcrumbSchema(breadcrumbItems),
+  ], [location?.name, specializationLabel, total, breadcrumbItems]);
+
+  // noindex pages with zero results to avoid thin content
+  const shouldNoindex = !isLoading && total === 0;
+
   return (
     <Layout>
+      <SEO
+        title={seoTitle}
+        description={seoDescription}
+        canonical={canonicalUrl}
+        noindex={shouldNoindex}
+        structuredData={structuredData}
+      />
+      
       {/* Search Section - Sticky at top like vind-een-psycholoog */}
       <section className="bg-gradient-to-b from-muted/50 to-background border-b border-border">
         <div className="container mx-auto px-4 py-6">
