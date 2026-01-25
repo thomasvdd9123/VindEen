@@ -7,6 +7,11 @@ import { MapPin, Phone, Globe, Star, CheckCircle, ArrowRight } from "lucide-reac
 import type { ProfileWithRelations } from "@shared/schema";
 import { specializationLabels } from "@shared/schema";
 
+// Convert specialization key to URL slug (e.g., GRAS_MAAIEN -> gras-maaien)
+function getSpecializationSlug(spec: string): string {
+  return spec.toLowerCase().replace(/_/g, "-");
+}
+
 interface ProfileCardProps {
   profile: ProfileWithRelations;
 }
@@ -68,9 +73,15 @@ export function ProfileCard({ profile }: ProfileCardProps) {
             {profile.specializations && profile.specializations.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mt-3">
                 {profile.specializations.slice(0, 3).map((spec) => (
-                  <Badge key={spec} variant="outline" className="text-xs font-normal">
-                    {specializationLabels[spec] || spec}
-                  </Badge>
+                  <Link key={spec} href={`/zoek/${getSpecializationSlug(spec)}`}>
+                    <Badge 
+                      variant="outline" 
+                      className="text-xs font-normal cursor-pointer"
+                      data-testid={`badge-spec-${spec.toLowerCase()}`}
+                    >
+                      {specializationLabels[spec] || spec}
+                    </Badge>
+                  </Link>
                 ))}
                 {profile.specializations.length > 3 && (
                   <Badge variant="outline" className="text-xs font-normal">
