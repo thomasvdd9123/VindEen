@@ -48,6 +48,8 @@ const fieldMap: Record<string, string> = {
 const ignoreFields = new Set([
   "offeredServices",
   "offered_services",
+  "mainCategories",
+  "main_categories",
 ]);
 
 function toSnakeCase(obj: Record<string, any>): Record<string, any> {
