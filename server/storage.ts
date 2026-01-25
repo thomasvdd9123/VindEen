@@ -79,6 +79,7 @@ export class MemStorage implements IStorage {
   private offices: Map<string, Office>;
   private practicals: Map<string, Practical>;
   private contactRequests: Map<string, ContactRequest>;
+  private subscriptionItems: Map<string, SubscriptionItem>;
 
   constructor() {
     this.categories = new Map();
@@ -89,6 +90,7 @@ export class MemStorage implements IStorage {
     this.offices = new Map();
     this.practicals = new Map();
     this.contactRequests = new Map();
+    this.subscriptionItems = new Map();
 
     this.seedData();
   }
@@ -815,7 +817,7 @@ export class MemStorage implements IStorage {
     return [];
   }
 
-  // Subscription Items (MemStorage stub - uses Supabase in production)
+  // Subscription Items
   async createSubscriptionItem(item: InsertSubscriptionItem): Promise<SubscriptionItem> {
     const id = randomUUID();
     const subscriptionItem: SubscriptionItem = {
@@ -839,11 +841,14 @@ export class MemStorage implements IStorage {
       createdAt: new Date(),
       updatedAt: new Date(),
     };
+    this.subscriptionItems.set(id, subscriptionItem);
     return subscriptionItem;
   }
 
   async getSubscriptionItemsByAccountId(accountId: string): Promise<SubscriptionItem[]> {
-    return [];
+    return Array.from(this.subscriptionItems.values())
+      .filter((item) => item.accountId === accountId)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   }
 
   // Helper to enrich profile with relations

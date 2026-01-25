@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { contactFormSchema, searchParamsSchema } from "@shared/schema";
+import { contactFormSchema, searchParamsSchema, insertSubscriptionItemSchema } from "@shared/schema";
 import { z } from "zod";
 import multer from "multer";
 import { supabaseAdmin } from "./lib/supabase";
@@ -493,28 +493,44 @@ export async function registerRoutes(
   });
 
   // Create subscription (mock - will be updated for Stripe/Mollie)
+  // Extended schema for API request (includes years for date calculation)
+  const createSubscriptionApiSchema = insertSubscriptionItemSchema.pick({
+    accountId: true,
+    subscriptionPlanId: true,
+    autoRenew: true,
+    paymentFrequency: true,
+  }).extend({
+    years: z.number().min(1).max(3).default(1),
+    totalAmount: z.number().positive().optional(), // For logging/future payment integration
+  });
+
   app.post("/api/subscriptions", async (req, res) => {
     try {
-      const { accountId, planId, years, totalAmount, status } = req.body;
+      const validationResult = createSubscriptionApiSchema.safeParse(req.body);
       
-      if (!accountId) {
-        return res.status(400).json({ error: "Account ID is required" });
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          error: "Validation failed", 
+          details: validationResult.error.flatten().fieldErrors 
+        });
       }
 
-      // Calculate dates
+      const { accountId, subscriptionPlanId, years, totalAmount, autoRenew, paymentFrequency } = validationResult.data;
+
+      // Calculate dates based on validated years
       const startDate = new Date();
       const endDate = new Date();
-      endDate.setFullYear(endDate.getFullYear() + (years || 1));
+      endDate.setFullYear(endDate.getFullYear() + years);
 
       // Create subscription item (mock - in production, status would be PENDING until payment confirmed)
       const subscriptionItem = await storage.createSubscriptionItem({
         accountId,
-        subscriptionPlanId: planId || null,
+        subscriptionPlanId: subscriptionPlanId || null,
         startDate,
         endDate,
         status: "ACTIVE", // For mock flow, set as active immediately
-        paymentFrequency: "YEARLY",
-        autoRenew: true,
+        paymentFrequency: paymentFrequency || "YEARLY",
+        autoRenew: autoRenew ?? true,
       });
 
       console.log(`Created subscription for account ${accountId}:`, {
