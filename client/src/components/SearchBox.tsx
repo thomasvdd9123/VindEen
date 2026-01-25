@@ -193,6 +193,10 @@ export function SearchBox({
 
     const params = new URLSearchParams();
     if (keyword) params.set("q", keyword);
+    // Add main category as query param (not in URL path)
+    if (selectedMainCategory && selectedMainCategory !== "all") {
+      params.set("cat", selectedMainCategory);
+    }
 
     if (params.toString()) {
       url += `?${params.toString()}`;

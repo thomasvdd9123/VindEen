@@ -67,6 +67,7 @@ export default function CategoryPage() {
   const searchString = useSearch();
   const urlParams = new URLSearchParams(searchString);
   const queryParam = urlParams.get("q") || "";
+  const mainCategoryParam = urlParams.get("cat") || "";
 
   // Parse URL to determine location and specialization
   // New URL structure:
@@ -127,7 +128,7 @@ export default function CategoryPage() {
   });
 
   // Reset page when filters change
-  const filterKey = `${fullLocationSlug}-${specializationSlug}-${queryParam}`;
+  const filterKey = `${fullLocationSlug}-${specializationSlug}-${mainCategoryParam}-${queryParam}`;
   useEffect(() => {
     setCurrentPage(1);
   }, [filterKey]);
@@ -136,6 +137,7 @@ export default function CategoryPage() {
   const searchParams = new URLSearchParams();
   if (locationSlug) searchParams.set("location", locationSlug);
   if (specializationKey) searchParams.set("spec", specializationKey);
+  if (mainCategoryParam) searchParams.set("mainCategory", mainCategoryParam);
   if (queryParam) searchParams.set("q", queryParam);
   searchParams.set("page", currentPage.toString());
   
@@ -190,6 +192,7 @@ export default function CategoryPage() {
             <div className="max-w-4xl mx-auto">
               <SearchBox 
                 locations={locations}
+                initialCategory={mainCategoryParam || undefined}
                 initialSpecialization={specializationKey || undefined}
                 initialLocation={fullLocationSlug || undefined}
                 initialQuery={queryParam}
