@@ -381,6 +381,7 @@ export class SupabaseStorage implements IStorage {
     if (updates.imageUrls !== undefined) updateData.image_urls = updates.imageUrls;
     if (updates.isActive !== undefined) updateData.is_active = updates.isActive;
     if (updates.isPublic !== undefined) updateData.is_public = updates.isPublic;
+    if ((updates as any).hideAddress !== undefined) updateData.hide_address = (updates as any).hideAddress;
     if (updates.categoryId !== undefined) updateData.category_id = updates.categoryId;
     if (updates.locationId !== undefined) updateData.location_id = updates.locationId;
     if (updates.seoTitle !== undefined) updateData.seo_title = updates.seoTitle;

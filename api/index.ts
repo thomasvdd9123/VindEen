@@ -44,12 +44,22 @@ const fieldMap: Record<string, string> = {
   billingCity: "billing_city",
 };
 
-// Fields that should be ignored (don't exist in database)
+// Fields that should be ignored (don't exist in profiles table - separate tables or UI-only)
 const ignoreFields = new Set([
   "offeredServices",
   "offered_services",
   "mainCategories",
   "main_categories",
+  "office",
+  "practicals",
+  "officeStreet",
+  "officeNumber",
+  "officeTown",
+  "officePostcode",
+  "office_street",
+  "office_number",
+  "office_town",
+  "office_postcode",
 ]);
 
 function toSnakeCase(obj: Record<string, any>): Record<string, any> {
@@ -685,14 +695,35 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(400).json({ error: "No update data provided" });
       }
       
-      const updates = toSnakeCase(req.body);
-      updates.updated_at = new Date().toISOString();
+      // Use whitelist approach like dev server - only pick known profile fields
+      const body = req.body;
+      const updateData: Record<string, unknown> = {};
+      if (body.name !== undefined) updateData.name = body.name;
+      if (body.email !== undefined) updateData.email = body.email;
+      if (body.telnr !== undefined) updateData.telnr = body.telnr;
+      if (body.website !== undefined) updateData.website = body.website;
+      if (body.hasWebsite !== undefined) updateData.has_website = body.hasWebsite;
+      if (body.description !== undefined) updateData.description = body.description;
+      if (body.introduction !== undefined) updateData.introduction = body.introduction;
+      if (body.title !== undefined) updateData.title = body.title;
+      if (body.education !== undefined) updateData.education = body.education;
+      if (body.specializations !== undefined) updateData.specializations = body.specializations;
+      if (body.logoUrl !== undefined) updateData.logo_url = body.logoUrl;
+      if (body.imageUrls !== undefined) updateData.image_urls = body.imageUrls;
+      if (body.isActive !== undefined) updateData.is_active = body.isActive;
+      if (body.isPublic !== undefined) updateData.is_public = body.isPublic;
+      if (body.hideAddress !== undefined) updateData.hide_address = body.hideAddress;
+      if (body.categoryId !== undefined) updateData.category_id = body.categoryId;
+      if (body.locationId !== undefined) updateData.location_id = body.locationId;
+      if (body.seoTitle !== undefined) updateData.seo_title = body.seoTitle;
+      if (body.seoDescription !== undefined) updateData.seo_description = body.seoDescription;
+      updateData.updated_at = new Date().toISOString();
       
-      console.log("PATCH /api/profiles/:id - Updating profile:", id, "with:", updates);
+      console.log("PATCH /api/profiles/:id - Updating profile:", id, "with:", updateData);
       
       const { data, error } = await supabase
         .from("profiles")
-        .update(updates)
+        .update(updateData)
         .eq("id", id)
         .select()
         .single();
