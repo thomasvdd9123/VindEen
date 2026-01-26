@@ -1444,7 +1444,7 @@ Sitemap: ${SITEMAP_BASE_URL}/sitemap.xml
                   method: "POST",
                   headers: {
                     "Content-Type": "application/json",
-                    "Authorization": `Bearer ${billitApiKey}`,
+                    "Authorization": billitApiKey,
                   },
                   body: JSON.stringify({
                     Supplier: {
