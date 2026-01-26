@@ -1,0 +1,588 @@
+Skip to content
+thomasvdd9123's projects
+thomasvdd9123's projects
+
+Hobby
+
+vind-een
+
+
+Find…
+F
+
+Filters
+
+Timeline
+
+Combobox Menu
+Last 30 minutes
+
+Contains Console Level
+
+​
+Error
+1
+
+​
+Warning
+0
+
+​
+Fatal
+0
+
+
+Resource
+
+
+
+
+
+Environment
+
+
+
+
+Route
+
+
+
+Request Path
+
+
+
+Status Code
+
+
+
+Request Type
+
+
+
+
+
+
+
+
+Host
+
+
+
+Request Method
+
+
+
+Cache
+
+
+
+Branch
+
+
+
+Deployment ID
+
+
+Search Logs
+Search logs…
+01:03:00
+01:08:10
+01:13:10
+01:18:10
+01:23:10
+01:33:00
+Time
+Status
+Host
+Request
+Messages
+Jan 26 01:32:01.49
+GET
+304
+www.zoek-een-tuinman.be
+/api/accounts/by-auth/2f713858-8f6e-4c37-813f-c1c2a9af5aa6
+Jan 26 01:32:01.48
+GET
+200
+www.zoek-een-tuinman.be
+/api/subscriptions/profile/576853ae-1949-4be7-b746-cc9b4e199d5a
+Jan 26 01:32:00.95
+GET
+304
+www.zoek-een-tuinman.be
+/api/contact-requests/6c7e6f12-f39b-4466-ba2a-b29f602e092d
+Jan 26 01:32:00.95
+GET
+304
+www.zoek-een-tuinman.be
+/api/my-profiles/6c7e6f12-f39b-4466-ba2a-b29f602e092d
+Jan 26 01:32:00.71
+GET
+304
+www.zoek-een-tuinman.be
+/api/accounts/by-auth/2f713858-8f6e-4c37-813f-c1c2a9af5aa6
+Jan 26 01:32:00.45
+GET
+304
+www.zoek-een-tuinman.be
+/api/accounts/by-auth/2f713858-8f6e-4c37-813f-c1c2a9af5aa6
+Jan 26 01:31:58.12
+POST
+200
+www.zoek-een-tuinman.be
+/api/mollie/webhook
+4
+Failed to send Peppol invoice: Error: Billit API error (401): {"errors":[{"Code":"ApiKeyNotValid"}]} at Object.handler (/vercel/path0/api/index.ts:1494:25) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) at async r (/opt/rust/nodejs.js:2:15572) at async Server.<anonymous> (/opt/rust/nodejs.js:2:11594) at async Server.<anonymous> (/opt/rust/nodejs.js:17:9988)
+Jan 26 01:31:58.08
+GET
+200
+www.zoek-een-tuinman.be
+/api/mollie/payment-status/37af331f-23b5-4590-87ea-5b32ae5ccf1e
+Jan 26 01:31:39.77
+POST
+200
+www.zoek-een-tuinman.be
+/api/mollie/create-payment
+2
+Created Mollie payment tr_yAUnKiXgAYHFDnQfvLGLJ for profile 576853ae-1949-4be7-b746-cc9b4e199d5a
+Jan 26 01:31:38.45
+GET
+304
+www.zoek-een-tuinman.be
+/api/accounts/by-auth/2f713858-8f6e-4c37-813f-c1c2a9af5aa6
+Jan 26 01:31:38.45
+GET
+200
+www.zoek-een-tuinman.be
+/api/profiles/by-id/576853ae-1949-4be7-b746-cc9b4e199d5a
+Jan 26 01:31:37.69
+GET
+304
+www.zoek-een-tuinman.be
+/api/contact-requests/6c7e6f12-f39b-4466-ba2a-b29f602e092d
+Jan 26 01:31:37.68
+GET
+404
+www.zoek-een-tuinman.be
+/api/subscriptions/profile/576853ae-1949-4be7-b746-cc9b4e199d5a
+Jan 26 01:31:37.40
+GET
+304
+www.zoek-een-tuinman.be
+/api/my-profiles/6c7e6f12-f39b-4466-ba2a-b29f602e092d
+Jan 26 01:31:37.39
+GET
+304
+www.zoek-een-tuinman.be
+/api/accounts/by-auth/2f713858-8f6e-4c37-813f-c1c2a9af5aa6
+Jan 26 01:31:37.14
+GET
+304
+www.zoek-een-tuinman.be
+/api/accounts/by-auth/2f713858-8f6e-4c37-813f-c1c2a9af5aa6
+Jan 26 01:31:31.40
+GET
+200
+www.zoek-een-tuinman.be
+/robots.txt
+Jan 26 01:31:22.11
+GET
+304
+www.zoek-een-tuinman.be
+/api/categories/grouped
+Jan 26 01:31:22.11
+GET
+304
+www.zoek-een-tuinman.be
+/api/profiles/count
+Jan 26 01:31:21.57
+GET
+304
+www.zoek-een-tuinman.be
+/api/locations
+Jan 26 01:31:01.50
+GET
+200
+vind-hgecg8i0b-thomasvdd9123s-projects.vercel.app
+/api/locations
+Jan 26 01:31:01.47
+GET
+200
+vind-hgecg8i0b-thomasvdd9123s-projects.vercel.app
+/api/locations
+Jan 26 01:30:20.86
+GET
+200
+www.zoek-een-tuinman.be
+/api/profiles/search
+Jan 26 01:30:20.74
+GET
+200
+www.zoek-een-tuinman.be
+/api/locations/ferrieres
+Jan 26 01:30:20.74
+GET
+200
+www.zoek-een-tuinman.be
+/robots.txt
+Jan 26 01:28:14.86
+GET
+200
+www.zoek-een-tuinman.be
+/api/profiles/search
+Jan 26 01:28:14.79
+GET
+200
+www.zoek-een-tuinman.be
+/api/locations/neufchateau
+Jan 26 01:26:06.78
+GET
+200
+www.zoek-een-tuinman.be
+/api/profiles/search
+Jan 26 01:25:32.88
+GET
+304
+www.zoek-een-tuinman.be
+/api/my-profiles/6c7e6f12-f39b-4466-ba2a-b29f602e092d
+Jan 26 01:25:32.88
+GET
+304
+www.zoek-een-tuinman.be
+/api/accounts/by-auth/2f713858-8f6e-4c37-813f-c1c2a9af5aa6
+Jan 26 01:25:32.88
+GET
+200
+www.zoek-een-tuinman.be
+/api/subscriptions/profile/576853ae-1949-4be7-b746-cc9b4e199d5a
+Jan 26 01:20:30.93
+GET
+200
+www.zoek-een-tuinman.be
+/api/profiles/search
+Jan 26 01:16:41.70
+GET
+200
+www.zoek-een-tuinman.be
+/api/subscriptions/profile/576853ae-1949-4be7-b746-cc9b4e199d5a
+Jan 26 01:16:41.49
+GET
+304
+www.zoek-een-tuinman.be
+/api/contact-requests/6c7e6f12-f39b-4466-ba2a-b29f602e092d
+Jan 26 01:16:41.49
+GET
+304
+www.zoek-een-tuinman.be
+/api/accounts/by-auth/2f713858-8f6e-4c37-813f-c1c2a9af5aa6
+Jan 26 01:16:41.46
+GET
+304
+www.zoek-een-tuinman.be
+/api/my-profiles/6c7e6f12-f39b-4466-ba2a-b29f602e092d
+Jan 26 01:16:41.26
+GET
+304
+www.zoek-een-tuinman.be
+/api/accounts/by-auth/2f713858-8f6e-4c37-813f-c1c2a9af5aa6
+Jan 26 01:16:40.42
+GET
+304
+www.zoek-een-tuinman.be
+/api/accounts/by-auth/2f713858-8f6e-4c37-813f-c1c2a9af5aa6
+Jan 26 01:16:38.54
+POST
+200
+www.zoek-een-tuinman.be
+/api/mollie/webhook
+3
+Sent payment confirmation email to thomasvandendriesch@gmail.com
+Jan 26 01:16:38.37
+GET
+200
+www.zoek-een-tuinman.be
+/api/mollie/payment-status/2795b023-fb3b-4a14-9eab-778785c6753d
+Jan 26 01:16:11.59
+GET
+200
+www.zoek-een-tuinman.be
+/api/profiles/search
+Jan 26 01:16:05.88
+POST
+200
+www.zoek-een-tuinman.be
+/api/mollie/create-payment
+2
+Created Mollie payment tr_9andojkHjtp7VxjjLKGLJ for profile 576853ae-1949-4be7-b746-cc9b4e199d5a
+Jan 26 01:16:03.29
+GET
+200
+www.zoek-een-tuinman.be
+/api/profiles/by-id/576853ae-1949-4be7-b746-cc9b4e199d5a
+Jan 26 01:16:03.29
+GET
+304
+www.zoek-een-tuinman.be
+/api/accounts/by-auth/2f713858-8f6e-4c37-813f-c1c2a9af5aa6
+Jan 26 01:16:02.61
+GET
+304
+www.zoek-een-tuinman.be
+/api/contact-requests/6c7e6f12-f39b-4466-ba2a-b29f602e092d
+Jan 26 01:16:02.61
+GET
+404
+www.zoek-een-tuinman.be
+/api/subscriptions/profile/576853ae-1949-4be7-b746-cc9b4e199d5a
+Jan 26 01:16:02.36
+GET
+304
+www.zoek-een-tuinman.be
+/api/my-profiles/6c7e6f12-f39b-4466-ba2a-b29f602e092d
+Jan 26 01:16:02.35
+GET
+304
+www.zoek-een-tuinman.be
+/api/accounts/by-auth/2f713858-8f6e-4c37-813f-c1c2a9af5aa6
+Jan 26 01:16:02.10
+GET
+304
+www.zoek-een-tuinman.be
+/api/accounts/by-auth/2f713858-8f6e-4c37-813f-c1c2a9af5aa6
+Jan 26 01:16:00.81
+GET
+404
+www.zoek-een-tuinman.be
+/api/subscriptions/profile/576853ae-1949-4be7-b746-cc9b4e199d5a
+Jan 26 01:16:00.79
+GET
+304
+www.zoek-een-tuinman.be
+/api/contact-requests/6c7e6f12-f39b-4466-ba2a-b29f602e092d
+Jan 26 01:16:00.55
+GET
+304
+www.zoek-een-tuinman.be
+/api/my-profiles/6c7e6f12-f39b-4466-ba2a-b29f602e092d
+Jan 26 01:16:00.55
+GET
+304
+www.zoek-een-tuinman.be
+/api/accounts/by-auth/2f713858-8f6e-4c37-813f-c1c2a9af5aa6
+Jan 26 01:16:00.31
+GET
+304
+www.zoek-een-tuinman.be
+/api/accounts/by-auth/2f713858-8f6e-4c37-813f-c1c2a9af5aa6
+Jan 26 01:15:59.09
+GET
+304
+www.zoek-een-tuinman.be
+/api/accounts/by-auth/2f713858-8f6e-4c37-813f-c1c2a9af5aa6
+Jan 26 01:15:59.09
+GET
+404
+www.zoek-een-tuinman.be
+/api/subscriptions/profile/576853ae-1949-4be7-b746-cc9b4e199d5a
+Jan 26 01:15:58.34
+GET
+304
+www.zoek-een-tuinman.be
+/api/accounts/by-auth/2f713858-8f6e-4c37-813f-c1c2a9af5aa6
+Jan 26 01:15:57.16
+GET
+304
+www.zoek-een-tuinman.be
+/api/accounts/by-auth/2f713858-8f6e-4c37-813f-c1c2a9af5aa6
+Jan 26 01:15:51.47
+GET
+304
+www.zoek-een-tuinman.be
+/api/my-profiles/6c7e6f12-f39b-4466-ba2a-b29f602e092d
+Jan 26 01:15:51.47
+GET
+304
+www.zoek-een-tuinman.be
+/api/contact-requests/6c7e6f12-f39b-4466-ba2a-b29f602e092d
+Jan 26 01:15:51.23
+GET
+304
+www.zoek-een-tuinman.be
+/api/accounts/by-auth/2f713858-8f6e-4c37-813f-c1c2a9af5aa6
+Jan 26 01:15:50.83
+GET
+304
+www.zoek-een-tuinman.be
+/api/accounts/by-auth/2f713858-8f6e-4c37-813f-c1c2a9af5aa6
+Jan 26 01:15:48.99
+GET
+304
+www.zoek-een-tuinman.be
+/api/accounts/by-auth/2f713858-8f6e-4c37-813f-c1c2a9af5aa6
+Jan 26 01:15:39.27
+GET
+200
+vind-cr0w4h6bo-thomasvdd9123s-projects.vercel.app
+/api/locations
+Jan 26 01:15:39.22
+GET
+200
+vind-cr0w4h6bo-thomasvdd9123s-projects.vercel.app
+/api/locations
+Jan 26 01:14:41.99
+GET
+304
+www.zoek-een-tuinman.be
+/api/accounts/by-auth/2f713858-8f6e-4c37-813f-c1c2a9af5aa6
+Jan 26 01:13:41.24
+GET
+200
+www.zoek-een-tuinman.be
+/api/profiles/search
+Jan 26 01:13:03.08
+GET
+304
+www.zoek-een-tuinman.be
+/api/accounts/by-auth/2f713858-8f6e-4c37-813f-c1c2a9af5aa6
+Jan 26 01:08:57.76
+GET
+304
+www.zoek-een-tuinman.be
+/api/accounts/by-auth/2f713858-8f6e-4c37-813f-c1c2a9af5aa6
+Jan 26 01:06:44.66
+GET
+304
+www.zoek-een-tuinman.be
+/api/accounts/by-auth/2f713858-8f6e-4c37-813f-c1c2a9af5aa6
+Jan 26 01:06:27.83
+GET
+200
+www.zoek-een-tuinman.be
+/api/profiles/search
+Jan 26 01:05:39.29
+GET
+304
+www.zoek-een-tuinman.be
+/api/contact-requests/6c7e6f12-f39b-4466-ba2a-b29f602e092d
+Jan 26 01:05:39.29
+GET
+304
+www.zoek-een-tuinman.be
+/api/my-profiles/6c7e6f12-f39b-4466-ba2a-b29f602e092d
+Jan 26 01:05:39.05
+GET
+304
+www.zoek-een-tuinman.be
+/api/accounts/by-auth/2f713858-8f6e-4c37-813f-c1c2a9af5aa6
+Jan 26 01:05:38.76
+GET
+304
+www.zoek-een-tuinman.be
+/api/accounts/by-auth/2f713858-8f6e-4c37-813f-c1c2a9af5aa6
+Jan 26 01:05:32.26
+GET
+200
+www.zoek-een-tuinman.be
+/api/accounts/by-auth/2f713858-8f6e-4c37-813f-c1c2a9af5aa6
+Jan 26 01:05:31.92
+PATCH
+200
+www.zoek-een-tuinman.be
+/api/accounts/6c7e6f12-f39b-4466-ba2a-b29f602e092d
+Jan 26 01:04:43.39
+GET
+304
+www.zoek-een-tuinman.be
+/api/accounts/by-auth/2f713858-8f6e-4c37-813f-c1c2a9af5aa6
+Jan 26 01:04:42.21
+GET
+404
+www.zoek-een-tuinman.be
+/api/subscriptions/profile/576853ae-1949-4be7-b746-cc9b4e199d5a
+Jan 26 01:04:42.00
+GET
+304
+www.zoek-een-tuinman.be
+/api/contact-requests/6c7e6f12-f39b-4466-ba2a-b29f602e092d
+Jan 26 01:04:41.71
+GET
+304
+www.zoek-een-tuinman.be
+/api/my-profiles/6c7e6f12-f39b-4466-ba2a-b29f602e092d
+Jan 26 01:04:41.70
+GET
+304
+www.zoek-een-tuinman.be
+/api/accounts/by-auth/2f713858-8f6e-4c37-813f-c1c2a9af5aa6
+Jan 26 01:04:41.41
+GET
+304
+www.zoek-een-tuinman.be
+/api/accounts/by-auth/2f713858-8f6e-4c37-813f-c1c2a9af5aa6
+Jan 26 01:04:39.82
+GET
+304
+www.zoek-een-tuinman.be
+/api/categories/grouped
+Jan 26 01:04:39.82
+GET
+304
+www.zoek-een-tuinman.be
+/api/profiles/count
+Jan 26 01:04:39.24
+GET
+304
+www.zoek-een-tuinman.be
+/api/locations
+Jan 26 01:03:06.49
+GET
+200
+www.zoek-een-tuinman.be
+/api/profiles/count
+Jan 26 01:03:05.48
+GET
+200
+www.zoek-een-tuinman.be
+/api/profiles/search
+Jan 26 01:03:05.27
+GET
+200
+www.zoek-een-tuinman.be
+/api/profiles/search
+No more logs to show within selected timeline
+
+Logs
+No logs found for this request
+
+GET
+
+/api/accounts/by-auth/2f713858-8f6e-4c37-813f-c1c2a9af5aa6
+
+304
+Request started
+Jan 26 01:31:38.45GMT+1
+
+Received in Paris, France (cdg1)
+
+
+Routed to Washington, D.C., USA (iad1)
+Function Invocation
+
+200
+
+
+External APIs
+
+Fluid
+
+266 MB
+Response finished in 238ms
+Deployment Information
+
+/api/accounts/by-auth/2f713858-8f6e-4c37-813f-c1c2a9af5aa6
+/api/accounts/by-auth/2f713858-8f6e-4c37-813f-c1c2a9af5aa6
+/api/my-profiles/6c7e6f12-f39b-4466-ba2a-b29f602e092d
+/api/contact-requests/6c7e6f12-f39b-4466-ba2a-b29f602e092d
+/api/subscriptions/profile/576853ae-1949-4be7-b746-cc9b4e199d5a
+/api/accounts/by-auth/2f713858-8f6e-4c37-813f-c1c2a9af5aa6
+01:28:10
