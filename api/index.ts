@@ -563,7 +563,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         .order("created_at", { ascending: false });
       
       if (error) throw error;
-      return res.status(200).json(data || []);
+      // Transform to camelCase for frontend
+      const transformed = (data || []).map((item: Record<string, any>) => toCamelCase(item));
+      return res.status(200).json(transformed);
     }
 
     // POST /api/contact/:profileId (simplified - no status tracking)
