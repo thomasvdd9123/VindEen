@@ -117,6 +117,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Content-Type", "application/json");
 
   try {
+    // GET /api/config/recaptcha - public site key
+    if (method === "GET" && path === "/api/config/recaptcha") {
+      const siteKey = process.env.RECAPTCHA_SITE_KEY;
+      if (!siteKey) {
+        return res.status(503).json({ error: "reCAPTCHA not configured" });
+      }
+      return res.status(200).json({ siteKey });
+    }
+
     // GET /api/categories
     if (method === "GET" && path === "/api/categories") {
       const { data, error } = await supabase
@@ -569,7 +578,28 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(404).json({ error: "Profile not found" });
       }
       
-      const { visitorName, visitorEmail, telnr, subject, message } = req.body;
+      // Verify reCAPTCHA token
+      const recaptchaSecretKey = process.env.RECAPTCHA_SECRET_KEY;
+      const { recaptchaToken, visitorName, visitorEmail, telnr, subject, message } = req.body;
+      
+      if (recaptchaSecretKey) {
+        if (!recaptchaToken) {
+          return res.status(400).json({ error: "reCAPTCHA verificatie mislukt" });
+        }
+
+        const recaptchaResponse = await fetch("https://www.google.com/recaptcha/api/siteverify", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: `secret=${recaptchaSecretKey}&response=${recaptchaToken}`,
+        });
+        
+        const recaptchaResult = await recaptchaResponse.json() as { success: boolean; score?: number };
+        
+        if (!recaptchaResult.success || (recaptchaResult.score !== undefined && recaptchaResult.score < 0.5)) {
+          console.log("reCAPTCHA failed:", recaptchaResult);
+          return res.status(400).json({ error: "reCAPTCHA verificatie mislukt. Probeer het opnieuw." });
+        }
+      }
       
       const { data, error } = await supabase
         .from("contact_requests")

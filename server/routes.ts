@@ -54,6 +54,15 @@ export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
+  // Public config (reCAPTCHA site key)
+  app.get("/api/config/recaptcha", (req, res) => {
+    const siteKey = process.env.RECAPTCHA_SITE_KEY;
+    if (!siteKey) {
+      return res.status(503).json({ error: "reCAPTCHA not configured" });
+    }
+    res.json({ siteKey });
+  });
+
   // Categories
   app.get("/api/categories", async (req, res) => {
     try {
@@ -893,7 +902,30 @@ export async function registerRoutes(
         return res.status(404).json({ error: "Profile not found" });
       }
 
-      const validatedData = contactFormSchema.parse(req.body);
+      // Verify reCAPTCHA token
+      const recaptchaSecretKey = process.env.RECAPTCHA_SECRET_KEY;
+      const { recaptchaToken, ...formData } = req.body;
+      
+      if (recaptchaSecretKey) {
+        if (!recaptchaToken) {
+          return res.status(400).json({ error: "reCAPTCHA verificatie mislukt" });
+        }
+
+        const recaptchaResponse = await fetch("https://www.google.com/recaptcha/api/siteverify", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: `secret=${recaptchaSecretKey}&response=${recaptchaToken}`,
+        });
+        
+        const recaptchaResult = await recaptchaResponse.json() as { success: boolean; score?: number };
+        
+        if (!recaptchaResult.success || (recaptchaResult.score !== undefined && recaptchaResult.score < 0.5)) {
+          console.log("reCAPTCHA failed:", recaptchaResult);
+          return res.status(400).json({ error: "reCAPTCHA verificatie mislukt. Probeer het opnieuw." });
+        }
+      }
+
+      const validatedData = contactFormSchema.parse(formData);
 
       // Save contact request to database
       const contactRequest = await storage.createContactRequest({

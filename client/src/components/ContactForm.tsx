@@ -1,6 +1,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,6 +12,16 @@ import { Send, Loader2, CheckCircle } from "lucide-react";
 import { contactFormSchema, type ContactFormData } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 
+// Extend window type for reCAPTCHA
+declare global {
+  interface Window {
+    grecaptcha?: {
+      ready: (callback: () => void) => void;
+      execute: (siteKey: string, options: { action: string }) => Promise<string>;
+    };
+  }
+}
+
 interface ContactFormProps {
   profileId: string;
   profileName: string;
@@ -18,6 +29,41 @@ interface ContactFormProps {
 
 export function ContactForm({ profileId, profileName }: ContactFormProps) {
   const { toast } = useToast();
+
+  // Fetch reCAPTCHA site key from backend
+  const { data: recaptchaConfig } = useQuery<{ siteKey: string }>({
+    queryKey: ["/api/config/recaptcha"],
+  });
+
+  // Load reCAPTCHA script when site key is available
+  useEffect(() => {
+    if (!recaptchaConfig?.siteKey) return;
+    
+    // Check if already loaded
+    if (document.querySelector('script[src*="recaptcha"]')) return;
+    
+    const script = document.createElement("script");
+    script.src = `https://www.google.com/recaptcha/api.js?render=${recaptchaConfig.siteKey}`;
+    script.async = true;
+    document.head.appendChild(script);
+  }, [recaptchaConfig?.siteKey]);
+
+  // Get reCAPTCHA token
+  const getRecaptchaToken = useCallback(async (): Promise<string | null> => {
+    if (!recaptchaConfig?.siteKey || !window.grecaptcha) return null;
+    
+    return new Promise((resolve) => {
+      window.grecaptcha!.ready(async () => {
+        try {
+          const token = await window.grecaptcha!.execute(recaptchaConfig.siteKey, { action: "contact_form" });
+          resolve(token);
+        } catch (error) {
+          console.error("reCAPTCHA error:", error);
+          resolve(null);
+        }
+      });
+    });
+  }, [recaptchaConfig?.siteKey]);
 
   const form = useForm<ContactFormData>({
     resolver: zodResolver(contactFormSchema),
@@ -32,7 +78,12 @@ export function ContactForm({ profileId, profileName }: ContactFormProps) {
 
   const mutation = useMutation({
     mutationFn: async (data: ContactFormData) => {
-      return apiRequest("POST", `/api/contact/${profileId}`, data);
+      const recaptchaToken = await getRecaptchaToken();
+      // If reCAPTCHA is configured but token couldn't be obtained, show error
+      if (recaptchaConfig?.siteKey && !recaptchaToken) {
+        throw new Error("reCAPTCHA kon niet worden geladen. Herlaad de pagina en probeer opnieuw.");
+      }
+      return apiRequest("POST", `/api/contact/${profileId}`, { ...data, recaptchaToken });
     },
     onSuccess: () => {
       toast({
@@ -41,10 +92,10 @@ export function ContactForm({ profileId, profileName }: ContactFormProps) {
       });
       form.reset();
     },
-    onError: () => {
+    onError: (error: Error) => {
       toast({
         title: "Er ging iets mis",
-        description: "Je bericht kon niet worden verzonden. Probeer het later opnieuw.",
+        description: error.message || "Je bericht kon niet worden verzonden. Probeer het later opnieuw.",
         variant: "destructive",
       });
     },
