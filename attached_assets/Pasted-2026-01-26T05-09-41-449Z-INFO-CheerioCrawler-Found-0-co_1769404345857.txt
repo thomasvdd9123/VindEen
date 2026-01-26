@@ -1,0 +1,300 @@
+2026-01-26T05:09:41.449Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/113/
+2026-01-26T05:09:41.467Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/16/
+2026-01-26T05:09:41.467Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/16/
+2026-01-26T05:09:41.476Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/55/
+2026-01-26T05:09:41.477Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/55/
+2026-01-26T05:09:41.498Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/114/
+2026-01-26T05:09:41.499Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/114/
+2026-01-26T05:09:41.530Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/17/
+2026-01-26T05:09:41.531Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/17/
+2026-01-26T05:09:41.591Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/18/
+2026-01-26T05:09:41.592Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/18/
+2026-01-26T05:09:41.617Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/19/
+2026-01-26T05:09:41.618Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/19/
+2026-01-26T05:09:41.647Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/115/
+2026-01-26T05:09:41.647Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/115/
+2026-01-26T05:09:41.681Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/116/
+2026-01-26T05:09:41.681Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/116/
+2026-01-26T05:09:41.693Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/57/
+2026-01-26T05:09:41.694Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/57/
+2026-01-26T05:09:41.735Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/20/
+2026-01-26T05:09:41.735Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/20/
+2026-01-26T05:09:41.743Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/117/
+2026-01-26T05:09:41.743Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/117/
+2026-01-26T05:09:41.765Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/58/
+2026-01-26T05:09:41.766Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/58/
+2026-01-26T05:09:41.770Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/56/
+2026-01-26T05:09:41.770Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/56/
+2026-01-26T05:09:41.813Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/59/
+2026-01-26T05:09:41.813Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/59/
+2026-01-26T05:09:41.817Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/118/
+2026-01-26T05:09:41.817Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/118/
+2026-01-26T05:09:41.860Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/22/
+2026-01-26T05:09:41.861Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/22/
+2026-01-26T05:09:41.903Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/21/
+2026-01-26T05:09:41.904Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/21/
+2026-01-26T05:09:41.945Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/60/
+2026-01-26T05:09:41.946Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/60/
+2026-01-26T05:09:41.986Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/23/
+2026-01-26T05:09:41.992Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/23/
+2026-01-26T05:09:41.992Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/120/
+2026-01-26T05:09:41.992Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/120/
+2026-01-26T05:09:41.993Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/119/
+2026-01-26T05:09:41.993Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/119/
+2026-01-26T05:09:41.994Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/61/
+2026-01-26T05:09:41.994Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/61/
+2026-01-26T05:09:42.068Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/24/
+2026-01-26T05:09:42.068Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/24/
+2026-01-26T05:09:42.086Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/62/
+2026-01-26T05:09:42.087Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/62/
+2026-01-26T05:09:42.115Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/121/
+2026-01-26T05:09:42.115Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/121/
+2026-01-26T05:09:42.121Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/63/
+2026-01-26T05:09:42.122Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/63/
+2026-01-26T05:09:42.147Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/25/
+2026-01-26T05:09:42.149Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/25/
+2026-01-26T05:09:42.203Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/122/
+2026-01-26T05:09:42.204Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/122/
+2026-01-26T05:10:33.598Z INFO  CheerioCrawler:Statistics: CheerioCrawler request statistics: {"requestAvgFailedDurationMillis":null,"requestAvgFinishedDurationMillis":623,"requestsFinishedPerMinute":59,"requestsFailedPerMinute":0,"requestTotalDurationMillis":37399,"requestsTotal":60,"crawlerRuntimeMillis":60789,"retryHistogram":[60]}
+2026-01-26T05:10:33.947Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/65/
+2026-01-26T05:10:33.948Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/65/
+2026-01-26T05:10:33.952Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/124/
+2026-01-26T05:10:33.952Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/124/
+2026-01-26T05:10:33.960Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/66/
+2026-01-26T05:10:33.960Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/66/
+2026-01-26T05:10:33.962Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/64/
+2026-01-26T05:10:33.962Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/64/
+2026-01-26T05:10:33.969Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/123/
+2026-01-26T05:10:33.969Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/123/
+2026-01-26T05:10:35.148Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/125/
+2026-01-26T05:10:35.148Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/125/
+2026-01-26T05:10:35.165Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/67/
+2026-01-26T05:10:35.165Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/67/
+2026-01-26T05:10:35.200Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/69/
+2026-01-26T05:10:35.201Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/69/
+2026-01-26T05:10:35.212Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/68/
+2026-01-26T05:10:35.213Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/68/
+2026-01-26T05:10:35.239Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/70/
+2026-01-26T05:10:35.239Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/70/
+2026-01-26T05:10:35.739Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/71/
+2026-01-26T05:10:35.740Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/71/
+2026-01-26T05:10:35.744Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/74/
+2026-01-26T05:10:35.744Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/74/
+2026-01-26T05:10:35.762Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/73/
+2026-01-26T05:10:35.763Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/73/
+2026-01-26T05:10:35.805Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/72/
+2026-01-26T05:10:35.806Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/72/
+2026-01-26T05:10:35.808Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/75/
+2026-01-26T05:10:35.809Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/75/
+2026-01-26T05:10:36.836Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/27/
+2026-01-26T05:10:36.836Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/27/
+2026-01-26T05:10:36.841Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/26/
+2026-01-26T05:10:36.841Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/26/
+2026-01-26T05:10:36.843Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/28/
+2026-01-26T05:10:36.844Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/28/
+2026-01-26T05:10:37.943Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/31/
+2026-01-26T05:10:37.944Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/31/
+2026-01-26T05:10:37.947Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/30/
+2026-01-26T05:10:37.947Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/30/
+2026-01-26T05:10:37.962Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/29/
+2026-01-26T05:10:37.962Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/29/
+2026-01-26T05:10:39.068Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/33/
+2026-01-26T05:10:39.068Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/33/
+2026-01-26T05:10:39.070Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/32/
+2026-01-26T05:10:39.071Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/32/
+2026-01-26T05:10:39.082Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/35/
+2026-01-26T05:10:39.083Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/35/
+2026-01-26T05:10:39.085Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/34/
+2026-01-26T05:10:39.085Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/34/
+2026-01-26T05:10:40.156Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/39/
+2026-01-26T05:10:40.157Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/39/
+2026-01-26T05:10:40.204Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/36/
+2026-01-26T05:10:40.204Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/36/
+2026-01-26T05:10:40.215Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/37/
+2026-01-26T05:10:40.215Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/37/
+2026-01-26T05:10:40.219Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/40/
+2026-01-26T05:10:40.219Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/40/
+2026-01-26T05:10:40.296Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/38/
+2026-01-26T05:10:40.296Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/38/
+2026-01-26T05:10:40.795Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/45/
+2026-01-26T05:10:40.796Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/45/
+2026-01-26T05:10:40.800Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/41/
+2026-01-26T05:10:40.800Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/41/
+2026-01-26T05:10:40.828Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/43/
+2026-01-26T05:10:40.828Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/43/
+2026-01-26T05:10:40.831Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/44/
+2026-01-26T05:10:40.831Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/44/
+2026-01-26T05:10:40.892Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/42/
+2026-01-26T05:10:40.893Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/42/
+2026-01-26T05:10:40.932Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/46/
+2026-01-26T05:10:40.932Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/46/
+2026-01-26T05:10:40.935Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/47/
+2026-01-26T05:10:40.935Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/47/
+2026-01-26T05:10:40.970Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/49/
+2026-01-26T05:10:40.970Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/49/
+2026-01-26T05:10:40.980Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/48/
+2026-01-26T05:10:40.981Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/48/
+2026-01-26T05:10:41.042Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/126/
+2026-01-26T05:10:41.043Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/126/
+2026-01-26T05:10:41.066Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/128/
+2026-01-26T05:10:41.066Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/128/
+2026-01-26T05:10:41.071Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/50/
+2026-01-26T05:10:41.071Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/50/
+2026-01-26T05:10:41.104Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/127/
+2026-01-26T05:10:41.104Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/127/
+2026-01-26T05:10:41.910Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/131/
+2026-01-26T05:10:41.910Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/131/
+2026-01-26T05:10:41.928Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/132/
+2026-01-26T05:10:41.928Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/132/
+2026-01-26T05:10:41.939Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/129/
+2026-01-26T05:10:41.940Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/129/
+2026-01-26T05:10:41.948Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/133/
+2026-01-26T05:10:41.950Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/133/
+2026-01-26T05:10:42.000Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/134/
+2026-01-26T05:10:42.001Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/134/
+2026-01-26T05:10:42.024Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/136/
+2026-01-26T05:10:42.025Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/136/
+2026-01-26T05:10:42.027Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/135/
+2026-01-26T05:10:42.027Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/135/
+2026-01-26T05:10:42.054Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/130/
+2026-01-26T05:10:42.054Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/130/
+2026-01-26T05:10:42.072Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/137/
+2026-01-26T05:10:42.072Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/137/
+2026-01-26T05:10:42.122Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/139/
+2026-01-26T05:10:42.123Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/139/
+2026-01-26T05:10:42.124Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/141/
+2026-01-26T05:10:42.124Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/141/
+2026-01-26T05:10:42.146Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/138/
+2026-01-26T05:10:42.147Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/138/
+2026-01-26T05:10:42.161Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/142/
+2026-01-26T05:10:42.162Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/142/
+2026-01-26T05:10:42.220Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/144/
+2026-01-26T05:10:42.221Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/144/
+2026-01-26T05:10:42.223Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/143/
+2026-01-26T05:10:42.223Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/143/
+2026-01-26T05:10:42.250Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/76/
+2026-01-26T05:10:42.250Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/76/
+2026-01-26T05:10:42.267Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/140/
+2026-01-26T05:10:42.267Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/140/
+2026-01-26T05:11:33.598Z INFO  CheerioCrawler:Statistics: CheerioCrawler request statistics: {"requestAvgFailedDurationMillis":null,"requestAvgFinishedDurationMillis":344,"requestsFinishedPerMinute":60,"requestsFailedPerMinute":0,"requestTotalDurationMillis":41312,"requestsTotal":120,"crawlerRuntimeMillis":120788,"retryHistogram":[120]}
+2026-01-26T05:11:34.093Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/77/
+2026-01-26T05:11:34.094Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/77/
+2026-01-26T05:11:34.096Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/145/
+2026-01-26T05:11:34.096Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/145/
+2026-01-26T05:11:34.099Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/78/
+2026-01-26T05:11:34.100Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/78/
+2026-01-26T05:11:34.115Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/146/
+2026-01-26T05:11:34.116Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/146/
+2026-01-26T05:11:34.179Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/79/
+2026-01-26T05:11:34.179Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/79/
+2026-01-26T05:11:35.189Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/148/
+2026-01-26T05:11:35.190Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/148/
+2026-01-26T05:11:35.192Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/80/
+2026-01-26T05:11:35.192Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/80/
+2026-01-26T05:11:35.216Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/151/
+2026-01-26T05:11:35.217Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/151/
+2026-01-26T05:11:35.228Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/152/
+2026-01-26T05:11:35.229Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/152/
+2026-01-26T05:11:35.261Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/147/
+2026-01-26T05:11:35.261Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/147/
+2026-01-26T05:11:35.824Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/149/
+2026-01-26T05:11:35.824Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/149/
+2026-01-26T05:11:35.828Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/150/
+2026-01-26T05:11:35.828Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/150/
+2026-01-26T05:11:35.831Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/154/
+2026-01-26T05:11:35.832Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/154/
+2026-01-26T05:11:35.835Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/81/
+2026-01-26T05:11:35.836Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/81/
+2026-01-26T05:11:35.838Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/153/
+2026-01-26T05:11:35.839Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/153/
+2026-01-26T05:11:36.906Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/83/
+2026-01-26T05:11:36.907Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/83/
+2026-01-26T05:11:36.964Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/155/
+2026-01-26T05:11:36.964Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/155/
+2026-01-26T05:11:36.973Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/82/
+2026-01-26T05:11:36.973Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/82/
+2026-01-26T05:11:38.093Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/157/
+2026-01-26T05:11:38.094Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/157/
+2026-01-26T05:11:38.103Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/156/
+2026-01-26T05:11:38.104Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/156/
+2026-01-26T05:11:38.298Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/84/
+2026-01-26T05:11:38.299Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/84/
+2026-01-26T05:11:38.897Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/87/
+2026-01-26T05:11:38.899Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/87/
+2026-01-26T05:11:38.900Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/86/
+2026-01-26T05:11:38.902Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/86/
+2026-01-26T05:11:38.904Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/158/
+2026-01-26T05:11:38.905Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/158/
+2026-01-26T05:11:38.999Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/85/
+2026-01-26T05:11:38.999Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/85/
+2026-01-26T05:11:40.092Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/160/
+2026-01-26T05:11:40.093Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/160/
+2026-01-26T05:11:40.122Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/159/
+2026-01-26T05:11:40.123Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/159/
+2026-01-26T05:11:40.134Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/89/
+2026-01-26T05:11:40.134Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/89/
+2026-01-26T05:11:40.137Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/88/
+2026-01-26T05:11:40.137Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/88/
+2026-01-26T05:11:40.163Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/161/
+2026-01-26T05:11:40.163Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/161/
+2026-01-26T05:11:40.764Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/92/
+2026-01-26T05:11:40.764Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/92/
+2026-01-26T05:11:40.766Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/162/
+2026-01-26T05:11:40.767Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/162/
+2026-01-26T05:11:40.769Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/163/
+2026-01-26T05:11:40.769Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/163/
+2026-01-26T05:11:40.771Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/91/
+2026-01-26T05:11:40.772Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/91/
+2026-01-26T05:11:40.774Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/90/
+2026-01-26T05:11:40.774Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/90/
+2026-01-26T05:11:40.852Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/164/
+2026-01-26T05:11:40.853Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/164/
+2026-01-26T05:11:40.890Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/93/
+2026-01-26T05:11:40.890Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/93/
+2026-01-26T05:11:40.893Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/165/
+2026-01-26T05:11:40.893Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/165/
+2026-01-26T05:11:40.896Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/166/
+2026-01-26T05:11:40.896Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/166/
+2026-01-26T05:11:40.899Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/94/
+2026-01-26T05:11:40.899Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/94/
+2026-01-26T05:11:40.974Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/167/
+2026-01-26T05:11:40.975Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/167/
+2026-01-26T05:11:40.977Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/96/
+2026-01-26T05:11:40.977Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/96/
+2026-01-26T05:11:41.009Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/95/
+2026-01-26T05:11:41.010Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/95/
+2026-01-26T05:11:41.841Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/168/
+2026-01-26T05:11:41.841Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/168/
+2026-01-26T05:11:41.844Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/170/
+2026-01-26T05:11:41.845Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/170/
+2026-01-26T05:11:41.849Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/169/
+2026-01-26T05:11:41.849Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/169/
+2026-01-26T05:11:41.860Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/97/
+2026-01-26T05:11:41.860Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/97/
+2026-01-26T05:11:41.876Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/98/
+2026-01-26T05:11:41.877Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/98/
+2026-01-26T05:11:41.923Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/171/
+2026-01-26T05:11:41.923Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/171/
+2026-01-26T05:11:41.935Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/100/
+2026-01-26T05:11:41.935Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/100/
+2026-01-26T05:11:41.955Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/99/
+2026-01-26T05:11:41.955Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/99/
+2026-01-26T05:11:41.979Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/172/
+2026-01-26T05:11:41.984Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/172/
+2026-01-26T05:11:41.984Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/173/
+2026-01-26T05:11:41.984Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/173/
+2026-01-26T05:11:42.031Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/174/
+2026-01-26T05:11:42.031Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/174/
+2026-01-26T05:11:42.113Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/177/
+2026-01-26T05:11:42.113Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/177/
+2026-01-26T05:11:42.115Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/175/
+2026-01-26T05:11:42.116Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/175/
+2026-01-26T05:11:42.117Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/201/
+2026-01-26T05:11:42.118Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/201/
+2026-01-26T05:11:42.189Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/176/
+2026-01-26T05:11:42.190Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/176/
+2026-01-26T05:11:42.200Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/202/
+2026-01-26T05:11:42.200Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/202/
+2026-01-26T05:11:42.226Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/178/
+2026-01-26T05:11:42.226Z INFO  CheerioCrawler: Found 0 companies on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/178/
+2026-01-26T05:11:43.140Z ACTOR: The Actor run was aborted by the user.
