@@ -561,7 +561,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       
       const { data: profile } = await supabase
         .from("profiles")
-        .select("id")
+        .select("id, name, email")
         .eq("id", profileId)
         .single();
       
@@ -585,6 +585,91 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         .single();
       
       if (error) throw error;
+
+      // Send email notification to the profile's contact email via Resend
+      const resendApiKey = process.env.RESEND_API_KEY;
+      if (resendApiKey && profile.email) {
+        try {
+          await fetch("https://api.resend.com/emails", {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${resendApiKey}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              from: "Zoek-een-tuinman.be <noreply@zoek-een-tuinman.be>",
+              to: [profile.email],
+              reply_to: visitorEmail,
+              subject: `Nieuw contactverzoek: ${subject}`,
+              html: `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                  <meta charset="utf-8">
+                  <style>
+                    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f5f5f5; }
+                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                    .header { background: #1B7340; color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+                    .header h1 { margin: 0; font-size: 24px; }
+                    .content { background: white; padding: 30px; border-radius: 0 0 8px 8px; }
+                    .details { background: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0; }
+                    .detail-row { padding: 10px 0; border-bottom: 1px solid #eee; }
+                    .detail-row:last-child { border-bottom: none; }
+                    .label { color: #666; font-weight: bold; }
+                    .message-box { background: #fff; border: 1px solid #e0e0e0; padding: 20px; border-radius: 8px; margin-top: 20px; white-space: pre-wrap; }
+                    .footer { text-align: center; margin-top: 20px; color: #666; font-size: 14px; }
+                    .button { display: inline-block; background: #1B7340; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; }
+                  </style>
+                </head>
+                <body>
+                  <div class="container">
+                    <div class="header">
+                      <h1>Nieuw Contactverzoek</h1>
+                    </div>
+                    <div class="content">
+                      <p>Beste ${profile.name},</p>
+                      <p>Je hebt een nieuw contactverzoek ontvangen via Zoek-een-tuinman.be!</p>
+                      
+                      <div class="details">
+                        <div class="detail-row">
+                          <span class="label">Van:</span> ${visitorName}
+                        </div>
+                        <div class="detail-row">
+                          <span class="label">Email:</span> <a href="mailto:${visitorEmail}">${visitorEmail}</a>
+                        </div>
+                        ${telnr ? `<div class="detail-row"><span class="label">Telefoon:</span> <a href="tel:${telnr}">${telnr}</a></div>` : ''}
+                        <div class="detail-row">
+                          <span class="label">Onderwerp:</span> ${subject}
+                        </div>
+                      </div>
+
+                      <p><strong>Bericht:</strong></p>
+                      <div class="message-box">${message}</div>
+
+                      <p style="margin-top: 30px; text-align: center;">
+                        <a href="mailto:${visitorEmail}?subject=Re: ${encodeURIComponent(subject)}" class="button">Beantwoord dit bericht</a>
+                      </p>
+
+                      <p style="margin-top: 30px; color: #666; font-size: 14px;">
+                        Je kunt ook alle contactverzoeken bekijken in je <a href="https://www.zoek-een-tuinman.be/dashboard/contacten">dashboard</a>.
+                      </p>
+                    </div>
+                    <div class="footer">
+                      <p>© ${new Date().getFullYear()} Zoek-een-tuinman.be - Alle rechten voorbehouden</p>
+                    </div>
+                  </div>
+                </body>
+                </html>
+              `,
+            }),
+          });
+          console.log(`Sent contact notification email to ${profile.email} for profile ${profile.id}`);
+        } catch (emailError) {
+          console.error("Failed to send contact notification email:", emailError);
+          // Don't fail the request if email fails - contact is still saved
+        }
+      }
+
       return res.status(201).json({ success: true, id: data.id });
     }
 

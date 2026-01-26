@@ -30,7 +30,6 @@ export default function DashboardContacts() {
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<SortOption>("date-desc");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
 
   // Get account ID
   const { data: account } = useQuery<Account>({
@@ -59,10 +58,7 @@ export default function DashboardContacts() {
   const filteredContacts = useMemo(() => {
     let result = [...contacts];
 
-    // Filter by status
-    if (statusFilter !== "all") {
-      result = result.filter((c) => c.status === statusFilter);
-    }
+    // Status filter removed - schema doesn't track status
 
     // Filter by search query
     if (searchQuery) {
@@ -97,7 +93,7 @@ export default function DashboardContacts() {
     });
 
     return result;
-  }, [contacts, searchQuery, sortBy, statusFilter]);
+  }, [contacts, searchQuery, sortBy]);
 
   return (
     <DashboardLayout 
@@ -119,18 +115,6 @@ export default function DashboardContacts() {
                   data-testid="input-search-contacts"
                 />
               </div>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-full sm:w-[150px]" data-testid="select-status-filter">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Alle</SelectItem>
-                  <SelectItem value="NEW">Nieuw</SelectItem>
-                  <SelectItem value="READ">Gelezen</SelectItem>
-                  <SelectItem value="REPLIED">Beantwoord</SelectItem>
-                  <SelectItem value="ARCHIVED">Gearchiveerd</SelectItem>
-                </SelectContent>
-              </Select>
               <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
                 <SelectTrigger className="w-full sm:w-[180px]" data-testid="select-sort">
                   <SortAsc className="h-4 w-4 mr-2" />
@@ -212,8 +196,8 @@ function ContactCard({ contact }: { contact: ContactRequest }) {
     ARCHIVED: { label: "Gearchiveerd", variant: "outline" },
   };
 
-  const status = statusConfig[contact.status] || statusConfig.NEW;
-  const contactDate = contact.date ? new Date(contact.date) : new Date(contact.createdAt);
+  const status = statusConfig.NEW;
+  const contactDate = new Date(contact.createdAt);
 
   return (
     <Card data-testid={`card-contact-${contact.id}`}>
