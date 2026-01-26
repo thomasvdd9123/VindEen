@@ -607,7 +607,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         .from("contact_requests")
         .insert({
           profile_id: profileId,
-          gardener_id: profileId,
           visitor_name: visitorName,
           visitor_email: visitorEmail,
           telnr: telnr || null,
