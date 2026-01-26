@@ -27,6 +27,14 @@ import FAQ from "@/pages/FAQ";
 import Contact from "@/pages/Contact";
 import About from "@/pages/About";
 import Pricing from "@/pages/Pricing";
+import Artikelen from "@/pages/Artikelen";
+import Ervaringen from "@/pages/Ervaringen";
+import DeTuinman from "@/pages/info/DeTuinman";
+import GoedeTuinmanVinden from "@/pages/info/GoedeTuinmanVinden";
+import HoeWerktTuinaanleg from "@/pages/info/HoeWerktTuinaanleg";
+import TuinmanVsHovenier from "@/pages/info/TuinmanVsHovenier";
+import KostenPrijzen from "@/pages/info/KostenPrijzen";
+import VoorTuinmannen from "@/pages/info/VoorTuinmannen";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -34,6 +42,7 @@ function Router() {
     <Switch>
       <Route path="/" component={Home} />
       {/* New URL structure: /zoek/{postcode-city}/{specialization} */}
+      <Route path="/zoek" component={CategoryPage} />
       <Route path="/zoek/:locationOrSpec/:specialization" component={CategoryPage} />
       <Route path="/zoek/:locationOrSpec" component={CategoryPage} />
       <Route path="/bedrijf/:slug" component={ProfilePage} />
@@ -55,6 +64,14 @@ function Router() {
       <Route path="/contact" component={Contact} />
       <Route path="/over-ons" component={About} />
       <Route path="/prijzen" component={Pricing} />
+      <Route path="/artikelen" component={Artikelen} />
+      <Route path="/ervaringen" component={Ervaringen} />
+      <Route path="/info/de-tuinman" component={DeTuinman} />
+      <Route path="/info/goede-tuinman-vinden" component={GoedeTuinmanVinden} />
+      <Route path="/info/hoe-werkt-tuinaanleg" component={HoeWerktTuinaanleg} />
+      <Route path="/info/tuinman-vs-hovenier" component={TuinmanVsHovenier} />
+      <Route path="/info/kosten-prijzen" component={KostenPrijzen} />
+      <Route path="/info/voor-tuinmannen" component={VoorTuinmannen} />
       <Route component={NotFound} />
     </Switch>
   );

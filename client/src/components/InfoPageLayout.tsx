@@ -23,7 +23,9 @@ interface InfoPageLayoutProps {
   heroImageAlt?: string;
   children: React.ReactNode;
   showCta?: boolean;
+  showTuinmanCta?: boolean;
   relatedLinks?: Array<{ title: string; href: string; description?: string }>;
+  wideContent?: boolean;
 }
 
 const defaultRelatedLinks = [
@@ -41,7 +43,9 @@ export function InfoPageLayout({
   heroImageAlt,
   children,
   showCta = true,
+  showTuinmanCta = true,
   relatedLinks = defaultRelatedLinks,
+  wideContent = false,
 }: InfoPageLayoutProps) {
   return (
     <Layout>
@@ -86,8 +90,8 @@ export function InfoPageLayout({
       )}
 
       <div className="container mx-auto px-4 py-8 md:py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2">
+        <div className={wideContent ? "max-w-4xl mx-auto" : "grid grid-cols-1 lg:grid-cols-3 gap-8"}>
+          <div className={wideContent ? "" : "lg:col-span-2"}>
             {!heroImage && (
               <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-6">{title}</h1>
             )}
@@ -96,67 +100,71 @@ export function InfoPageLayout({
             </div>
           </div>
 
-          <aside className="space-y-6">
-            {showCta && (
-              <Card className="border-primary/20 bg-primary/5">
+          {!wideContent && (
+            <aside className="space-y-6">
+              {showCta && (
+                <Card className="border-primary/20 bg-primary/5">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <Leaf className="h-5 w-5 text-primary" />
+                      Zoek een tuinman
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Vind de perfecte tuinprofessional voor jouw project in heel België.
+                    </p>
+                    <Link href="/zoek">
+                      <Button className="w-full gap-2">
+                        Start je zoekopdracht
+                        <ArrowRight className="h-4 w-4" />
+                      </Button>
+                    </Link>
+                  </CardContent>
+                </Card>
+              )}
+
+              <Card>
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <Leaf className="h-5 w-5 text-primary" />
-                    Zoek een tuinman
-                  </CardTitle>
+                  <CardTitle className="text-lg">Gerelateerde onderwerpen</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Vind de perfecte tuinprofessional voor jouw project in heel België.
-                  </p>
-                  <Link href="/zoek">
-                    <Button className="w-full gap-2">
-                      Start je zoekopdracht
-                      <ArrowRight className="h-4 w-4" />
-                    </Button>
-                  </Link>
+                <CardContent className="space-y-3">
+                  {relatedLinks.map((link, index) => (
+                    <Link key={index} href={link.href}>
+                      <div className="group cursor-pointer">
+                        <p className="font-medium text-sm group-hover:text-primary transition-colors flex items-center gap-1">
+                          {link.title}
+                          <ArrowRight className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </p>
+                        {link.description && (
+                          <p className="text-xs text-muted-foreground">{link.description}</p>
+                        )}
+                      </div>
+                    </Link>
+                  ))}
                 </CardContent>
               </Card>
-            )}
 
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg">Gerelateerde onderwerpen</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {relatedLinks.map((link, index) => (
-                  <Link key={index} href={link.href}>
-                    <div className="group cursor-pointer">
-                      <p className="font-medium text-sm group-hover:text-primary transition-colors flex items-center gap-1">
-                        {link.title}
-                        <ArrowRight className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                      </p>
-                      {link.description && (
-                        <p className="text-xs text-muted-foreground">{link.description}</p>
-                      )}
-                    </div>
-                  </Link>
-                ))}
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg">Ben je tuinman?</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Sluit je aan bij {siteConfig.name} en bereik meer klanten.
-                </p>
-                <Link href="/info/voor-tuinmannen">
-                  <Button variant="outline" className="w-full gap-2">
-                    Meer informatie
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
-          </aside>
+              {showTuinmanCta && (
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg">Ben je tuinman?</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Sluit je aan bij {siteConfig.name} en bereik meer klanten.
+                    </p>
+                    <Link href="/info/voor-tuinmannen">
+                      <Button variant="outline" className="w-full gap-2">
+                        Meer informatie
+                        <ArrowRight className="h-4 w-4" />
+                      </Button>
+                    </Link>
+                  </CardContent>
+                </Card>
+              )}
+            </aside>
+          )}
         </div>
       </div>
     </Layout>

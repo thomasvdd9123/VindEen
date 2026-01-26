@@ -1,24 +1,16 @@
 import { Link } from "wouter";
-import { Layout } from "@/components/layout/Layout";
-import { SEO } from "@/components/SEO";
+import { InfoPageLayout } from "@/components/InfoPageLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { 
-  Breadcrumb, 
-  BreadcrumbItem, 
-  BreadcrumbLink, 
-  BreadcrumbList, 
-  BreadcrumbPage, 
-  BreadcrumbSeparator 
-} from "@/components/ui/breadcrumb";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { HelpCircle, Leaf, ArrowRight, MessageSquare } from "lucide-react";
+import { Leaf, ArrowRight, MessageSquare } from "lucide-react";
 import { siteConfig } from "@/lib/theme.config";
+import heroImage from "@/assets/images/info-faq.jpg";
 
 const faqCategories = [
   {
@@ -116,94 +108,69 @@ const faqCategories = [
 
 export default function FAQ() {
   return (
-    <Layout>
-      <SEO
-        title="Veelgestelde vragen (FAQ)"
-        description="Vind antwoorden op veelgestelde vragen over Zoek-een-tuinman.be. Informatie voor zowel klanten als tuinprofessionals."
-        canonical="/faq"
-      />
-
-      <div className="bg-muted/30 border-b border-border">
-        <div className="container mx-auto px-4 py-4">
-          <Breadcrumb>
-            <BreadcrumbList>
-              <BreadcrumbItem>
-                <BreadcrumbLink asChild>
-                  <Link href="/">Home</Link>
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbPage>Veelgestelde vragen</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
-        </div>
-      </div>
-
-      <div className="container mx-auto px-4 py-8 md:py-12">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-10">
-            <HelpCircle className="h-12 w-12 text-primary mx-auto mb-4" />
-            <h1 className="text-3xl font-bold mb-4" data-testid="text-faq-title">Veelgestelde vragen</h1>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              Vind snel antwoord op je vragen over {siteConfig.name}. Staat je vraag er niet 
-              tussen? Neem dan gerust contact met ons op.
-            </p>
-          </div>
-
-          <div className="space-y-8">
-            {faqCategories.map((category, categoryIndex) => (
-              <Card key={categoryIndex}>
-                <CardHeader>
-                  <CardTitle className="text-xl">{category.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Accordion type="single" collapsible className="w-full">
-                    {category.questions.map((item, index) => (
-                      <AccordionItem key={index} value={`${categoryIndex}-${index}`} data-testid={`accordion-faq-${categoryIndex}-${index}`}>
-                        <AccordionTrigger className="text-left">
-                          {item.question}
-                        </AccordionTrigger>
-                        <AccordionContent className="text-muted-foreground">
-                          {item.answer}
-                        </AccordionContent>
-                      </AccordionItem>
-                    ))}
-                  </Accordion>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-
-          <Card className="mt-10 bg-primary/5 border-primary/20">
-            <CardContent className="p-6 text-center">
-              <MessageSquare className="h-10 w-10 text-primary mx-auto mb-4" />
-              <h3 className="text-xl font-semibold mb-2">Nog vragen?</h3>
-              <p className="text-muted-foreground mb-4 max-w-md mx-auto">
-                Staat je vraag er niet tussen? Neem dan gerust contact met ons op via{" "}
-                <a href={`mailto:${siteConfig.email}`} className="text-primary hover:underline">
-                  {siteConfig.email}
-                </a>
-              </p>
-              <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <Link href="/zoek">
-                  <Button className="gap-2">
-                    <Leaf className="h-4 w-4" />
-                    Zoek een tuinman
-                  </Button>
-                </Link>
-                <Link href="/info/voor-tuinmannen">
-                  <Button variant="outline" className="gap-2">
-                    Ben je tuinman?
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </Link>
-              </div>
+    <InfoPageLayout
+      title="Veelgestelde vragen (FAQ)"
+      description="Vind antwoorden op veelgestelde vragen over Zoek-een-tuinman.be. Informatie voor zowel klanten als tuinprofessionals."
+      canonical="/faq"
+      breadcrumbTitle="Veelgestelde vragen"
+      heroImage={heroImage}
+      heroImageAlt="Veelgestelde vragen en antwoorden over tuinmannen"
+      relatedLinks={[
+        { title: "Kosten & prijzen", href: "/info/kosten-prijzen", description: "Wat kost een tuinman?" },
+        { title: "De tuinman", href: "/info/de-tuinman", description: "Wat doet een tuinman?" },
+        { title: "Ervaringen", href: "/ervaringen", description: "Lees ervaringen van anderen" },
+      ]}
+    >
+      <div className="space-y-8 not-prose">
+        {faqCategories.map((category, categoryIndex) => (
+          <Card key={categoryIndex}>
+            <CardHeader>
+              <CardTitle className="text-xl">{category.title}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Accordion type="single" collapsible className="w-full">
+                {category.questions.map((item, index) => (
+                  <AccordionItem key={index} value={`${categoryIndex}-${index}`} data-testid={`accordion-faq-${categoryIndex}-${index}`}>
+                    <AccordionTrigger className="text-left">
+                      {item.question}
+                    </AccordionTrigger>
+                    <AccordionContent className="text-muted-foreground">
+                      {item.answer}
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
             </CardContent>
           </Card>
-        </div>
+        ))}
+
+        <Card className="bg-primary/5 border-primary/20">
+          <CardContent className="p-6 text-center">
+            <MessageSquare className="h-10 w-10 text-primary mx-auto mb-4" />
+            <h3 className="text-xl font-semibold mb-2">Nog vragen?</h3>
+            <p className="text-muted-foreground mb-4 max-w-md mx-auto">
+              Staat je vraag er niet tussen? Neem dan gerust contact met ons op via{" "}
+              <a href={`mailto:${siteConfig.email}`} className="text-primary hover:underline">
+                {siteConfig.email}
+              </a>
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Link href="/zoek">
+                <Button className="gap-2">
+                  <Leaf className="h-4 w-4" />
+                  Zoek een tuinman
+                </Button>
+              </Link>
+              <Link href="/info/voor-tuinmannen">
+                <Button variant="outline" className="gap-2">
+                  Ben je tuinman?
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
       </div>
-    </Layout>
+    </InfoPageLayout>
   );
 }
