@@ -1,0 +1,252 @@
+[
+  {
+    "companyId": "L14880244",
+    "detailUrl": "https://www.goudengids.be/bedrijf/Roosdaal/L14880244/Tuintjes+Jaco/",
+    "sourceUrl": "https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/26/"
+  },
+  {
+    "companyId": "L18435804",
+    "detailUrl": "https://www.goudengids.be/bedrijf/Aartselaar/L18435804/TUINEN+ESTERBECQ/",
+    "sourceUrl": "https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/26/"
+  },
+  {
+    "companyId": "L17999273",
+    "detailUrl": "https://www.goudengids.be/bedrijf/Tremelo/L17999273/Tuinen+Bussy/",
+    "sourceUrl": "https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/26/"
+  },
+  {
+    "companyId": "L1035149",
+    "detailUrl": "https://www.goudengids.be/bedrijf/Stekene/L1035149/PASSIFLORA+TUINAANLEG+EN+-ONDERHOUD/",
+    "sourceUrl": "https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/26/"
+  },
+  {
+    "companyId": "L10679065",
+    "detailUrl": "https://www.goudengids.be/bedrijf/Lievegem/L10679065/De+Kesel+Bernard/",
+    "sourceUrl": "https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/26/"
+  },
+  {
+    "companyId": "L11308012",
+    "detailUrl": "https://www.goudengids.be/bedrijf/Pepinster/L11308012/Arimont+Raphael/",
+    "sourceUrl": "https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/26/"
+  },
+  {
+    "companyId": "L16701403",
+    "detailUrl": "https://www.goudengids.be/bedrijf/Hasselt/L16701403/BPTuinwerk/",
+    "sourceUrl": "https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/26/"
+  },
+  {
+    "companyId": "L18508192",
+    "detailUrl": "https://www.goudengids.be/bedrijf/Hotton/L18508192/Jardinicky/",
+    "sourceUrl": "https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/26/"
+  },
+  {
+    "companyId": "L621199990",
+    "detailUrl": "https://www.goudengids.be/bedrijf/Lier/L621199990/Andries+service%2B/",
+    "sourceUrl": "https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/26/"
+  },
+  {
+    "companyId": "L17484479",
+    "detailUrl": "https://www.goudengids.be/bedrijf/Antwerpen/L17484479/Abro+Tuincreaties/",
+    "sourceUrl": "https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/26/"
+  },
+  {
+    "companyId": "L1172103",
+    "detailUrl": "https://www.goudengids.be/bedrijf/Houthulst/L1172103/Crombez+Stijn/",
+    "sourceUrl": "https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/26/"
+  },
+  {
+    "companyId": "L1271370",
+    "detailUrl": "https://www.goudengids.be/bedrijf/Elzele/L1271370/BAUTERS/",
+    "sourceUrl": "https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/26/"
+  },
+  {
+    "companyId": "L13415358",
+    "detailUrl": "https://www.goudengids.be/bedrijf/Lommel/L13415358/Tuinonderhoud+Amar/",
+    "sourceUrl": "https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/26/"
+  },
+  {
+    "companyId": "L11765202",
+    "detailUrl": "https://www.goudengids.be/bedrijf/Geer/L11765202/MATHIEU+LINCKENS/",
+    "sourceUrl": "https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/26/"
+  },
+  {
+    "companyId": "L11464356",
+    "detailUrl": "https://www.goudengids.be/bedrijf/Kruisem/L11464356/Tuinen+Michiel/",
+    "sourceUrl": "https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/26/"
+  },
+  {
+    "companyId": "L6500659",
+    "detailUrl": "https://www.goudengids.be/bedrijf/Balen/L6500659/HOVUM/",
+    "sourceUrl": "https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/26/"
+  },
+  {
+    "companyId": "L459451",
+    "detailUrl": "https://www.goudengids.be/bedrijf/Riemst/L459451/Franssen+Francis/",
+    "sourceUrl": "https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/26/"
+  },
+  {
+    "companyId": "L390206",
+    "detailUrl": "https://www.goudengids.be/bedrijf/Oupeye/L390206/CYNORHODON/",
+    "sourceUrl": "https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/26/"
+  },
+  {
+    "companyId": "L7184934",
+    "detailUrl": "https://www.goudengids.be/bedrijf/Wichelen/L7184934/JARNO+VAN+POLLAERT/",
+    "sourceUrl": "https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/26/"
+  },
+  {
+    "companyId": "L14890209",
+    "detailUrl": "https://www.goudengids.be/bedrijf/Gent/L14890209/Wout+Rogghee/",
+    "sourceUrl": "https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/26/"
+  },
+  {
+    "companyId": "L628374",
+    "detailUrl": "https://www.goudengids.be/bedrijf/Vloesberg/L628374/SERVICES+JLMD/",
+    "sourceUrl": "https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/27/"
+  },
+  {
+    "companyId": "L11654487",
+    "detailUrl": "https://www.goudengids.be/bedrijf/Rouvroy/L11654487/Gennart+A-C/",
+    "sourceUrl": "https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/27/"
+  },
+  {
+    "companyId": "L12651035",
+    "detailUrl": "https://www.goudengids.be/bedrijf/Pelt/L12651035/VANDEN+BERK+DIRK/",
+    "sourceUrl": "https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/27/"
+  },
+  {
+    "companyId": "L11224105",
+    "detailUrl": "https://www.goudengids.be/bedrijf/Etterbeek/L11224105/PATRICK+JANSSENS/",
+    "sourceUrl": "https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/27/"
+  },
+  {
+    "companyId": "L17078464",
+    "detailUrl": "https://www.goudengids.be/bedrijf/Mol/L17078464/Ruud's+Servicedienst/",
+    "sourceUrl": "https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/27/"
+  },
+  {
+    "companyId": "L19124456",
+    "detailUrl": "https://www.goudengids.be/bedrijf/Dilsen-Stokkem/L19124456/Patrick+Vanoppen/",
+    "sourceUrl": "https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/27/"
+  },
+  {
+    "companyId": "L16403508",
+    "detailUrl": "https://www.goudengids.be/bedrijf/Ukkel/L16403508/Natan,+your+Private+Garden+Butler/",
+    "sourceUrl": "https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/27/"
+  },
+  {
+    "companyId": "L14244030",
+    "detailUrl": "https://www.goudengids.be/bedrijf/Zonnebeke/L14244030/TUINEN-JARDINS+ANTON+BUCSAN/",
+    "sourceUrl": "https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/27/"
+  },
+  {
+    "companyId": "L189703",
+    "detailUrl": "https://www.goudengids.be/bedrijf/Doornik/L189703/MAIGRAY+OLIVIER/",
+    "sourceUrl": "https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/27/"
+  },
+  {
+    "companyId": "L18771363",
+    "detailUrl": "https://www.goudengids.be/bedrijf/De+Haan/L18771363/Tuinen+Geers/",
+    "sourceUrl": "https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/27/"
+  },
+  {
+    "companyId": "L18389020",
+    "detailUrl": "https://www.goudengids.be/bedrijf/Zulte/L18389020/DE+CLERCQ+JEFFREY/",
+    "sourceUrl": "https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/27/"
+  },
+  {
+    "companyId": "L11433287",
+    "detailUrl": "https://www.goudengids.be/bedrijf/Libramont-Chevigny/L11433287/Coibion+Laurent/",
+    "sourceUrl": "https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/27/"
+  },
+  {
+    "companyId": "L12661657",
+    "detailUrl": "https://www.goudengids.be/bedrijf/Wortegem-Petegem/L12661657/MORNIE+LOWIE/",
+    "sourceUrl": "https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/27/"
+  },
+  {
+    "companyId": "L6187909",
+    "detailUrl": "https://www.goudengids.be/bedrijf/Rijkevorsel/L6187909/NOOYENS+FRANS/",
+    "sourceUrl": "https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/27/"
+  },
+  {
+    "companyId": "L14014947",
+    "detailUrl": "https://www.goudengids.be/bedrijf/Waregem/L14014947/De+Tuin+Tovenaar/",
+    "sourceUrl": "https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/27/"
+  },
+  {
+    "companyId": "L510962",
+    "detailUrl": "https://www.goudengids.be/bedrijf/Bertem/L510962/VANDER+HULST+JORIS/",
+    "sourceUrl": "https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/27/"
+  },
+  {
+    "companyId": "L18215521",
+    "detailUrl": "https://www.goudengids.be/bedrijf/Diepenbeek/L18215521/Yelle+Helven/",
+    "sourceUrl": "https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/27/"
+  },
+  {
+    "companyId": "L5898167",
+    "detailUrl": "https://www.goudengids.be/bedrijf/Mechelen/L5898167/groen+van+doen/",
+    "sourceUrl": "https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/27/"
+  },
+  {
+    "companyId": "L13913049",
+    "detailUrl": "https://www.goudengids.be/bedrijf/Pajottegem/L13913049/Lima+Verde/",
+    "sourceUrl": "https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/27/"
+  },
+  {
+    "companyId": "L14354399",
+    "detailUrl": "https://www.goudengids.be/bedrijf/Kaprijke/L14354399/Bjorn+De+Decker/",
+    "sourceUrl": "https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/27/"
+  },
+  {
+    "companyId": "L619611382",
+    "detailUrl": "https://www.goudengids.be/bedrijf/Aarschot/L619611382/Hennie's+Hark/",
+    "sourceUrl": "https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/28/"
+  },
+  {
+    "companyId": "L12657633",
+    "detailUrl": "https://www.goudengids.be/bedrijf/Tielt-Winge/L12657633/Tuinwerken+Vanfroyenhoven/",
+    "sourceUrl": "https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/28/"
+  },
+  {
+    "companyId": "L12765032",
+    "detailUrl": "https://www.goudengids.be/bedrijf/Chaudfontaine/L12765032/ERNEST+YOURI/",
+    "sourceUrl": "https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/28/"
+  },
+  {
+    "companyId": "L17983627",
+    "detailUrl": "https://www.goudengids.be/bedrijf/Bernissart/L17983627/Gr%C3%A9goire+Renard+Garden/",
+    "sourceUrl": "https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/28/"
+  },
+  {
+    "companyId": "L13566338",
+    "detailUrl": "https://www.goudengids.be/bedrijf/Ittre/L13566338/Deliener+Thomas/",
+    "sourceUrl": "https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/28/"
+  },
+  {
+    "companyId": "L2757125",
+    "detailUrl": "https://www.goudengids.be/bedrijf/Ottignies-Louvain-la-Neuve/L2757125/Green+Jobs/",
+    "sourceUrl": "https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/28/"
+  },
+  {
+    "companyId": "L1226222",
+    "detailUrl": "https://www.goudengids.be/bedrijf/Balen/L1226222/GEMO+Services/",
+    "sourceUrl": "https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/28/"
+  },
+  {
+    "companyId": "L621015592",
+    "detailUrl": "https://www.goudengids.be/bedrijf/Scherpenheuvel-Zichem/L621015592/Mathigras/",
+    "sourceUrl": "https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/28/"
+  },
+  {
+    "companyId": "L13337945",
+    "detailUrl": "https://www.goudengids.be/bedrijf/Herk-de-Stad/L13337945/Koen+Philtjens/",
+    "sourceUrl": "https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/28/"
+  },
+  {
+    "companyId": "L651012",
+    "detailUrl": "https://www.goudengids.be/bedrijf/Duffel/L651012/VERBERGT+PIETER/",
+    "sourceUrl": "https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/28/"
+  }
+]
