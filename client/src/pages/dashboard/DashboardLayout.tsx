@@ -80,6 +80,8 @@ export function DashboardLayout({ children, title, description }: DashboardLayou
 
   const handleSignOut = async () => {
     await signOut();
+    // Clear all cached queries
+    queryClient.clear();
     // Small delay to ensure session is fully cleared before redirect
     setTimeout(() => {
       window.location.href = "/";

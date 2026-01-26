@@ -143,13 +143,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
     setSession(null);
     try {
-      // Sign out with local scope (more reliable in production)
-      await supabase.auth.signOut({ scope: 'local' });
+      // Sign out with global scope to clear all sessions
+      await supabase.auth.signOut({ scope: 'global' });
     } catch (error) {
       console.error("Sign out error:", error);
     }
-    // Force clear localStorage auth data
-    localStorage.removeItem('sb-xukahojkfudtymnwukfk-auth-token');
+    // Force clear all Supabase localStorage keys
+    Object.keys(localStorage).forEach(key => {
+      if (key.startsWith('sb-')) {
+        localStorage.removeItem(key);
+      }
+    });
   }, []);
 
   const resetPassword = useCallback(async (email: string) => {
