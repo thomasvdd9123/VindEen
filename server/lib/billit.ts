@@ -144,7 +144,7 @@ export async function sendPeppolInvoice(params: SendPeppolInvoiceParams): Promis
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": apiKey,
+        "Authorization": `Bearer ${apiKey}`,
       },
       body: JSON.stringify(invoice),
     });
@@ -175,7 +175,7 @@ export async function checkPeppolRegistration(vatNumber: string): Promise<boolea
     const baseUrl = getBaseUrl();
     const response = await fetch(`${baseUrl}/v1/peppol/lookup?vatNumber=${encodeURIComponent(vatNumber)}`, {
       headers: {
-        "Authorization": apiKey,
+        "Authorization": `Bearer ${apiKey}`,
       },
     });
 
