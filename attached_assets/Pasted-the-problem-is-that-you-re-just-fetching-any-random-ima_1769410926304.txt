@@ -1,0 +1,290 @@
+the problem is that you're just fetching any random image, not the image i want. let me give you some pointers
+
+
+<img src="https://i.fcrmedia.com/goudengids.be/images/w460/000/283/146/283146492_goossens_filip_logo.webp" alt="Logo Goossens Filip" class="w-full h-ful object-contain">
+
+this is logo
+
+<h1 class="text-[1.375rem] font-semibold wrap-break-word">
+                Goossens Filip
+            </h1>
+
+this is name
+
+<a href="tel:+32476878628" id="contactValue_a64cd4324092460eb9eb6f5e1f004fa9" class="w-full sm:px-4 px-3 py-[12px] bg-gg-yellow-default hover:bg-gg-yellow-light items-center sm:gap-2 gap-1 rounded-full sm:text-sm text-xs justify-center cursor-pointer whitespace-nowrap hidden flex" target="_blank" rel="nofollow noopener noreferrer" data-ta="PhoneNumberClick" data-tc="DETAIL" data-tl="{&quot;actionData&quot;:{&quot;id&quot;:&quot;L13745382&quot;}}">
+                
+<svg viewBox="0 0 18 18" fill="none" class="h-[18px] w-[18px] shrink-0" style="">
+    <path fill-rule="evenodd" clip-rule="evenodd" d="M3.199 2.4431C4.15591 1.48621 5.77399 1.77963 6.33397 3.01159L7.54995 5.68669C7.84965 6.346 7.75447 7.1097 7.32022 7.67249C7.17802 7.85676 6.99921 7.97009 6.85756 8.04269L4.75746 9.11931C5.26707 9.93464 5.87641 10.7056 6.58554 11.4147C7.29469 12.1238 8.06557 12.7332 8.8809 13.2428L9.9576 11.1427C10.0302 11.0011 10.1435 10.8223 10.3278 10.6801C10.8906 10.2457 11.6542 10.1506 12.3136 10.4503L14.9887 11.6663C16.2206 12.2263 16.514 13.8444 15.5572 14.8012L14.756 15.6024C14.3613 15.9971 13.7914 16.2024 13.2144 16.0984C10.4947 15.6081 7.89142 14.3116 5.79004 12.2101C3.68869 10.1088 2.39212 7.50546 1.90184 4.78587C1.79781 4.20877 2.0031 3.63893 2.39786 3.2442M9.861 13.7971C10.992 14.3726 12.19 14.7706 13.414 14.9912C13.601 15.025 13.8061 14.9612 13.9605 14.8069L14.7616 14.0058C15.1631 13.6043 15.0401 12.9254 14.5232 12.6904L11.8481 11.4745C11.5716 11.3488 11.251 11.3886 11.015 11.5707C11.0151 11.5707 11.0152 11.5706 11.015 11.5707C11.0141 11.5714 11.0086 11.5763 10.9993 11.5886C10.9885 11.6029 10.9749 11.6244 10.9587 11.656L9.861 13.7971ZM4.2032 8.13929L6.34432 7.04157C6.37588 7.02539 6.39733 7.01177 6.41166 7.00098C6.42558 6.99048 6.42982 6.98487 6.42957 6.9852C6.61166 6.74923 6.65142 6.42867 6.52576 6.15222L5.30981 3.47712C5.07486 2.96023 4.39597 2.83713 3.99448 3.23861L3.19333 4.03971C3.03898 4.19405 2.97526 4.39917 3.00899 4.58629C3.22963 5.81017 3.62764 7.00822 4.2032 8.13929Z" fill="currentColor">
+    </path>
+</svg>
+                <span>
+                    +32476878628
+                </span>
+            </a>
+
+phone number
+
+<a href="https://www.filipgoossenstuinaanleg.be?utm_source=fcrmedia&amp;utm_medium=internet&amp;utm_campaign=goudengidspagesdor" class="border border-gg-gray-default rounded-full flex items-center justify-center bg-white hover:bg-gg-gray-light py-[11px] sm:px-4 px-3 sm:text-sm text-xs sm:gap-2 gap-1 whitespace-nowrap" target="_blank" rel="nofollow noopener noreferrer" data-ta="LinkClick" data-tc="DETAIL" data-tl="{&quot;actionData&quot;:{&quot;id&quot;:&quot;L13745382&quot;}}">
+                
+<svg viewBox="0 0 18 18" fill="none" class="h-[18px] w-[18px] shrink-0 text-gg-gray-default" style="">
+    <path d="M1.50234 9.09412C1.55269 13.1925 4.89062 16.5001 9.00105 16.5001C13.1428 16.5001 16.5004 13.1418 16.5004 9.00015C16.5004 4.86934 13.1605 1.51788 9.03367 1.50029C9.0228 1.5001 9.01185 1.5 9.0009 1.5C8.98995 1.5 8.979 1.5001 8.96805 1.50029C4.87316 1.51792 1.55317 4.81811 1.50235 8.90497C1.50079 8.93632 1.5 8.9679 1.5 8.9997C1.5 9.03135 1.50079 9.06285 1.50234 9.09412ZM6.73429 6.73284C7.43676 6.62338 8.19945 6.56274 8.9997 6.56274C9.80092 6.56274 10.5645 6.62352 11.2676 6.73323C11.3772 7.436 11.4379 8.199 11.4379 8.9997C11.4379 9.80033 11.3772 10.5634 11.2676 11.2662C10.5645 11.3758 9.80092 11.4367 8.9997 11.4367C8.19945 11.4367 7.43677 11.376 6.73429 11.2666C6.62468 10.5637 6.56397 9.80055 6.56397 8.9997C6.56397 8.19893 6.62468 7.43571 6.73429 6.73284ZM5.56425 6.97364C5.48236 7.61955 5.43897 8.29958 5.43897 8.9997C5.43897 9.69983 5.48236 10.3799 5.56425 11.0258C5.10615 10.9064 4.68766 10.7643 4.31772 10.6043C3.732 10.3511 3.29366 10.064 3.00979 9.77385C2.75072 9.50903 2.64251 9.26692 2.62699 9.054C2.62684 9.03607 2.62676 9.01815 2.62676 9.00015C2.62676 8.98185 2.62684 8.96355 2.62699 8.94525C2.64255 8.7324 2.75077 8.4903 3.00979 8.22555C3.29366 7.93537 3.732 7.64835 4.31772 7.39507C4.68766 7.23512 5.10615 7.0931 5.56425 6.97364ZM6.97524 5.56283C7.09461 5.10528 7.23652 4.68727 7.3963 4.31772C7.64955 3.732 7.93657 3.29366 8.22675 3.0098C8.50642 2.7362 8.76082 2.63086 8.98207 2.62524L9.00105 2.62521L9.01972 2.62524C9.24105 2.63085 9.49545 2.73619 9.77512 3.0098C10.0652 3.29366 10.3523 3.732 10.6055 4.31772C10.7653 4.68736 10.9073 5.10547 11.0267 5.56315C10.3805 5.48118 9.7002 5.43774 8.9997 5.43774C8.30017 5.43774 7.62067 5.48106 6.97524 5.56283ZM12.4377 6.9743C12.8948 7.09362 13.3124 7.23542 13.6816 7.39507C14.2674 7.64835 14.7058 7.93537 14.9896 8.22555C15.271 8.51317 15.3744 8.77403 15.3744 8.9997C15.3744 9.22538 15.271 9.48623 14.9896 9.77385C14.7058 10.064 14.2674 10.3511 13.6816 10.6043C13.3124 10.764 12.8948 10.9058 12.4377 11.0251C12.5195 10.3794 12.5629 9.6996 12.5629 8.9997C12.5629 8.2998 12.5195 7.62 12.4377 6.9743ZM11.0267 12.4363C10.9073 12.8939 10.7653 13.3121 10.6055 13.6817C10.3523 14.2674 10.0652 14.7058 9.77512 14.9896C9.4875 15.271 9.22657 15.3744 9.0009 15.3744C8.77522 15.3744 8.51437 15.271 8.22675 14.9897C7.93657 14.7058 7.64955 14.2674 7.3963 13.6817C7.23652 13.3121 7.09461 12.8941 6.97524 12.4366C7.62067 12.5183 8.30017 12.5617 8.9997 12.5617C9.7002 12.5617 10.3805 12.5182 11.0267 12.4363ZM5.76983 12.2312C5.92181 12.9302 6.12239 13.57 6.36368 14.1281C6.4969 14.4363 6.64487 14.7249 6.80746 14.9875C5.05202 14.344 3.65833 12.9503 3.01463 11.1949C3.27649 11.3568 3.5642 11.5042 3.87126 11.6369C4.42975 11.8784 5.07012 12.0791 5.76983 12.2312ZM12.2321 12.2305C12.9308 12.0786 13.5703 11.8781 14.1281 11.6369C14.4366 11.5036 14.7255 11.3554 14.9883 11.1927C14.3449 12.9493 12.9506 14.3439 11.1943 14.9876C11.3569 14.725 11.5049 14.4363 11.6382 14.1281C11.8795 13.5699 12.0802 12.9299 12.2321 12.2305ZM14.9878 6.80647C14.7252 6.64378 14.4364 6.49573 14.1281 6.36245C13.5703 6.12128 12.9308 5.92078 12.2321 5.76883C12.0802 5.0695 11.8795 4.42947 11.6382 3.87126C11.5051 3.56353 11.3573 3.27524 11.195 3.01292C12.9506 3.65661 14.3443 5.05065 14.9878 6.80647ZM5.76983 5.76826C5.07012 5.92029 4.42974 6.12099 3.87126 6.36245C3.56436 6.49514 3.27679 6.64247 3.01504 6.8043C3.65883 5.04961 5.05203 3.65652 6.80677 3.01303C6.64445 3.27533 6.49671 3.56358 6.36368 3.87126C6.12239 4.42933 5.92181 5.06916 5.76983 5.76826Z" fill="#BDBEC0"></path>
+</svg>
+
+                <span>
+                    Website
+                </span>
+            </a>
+
+
+website link
+
+<span class="font-semibold">Ondernemingsnummer:</span>
+
+ondernaming nummer
+
+
+<section id="description-and-gallery" class="p-6">
+            <div class="break-words traffic-descriptions">
+                            <h2 class="font-medium mb-4 text-xl">Ontwerp, aanleg en onderhoud van tuinen, contacteer Filip Goossens</h2>
+<p>Tuinaanleg Filip Goossens legt zich sinds 1999 toe op het o<b>ntwerp, de aanleg en onderhoud van privé- en bedrijfstuinen</b>. Dit na beëindiging van de opleiding Tuin- en Landschapsarchitectuur te Melle. Ons team van 5 tuinaanleggers zijn gespecialiseerd in het ontwerpen, plannen en uitvoeren van totaalprojecten. Van ontwerp, aanleg en onderhoud van tuinen tot grondwerken, rioleringswerken, bemestingswerken, schors aanbrengen, drainage van natte percelen, draadafsluiting, houten schermen, grasmatten plaatsen, gazon inzaaien, keerwanden plaatsen, Ook voor renovatie van uw tuin of gazon kan u bij ons team terecht. Wij voeren eventueel ook aanleg uit indien u al een ontwerpplan elders liet opmaken. Hiervoor maken wij graag een <b>gratis prijsofferte</b>.</p> <p>Onze firma heeft 3 pijlers:</p> <p><br>-leveren van kwaliteit, hoge afwerkingsgraad<br>-stipte afspraken voor uitvoering<br>-service en garantie na beëindigen werken</p> <p>We beschikken over een <b>uitgebreid machinepark</b> om onze werken uit te voeren. Hierdoor kan een vlotte opeenvolging van alle onderdelen gegarandeerd worden. Steeds meer mensen vinden daarom de weg naar ons bedrijf. Onder onze klanten bevinden zich zowel particulieren als bedrijven, kantoren, bouwfirma’s, scholen,...Wij maken vrijblijvend een offerte op maat!</p>                            <h2 class="font-medium mb-4 text-xl">Wenst U een terras, oprit of parking te laten aanleggen, aarzel niet en contacteer Filip Goossens</h2>
+<p>Wij bieden een totaalpakket aan van alle werken rond het huis. Al deze werken worden uitgevoerd door ons eigen team tuinspecialisten. U kan bij ons terecht voor de <b>aanleg van paden, opritten, terrassen, parkings, …</b> .En dit in diverse materialen: kleiklinkers, betonklinkers, gepolierde betontegels, hardhouten terrassen, natuursteen zoals kassei, platinnes, keramische tegels, arduintegels, gekloven arduin,... diverse soorten grind, grasdallen in beton, kunststof, eventueel met voorbegroeide tegels. Wij komen graag ter plaatse in regio Beveren, Sint-Niklaas, Temse, Sint-Gillis-Waas, Kruibeke voor advies en een <b>offerte op maat</b>!</p>            </div>
+        
+<script>
+    window.galleryImages = JSON.parse('["https://i.fcrmedia.com/goudengids.be/images/w650/000/283/146/283146493_goossens_filip_image.webp","https://i.fcrmedia.com/goudengids.be/images/w650/000/283/146/283146494_goossens_filip_image.webp"]');
+</script>
+
+            <div class="grid grid-cols-2 gap-2 h-52 mt-6">
+                <img src="https://i.fcrmedia.com/goudengids.be/images/w650/000/283/146/283146493_goossens_filip_image.webp" class="w-full h-full max-h-52 object-cover rounded-lg cursor-pointer" alt="" @click="$store.gallery.open('https://i.fcrmedia.com/goudengids.be/images/w650/000/283/146/283146493_goossens_filip_image.webp')">
+                <img src="https://i.fcrmedia.com/goudengids.be/images/w650/000/283/146/283146494_goossens_filip_image.webp" class="w-full h-full max-h-52 object-cover rounded-lg cursor-pointer" alt="" @click="$store.gallery.open('https://i.fcrmedia.com/goudengids.be/images/w650/000/283/146/283146494_goossens_filip_image.webp')">
+            </div>
+    <div id="lightbox" x-data="$store.gallery" class="fixed inset-0 z-[10000] hidden items-center justify-center bg-white/30 backdrop-blur-md">
+        <button @click="$store.gallery.close()" class="absolute top-10 right-6 w-8 h-8 pb-1 flex items-center justify-center rounded-md border border-gray-200 bg-gray-50 text-black text-2xl shadow-sm transition-all z-[10000] cursor-pointer">
+            ×
+        </button>
+        <div class="relative max-w-[90%] max-h-[90%]">
+            <img id="lightboxImage" src="" class="max-w-full max-h-[90vh] rounded shadow-lg" alt="Large View">
+        </div>
+        <!-- workaround template for alpine store, which loads store.gallery before Gallery -->
+        <!-- prev -->
+        <template x-if="$store.gallery">
+            <button x-show="$store.gallery.images.length &gt; 1" :disabled="$store.gallery.currentIndex === 0" @click="$store.gallery.prev()" class="absolute left-4 top-1/2 -translate-y-1/2 z-10 pb-1
+                   w-10 h-10 flex items-center justify-center rounded-full transition
+                   text-black
+                   bg-white border-gray-400 border
+                   disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white/50">
+                ‹
+            </button>
+        </template><button x-show="$store.gallery.images.length &gt; 1" :disabled="$store.gallery.currentIndex === 0" @click="$store.gallery.prev()" class="absolute left-4 top-1/2 -translate-y-1/2 z-10 pb-1
+                   w-10 h-10 flex items-center justify-center rounded-full transition
+                   text-black
+                   bg-white border-gray-400 border
+                   disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white/50" disabled="disabled" style="display: none;">
+                ‹
+            </button>
+        <!-- next -->
+        <template x-if="$store.gallery">
+            <button x-show="$store.gallery.images.length &gt; 1" :disabled="$store.gallery.currentIndex === $store.gallery.images.length - 1" @click="$store.gallery.next()" class="absolute right-4 top-1/2 -translate-y-1/2 z-10 pb-1
+                   w-10 h-10 flex items-center justify-center rounded-full transition
+                   text-black
+                   bg-white border-gray-300 border
+                   disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white/50">
+                ›
+            </button>
+        </template><button x-show="$store.gallery.images.length &gt; 1" :disabled="$store.gallery.currentIndex === $store.gallery.images.length - 1" @click="$store.gallery.next()" class="absolute right-4 top-1/2 -translate-y-1/2 z-10 pb-1
+                   w-10 h-10 flex items-center justify-center rounded-full transition
+                   text-black
+                   bg-white border-gray-300 border
+                   disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white/50" style="display: none;">
+                ›
+            </button>
+
+
+    </div>
+
+    </section>
+
+
+decription
+
+
+<div class="grid grid-cols-2 gap-2 h-52 mt-6">
+                <img src="https://i.fcrmedia.com/goudengids.be/images/w650/000/283/146/283146493_goossens_filip_image.webp" class="w-full h-full max-h-52 object-cover rounded-lg cursor-pointer" alt="" @click="$store.gallery.open('https://i.fcrmedia.com/goudengids.be/images/w650/000/283/146/283146493_goossens_filip_image.webp')">
+                <img src="https://i.fcrmedia.com/goudengids.be/images/w650/000/283/146/283146494_goossens_filip_image.webp" class="w-full h-full max-h-52 object-cover rounded-lg cursor-pointer" alt="" @click="$store.gallery.open('https://i.fcrmedia.com/goudengids.be/images/w650/000/283/146/283146494_goossens_filip_image.webp')">
+            </div>
+
+
+extra images
+
+
+<a href="mailto:info@filipgoossens.be?subject=Informatieaanvraag vanuit goudengids.be" class="text-sm underline hover:no-underline" target="_blank" rel="noopener noreferrer">
+            E-mail
+        </a>
+
+
+email
+
+
+<span class="text-sm">
+                <span data-yext="street">Loeverstraat 23, </span>
+                    <br>
+
+                <span data-yext="postal-code">9170</span>
+ 
+                <span>Sint-Gillis-Waas</span>
+        </span>
+
+
+address
+
+
+<ul class="flex flex-col gap-2">
+                <li data-js-child-lat="51.21486" data-js-child-lng="4.092289" data-js-map-address="Loeverstraat 23, 9170 Sint-Gillis-Waas" class="border border-gg-gray-10 rounded-lg p-4">
+
+                    <div class="text-sm">Loeverstraat 23, 9170 Sint-Gillis-Waas</div>
+
+                    <a href="/bedrijf/L13012646/L13745382/Goossens+Filip/" class="text-sm underline hover:no-underline">
+                        Ga naar vestiging
+                    </a>
+                </li>
+                <li data-js-child-lat="51.183693" data-js-child-lng="4.214954" data-js-map-address="Boekweithofstraat 20, 9120 Haasdonk (Beveren-Kruibeke-Zwijndrecht)" class="border border-gg-gray-10 rounded-lg p-4">
+
+                    <div class="text-sm">Boekweithofstraat 20, 9120 Haasdonk (Beveren-Kruibeke-Zwijndrecht)</div>
+
+                    <a href="/bedrijf/L13012646/L13752417/Goossens+Filip/" class="text-sm underline hover:no-underline">
+                        Ga naar vestiging
+                    </a>
+                </li>
+        </ul>
+
+alternative addresses
+
+
+<section id="categories" class="p-6">
+        <h2 class="text-[1.125rem] font-medium text-gg-black-default mb-6">Categorieën</h2>
+    <ul class="flex flex-wrap gap-2">
+
+            <li class="flex">
+                <a href="/bedrijven/parkings+%26+opritten+(aanleg+van)/" class="hover:bg-gg-gray-light border border-gg-gray-default/20 rounded-full p-2 px-4 text-sm">Parkings &amp; opritten (Aanleg van)</a>
+            </li>
+            <li class="flex">
+                <a href="/bedrijven/tuinaanleg+%26+-onderhoud/" class="hover:bg-gg-gray-light border border-gg-gray-default/20 rounded-full p-2 px-4 text-sm">Tuinaanleg &amp; -onderhoud</a>
+            </li>
+
+            <li class="flex">
+                <a href="/bedrijven/Sint-Gillis-Waas/parkings+%26+opritten+(aanleg+van)/" class="hover:bg-gg-gray-light border border-gg-gray-default/20 rounded-full p-2 px-4 text-sm">Sint-Gillis-Waas</a>
+            </li>
+                <li class="flex">
+                    <a href="/bedrijven/Sint-Gillis-Waas/rooiingswerken/" class="hover:bg-gg-gray-light border border-gg-gray-default/20 rounded-full p-2 px-4 text-sm">Rooiingswerken</a>
+                </li>
+                <li class="flex">
+                    <a href="/bedrijven/Sint-Gillis-Waas/grondwerken/" class="hover:bg-gg-gray-light border border-gg-gray-default/20 rounded-full p-2 px-4 text-sm">Grondwerken</a>
+                </li>
+                <li class="flex">
+                    <a href="/bedrijven/Sint-Gillis-Waas/bemestingswerken/" class="hover:bg-gg-gray-light border border-gg-gray-default/20 rounded-full p-2 px-4 text-sm">Bemestingswerken</a>
+                </li>
+                <li class="flex">
+                    <a href="/bedrijven/Sint-Gillis-Waas/schors/" class="hover:bg-gg-gray-light border border-gg-gray-default/20 rounded-full p-2 px-4 text-sm">Schors</a>
+                </li>
+                <li class="flex">
+                    <a href="/bedrijven/Sint-Gillis-Waas/drainage/" class="hover:bg-gg-gray-light border border-gg-gray-default/20 rounded-full p-2 px-4 text-sm">Drainage</a>
+                </li>
+                <li class="flex">
+                    <a href="/bedrijven/Sint-Gillis-Waas/houten+schermen/" class="hover:bg-gg-gray-light border border-gg-gray-default/20 rounded-full p-2 px-4 text-sm">Houten schermen</a>
+                </li>
+                <li class="flex">
+                    <a href="/bedrijven/Sint-Gillis-Waas/rioleringswerken/" class="hover:bg-gg-gray-light border border-gg-gray-default/20 rounded-full p-2 px-4 text-sm">Rioleringswerken</a>
+                </li>
+                <li class="flex">
+                    <a href="/bedrijven/Sint-Gillis-Waas/paden/" class="hover:bg-gg-gray-light border border-gg-gray-default/20 rounded-full p-2 px-4 text-sm">Paden</a>
+                </li>
+                <li class="flex">
+                    <a href="/bedrijven/Sint-Gillis-Waas/opritten/" class="hover:bg-gg-gray-light border border-gg-gray-default/20 rounded-full p-2 px-4 text-sm">Opritten</a>
+                </li>
+                <li class="flex">
+                    <a href="/bedrijven/Sint-Gillis-Waas/terrassen/" class="hover:bg-gg-gray-light border border-gg-gray-default/20 rounded-full p-2 px-4 text-sm">Terrassen</a>
+                </li>
+                <li class="flex">
+                    <a href="/bedrijven/Sint-Gillis-Waas/parkings/" class="hover:bg-gg-gray-light border border-gg-gray-default/20 rounded-full p-2 px-4 text-sm">Parkings</a>
+                </li>
+                <li class="flex">
+                    <a href="/bedrijven/Sint-Gillis-Waas/gepolierde+betontegels/" class="hover:bg-gg-gray-light border border-gg-gray-default/20 rounded-full p-2 px-4 text-sm">Gepolierde betontegels</a>
+                </li>
+                <li class="flex">
+                    <a href="/bedrijven/Sint-Gillis-Waas/hardhouten+terrassen/" class="hover:bg-gg-gray-light border border-gg-gray-default/20 rounded-full p-2 px-4 text-sm">Hardhouten terrassen</a>
+                </li>
+                <li class="flex">
+                    <a href="/bedrijven/Sint-Gillis-Waas/natuursteen/" class="hover:bg-gg-gray-light border border-gg-gray-default/20 rounded-full p-2 px-4 text-sm">Natuursteen</a>
+                </li>
+                <li class="flex">
+                    <a href="/bedrijven/Sint-Gillis-Waas/platinnes/" class="hover:bg-gg-gray-light border border-gg-gray-default/20 rounded-full p-2 px-4 text-sm">Platinnes</a>
+                </li>
+                <li class="flex">
+                    <a href="/bedrijven/Sint-Gillis-Waas/arduintegels/" class="hover:bg-gg-gray-light border border-gg-gray-default/20 rounded-full p-2 px-4 text-sm">Arduintegels</a>
+                </li>
+                <li class="flex">
+                    <a href="/bedrijven/Sint-Gillis-Waas/gekloven+arduin/" class="hover:bg-gg-gray-light border border-gg-gray-default/20 rounded-full p-2 px-4 text-sm">Gekloven arduin</a>
+                </li>
+                <li class="flex">
+                    <a href="/bedrijven/Sint-Gillis-Waas/grind/" class="hover:bg-gg-gray-light border border-gg-gray-default/20 rounded-full p-2 px-4 text-sm">Grind</a>
+                </li>
+                <li class="flex">
+                    <a href="/bedrijven/Sint-Gillis-Waas/grasdallen+in+beton/" class="hover:bg-gg-gray-light border border-gg-gray-default/20 rounded-full p-2 px-4 text-sm">Grasdallen in beton</a>
+                </li>
+                <li class="flex">
+                    <a href="/bedrijven/Sint-Gillis-Waas/grasdallen+in+kunststof/" class="hover:bg-gg-gray-light border border-gg-gray-default/20 rounded-full p-2 px-4 text-sm">Grasdallen in kunststof</a>
+                </li>
+                <li class="flex">
+                    <a href="/bedrijven/Sint-Gillis-Waas/voorbegroeide+tegels/" class="hover:bg-gg-gray-light border border-gg-gray-default/20 rounded-full p-2 px-4 text-sm">Voorbegroeide tegels</a>
+                </li>
+                <li class="flex">
+                    <a href="/bedrijven/Sint-Gillis-Waas/tuinverlichting/" class="hover:bg-gg-gray-light border border-gg-gray-default/20 rounded-full p-2 px-4 text-sm">Tuinverlichting</a>
+                </li>
+                <li class="flex">
+                    <a href="/bedrijven/Sint-Gillis-Waas/waterelementen/" class="hover:bg-gg-gray-light border border-gg-gray-default/20 rounded-full p-2 px-4 text-sm">Waterelementen</a>
+                </li>
+                <li class="flex">
+                    <a href="/bedrijven/Sint-Gillis-Waas/plantbakken/" class="hover:bg-gg-gray-light border border-gg-gray-default/20 rounded-full p-2 px-4 text-sm">Plantbakken</a>
+                </li>
+                <li class="flex">
+                    <a href="/bedrijven/Sint-Gillis-Waas/aanleg+borders/" class="hover:bg-gg-gray-light border border-gg-gray-default/20 rounded-full p-2 px-4 text-sm">aanleg borders</a>
+                </li>
+                <li class="flex">
+                    <a href="/bedrijven/Sint-Gillis-Waas/aanplanten+hagen/" class="hover:bg-gg-gray-light border border-gg-gray-default/20 rounded-full p-2 px-4 text-sm">aanplanten hagen</a>
+                </li>
+                <li class="flex">
+                    <a href="/bedrijven/Sint-Gillis-Waas/graszoden/" class="hover:bg-gg-gray-light border border-gg-gray-default/20 rounded-full p-2 px-4 text-sm">Graszoden</a>
+                </li>
+                <li class="flex">
+                    <a href="/bedrijven/Sint-Gillis-Waas/grasmatten/" class="hover:bg-gg-gray-light border border-gg-gray-default/20 rounded-full p-2 px-4 text-sm">Grasmatten</a>
+                </li>
+                <li class="flex">
+                    <a href="/bedrijven/Sint-Gillis-Waas/betonklinkers/" class="hover:bg-gg-gray-light border border-gg-gray-default/20 rounded-full p-2 px-4 text-sm">Betonklinkers</a>
+                </li>
+                <li class="flex">
+                    <a href="/bedrijven/Sint-Gillis-Waas/graszodenteelt/" class="hover:bg-gg-gray-light border border-gg-gray-default/20 rounded-full p-2 px-4 text-sm">Graszodenteelt</a>
+                </li>
+                <li class="flex">
+                    <a href="/bedrijven/Sint-Gillis-Waas/keramische+tegels/" class="hover:bg-gg-gray-light border border-gg-gray-default/20 rounded-full p-2 px-4 text-sm">Keramische tegels</a>
+                </li>
+                <li class="flex">
+                    <a href="/bedrijven/Sint-Gillis-Waas/draadafsluitingen/" class="hover:bg-gg-gray-light border border-gg-gray-default/20 rounded-full p-2 px-4 text-sm">Draadafsluitingen</a>
+                </li>
+                <li class="flex">
+                    <a href="/bedrijven/Sint-Gillis-Waas/kleiklinkers/" class="hover:bg-gg-gray-light border border-gg-gray-default/20 rounded-full p-2 px-4 text-sm">Kleiklinkers</a>
+                </li>
+                <li class="flex">
+                    <a href="/bedrijven/Sint-Gillis-Waas/kasseien/" class="hover:bg-gg-gray-light border border-gg-gray-default/20 rounded-full p-2 px-4 text-sm">Kasseien</a>
+                </li>
+                <li class="flex">
+                    <a href="/bedrijven/Sint-Gillis-Waas/keermuren+plaatsen/" class="hover:bg-gg-gray-light border border-gg-gray-default/20 rounded-full p-2 px-4 text-sm">Keermuren plaatsen</a>
+                </li>
+                <li class="flex">
+                    <a href="/bedrijven/Sint-Gillis-Waas/gazon/" class="hover:bg-gg-gray-light border border-gg-gray-default/20 rounded-full p-2 px-4 text-sm">Gazon</a>
+                </li>
+
+    </ul>
+</section>
+
+
+caegories
+
