@@ -351,7 +351,7 @@ export class SupabaseStorage implements IStorage {
       }
     }
 
-    // Filter by location with 10km radius search
+    // Filter by location with 20km radius search
     if (params.locationSlug) {
       const searchLocation = await this.getLocationBySlug(params.locationSlug);
       if (searchLocation && searchLocation.latitude && searchLocation.longitude) {
@@ -363,25 +363,36 @@ export class SupabaseStorage implements IStorage {
           id: searchLocation.id,
         };
         
-        // Find all locations within 10km radius
-        const allLocations = await this.getLocations();
-        const nearbyLocationIds = allLocations
-          .filter(loc => {
-            if (!loc.latitude || !loc.longitude) return false;
-            const distance = calculateDistance(
-              searchLocation.latitude!,
-              searchLocation.longitude!,
-              loc.latitude,
-              loc.longitude
-            );
-            return distance <= SEARCH_RADIUS_KM;
-          })
-          .map(loc => loc.id);
-        
-        if (nearbyLocationIds.length > 0) {
-          query = query.in("location_id", nearbyLocationIds);
-        } else {
-          // Fallback to exact match if no nearby locations found
+        // Find all locations within 20km radius
+        try {
+          const allLocations = await this.getLocations();
+          console.log(`[Search] Found ${allLocations.length} total locations for radius search`);
+          
+          const nearbyLocationIds = allLocations
+            .filter(loc => {
+              if (!loc.latitude || !loc.longitude) return false;
+              const distance = calculateDistance(
+                searchLocation.latitude!,
+                searchLocation.longitude!,
+                loc.latitude,
+                loc.longitude
+              );
+              return distance <= SEARCH_RADIUS_KM;
+            })
+            .map(loc => loc.id);
+          
+          console.log(`[Search] Found ${nearbyLocationIds.length} locations within ${SEARCH_RADIUS_KM}km of ${searchLocation.name}`);
+          
+          if (nearbyLocationIds.length > 0) {
+            query = query.in("location_id", nearbyLocationIds);
+          } else {
+            // Fallback to exact match if no nearby locations found
+            console.log(`[Search] No nearby locations found, using exact match for ${searchLocation.name}`);
+            query = query.eq("location_id", searchLocation.id);
+          }
+        } catch (error) {
+          console.error("[Search] Error fetching locations for radius search:", error);
+          // Fallback to exact match on error
           query = query.eq("location_id", searchLocation.id);
         }
       } else if (searchLocation) {
