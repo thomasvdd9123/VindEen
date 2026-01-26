@@ -438,6 +438,21 @@ export class SupabaseStorage implements IStorage {
     }
   }
 
+  async incrementWebsiteClicks(id: string): Promise<void> {
+    const { data } = await supabaseAdmin
+      .from("profiles")
+      .select("website_clicks")
+      .eq("id", id)
+      .single();
+    
+    if (data) {
+      await supabaseAdmin
+        .from("profiles")
+        .update({ website_clicks: ((data as any).website_clicks || 0) + 1 })
+        .eq("id", id);
+    }
+  }
+
   // Profile Status History
   async getProfileStatusHistory(profileId: string): Promise<ProfileStatusHistory[]> {
     const { data, error } = await supabaseAdmin

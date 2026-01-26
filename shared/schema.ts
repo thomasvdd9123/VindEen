@@ -141,6 +141,7 @@ export const profiles = pgTable("profiles", {
   hideAddress: boolean("hide_address").default(false),
   verificationStatus: verificationStatusEnum("verification_status").default("PENDING"),
   viewCount: integer("view_count").default(0),
+  websiteClicks: integer("website_clicks").default(0),
   seoTitle: text("seo_title"),
   seoDescription: text("seo_description"),
   categoryId: varchar("category_id").references(() => categories.id),

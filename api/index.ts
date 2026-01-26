@@ -870,6 +870,30 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json({ success: true });
     }
 
+    // POST /api/profiles/:id/track-click
+    if (method === "POST" && path.match(/^\/api\/profiles\/[^/]+\/track-click$/)) {
+      const parts = path.split("/");
+      const id = parts[parts.length - 2];
+      const { type } = req.body;
+      
+      if (type === "website") {
+        const { data } = await supabase
+          .from("profiles")
+          .select("website_clicks")
+          .eq("id", id)
+          .single();
+        
+        if (data) {
+          await supabase
+            .from("profiles")
+            .update({ website_clicks: ((data as any).website_clicks || 0) + 1 })
+            .eq("id", id);
+        }
+      }
+      
+      return res.status(200).json({ success: true });
+    }
+
     // ========================================================================
     // SITEMAPS - Multi-sitemap structure for SEO
     // ========================================================================

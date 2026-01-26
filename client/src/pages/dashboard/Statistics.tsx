@@ -13,6 +13,7 @@ interface ProfileWithStats {
   logoUrl: string | null;
   isPublic: boolean;
   viewCount?: number;
+  websiteClicks?: number;
 }
 import { 
   BarChart3,
@@ -21,6 +22,7 @@ import {
   TrendingUp,
   Calendar,
   Loader2,
+  ExternalLink,
 } from "lucide-react";
 
 type TimeRange = "7d" | "30d" | "90d" | "all";
@@ -75,6 +77,7 @@ export default function DashboardStatistics() {
 
   const totalViews = profiles.reduce((acc, p) => acc + (p.viewCount || 0), 0);
   const totalContacts = Object.values(contactCounts).reduce((acc, count) => acc + count, 0);
+  const totalWebsiteClicks = profiles.reduce((acc, p) => acc + (p.websiteClicks || 0), 0);
 
   const getTimeRangeLabel = (range: TimeRange) => {
     switch (range) {
@@ -112,9 +115,9 @@ export default function DashboardStatistics() {
           </div>
         ) : (
           <>
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               <Card data-testid="card-total-views">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 gap-2">
                   <CardTitle className="text-sm font-medium">Profielweergaven</CardTitle>
                   <Eye className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
@@ -126,8 +129,21 @@ export default function DashboardStatistics() {
                 </CardContent>
               </Card>
 
+              <Card data-testid="card-total-website-clicks">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 gap-2">
+                  <CardTitle className="text-sm font-medium">Website kliks</CardTitle>
+                  <ExternalLink className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{totalWebsiteClicks}</div>
+                  <p className="text-xs text-muted-foreground">
+                    {getTimeRangeLabel(timeRange)}
+                  </p>
+                </CardContent>
+              </Card>
+
               <Card data-testid="card-total-contacts">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 gap-2">
                   <CardTitle className="text-sm font-medium">Contactverzoeken</CardTitle>
                   <MousePointerClick className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
@@ -140,7 +156,7 @@ export default function DashboardStatistics() {
               </Card>
 
               <Card data-testid="card-conversion-rate">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 gap-2">
                   <CardTitle className="text-sm font-medium">Conversieratio</CardTitle>
                   <TrendingUp className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
@@ -195,14 +211,18 @@ export default function DashboardStatistics() {
                             </p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-6 text-sm">
+                        <div className="flex items-center gap-4 text-sm">
                           <div className="text-center">
                             <p className="font-semibold">{profile.viewCount || 0}</p>
-                            <p className="text-muted-foreground">Weergaven</p>
+                            <p className="text-muted-foreground text-xs">Weergaven</p>
+                          </div>
+                          <div className="text-center">
+                            <p className="font-semibold">{profile.websiteClicks || 0}</p>
+                            <p className="text-muted-foreground text-xs">Website kliks</p>
                           </div>
                           <div className="text-center">
                             <p className="font-semibold">{contactCounts[profile.id] || 0}</p>
-                            <p className="text-muted-foreground">Contacten</p>
+                            <p className="text-muted-foreground text-xs">Contacten</p>
                           </div>
                         </div>
                       </div>

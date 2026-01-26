@@ -44,6 +44,7 @@ export interface IStorage {
   updateProfile(id: string, updates: Partial<InsertProfile>): Promise<Profile | undefined>;
   deleteProfile(id: string): Promise<void>;
   incrementProfileViewCount(id: string): Promise<void>;
+  incrementWebsiteClicks(id: string): Promise<void>;
 
   // Profile Status History
   getProfileStatusHistory(profileId: string): Promise<ProfileStatusHistory[]>;
@@ -704,6 +705,14 @@ export class MemStorage implements IStorage {
     const profile = this.profiles.get(id);
     if (profile) {
       profile.viewCount = (profile.viewCount || 0) + 1;
+      this.profiles.set(id, profile);
+    }
+  }
+
+  async incrementWebsiteClicks(id: string): Promise<void> {
+    const profile = this.profiles.get(id);
+    if (profile) {
+      profile.websiteClicks = (profile.websiteClicks || 0) + 1;
       this.profiles.set(id, profile);
     }
   }

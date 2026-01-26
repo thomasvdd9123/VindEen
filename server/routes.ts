@@ -435,6 +435,20 @@ export async function registerRoutes(
     }
   });
 
+  // Track profile clicks (website clicks, etc.)
+  app.post("/api/profiles/:id/track-click", async (req, res) => {
+    try {
+      const { type } = req.body;
+      if (type === "website") {
+        await storage.incrementWebsiteClicks(req.params.id);
+      }
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error tracking click:", error);
+      res.status(500).json({ error: "Failed to track click" });
+    }
+  });
+
   // Legacy endpoint for gardeners - redirects to accounts
   app.post("/api/gardeners", async (req, res) => {
     try {
