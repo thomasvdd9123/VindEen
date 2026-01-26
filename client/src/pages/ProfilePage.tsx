@@ -400,13 +400,15 @@ export default function ProfilePage() {
                     rel="noopener noreferrer"
                     className="flex items-center gap-3 p-3 rounded-md bg-muted/50 hover:bg-muted transition-colors"
                     data-testid="link-website"
-                    onClick={() => {
-                      // Track website click
-                      fetch(`/api/profiles/${profile.id}/track-click`, { 
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ type: 'website' })
-                      }).catch(() => {});
+                    onMouseDown={(e) => {
+                      // Track website click for left-click (0) and middle-click (1)
+                      if (e.button === 0 || e.button === 1) {
+                        fetch(`/api/profiles/${profile.id}/track-click`, { 
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ type: 'website' })
+                        }).catch(() => {});
+                      }
                     }}
                   >
                     <Globe className="h-5 w-5 text-primary" />
