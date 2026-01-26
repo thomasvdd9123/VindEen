@@ -1,0 +1,124 @@
+Time
+Status
+Host
+Request
+Messages
+Jan 26 02:04:28.88
+GET
+304
+www.zoek-een-tuinman.be
+/api/my-profiles/6c7e6f12-f39b-4466-ba2a-b29f602e092d
+Jan 26 02:04:28.87
+GET
+304
+www.zoek-een-tuinman.be
+/api/subscriptions/profile/576853ae-1949-4be7-b746-cc9b4e199d5a
+Jan 26 02:04:28.87
+GET
+304
+www.zoek-een-tuinman.be
+/api/accounts/by-auth/2f713858-8f6e-4c37-813f-c1c2a9af5aa6
+Jan 26 01:53:08.03
+GET
+---
+www.zoek-een-tuinman.be
+/api/profiles/search
+Jan 26 01:47:06.51
+GET
+304
+www.zoek-een-tuinman.be
+/api/accounts/by-auth/2f713858-8f6e-4c37-813f-c1c2a9af5aa6
+Jan 26 01:47:06.51
+GET
+200
+www.zoek-een-tuinman.be
+/api/subscriptions/profile/576853ae-1949-4be7-b746-cc9b4e199d5a
+Jan 26 01:47:05.26
+GET
+304
+www.zoek-een-tuinman.be
+/api/my-profiles/6c7e6f12-f39b-4466-ba2a-b29f602e092d
+Jan 26 01:47:05.26
+GET
+304
+www.zoek-een-tuinman.be
+/api/contact-requests/6c7e6f12-f39b-4466-ba2a-b29f602e092d
+Jan 26 01:47:05.03
+GET
+304
+www.zoek-een-tuinman.be
+/api/accounts/by-auth/2f713858-8f6e-4c37-813f-c1c2a9af5aa6
+Jan 26 01:47:04.78
+GET
+304
+www.zoek-een-tuinman.be
+/api/accounts/by-auth/2f713858-8f6e-4c37-813f-c1c2a9af5aa6
+Jan 26 01:47:03.05
+GET
+200
+www.zoek-een-tuinman.be
+/api/mollie/payment-status/9c7af4a5-1732-4065-99fc-db4e96c7e5e8
+Jan 26 01:47:02.88
+POST
+200
+www.zoek-een-tuinman.be
+/api/mollie/webhook
+6
+Failed to send Peppol invoice: Error: Billit API error (401): {"errors":[{"Code":"InvalidAccessToken"}]} at Object.handler (/vercel/path0/api/index.ts:1499:25) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) at async r (/opt/rust/nodejs.js:2:15572) at async Server.<anonymous> (/opt/rust/nodejs.js:2:11594) at async Server.<anonymous> (/opt/rust/nodejs.js:17:9988)
+Jan 26 01:46:49.99
+POST
+200
+www.zoek-een-tuinman.be
+/api/mollie/create-payment
+2
+Created Mollie payment tr_bDw38mXwGpmhBQjJVNGLJ for profile 576853ae-1949-4be7-b746-cc9b4e199d5a
+Jan 26 01:46:48.70
+GET
+200
+www.zoek-een-tuinman.be
+/api/profiles/by-id/576853ae-1949-4be7-b746-cc9b4e199d5a
+Jan 26 01:46:48.69
+GET
+304
+www.zoek-een-tuinman.be
+/api/accounts/by-auth/2f713858-8f6e-4c37-813f-c1c2a9af5aa6
+Jan 26 01:46:34.90
+GET
+404
+www.zoek-een-tuinman.be
+/api/subscriptions/profile/576853ae-1949-4be7-b746-cc9b4e199d5a
+Jan 26 01:46:34.88
+GET
+304
+www.zoek-een-tuinman.be
+/api/contact-requests/6c7e6f12-f39b-4466-ba2a-b29f602e092d
+Jan 26 01:46:34.52
+GET
+304
+www.zoek-een-tuinman.be
+/api/my-profiles/6c7e6f12-f39b-4466-ba2a-b29f602e092d
+Jan 26 01:46:34.51
+GET
+304
+www.zoek-een-tuinman.be
+/api/accounts/by-auth/2f713858-8f6e-4c37-813f-c1c2a9af5aa6
+Jan 26 01:46:34.26
+GET
+304
+www.zoek-een-tuinman.be
+/api/accounts/by-auth/2f713858-8f6e-4c37-813f-c1c2a9af5aa6
+Jan 26 01:46:31.45
+GET
+304
+www.zoek-een-tuinman.be
+/api/profiles/count
+Jan 26 01:46:31.44
+GET
+304
+www.zoek-een-tuinman.be
+/api/categories/grouped
+Jan 26 01:46:31.44
+GET
+304
+www.zoek-een-tuinman.be
+/api/locations

@@ -1414,10 +1414,11 @@ Sitemap: ${SITEMAP_BASE_URL}/sitemap.xml
           }
         }
 
-        // Send Peppol invoice via Billit if configured
+        // Send Peppol invoice via Billit Accesspoint API if configured
         const billitApiKey = process.env.BILLIT_API_KEY;
+        const billitPartyId = process.env.BILLIT_PARTY_ID || "1037520";
         const billitSandbox = process.env.BILLIT_SANDBOX;
-        console.log(`Billit config: key exists=${!!billitApiKey}, key length=${billitApiKey?.length}, sandbox=${billitSandbox}`);
+        console.log(`Billit config: key exists=${!!billitApiKey}, partyId=${billitPartyId}, sandbox=${billitSandbox}`);
         
         if (billitApiKey) {
           try {
@@ -1437,60 +1438,52 @@ Sitemap: ${SITEMAP_BASE_URL}/sitemap.xml
               if (account?.vat_number && account?.billing_street && account?.billing_city) {
                 const priceExclVat = parseFloat(payment.amount?.value || "0") / 1.21;
                 const invoiceNumber = `INV-${new Date().getFullYear()}-${subscription.id.slice(0, 8).toUpperCase()}`;
-                const dueDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+                const today = new Date().toISOString().split('T')[0];
+                const dueDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
                 const billitBaseUrl = billitSandbox === "true" 
                   ? "https://api.sandbox.billit.be" 
                   : "https://api.billit.be";
                 
-                console.log(`Billit URL: ${billitBaseUrl}`);
+                const billitEndpoint = `${billitBaseUrl}/v1/einvoices/registrations/${billitPartyId}/commands/send`;
+                console.log(`Billit endpoint: ${billitEndpoint}`);
 
-                const peppolResponse = await fetch(`${billitBaseUrl}/v1/peppol/sendOrder`, {
+                const peppolResponse = await fetch(billitEndpoint, {
                   method: "POST",
                   headers: {
                     "Content-Type": "application/json",
-                    "Authorization": `Bearer ${billitApiKey}`,
+                    "Accept": "application/json",
+                    "ApiKey": billitApiKey,
+                    "PartyID": billitPartyId,
                   },
                   body: JSON.stringify({
-                    Supplier: {
-                      Name: process.env.PEPPOL_SUPPLIER_NAME || "Zoek-een-tuinman.be",
-                      Street: process.env.PEPPOL_SUPPLIER_STREET || "",
-                      StreetNumber: process.env.PEPPOL_SUPPLIER_NUMBER || "",
-                      Zipcode: process.env.PEPPOL_SUPPLIER_POSTCODE || "",
-                      City: process.env.PEPPOL_SUPPLIER_CITY || "",
-                      CountryCode: "BE",
-                      VATNumber: process.env.PEPPOL_SUPPLIER_VAT || "",
-                      IBAN: process.env.PEPPOL_SUPPLIER_IBAN,
-                      BIC: process.env.PEPPOL_SUPPLIER_BIC,
-                      PartyType: "Supplier",
-                      VATLiable: true,
+                    TransportType: "Peppol",
+                    Order: {
+                      OrderType: "Invoice",
+                      OrderDirection: "Income",
+                      OrderDate: today,
+                      ExpiryDate: dueDate,
+                      OrderNumber: invoiceNumber,
+                      OrderLines: [{
+                        Quantity: 1,
+                        UnitPriceExcl: priceExclVat,
+                        Description: `Profielvermelding ${profile.name || "profiel"} - ${metadata.years} jaar`,
+                        VATPercentage: 21,
+                      }],
+                      Customer: {
+                        Name: account.company_name || profile.name || "Unknown",
+                        VATNumber: account.vat_number,
+                        PartyType: "Customer",
+                        Email: account.email,
+                        Street: account.billing_street,
+                        StreetNumber: account.billing_number || "",
+                        Zipcode: account.billing_postcode || "",
+                        City: account.billing_city,
+                        CountryCode: "BE",
+                      },
+                      Paid: true,
+                      PaidDate: today,
                     },
-                    Customer: {
-                      Name: account.company_name || profile.name || "Unknown",
-                      Street: account.billing_street,
-                      StreetNumber: account.billing_number || "",
-                      Zipcode: account.billing_postcode || "",
-                      City: account.billing_city,
-                      CountryCode: "BE",
-                      VATNumber: account.vat_number,
-                      Email: account.email,
-                      PartyType: "Customer",
-                      VATLiable: true,
-                    },
-                    OrderNumber: invoiceNumber,
-                    OrderDate: new Date().toISOString(),
-                    ExpiryDate: dueDate.toISOString(),
-                    OrderType: "Invoice",
-                    OrderDirection: "Income",
-                    OrderLines: [{
-                      Quantity: 1,
-                      UnitPriceExcl: priceExclVat,
-                      Description: `Profielvermelding ${profile.name || "profiel"} - ${metadata.years} jaar`,
-                      VATPercentage: 21,
-                    }],
-                    Paid: true,
-                    PaidDate: new Date().toISOString(),
-                    Currency: "EUR",
                   }),
                 });
                 
@@ -1499,7 +1492,8 @@ Sitemap: ${SITEMAP_BASE_URL}/sitemap.xml
                   throw new Error(`Billit API error (${peppolResponse.status}): ${errorText}`);
                 }
                 
-                console.log(`Sent Peppol invoice ${invoiceNumber} for profile ${metadata.profileId}`);
+                const peppolResult = await peppolResponse.json();
+                console.log(`Sent Peppol invoice ${invoiceNumber} for profile ${metadata.profileId}, OrderID: ${peppolResult.OrderID}`);
               }
             }
           } catch (peppolError) {
