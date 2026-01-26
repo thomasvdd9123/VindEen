@@ -263,14 +263,50 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
       }
 
-      // Filter by location slug
+      // Filter by location with 20km radius search
+      const SEARCH_RADIUS_KM = 20;
       if (location) {
         const { data: loc } = await supabase
           .from("locations")
-          .select("id")
+          .select("*")
           .eq("slug", location)
           .single();
-        if (loc) {
+        
+        if (loc && loc.latitude && loc.longitude) {
+          // Get all locations for radius search
+          const { data: allLocations } = await supabase
+            .from("locations")
+            .select("id, latitude, longitude")
+            .eq("is_active", true);
+          
+          if (allLocations && allLocations.length > 0) {
+            // Calculate distance using Haversine formula
+            const toRad = (deg: number) => deg * Math.PI / 180;
+            const calcDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+              const R = 6371;
+              const dLat = toRad(lat2 - lat1);
+              const dLon = toRad(lon2 - lon1);
+              const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                        Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+                        Math.sin(dLon/2) * Math.sin(dLon/2);
+              const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+              return R * c;
+            };
+            
+            const nearbyLocationIds = allLocations
+              .filter(l => l.latitude && l.longitude && 
+                calcDistance(loc.latitude, loc.longitude, l.latitude, l.longitude) <= SEARCH_RADIUS_KM)
+              .map(l => l.id);
+            
+            if (nearbyLocationIds.length > 0) {
+              queryBuilder = queryBuilder.in("location_id", nearbyLocationIds);
+            } else {
+              queryBuilder = queryBuilder.eq("location_id", loc.id);
+            }
+          } else {
+            queryBuilder = queryBuilder.eq("location_id", loc.id);
+          }
+        } else if (loc) {
           queryBuilder = queryBuilder.eq("location_id", loc.id);
         }
       }
@@ -337,13 +373,59 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
       }
 
+      // Store location data for distance calculation
+      let searchLocationData: { lat: number; lng: number; name: string; id: string } | null = null;
+      const SEARCH_RADIUS_KM = 20;
+
       if (location) {
         const { data: loc } = await supabase
           .from("locations")
-          .select("id")
+          .select("*")
           .eq("slug", location)
           .single();
-        if (loc) {
+        
+        if (loc && loc.latitude && loc.longitude) {
+          searchLocationData = {
+            lat: loc.latitude,
+            lng: loc.longitude,
+            name: loc.name,
+            id: loc.id,
+          };
+          
+          // Get all locations for radius search
+          const { data: allLocations } = await supabase
+            .from("locations")
+            .select("id, latitude, longitude")
+            .eq("is_active", true);
+          
+          if (allLocations && allLocations.length > 0) {
+            // Calculate distance using Haversine formula
+            const toRad = (deg: number) => deg * Math.PI / 180;
+            const calcDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+              const R = 6371;
+              const dLat = toRad(lat2 - lat1);
+              const dLon = toRad(lon2 - lon1);
+              const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                        Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+                        Math.sin(dLon/2) * Math.sin(dLon/2);
+              const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+              return R * c;
+            };
+            
+            const nearbyLocationIds = allLocations
+              .filter(l => l.latitude && l.longitude && 
+                calcDistance(loc.latitude, loc.longitude, l.latitude, l.longitude) <= SEARCH_RADIUS_KM)
+              .map(l => l.id);
+            
+            if (nearbyLocationIds.length > 0) {
+              queryBuilder = queryBuilder.in("location_id", nearbyLocationIds);
+            } else {
+              queryBuilder = queryBuilder.eq("location_id", loc.id);
+            }
+          } else {
+            queryBuilder = queryBuilder.eq("location_id", loc.id);
+          }
+        } else if (loc) {
           queryBuilder = queryBuilder.eq("location_id", loc.id);
         }
       }
@@ -369,6 +451,60 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         queryBuilder = queryBuilder.or(`name.ilike.%${query}%,introduction.ilike.%${query}%,title.ilike.%${query}%`);
       }
 
+      // If we have a search location, fetch ALL results first for distance sorting
+      if (searchLocationData) {
+        const { data: allData, count: totalCount, error: allError } = await queryBuilder;
+        
+        if (allError) throw allError;
+        
+        // Calculate distance using Haversine formula
+        const toRad = (deg: number) => deg * Math.PI / 180;
+        const calcDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+          const R = 6371;
+          const dLat = toRad(lat2 - lat1);
+          const dLon = toRad(lon2 - lon1);
+          const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+                    Math.sin(dLon/2) * Math.sin(dLon/2);
+          const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+          return R * c;
+        };
+        
+        // Add distance to each profile
+        const profilesWithDistance = (allData || []).map((profile: any) => {
+          let distance = 0;
+          if (profile.location?.latitude && profile.location?.longitude) {
+            distance = calcDistance(
+              searchLocationData!.lat,
+              searchLocationData!.lng,
+              profile.location.latitude,
+              profile.location.longitude
+            );
+          }
+          return { ...profile, distance };
+        });
+        
+        // Sort by distance, then alphabetically
+        profilesWithDistance.sort((a: any, b: any) => {
+          if (a.distance !== b.distance) return a.distance - b.distance;
+          return (a.name || '').localeCompare(b.name || '');
+        });
+        
+        // Apply pagination AFTER sorting
+        const paginatedProfiles = profilesWithDistance.slice(offset, offset + limit);
+        const total = totalCount || profilesWithDistance.length;
+        const totalPages = Math.ceil(total / limit);
+        
+        return res.status(200).json({
+          profiles: toCamelCase(paginatedProfiles),
+          total,
+          page,
+          totalPages,
+          searchLocation: searchLocationData,
+        });
+      }
+
+      // No location search - use standard pagination
       const { data, count, error } = await queryBuilder
         .range(offset, offset + limit - 1);
 
