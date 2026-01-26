@@ -511,6 +511,11 @@ function SearchResultCard({ profile }: { profile: ProfileWithRelations }) {
               <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1">
                 <MapPin className="h-3 w-3" />
                 {profile.location.name}
+                {(profile as any).distanceKm && (
+                  <span className="text-primary font-medium">
+                    ({(profile as any).distanceKm} km)
+                  </span>
+                )}
               </p>
             )}
             

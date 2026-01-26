@@ -294,7 +294,7 @@ export class SupabaseStorage implements IStorage {
     return (data || []).map(d => this.mapProfileWithRelations(d));
   }
 
-  async searchProfiles(params: SearchParams): Promise<{ profiles: ProfileWithRelations[]; total: number; page: number; totalPages: number }> {
+  async searchProfiles(params: SearchParams): Promise<{ profiles: (ProfileWithRelations & { distanceKm?: number })[]; total: number; page: number; totalPages: number; searchLocation?: { lat: number; lng: number; name: string } }> {
     let query = supabaseAdmin
       .from("profiles")
       .select(`
@@ -306,6 +306,9 @@ export class SupabaseStorage implements IStorage {
       `, { count: "exact" })
       .eq("is_active", true)
       .eq("is_public", true);
+
+    // Store search location for distance calculation
+    let searchLocationData: { lat: number; lng: number; name: string; id: string } | null = null;
 
     // Filter by category
     if (params.categorySlug) {
@@ -328,6 +331,14 @@ export class SupabaseStorage implements IStorage {
     if (params.locationSlug) {
       const searchLocation = await this.getLocationBySlug(params.locationSlug);
       if (searchLocation && searchLocation.latitude && searchLocation.longitude) {
+        // Store for distance calculation
+        searchLocationData = {
+          lat: searchLocation.latitude,
+          lng: searchLocation.longitude,
+          name: searchLocation.name,
+          id: searchLocation.id,
+        };
+        
         // Find all locations within 10km radius
         const allLocations = await this.getLocations();
         const nearbyLocationIds = allLocations
@@ -351,6 +362,12 @@ export class SupabaseStorage implements IStorage {
         }
       } else if (searchLocation) {
         // No coordinates, use exact match
+        searchLocationData = {
+          lat: 0,
+          lng: 0,
+          name: searchLocation.name,
+          id: searchLocation.id,
+        };
         query = query.eq("location_id", searchLocation.id);
       }
     }
@@ -378,11 +395,34 @@ export class SupabaseStorage implements IStorage {
     const total = count || 0;
     const totalPages = Math.ceil(total / limit);
 
+    // Map profiles and calculate distance if we have a search location
+    const profiles = (data || []).map(d => {
+      const profile = this.mapProfileWithRelations(d) as ProfileWithRelations & { distanceKm?: number };
+      
+      // Calculate distance if search location and profile location have coordinates
+      if (searchLocationData && searchLocationData.lat && searchLocationData.lng && 
+          profile.location?.latitude && profile.location?.longitude) {
+        const distance = calculateDistance(
+          searchLocationData.lat,
+          searchLocationData.lng,
+          profile.location.latitude,
+          profile.location.longitude
+        );
+        // Only add distance if it's > 0 (not the same location)
+        if (distance > 0.1) {
+          profile.distanceKm = Math.round(distance * 10) / 10; // Round to 1 decimal
+        }
+      }
+      
+      return profile;
+    });
+
     return {
-      profiles: (data || []).map(d => this.mapProfileWithRelations(d)),
+      profiles,
       total,
       page,
       totalPages,
+      ...(searchLocationData && { searchLocation: { lat: searchLocationData.lat, lng: searchLocationData.lng, name: searchLocationData.name } }),
     };
   }
 
