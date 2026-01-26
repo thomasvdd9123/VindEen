@@ -16,6 +16,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { supabase } from "@/lib/supabase";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { isValidBelgianVAT, formatBelgianVAT } from "@/lib/utils";
 import type { Account, SubscriptionItem } from "@shared/schema";
 import { Badge } from "@/components/ui/badge";
 
@@ -36,7 +37,18 @@ const invoiceSchema = z.object({
   country: z.string().min(2, "Land is verplicht"),
   btwPlichtig: z.string(),
   btwNumber: z.string().optional(),
-});
+}).refine(
+  (data) => {
+    if (data.btwPlichtig === "yes" && data.btwNumber) {
+      return isValidBelgianVAT(data.btwNumber);
+    }
+    return true;
+  },
+  {
+    message: "Ongeldig BTW-nummer. Gebruik formaat BE0123456789 (BE + 10 cijfers)",
+    path: ["btwNumber"],
+  }
+);
 
 type AccountFormData = z.infer<typeof accountSchema>;
 type InvoiceFormData = z.infer<typeof invoiceSchema>;
@@ -169,7 +181,7 @@ export default function DashboardAccount() {
         billingNumber: data.houseNumber,
         billingCity: data.municipality,
         billingPostcode: data.postcode,
-        vatNumber: data.btwPlichtig === "yes" ? data.btwNumber : null,
+        vatNumber: data.btwPlichtig === "yes" && data.btwNumber ? formatBelgianVAT(data.btwNumber) : null,
       });
       
       // Invalidate account cache to refresh data

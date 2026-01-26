@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth, RequireAuth } from "@/lib/auth";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { isValidBelgianVAT, formatBelgianVAT } from "@/lib/utils";
 import { 
   User, 
   Building2, 
@@ -64,7 +65,18 @@ const businessSchema = z.object({
   btwPlichtig: z.string(),
   btwNumber: z.string().optional(),
   kvkNumber: z.string().optional(),
-});
+}).refine(
+  (data) => {
+    if (data.btwPlichtig === "ja" && data.btwNumber) {
+      return isValidBelgianVAT(data.btwNumber);
+    }
+    return true;
+  },
+  {
+    message: "Ongeldig BTW-nummer. Gebruik formaat BE0123456789 (BE + 10 cijfers)",
+    path: ["btwNumber"],
+  }
+);
 
 const profileSchema = z.object({
   name: z.string().min(2, "Bedrijfsnaam is verplicht"),
@@ -234,6 +246,7 @@ function OnboardingContent() {
       const { error } = await updateUserMetadata({
         ...data,
         country: "België",
+        btwNumber: data.btwPlichtig === "ja" && data.btwNumber ? formatBelgianVAT(data.btwNumber) : "",
       });
       if (error) {
         toast({ title: "Fout", description: error.message, variant: "destructive" });
