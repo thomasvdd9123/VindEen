@@ -1,0 +1,306 @@
+UI
+Thomas
+
+Personal
+
+
+Search...
+
+K
+
+
+Apify Store
+Home
+Actors
+Runs
+Saved tasks
+Integrations
+Schedules
+Development
+My Actors
+Insights
+Messaging
+Proxy
+Storage
+Billing
+Settings
+RAM
+0 MB
+/
+32 GB
+Usage
+$0.00
+/
+$85
+
+
+Develop new Actor
+Select template for your new Actor
+Templates help you quickly start a new web scraping, automation, or AI agent project.
+
+Search templates
+Language
+Use cases
+Quick start
+
+Crawlee + Cheerio
+
+A scraper example that uses Cheerio to parse HTML. It's fast, but it can't run the website's JavaScript or pass JS anti-scraping challenges.
+
+Starter
+
+Crawlee + Cheerio
+
+A scraper example that uses Cheerio to parse HTML. It's fast, but it can't run the website's JavaScript or pass JS anti-scraping challenges.
+
+Starter
+
+Crawlee + BeautifulSoup
+
+Crawl and scrape websites using Crawlee and BeautifulSoup. Start from a given start URLs, and store results to Apify dataset.
+
+Starter
+Python
+
+Crawlee + BeautifulSoup
+
+Crawl and scrape websites using Crawlee and BeautifulSoup. Start from a given start URLs, and store results to Apify dataset.
+
+Starter
+
+Empty Python project
+
+Empty template with basic structure for the Actor with Apify SDK that allows you to easily add your own functionality.
+
+
+One‑Page HTML Scraper with BeautifulSoup
+
+Scrape single page with provided URL with HTTPX and extract data from page's HTML with Beautiful Soup.
+
+Starter
+
+BeautifulSoup
+
+Example of a web scraper that uses Python HTTPX to scrape HTML from URLs provided on input, parses it using BeautifulSoup and saves results to storage.
+
+
+Playwright + Chrome
+
+Crawler example that uses headless Chrome driven by Playwright to scrape a website. Headless browsers render JavaScript and can help when getting blocked.
+
+
+Selenium + Chrome
+
+Scraper example built with Selenium and headless Chrome browser to scrape a website and save the results to storage. A popular alternative to Playwright.
+
+
+Standby Python project
+
+Template with basic structure for an Actor using Standby mode that allows you to easily add your own functionality.
+
+Starter
+
+Scrapy
+
+This example Scrapy spider scrapes page titles from URLs defined in input parameter. It shows how to use Apify SDK for Python and Scrapy pipelines to save results.
+
+
+Crawlee + Parsel
+
+Crawl and scrape websites using Crawlee and Parsel. Start from a given start URLs, and store results to Apify dataset.
+
+Starter
+
+Crawlee + Playwright + Chrome
+
+Crawl and scrape websites using Crawlee and Playwright. Start from a given start URLs, and store results to Apify dataset.
+
+Starter
+
+Crawlee + Playwright + Camoufox
+
+Crawl and scrape websites using Crawlee and Playwright with Camoufox. Start from a given start URLs, and store results to Apify dataset.
+
+Starter
+
+🦜️🔗 LangGraph AI agent
+
+Example of how to use LangGraph with Apify Actors to create a social media analysis tool-calling agent.
+
+AI Agent
+
+CrewAI agent
+
+Example of how to use CrewAI with Apify Actors to create a social media analysis tool-calling agent.
+
+AI Agent
+
+LlamaIndex agent
+
+LlamaIndex agent to scrape, deduplicate and summarize contact details from a website
+
+AI Agent
+
+PydanticAI agent
+
+A PydanticAI agent designed to generate jokes, showcasing a minimal example using the Pydantic AI framework.
+
+AI Agent
+
+Smolagents agent
+
+An AI news aggregator that fetches and summarizes the latest news based on user-defined interests using DuckDuckGo search and OpenAI models written in Python Smolagents.
+
+AI Agent
+
+Python MCP proxy
+
+Demonstrates how to convert a Python stdio, HTTP-streamable, or SSE-based Model Context Protocol server into an Apify Actor.
+
+AI Agent
+
+Python MCP server
+
+Create a Model Context Protocol server using Python and FastMCP with Apify Actor integration for pay-per-event monetization.
+
+AI Agent
+JavaScript
+
+Crawlee + Cheerio
+
+A scraper example that uses Cheerio to parse HTML. It's fast, but it can't run the website's JavaScript or pass JS anti-scraping challenges.
+
+Starter
+
+One‑Page HTML Scraper with Cheerio
+
+Scrape single page with provided URL with Axios and extract data from page's HTML with Cheerio.
+
+Starter
+
+Crawlee + Puppeteer + Chrome
+
+Example of a Puppeteer and headless Chrome web scraper. Headless browsers render JavaScript and are harder to block, but they're slower than plain HTTP.
+
+
+Crawlee + Playwright + Chrome
+
+Web scraper example with Crawlee, Playwright and headless Chrome. Playwright is more modern, user-friendly and harder to block than Puppeteer.
+
+
+Crawlee + Playwright + Camoufox
+
+Web scraper example with Crawlee, Playwright and Camoufox. Camoufox is a custom stealthy fork of Firefox. Try this template if you're facing anti-scraping challenges.
+
+
+Bootstrap CheerioCrawler
+
+Skeleton project that helps you quickly bootstrap `CheerioCrawler` in JavaScript. It's best for developers who already know Apify SDK and Crawlee.
+
+
+Cypress
+
+Example of running Cypress tests and saving their results on the Apify platform. JSON results are saved to Dataset, videos to Key-value store.
+
+
+Empty JavaScript Project
+
+Empty template with basic structure for the Actor with Apify SDK that allows you to easily add your own functionality.
+
+
+Standby JavaScript Project
+
+Template with basic structure for an Actor using Standby mode that allows you to easily add your own functionality.
+
+Starter
+
+🦜️🔗 LangChain
+
+Example of how to use LangChain.js with Apify to crawl the web data, vectorize them, and prompt the OpenAI model.
+
+AI Agent
+
+LangGraph agent
+
+LangGraph agent in JavaScript for answering questions via web search.
+
+AI Agent
+
+CLI-based Actor starter
+
+Actorize a CLI utility with the Apify Actor CLI
+
+TypeScript
+
+Crawlee + Cheerio
+
+A scraper example that uses Cheerio to parse HTML. It's fast, but it can't run the website's JavaScript or pass JS anti-scraping challenges.
+
+Starter
+
+One‑Page HTML Scraper with Cheerio
+
+Scrape single page with provided URL with Axios and extract data from page's HTML with Cheerio.
+
+Starter
+
+Crawlee + Puppeteer + Chrome
+
+Example of a Puppeteer and headless Chrome web scraper. Headless browsers render JavaScript and are harder to block, but they're slower than plain HTTP.
+
+
+Crawlee + Playwright + Chrome
+
+Web scraper example with Crawlee, Playwright and headless Chrome. Playwright is more modern, user-friendly and harder to block than Puppeteer.
+
+
+Crawlee + Playwright + Camoufox
+
+Web scraper example with Crawlee, Playwright and headless Camoufox. Camoufox is a custom stealthy fork of Firefox. Try this template if you're facing anti-scraping challenges.
+
+
+Playwright + Chrome Test Runner
+
+Example of using the Playwright Test project to run automated website tests in the cloud and display their results. Usable as an API.
+
+
+Empty TypeScript project
+
+Empty template with basic structure for the Actor with Apify SDK that allows you to easily add your own functionality.
+
+
+Standby TypeScript project
+
+Template with basic structure for an Actor using Standby mode that allows you to easily add your own functionality.
+
+Starter
+
+Start with TypeScript on Bun
+
+Scrape single page with provided URL with Axios and extract data from page's HTML with Cheerio.
+
+Starter
+
+🐝 BeeAI agent
+
+Example of how to use Bee Agent Framework with Apify Actors to create a social media analysis agent.
+
+AI Agent
+
+Mastra agent
+
+Example of how to use Mastra with Apify Actors to create a social media analysis agent.
+
+AI Agent
+
+TypeScript MCP proxy
+
+Example of how to turn a Model Context Protocol stdio, HTTP Streamable, or SSE server into an Apify Actor.
+
+AI Agent
+
+TypeScript MCP server
+
+Create a Model Context Protocol server using TypeScript and Express with Apify Actor integration for pay-per-event monetization.
+
+AI Agent
