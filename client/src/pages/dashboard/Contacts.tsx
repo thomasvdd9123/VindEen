@@ -1,15 +1,17 @@
 import { useState, useMemo } from "react";
 import { DashboardLayout } from "./DashboardLayout";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/lib/auth";
 import type { ContactRequest, Account } from "@shared/schema";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useToast } from "@/hooks/use-toast";
 import { 
   MessageSquare,
   Mail,
@@ -22,6 +24,7 @@ import {
   SortAsc,
   Loader2,
   AlertCircle,
+  X,
 } from "lucide-react";
 
 type SortOption = "date-desc" | "date-asc" | "name-asc" | "name-desc" | "subject-asc" | "subject-desc";
@@ -189,6 +192,9 @@ export default function DashboardContacts() {
 }
 
 function ContactCard({ contact }: { contact: ContactRequest }) {
+  const [showDetails, setShowDetails] = useState(false);
+  const { toast } = useToast();
+  
   const statusConfig: Record<string, { label: string; variant: "default" | "secondary" | "outline" }> = {
     NEW: { label: "Nieuw", variant: "default" },
     READ: { label: "Gelezen", variant: "secondary" },
@@ -199,59 +205,148 @@ function ContactCard({ contact }: { contact: ContactRequest }) {
   const status = statusConfig.NEW;
   const contactDate = new Date(contact.createdAt);
 
+  const handleReply = () => {
+    const subject = encodeURIComponent(`Re: ${contact.subject}`);
+    const body = encodeURIComponent(
+      `\n\n---\nOrigineel bericht van ${contact.visitorName} op ${contactDate.toLocaleDateString("nl-BE")}:\n\n${contact.message}`
+    );
+    window.location.href = `mailto:${contact.visitorEmail}?subject=${subject}&body=${body}`;
+  };
+
+  const handleArchive = () => {
+    toast({
+      title: "Binnenkort beschikbaar",
+      description: "De archiveringsfunctie wordt binnenkort toegevoegd.",
+    });
+  };
+
   return (
-    <Card data-testid={`card-contact-${contact.id}`}>
-      <CardContent className="p-5">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between gap-2 mb-2">
-              <div>
-                <h3 className="font-semibold">{contact.visitorName}</h3>
-                <p className="text-sm text-muted-foreground">{contact.subject}</p>
+    <>
+      <Card data-testid={`card-contact-${contact.id}`}>
+        <CardContent className="p-5">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-start justify-between gap-2 mb-2">
+                <div>
+                  <h3 className="font-semibold">{contact.visitorName}</h3>
+                  <p className="text-sm text-muted-foreground">{contact.subject}</p>
+                </div>
+                <Badge variant={status.variant}>{status.label}</Badge>
               </div>
-              <Badge variant={status.variant}>{status.label}</Badge>
-            </div>
 
-            <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
-              {contact.message}
-            </p>
+              <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
+                {contact.message}
+              </p>
 
-            <div className="flex flex-wrap gap-4 text-sm text-muted-foreground mb-4">
-              <span className="flex items-center gap-1">
-                <Mail className="h-3.5 w-3.5" />
-                {contact.visitorEmail}
-              </span>
-              {contact.telnr && (
+              <div className="flex flex-wrap gap-4 text-sm text-muted-foreground mb-4">
                 <span className="flex items-center gap-1">
-                  <Phone className="h-3.5 w-3.5" />
-                  {contact.telnr}
+                  <Mail className="h-3.5 w-3.5" />
+                  {contact.visitorEmail}
                 </span>
-              )}
-              <span className="flex items-center gap-1">
-                <Calendar className="h-3.5 w-3.5" />
-                {contactDate.toLocaleDateString("nl-BE")}
-              </span>
-            </div>
+                {contact.telnr && (
+                  <span className="flex items-center gap-1">
+                    <Phone className="h-3.5 w-3.5" />
+                    {contact.telnr}
+                  </span>
+                )}
+                <span className="flex items-center gap-1">
+                  <Calendar className="h-3.5 w-3.5" />
+                  {contactDate.toLocaleDateString("nl-BE")}
+                </span>
+              </div>
 
-            <div className="flex flex-wrap gap-2">
-              <Button variant="outline" size="sm" className="gap-1" data-testid={`button-view-${contact.id}`}>
-                <Eye className="h-3.5 w-3.5" />
-                Bekijken
-              </Button>
-              <Button variant="outline" size="sm" className="gap-1" asChild>
-                <a href={`mailto:${contact.visitorEmail}?subject=Re: ${contact.subject}`}>
+              <div className="flex flex-wrap gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="gap-1" 
+                  onClick={() => setShowDetails(true)}
+                  data-testid={`button-view-${contact.id}`}
+                >
+                  <Eye className="h-3.5 w-3.5" />
+                  Bekijken
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="gap-1" 
+                  onClick={handleReply}
+                  data-testid={`button-reply-${contact.id}`}
+                >
                   <Reply className="h-3.5 w-3.5" />
                   Beantwoorden
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="gap-1"
+                  onClick={handleArchive}
+                  data-testid={`button-archive-${contact.id}`}
+                >
+                  <Archive className="h-3.5 w-3.5" />
+                  Archiveren
+                </Button>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Dialog open={showDetails} onOpenChange={setShowDetails}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <MessageSquare className="h-5 w-5" />
+              {contact.subject}
+            </DialogTitle>
+            <DialogDescription>
+              Van {contact.visitorName} op {contactDate.toLocaleDateString("nl-BE", { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+              })}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="flex flex-wrap gap-4 text-sm">
+              <a 
+                href={`mailto:${contact.visitorEmail}`} 
+                className="flex items-center gap-1.5 text-primary hover:underline"
+              >
+                <Mail className="h-4 w-4" />
+                {contact.visitorEmail}
+              </a>
+              {contact.telnr && (
+                <a 
+                  href={`tel:${contact.telnr}`}
+                  className="flex items-center gap-1.5 text-primary hover:underline"
+                >
+                  <Phone className="h-4 w-4" />
+                  {contact.telnr}
                 </a>
+              )}
+            </div>
+            
+            <div className="bg-muted/50 rounded-lg p-4">
+              <p className="text-sm whitespace-pre-wrap">{contact.message}</p>
+            </div>
+
+            <div className="flex gap-2 pt-2">
+              <Button onClick={handleReply} className="gap-1" data-testid="button-reply-modal">
+                <Reply className="h-4 w-4" />
+                Beantwoorden
               </Button>
-              <Button variant="ghost" size="sm" className="gap-1">
-                <Archive className="h-3.5 w-3.5" />
-                Archiveren
+              <Button variant="outline" onClick={() => setShowDetails(false)}>
+                Sluiten
               </Button>
             </div>
           </div>
-        </div>
-      </CardContent>
-    </Card>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
