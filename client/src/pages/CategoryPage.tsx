@@ -154,7 +154,26 @@ export default function CategoryPage() {
     queryKey: [searchUrl],
   });
 
+  // Fetch ALL profiles for the map (without pagination limit)
+  const mapSearchParams = new URLSearchParams();
+  if (locationSlug) mapSearchParams.set("location", locationSlug);
+  if (specializationKey) mapSearchParams.set("spec", specializationKey);
+  if (mainCategoryParam) mapSearchParams.set("mainCategory", mainCategoryParam);
+  if (queryParam) mapSearchParams.set("q", queryParam);
+  mapSearchParams.set("limit", "1000"); // Get all profiles for the map
+  
+  const mapSearchUrl = `/api/profiles/search?${mapSearchParams.toString()}`;
+  
+  const { data: mapProfilesData } = useQuery<{
+    profiles: ProfileWithRelations[];
+    total: number;
+  }>({
+    queryKey: [mapSearchUrl],
+    enabled: viewMode === "map", // Only fetch when map view is active
+  });
+
   const profiles = profilesData?.profiles || [];
+  const allProfilesForMap = mapProfilesData?.profiles || profiles; // Fallback to paginated if map data not loaded
   const total = profilesData?.total || 0;
 
   const isLoading = (locationSlug && locationLoading) || profilesLoading;
@@ -404,7 +423,7 @@ export default function CategoryPage() {
           ) : profiles.length > 0 ? (
             viewMode === "map" ? (
               <SearchMap 
-                profiles={profiles} 
+                profiles={allProfilesForMap} 
                 locations={locations} 
                 className="h-[600px]" 
               />
