@@ -28,8 +28,8 @@ function calculateDistance(lat1: number, lng1: number, lat2: number, lng2: numbe
   return R * c;
 }
 
-// Radius in km for location search (hardcoded to 10km)
-const SEARCH_RADIUS_KM = 10;
+// Radius in km for location search (hardcoded to 20km)
+const SEARCH_RADIUS_KM = 20;
 
 export class SupabaseStorage implements IStorage {
   // Categories
