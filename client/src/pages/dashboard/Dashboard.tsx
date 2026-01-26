@@ -11,11 +11,56 @@ import {
   PlusCircle,
   Eye,
   Mail,
+  Loader2,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
+import { useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import type { Account } from "@shared/schema";
+
+interface ProfileWithStats {
+  id: string;
+  isPublic: boolean;
+  viewCount?: number;
+}
 
 export default function Dashboard() {
   const { user } = useAuth();
+
+  const { data: account } = useQuery<Account>({
+    queryKey: ["/api/accounts/by-user", user?.id],
+    queryFn: async () => {
+      if (!user?.id) throw new Error("No user");
+      return apiRequest("POST", "/api/accounts", {
+        authUserId: user.id,
+        email: user.email,
+      });
+    },
+    enabled: !!user?.id,
+  });
+
+  const { data: profiles = [], isLoading: profilesLoading } = useQuery<ProfileWithStats[]>({
+    queryKey: ["/api/my-profiles", account?.id],
+    queryFn: async () => {
+      if (!account?.id) return [];
+      return apiRequest("GET", `/api/my-profiles/${account.id}`);
+    },
+    enabled: !!account?.id,
+  });
+
+  const { data: contacts = [], isLoading: contactsLoading } = useQuery<{ id: string }[]>({
+    queryKey: ["/api/contact-requests", account?.id],
+    queryFn: async () => {
+      if (!account?.id) return [];
+      return apiRequest("GET", `/api/contact-requests/${account.id}`);
+    },
+    enabled: !!account?.id,
+  });
+
+  const isLoading = profilesLoading || contactsLoading;
+  const totalViews = profiles.reduce((acc, p) => acc + (p.viewCount || 0), 0);
+  const activeProfiles = profiles.filter(p => p.isPublic).length;
+  const totalContacts = contacts.length;
 
   const quickLinks = [
     {
@@ -45,9 +90,9 @@ export default function Dashboard() {
   ];
 
   const stats = [
-    { label: "Profielweergaven", value: "0", icon: Eye },
-    { label: "Contactverzoeken", value: "0", icon: Mail },
-    { label: "Actieve profielen", value: "0", icon: UserCircle },
+    { label: "Profielweergaven", value: isLoading ? "-" : totalViews.toString(), icon: Eye },
+    { label: "Contactverzoeken", value: isLoading ? "-" : totalContacts.toString(), icon: Mail },
+    { label: "Actieve profielen", value: isLoading ? "-" : activeProfiles.toString(), icon: UserCircle },
   ];
 
   return (
