@@ -101,7 +101,9 @@ export function SearchBox({
     (loc) =>
       loc.name.toLowerCase() === cityQuery.toLowerCase() ||
       loc.postcode === cityQuery ||
-      loc.slug === cityQuery.toLowerCase()
+      loc.slug === cityQuery.toLowerCase() ||
+      // Also match full location slug format like "3060-bertem"
+      `${loc.postcode}-${loc.slug}` === cityQuery.toLowerCase()
   );
   if (selectedLocation) {
     countParams.set("location", selectedLocation.slug);
