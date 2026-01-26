@@ -1413,6 +1413,88 @@ Sitemap: ${SITEMAP_BASE_URL}/sitemap.xml
             console.error("Failed to send confirmation email:", emailError);
           }
         }
+
+        // Send Peppol invoice via Billit if configured
+        const billitApiKey = process.env.BILLIT_API_KEY;
+        if (billitApiKey) {
+          try {
+            const { data: profile } = await supabase
+              .from("profiles")
+              .select("name, account_id")
+              .eq("id", metadata.profileId)
+              .single();
+            
+            if (profile?.account_id) {
+              const { data: account } = await supabase
+                .from("accounts")
+                .select("email, vat_number, company_name, billing_street, billing_number, billing_postcode, billing_city")
+                .eq("id", profile.account_id)
+                .single();
+              
+              if (account?.vat_number && account?.billing_street && account?.billing_city) {
+                const priceExclVat = parseFloat(payment.amount?.value || "0") / 1.21;
+                const invoiceNumber = `INV-${new Date().getFullYear()}-${subscription.id.slice(0, 8).toUpperCase()}`;
+                const dueDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+
+                const billitBaseUrl = process.env.BILLIT_SANDBOX === "true" 
+                  ? "https://api.sandbox.billit.be" 
+                  : "https://api.billit.be";
+
+                await fetch(`${billitBaseUrl}/v1/peppol/sendOrder`, {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${billitApiKey}`,
+                  },
+                  body: JSON.stringify({
+                    Supplier: {
+                      Name: process.env.PEPPOL_SUPPLIER_NAME || "Zoek-een-tuinman.be",
+                      Street: process.env.PEPPOL_SUPPLIER_STREET || "",
+                      StreetNumber: process.env.PEPPOL_SUPPLIER_NUMBER || "",
+                      Zipcode: process.env.PEPPOL_SUPPLIER_POSTCODE || "",
+                      City: process.env.PEPPOL_SUPPLIER_CITY || "",
+                      CountryCode: "BE",
+                      VATNumber: process.env.PEPPOL_SUPPLIER_VAT || "",
+                      IBAN: process.env.PEPPOL_SUPPLIER_IBAN,
+                      BIC: process.env.PEPPOL_SUPPLIER_BIC,
+                      PartyType: "Supplier",
+                      VATLiable: true,
+                    },
+                    Customer: {
+                      Name: account.company_name || profile.name || "Unknown",
+                      Street: account.billing_street,
+                      StreetNumber: account.billing_number || "",
+                      Zipcode: account.billing_postcode || "",
+                      City: account.billing_city,
+                      CountryCode: "BE",
+                      VATNumber: account.vat_number,
+                      Email: account.email,
+                      PartyType: "Customer",
+                      VATLiable: true,
+                    },
+                    OrderNumber: invoiceNumber,
+                    OrderDate: new Date().toISOString(),
+                    ExpiryDate: dueDate.toISOString(),
+                    OrderType: "Invoice",
+                    OrderDirection: "Income",
+                    OrderLines: [{
+                      Quantity: 1,
+                      UnitPriceExcl: priceExclVat,
+                      Description: `Profielvermelding ${profile.name || "profiel"} - ${metadata.years} jaar`,
+                      VATPercentage: 21,
+                    }],
+                    Paid: true,
+                    PaidDate: new Date().toISOString(),
+                    Currency: "EUR",
+                  }),
+                });
+                console.log(`Sent Peppol invoice ${invoiceNumber} for profile ${metadata.profileId}`);
+              }
+            }
+          } catch (peppolError) {
+            console.error("Failed to send Peppol invoice:", peppolError);
+          }
+        }
       } else if (["failed", "canceled", "expired"].includes(payment.status)) {
         // Payment failed
         await supabase

@@ -152,6 +152,17 @@ VITE_SUPABASE_ANON_KEY=
 MOLLIE_API_KEY=           # Payment processing
 RESEND_API_KEY=           # Email notifications
 SESSION_SECRET=           # Session encryption
+BILLIT_API_KEY=           # Peppol invoicing via Billit
+BILLIT_SANDBOX=true       # Set to false for production
+# Supplier info for Peppol invoices
+PEPPOL_SUPPLIER_NAME=     # Your company name
+PEPPOL_SUPPLIER_STREET=   # Street name
+PEPPOL_SUPPLIER_NUMBER=   # House number
+PEPPOL_SUPPLIER_POSTCODE= # Postal code
+PEPPOL_SUPPLIER_CITY=     # City
+PEPPOL_SUPPLIER_VAT=      # VAT number (BE0123456789)
+PEPPOL_SUPPLIER_IBAN=     # Bank account (optional)
+PEPPOL_SUPPLIER_BIC=      # BIC code (optional)
 ```
 
 ## Email (Resend)
@@ -160,14 +171,25 @@ SESSION_SECRET=           # Session encryption
 - **Domain verification required**: Add `zoek-een-tuinman.be` in Resend dashboard and configure DNS records
 - Sender address: `noreply@zoek-een-tuinman.be`
 
+## Peppol Invoicing (Billit)
+- **Provider**: Billit Access Point (https://docs.billit.be/)
+- **Endpoint**: `/v1/peppol/sendOrder` - JSON-based invoice sending (auto-converts to UBL)
+- **Sandbox**: https://api.sandbox.billit.be (set BILLIT_SANDBOX=true)
+- **Production**: https://api.billit.be (set BILLIT_SANDBOX=false)
+- Automatically sends Peppol invoice when:
+  1. Payment succeeds via Mollie webhook
+  2. Customer account has VAT number and billing address filled in
+- Invoice includes profile subscription details, VAT calculation (21%)
+- Supplier info comes from PEPPOL_SUPPLIER_* environment variables
+
 ## Next Steps (Post-MVP)
 1. ~~Supabase database integration~~ (DONE - using production Supabase)
 2. ~~Supabase Auth for login/registration~~ (DONE)
 3. Admin panel for managing profiles
 4. ~~Company dashboard/portal~~ (DONE)
-5. Mollie payment integration
-6. Resend email integration
-7. Peppol invoicing (required for Belgium B2B by Jan 2026)
+5. ~~Mollie payment integration~~ (DONE)
+6. ~~Resend email integration~~ (DONE)
+7. ~~Peppol invoicing~~ (DONE - via Billit)
 8. Advanced search with geo-filtering
 9. ~~Multi-step profile creation wizard~~ (DONE - onboarding flow)
 
