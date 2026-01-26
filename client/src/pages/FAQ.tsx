@@ -1,111 +1,209 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
+import { Link } from "wouter";
+import { Layout } from "@/components/layout/Layout";
 import { SEO } from "@/components/SEO";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { 
+  Breadcrumb, 
+  BreadcrumbItem, 
+  BreadcrumbLink, 
+  BreadcrumbList, 
+  BreadcrumbPage, 
+  BreadcrumbSeparator 
+} from "@/components/ui/breadcrumb";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { HelpCircle, Leaf, ArrowRight, MessageSquare } from "lucide-react";
 import { siteConfig } from "@/lib/theme.config";
 
-const faqs = [
+const faqCategories = [
   {
-    question: "Hoe kan ik mij registreren als tuinman?",
-    answer: "Klik op 'Registreren' in de navigatiebalk en vul je gegevens in. Na registratie ontvang je een bevestigingsmail. Zodra je email is bevestigd, kun je inloggen en je profiel aanmaken."
+    title: "Voor klanten",
+    questions: [
+      {
+        question: "Hoe vind ik een tuinman in mijn regio?",
+        answer: "Gebruik de zoekfunctie op onze homepage. Vul je gemeente of postcode in en bekijk alle beschikbare tuinmannen in jouw omgeving. Je kunt filteren op specialisatie om precies te vinden wat je nodig hebt."
+      },
+      {
+        question: "Is het gratis om een tuinman te zoeken?",
+        answer: "Ja, het zoeken en bekijken van profielen op Zoek-een-tuinman.be is volledig gratis. Je kunt onbeperkt profielen bekijken en contact opnemen met tuinmannen."
+      },
+      {
+        question: "Hoe neem ik contact op met een tuinman?",
+        answer: "Op elk profiel vind je een contactformulier. Vul je gegevens in en beschrijf kort wat je nodig hebt. De tuinman ontvangt je bericht en neemt contact met je op."
+      },
+      {
+        question: "Wat kost een tuinman gemiddeld?",
+        answer: "Tarieven variëren per regio en type werk. Gemiddeld rekenen tuinmannen €35-€50 per uur voor standaard onderhoud. Voor meer gedetailleerde prijsinformatie, bekijk onze pagina over kosten en prijzen."
+      },
+      {
+        question: "Zijn de tuinmannen op dit platform betrouwbaar?",
+        answer: "Wij verifiëren alle tuinmannen op ons platform. Je ziet bij elk profiel of deze geverifieerd is. We raden altijd aan om referenties te vragen en een schriftelijke offerte te ontvangen."
+      },
+      {
+        question: "Kan ik reviews zien van andere klanten?",
+        answer: "Op de profielpagina's kun je informatie vinden over de ervaring en specialisaties van de tuinman. We werken aan het toevoegen van een reviewsysteem."
+      },
+    ]
   },
   {
-    question: "Wat kost een vermelding op Zoek-een-tuinman.be?",
-    answer: "Bekijk onze prijzenpagina voor een overzicht van de beschikbare abonnementen. We bieden verschillende opties aan, van een basisvermelding tot premium pakketten met extra functies."
+    title: "Voor tuinmannen",
+    questions: [
+      {
+        question: "Hoe kan ik mij aanmelden als tuinman?",
+        answer: "Registreer je gratis via de 'Registreren' knop. Na het aanmaken van je account kun je je bedrijfsprofiel invullen met je specialisaties, foto's en contactgegevens."
+      },
+      {
+        question: "Wat kost een vermelding op dit platform?",
+        answer: "We bieden verschillende abonnementsopties aan. Na het gratis aanmaken van je account en profiel kun je een abonnement kiezen dat bij je past."
+      },
+      {
+        question: "Hoe word ik geverifieerd?",
+        answer: "Na het volledig invullen van je profiel wordt dit door ons team beoordeeld. We controleren of alle gegevens kloppen en of je een actief bedrijf hebt. Dit proces duurt meestal 1-2 werkdagen."
+      },
+      {
+        question: "Hoe ontvang ik contactaanvragen?",
+        answer: "Wanneer een klant contact opneemt via je profiel, ontvang je een e-mail met de aanvraag. Je kunt alle aanvragen ook bekijken in je persoonlijke dashboard."
+      },
+      {
+        question: "Kan ik meerdere profielen aanmaken?",
+        answer: "Ja, als je meerdere vestigingen of gespecialiseerde diensten hebt, kun je meerdere profielen aanmaken onder één account. Elk profiel heeft een apart abonnement nodig."
+      },
+      {
+        question: "Hoe kan ik mijn profiel aanpassen?",
+        answer: "Log in op je account en ga naar je dashboard. Daar kun je al je profielgegevens aanpassen, foto's toevoegen en je specialisaties bijwerken."
+      },
+      {
+        question: "Kan ik mijn profiel tijdelijk verbergen?",
+        answer: "Ja, in je dashboard kun je je profiel op 'inactief' zetten. Je profiel blijft bestaan maar is niet zichtbaar voor bezoekers totdat je het weer activeert."
+      },
+      {
+        question: "Hoe kan ik mijn abonnement opzeggen?",
+        answer: "Je kunt je abonnement beheren in je dashboard onder 'Abonnement'. Hier kun je je abonnement opzeggen, pauzeren of upgraden."
+      },
+    ]
   },
   {
-    question: "Hoe wordt mijn profiel zichtbaar voor bezoekers?",
-    answer: "Je profiel wordt zichtbaar nadat je een actief abonnement hebt en je profiel volledig is ingevuld. Hoe completer je profiel, hoe hoger je in de zoekresultaten verschijnt."
+    title: "Algemeen",
+    questions: [
+      {
+        question: "Wat is Zoek-een-tuinman.be?",
+        answer: "Zoek-een-tuinman.be is het grootste online platform om tuinprofessionals te vinden in België. We verbinden klanten met betrouwbare tuinmannen, hoveniers en tuinaannemers in heel het land."
+      },
+      {
+        question: "In welke regio's zijn jullie actief?",
+        answer: "We zijn actief in heel België: Vlaanderen, Wallonië en het Brussels Hoofdstedelijk Gewest. Je kunt zoeken in alle 572 Belgische gemeenten."
+      },
+      {
+        question: "Hoe kan ik contact opnemen met jullie?",
+        answer: "Je kunt ons bereiken via het contactformulier op onze website of per e-mail. We proberen alle vragen binnen 24 uur te beantwoorden."
+      },
+      {
+        question: "Verwerken jullie mijn gegevens veilig?",
+        answer: "Ja, we nemen privacy zeer serieus. Al je gegevens worden veilig opgeslagen en verwerkt volgens de GDPR-richtlijnen. Lees ons privacybeleid voor meer informatie."
+      },
+      {
+        question: "Hoe kan ik mijn wachtwoord wijzigen?",
+        answer: "Ga naar je dashboard en klik op 'Account'. Hier kun je je wachtwoord wijzigen. Je kunt ook via de 'Wachtwoord vergeten' link op de inlogpagina een nieuw wachtwoord aanvragen."
+      },
+    ]
   },
-  {
-    question: "Kan ik mijn profiel tijdelijk verbergen?",
-    answer: "Ja, in je dashboard kun je je profiel op 'inactief' zetten. Je profiel blijft bestaan maar is niet zichtbaar voor bezoekers totdat je het weer activeert."
-  },
-  {
-    question: "Hoe ontvang ik contactaanvragen?",
-    answer: "Wanneer een bezoeker je contactformulier invult, ontvang je een email met de gegevens. Je kunt ook alle aanvragen bekijken in je dashboard onder 'Contacten'."
-  },
-  {
-    question: "Kan ik foto's van mijn werk uploaden?",
-    answer: "Ja, je kunt een profielfoto en meerdere foto's van uitgevoerde werken toevoegen aan je profiel. Goede foto's helpen bezoekers een beeld te krijgen van je werk."
-  },
-  {
-    question: "Hoe kan ik mijn abonnement opzeggen?",
-    answer: "Je kunt je abonnement beheren in je dashboard onder 'Abonnement'. Hier kun je je abonnement opzeggen, pauzeren of upgraden."
-  },
-  {
-    question: "Wat gebeurt er als mijn abonnement verloopt?",
-    answer: "Na het verlopen van je abonnement krijg je een grace period van 7 dagen. Daarna wordt je profiel automatisch op privé gezet totdat je je abonnement vernieuwt."
-  },
-  {
-    question: "Hoe kan ik mijn wachtwoord wijzigen?",
-    answer: "Ga naar je dashboard en klik op 'Account'. Hier kun je je wachtwoord wijzigen. Je kunt ook via de 'Wachtwoord vergeten' link op de inlogpagina een nieuw wachtwoord aanvragen."
-  },
-  {
-    question: "In welke regio's is Zoek-een-tuinman.be actief?",
-    answer: "Zoek-een-tuinman.be is actief in heel België. Je kunt je werkgebied instellen in je profiel, zodat bezoekers uit jouw regio je kunnen vinden."
-  }
 ];
 
 export default function FAQ() {
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <Layout>
       <SEO
         title="Veelgestelde vragen (FAQ)"
-        description="Antwoorden op veelgestelde vragen over Zoek-een-tuinman.be. Leer hoe je je registreert, profiel beheert en contactaanvragen ontvangt."
+        description="Vind antwoorden op veelgestelde vragen over Zoek-een-tuinman.be. Informatie voor zowel klanten als tuinprofessionals."
         canonical="/faq"
       />
-      <Header />
-      <main className="flex-1">
-        <div className="bg-primary/5 border-b">
-          <div className="container mx-auto px-4 py-12">
-            <h1 className="text-3xl font-bold text-foreground" data-testid="text-faq-title">
-              Veelgestelde vragen
-            </h1>
-            <p className="text-muted-foreground mt-2">
-              Antwoorden op de meest gestelde vragen over {siteConfig.name}
+
+      <div className="bg-muted/30 border-b border-border">
+        <div className="container mx-auto px-4 py-4">
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link href="/">Home</Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>Veelgestelde vragen</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+        </div>
+      </div>
+
+      <div className="container mx-auto px-4 py-8 md:py-12">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-10">
+            <HelpCircle className="h-12 w-12 text-primary mx-auto mb-4" />
+            <h1 className="text-3xl font-bold mb-4" data-testid="text-faq-title">Veelgestelde vragen</h1>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Vind snel antwoord op je vragen over {siteConfig.name}. Staat je vraag er niet 
+              tussen? Neem dan gerust contact met ons op.
             </p>
           </div>
-        </div>
 
-        <div className="container mx-auto px-4 py-12">
-          <div className="max-w-3xl mx-auto">
-            <Card>
-              <CardHeader>
-                <CardTitle>FAQ</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Accordion type="single" collapsible className="w-full">
-                  {faqs.map((faq, index) => (
-                    <AccordionItem key={index} value={`item-${index}`} data-testid={`accordion-faq-${index}`}>
-                      <AccordionTrigger className="text-left">
-                        {faq.question}
-                      </AccordionTrigger>
-                      <AccordionContent className="text-muted-foreground">
-                        {faq.answer}
-                      </AccordionContent>
-                    </AccordionItem>
-                  ))}
-                </Accordion>
-              </CardContent>
-            </Card>
-
-            <Card className="mt-8">
-              <CardContent className="py-6">
-                <h3 className="font-semibold mb-2">Staat je vraag er niet bij?</h3>
-                <p className="text-muted-foreground">
-                  Neem gerust contact met ons op via{" "}
-                  <a href={`mailto:${siteConfig.email}`} className="text-primary hover:underline">
-                    {siteConfig.email}
-                  </a>
-                </p>
-              </CardContent>
-            </Card>
+          <div className="space-y-8">
+            {faqCategories.map((category, categoryIndex) => (
+              <Card key={categoryIndex}>
+                <CardHeader>
+                  <CardTitle className="text-xl">{category.title}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Accordion type="single" collapsible className="w-full">
+                    {category.questions.map((item, index) => (
+                      <AccordionItem key={index} value={`${categoryIndex}-${index}`} data-testid={`accordion-faq-${categoryIndex}-${index}`}>
+                        <AccordionTrigger className="text-left">
+                          {item.question}
+                        </AccordionTrigger>
+                        <AccordionContent className="text-muted-foreground">
+                          {item.answer}
+                        </AccordionContent>
+                      </AccordionItem>
+                    ))}
+                  </Accordion>
+                </CardContent>
+              </Card>
+            ))}
           </div>
+
+          <Card className="mt-10 bg-primary/5 border-primary/20">
+            <CardContent className="p-6 text-center">
+              <MessageSquare className="h-10 w-10 text-primary mx-auto mb-4" />
+              <h3 className="text-xl font-semibold mb-2">Nog vragen?</h3>
+              <p className="text-muted-foreground mb-4 max-w-md mx-auto">
+                Staat je vraag er niet tussen? Neem dan gerust contact met ons op via{" "}
+                <a href={`mailto:${siteConfig.email}`} className="text-primary hover:underline">
+                  {siteConfig.email}
+                </a>
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <Link href="/zoek">
+                  <Button className="gap-2">
+                    <Leaf className="h-4 w-4" />
+                    Zoek een tuinman
+                  </Button>
+                </Link>
+                <Link href="/info/voor-tuinmannen">
+                  <Button variant="outline" className="gap-2">
+                    Ben je tuinman?
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
         </div>
-      </main>
-      <Footer />
-    </div>
+      </div>
+    </Layout>
   );
 }
