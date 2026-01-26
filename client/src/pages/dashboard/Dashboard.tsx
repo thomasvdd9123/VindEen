@@ -27,7 +27,7 @@ interface ProfileWithStats {
 export default function Dashboard() {
   const { user } = useAuth();
 
-  const { data: account } = useQuery<Account>({
+  const { data: account, isLoading: accountLoading } = useQuery<Account>({
     queryKey: ["/api/accounts/by-user", user?.id],
     queryFn: async () => {
       if (!user?.id) throw new Error("No user");
@@ -57,7 +57,7 @@ export default function Dashboard() {
     enabled: !!account?.id,
   });
 
-  const isLoading = profilesLoading || contactsLoading;
+  const isLoading = accountLoading || profilesLoading || contactsLoading;
   const totalViews = profiles.reduce((acc, p) => acc + (p.viewCount || 0), 0);
   const activeProfiles = profiles.filter(p => p.isPublic).length;
   const totalContacts = contacts.length;
@@ -122,8 +122,8 @@ export default function Dashboard() {
         })}
       </div>
 
-      {/* Create profile CTA - only show if no profiles */}
-      {profiles.length === 0 && !profilesLoading && (
+      {/* Create profile CTA - only show if no profiles and data is loaded */}
+      {profiles.length === 0 && !isLoading && (
         <Card className="mb-8 border-primary/20 bg-primary/5">
           <CardContent className="py-6">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
