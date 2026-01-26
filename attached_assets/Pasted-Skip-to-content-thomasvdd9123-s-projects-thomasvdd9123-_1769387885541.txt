@@ -1,0 +1,363 @@
+Skip to content
+thomasvdd9123's projects
+thomasvdd9123's projects
+
+Hobby
+
+vind-een
+
+
+Find…
+F
+
+Filters
+
+Timeline
+
+Combobox Menu
+Last 30 minutes
+
+Contains Console Level
+
+​
+Error
+2
+
+​
+Warning
+0
+
+​
+Fatal
+0
+
+
+Resource
+
+
+
+
+
+Environment
+
+
+
+
+Route
+
+
+
+Request Path
+
+
+
+Status Code
+
+
+
+Request Type
+
+
+
+
+
+
+
+
+Host
+
+
+
+Request Method
+
+
+
+Cache
+
+
+
+Branch
+
+
+
+Deployment ID
+
+
+Search Logs
+Search logs…
+01:08:00
+01:13:10
+01:18:10
+01:23:10
+01:28:10
+01:38:00
+Time
+Status
+Host
+Request
+Messages
+Jan 26 01:37:52.13
+GET
+304
+www.zoek-een-tuinman.be
+/api/accounts/by-auth/2f713858-8f6e-4c37-813f-c1c2a9af5aa6
+Jan 26 01:37:52.12
+GET
+200
+www.zoek-een-tuinman.be
+/api/subscriptions/profile/576853ae-1949-4be7-b746-cc9b4e199d5a
+Jan 26 01:37:47.13
+GET
+304
+www.zoek-een-tuinman.be
+/api/contact-requests/6c7e6f12-f39b-4466-ba2a-b29f602e092d
+Jan 26 01:37:47.13
+GET
+304
+www.zoek-een-tuinman.be
+/api/my-profiles/6c7e6f12-f39b-4466-ba2a-b29f602e092d
+Jan 26 01:37:46.88
+GET
+304
+www.zoek-een-tuinman.be
+/api/accounts/by-auth/2f713858-8f6e-4c37-813f-c1c2a9af5aa6
+Jan 26 01:37:46.63
+GET
+304
+www.zoek-een-tuinman.be
+/api/accounts/by-auth/2f713858-8f6e-4c37-813f-c1c2a9af5aa6
+Jan 26 01:37:42.84
+GET
+200
+www.zoek-een-tuinman.be
+/api/mollie/payment-status/b9c43dcb-9d58-4d0c-be54-03343661aa4d
+Jan 26 01:37:42.57
+POST
+200
+www.zoek-een-tuinman.be
+/api/mollie/webhook
+4
+Failed to send Peppol invoice: Error: Billit API error (401): {"errors":[{"Code":"ApiKeyNotValid"}]} at Object.handler (/vercel/path0/api/index.ts:1494:25) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) at async r (/opt/rust/nodejs.js:2:15572) at async Server.<anonymous> (/opt/rust/nodejs.js:2:11594) at async Server.<anonymous> (/opt/rust/nodejs.js:17:9988)
+Jan 26 01:37:25.78
+POST
+200
+www.zoek-een-tuinman.be
+/api/mollie/create-payment
+2
+Created Mollie payment tr_PwqqvKJHU328rDWMXMGLJ for profile 576853ae-1949-4be7-b746-cc9b4e199d5a
+Jan 26 01:37:24.24
+GET
+200
+www.zoek-een-tuinman.be
+/api/profiles/by-id/576853ae-1949-4be7-b746-cc9b4e199d5a
+Jan 26 01:37:24.23
+GET
+304
+www.zoek-een-tuinman.be
+/api/accounts/by-auth/2f713858-8f6e-4c37-813f-c1c2a9af5aa6
+Jan 26 01:37:23.57
+GET
+304
+www.zoek-een-tuinman.be
+/api/contact-requests/6c7e6f12-f39b-4466-ba2a-b29f602e092d
+Jan 26 01:37:22.13
+GET
+304
+www.zoek-een-tuinman.be
+/api/my-profiles/6c7e6f12-f39b-4466-ba2a-b29f602e092d
+Jan 26 01:37:22.12
+GET
+304
+www.zoek-een-tuinman.be
+/api/accounts/by-auth/2f713858-8f6e-4c37-813f-c1c2a9af5aa6
+Jan 26 01:37:22.12
+GET
+404
+www.zoek-een-tuinman.be
+/api/subscriptions/profile/576853ae-1949-4be7-b746-cc9b4e199d5a
+Jan 26 01:37:08.66
+GET
+200
+vind-4ir68x7pc-thomasvdd9123s-projects.vercel.app
+/api/locations
+Jan 26 01:37:08.62
+GET
+200
+vind-4ir68x7pc-thomasvdd9123s-projects.vercel.app
+/api/locations
+Jan 26 01:37:02.09
+GET
+---
+www.zoek-een-tuinman.be
+/api/profiles/search
+Jan 26 01:37:02.06
+GET
+304
+www.zoek-een-tuinman.be
+/api/profiles/count
+Jan 26 01:37:02.06
+GET
+304
+www.zoek-een-tuinman.be
+/api/categories/grouped
+Jan 26 01:37:02.02
+GET
+200
+www.zoek-een-tuinman.be
+/api/locations/colfontaine
+Jan 26 01:37:01.67
+GET
+304
+www.zoek-een-tuinman.be
+/api/locations
+Jan 26 01:37:01.06
+GET
+304
+www.zoek-een-tuinman.be
+/api/accounts/by-auth/2f713858-8f6e-4c37-813f-c1c2a9af5aa6
+Jan 26 01:36:28.90
+GET
+200
+www.zoek-een-tuinman.be
+/api/profiles/search
+Jan 26 01:36:26.48
+GET
+200
+www.zoek-een-tuinman.be
+/robots.txt
+Jan 26 01:34:11.69
+GET
+200
+www.zoek-een-tuinman.be
+/api/profiles/search
+Jan 26 01:34:11.66
+GET
+200
+www.zoek-een-tuinman.be
+/api/locations/soumagne
+Jan 26 01:34:11.65
+GET
+200
+www.zoek-een-tuinman.be
+/robots.txt
+Jan 26 01:32:01.49
+GET
+304
+www.zoek-een-tuinman.be
+/api/accounts/by-auth/2f713858-8f6e-4c37-813f-c1c2a9af5aa6
+Jan 26 01:32:01.48
+GET
+200
+www.zoek-een-tuinman.be
+/api/subscriptions/profile/576853ae-1949-4be7-b746-cc9b4e199d5a
+Jan 26 01:32:00.95
+GET
+304
+www.zoek-een-tuinman.be
+/api/contact-requests/6c7e6f12-f39b-4466-ba2a-b29f602e092d
+Jan 26 01:32:00.95
+GET
+304
+www.zoek-een-tuinman.be
+/api/my-profiles/6c7e6f12-f39b-4466-ba2a-b29f602e092d
+Jan 26 01:32:00.71
+GET
+304
+www.zoek-een-tuinman.be
+/api/accounts/by-auth/2f713858-8f6e-4c37-813f-c1c2a9af5aa6
+Jan 26 01:32:00.45
+GET
+304
+www.zoek-een-tuinman.be
+/api/accounts/by-auth/2f713858-8f6e-4c37-813f-c1c2a9af5aa6
+Jan 26 01:31:58.12
+POST
+200
+www.zoek-een-tuinman.be
+/api/mollie/webhook
+4
+Failed to send Peppol invoice: Error: Billit API error (401): {"errors":[{"Code":"ApiKeyNotValid"}]} at Object.handler (/vercel/path0/api/index.ts:1494:25) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) at async r (/opt/rust/nodejs.js:2:15572) at async Server.<anonymous> (/opt/rust/nodejs.js:2:11594) at async Server.<anonymous> (/opt/rust/nodejs.js:17:9988)
+Jan 26 01:31:58.08
+GET
+200
+www.zoek-een-tuinman.be
+/api/mollie/payment-status/37af331f-23b5-4590-87ea-5b32ae5ccf1e
+Jan 26 01:31:39.77
+POST
+200
+www.zoek-een-tuinman.be
+/api/mollie/create-payment
+2
+Created Mollie payment tr_yAUnKiXgAYHFDnQfvLGLJ for profile 576853ae-1949-4be7-b746-cc9b4e199d5a
+Jan 26 01:31:38.45
+GET
+304
+www.zoek-een-tuinman.be
+/api/accounts/by-auth/2f713858-8f6e-4c37-813f-c1c2a9af5aa6
+Jan 26 01:31:38.45
+GET
+200
+www.zoek-een-tuinman.be
+/api/profiles/by-id/576853ae-1949-4be7-b746-cc9b4e199d5a
+Jan 26 01:31:37.69
+GET
+304
+www.zoek-een-tuinman.be
+/api/contact-requests/6c7e6f12-f39b-4466-ba2a-b29f602e092d
+Jan 26 01:31:37.68
+GET
+404
+www.zoek-een-tuinman.be
+/api/subscriptions/profile/576853ae-1949-4be7-b746-cc9b4e199d5a
+Jan 26 01:31:37.40
+GET
+304
+www.zoek-een-tuinman.be
+/api/my-profiles/6c7e6f12-f39b-4466-ba2a-b29f602e092d
+Jan 26 01:31:37.39
+GET
+304
+www.zoek-een-tuinman.be
+/api/accounts/by-auth/2f713858-8f6e-4c37-813f-c1c2a9af5aa6
+Jan 26 01:31:37.14
+GET
+304
+www.zoek-een-tuinman.be
+/api/accounts/by-auth/2f713858-8f6e-4c37-813f-c1c2a9af5aa6
+Jan 26 01:31:31.40
+GET
+200
+www.zoek-een-tuinman.be
+/robots.txt
+Jan 26 01:31:22.11
+GET
+304
+www.zoek-een-tuinman.be
+/api/categories/grouped
+Jan 26 01:31:22.11
+GET
+304
+www.zoek-een-tuinman.be
+/api/profiles/count
+Jan 26 01:31:21.57
+GET
+304
+www.zoek-een-tuinman.be
+/api/locations
+Jan 26 01:31:01.50
+GET
+200
+vind-hgecg8i0b-thomasvdd9123s-projects.vercel.app
+/api/locations
+Jan 26 01:31:01.47
+GET
+200
+vind-hgecg8i0b-thomasvdd9123s-projects.vercel.app
+/api/locations
+vind-een – Logs – Vercel
+/api/accounts/by-auth/2f713858-8f6e-4c37-813f-c1c2a9af5aa6
+/api/my-profiles/6c7e6f12-f39b-4466-ba2a-b29f602e092d
+/api/contact-requests/6c7e6f12-f39b-4466-ba2a-b29f602e092d
+/api/subscriptions/profile/576853ae-1949-4be7-b746-cc9b4e199d5a
+/api/accounts/by-auth/2f713858-8f6e-4c37-813f-c1c2a9af5aa6
+01:33:10

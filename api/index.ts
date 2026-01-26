@@ -1416,6 +1416,9 @@ Sitemap: ${SITEMAP_BASE_URL}/sitemap.xml
 
         // Send Peppol invoice via Billit if configured
         const billitApiKey = process.env.BILLIT_API_KEY;
+        const billitSandbox = process.env.BILLIT_SANDBOX;
+        console.log(`Billit config: key exists=${!!billitApiKey}, key length=${billitApiKey?.length}, sandbox=${billitSandbox}`);
+        
         if (billitApiKey) {
           try {
             const { data: profile } = await supabase
@@ -1436,9 +1439,11 @@ Sitemap: ${SITEMAP_BASE_URL}/sitemap.xml
                 const invoiceNumber = `INV-${new Date().getFullYear()}-${subscription.id.slice(0, 8).toUpperCase()}`;
                 const dueDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
 
-                const billitBaseUrl = process.env.BILLIT_SANDBOX === "true" 
+                const billitBaseUrl = billitSandbox === "true" 
                   ? "https://api.sandbox.billit.be" 
                   : "https://api.billit.be";
+                
+                console.log(`Billit URL: ${billitBaseUrl}`);
 
                 const peppolResponse = await fetch(`${billitBaseUrl}/v1/peppol/sendOrder`, {
                   method: "POST",
