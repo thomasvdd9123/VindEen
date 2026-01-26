@@ -4,40 +4,48 @@ async function registerCompany() {
   const baseUrl = "https://api.sandbox.billit.be";
   
   console.log("Registering company with Billit...");
-  console.log("URL:", `${baseUrl}/v1/einvoices/registrations`);
   console.log("API Key first 8 chars:", apiKey?.slice(0, 8));
   console.log("API Key last 4 chars:", apiKey?.slice(-4));
-  console.log("API Key has whitespace:", apiKey !== apiKey?.trim());
   
+  // Use the main Billit API endpoint for company registration
   const registrationData = {
-    TaxIdentifier: process.env.PEPPOL_SUPPLIER_VAT || "BE0791920272",
-    CompanyName: process.env.PEPPOL_SUPPLIER_NAME || "Vanden Driesch, Thomas",
-    CommercialName: "Zoek-een-tuinman.be",
-    TaxDeductable: true,
-    TaxLiable: true,
-    IBAN: process.env.PEPPOL_SUPPLIER_IBAN || "BE37363162405928",
-    BIC: process.env.PEPPOL_SUPPLIER_BIC || "BBRUBEBB",
-    Email: "thomasvandendriesch@gmail.com",
-    ContactFirstName: "Thomas",
-    ContactLastName: "Vanden Driesch",
-    Language: "NL",
-    Addresses: [
-      {
-        AddressType: "InvoiceAddress",
-        Name: process.env.PEPPOL_SUPPLIER_NAME || "Vanden Driesch, Thomas",
-        Street: process.env.PEPPOL_SUPPLIER_STREET || "Baron d'Eynattenstraat",
-        StreetNumber: process.env.PEPPOL_SUPPLIER_NUMBER || "4",
-        Zipcode: process.env.PEPPOL_SUPPLIER_POSTCODE || "3000",
-        City: process.env.PEPPOL_SUPPLIER_CITY || "Leuven",
-        CountryCode: "BE"
-      }
-    ]
+    Company: {
+      Name: "Vanden Driesch, Thomas",
+      CommercialName: "Zoek-een-tuinman.be",
+      VATNumber: "BE0791920272",
+      Street: "Baron d'Eynattenstraat",
+      StreetNumber: "4",
+      Zipcode: "3000",
+      City: "Leuven",
+      CountryCode: "BE",
+      IBAN: "BE37363162405928",
+      BIC: "BBRUBEBB",
+      Email: "thomasvandendriesch@gmail.com",
+      Mobile: "+32488359756",
+      ContactFirstName: "Thomas",
+      ContactLastName: "Vanden Driesch",
+      Language: "NL",
+      VATLiable: true,
+      VATDeductable: true,
+      Addresses: [
+        {
+          AddressType: "InvoiceAddress",
+          Name: "Vanden Driesch, Thomas",
+          Street: "Baron d'Eynattenstraat",
+          StreetNumber: "4",
+          Zipcode: "3000",
+          City: "Leuven",
+          CountryCode: "BE"
+        }
+      ]
+    }
   };
   
+  console.log("Using endpoint:", `${baseUrl}/v1/account/registercompany`);
   console.log("Registration data:", JSON.stringify(registrationData, null, 2));
   
   try {
-    const response = await fetch(`${baseUrl}/v1/einvoices/registrations`, {
+    const response = await fetch(`${baseUrl}/v1/account/registercompany`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
