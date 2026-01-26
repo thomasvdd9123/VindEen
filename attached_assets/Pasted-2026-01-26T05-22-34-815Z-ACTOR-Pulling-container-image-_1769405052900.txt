@@ -1,0 +1,98 @@
+2026-01-26T05:22:34.815Z ACTOR: Pulling container image of build m80ym6oLx6P8tS9su from registry.
+2026-01-26T05:22:35.345Z ACTOR: Creating container.
+2026-01-26T05:22:35.401Z ACTOR: Starting container.
+2026-01-26T05:22:35.402Z ACTOR: Running under "LIMITED_PERMISSIONS" permission level.
+2026-01-26T05:22:36.867Z INFO  System info {"apifyVersion":"3.5.3","apifyClientVersion":"2.21.0","crawleeVersion":"3.15.3","osType":"Linux","nodeVersion":"v22.21.1"}
+2026-01-26T05:22:37.763Z INFO  CheerioCrawler: Starting the crawler.
+2026-01-26T05:22:39.570Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/51/
+2026-01-26T05:22:39.581Z INFO  CheerioCrawler: Found 20 unique detail URLs on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/51/
+2026-01-26T05:22:40.680Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/52/
+2026-01-26T05:22:40.684Z INFO  CheerioCrawler: Found 20 unique detail URLs on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/52/
+2026-01-26T05:22:41.562Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/1/
+2026-01-26T05:22:41.565Z INFO  CheerioCrawler: Found 20 unique detail URLs on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/1/
+2026-01-26T05:22:42.755Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/53/
+2026-01-26T05:22:42.757Z INFO  CheerioCrawler: Found 19 unique detail URLs on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/53/
+2026-01-26T05:22:43.806Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/54/
+2026-01-26T05:22:43.807Z INFO  CheerioCrawler: Found 20 unique detail URLs on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/54/
+2026-01-26T05:22:44.747Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/2/
+2026-01-26T05:22:44.749Z INFO  CheerioCrawler: Found 20 unique detail URLs on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/2/
+2026-01-26T05:22:45.762Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/55/
+2026-01-26T05:22:45.763Z INFO  CheerioCrawler: Found 20 unique detail URLs on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/55/
+2026-01-26T05:22:46.665Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/3/
+2026-01-26T05:22:46.667Z INFO  CheerioCrawler: Found 16 unique detail URLs on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/3/
+2026-01-26T05:22:47.750Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/56/
+2026-01-26T05:22:47.752Z INFO  CheerioCrawler: Found 20 unique detail URLs on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/56/
+2026-01-26T05:22:48.723Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/4/
+2026-01-26T05:22:48.725Z INFO  CheerioCrawler: Found 20 unique detail URLs on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/4/
+2026-01-26T05:22:49.617Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/5/
+2026-01-26T05:22:49.620Z INFO  CheerioCrawler: Found 15 unique detail URLs on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/5/
+2026-01-26T05:22:50.623Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/57/
+2026-01-26T05:22:50.624Z INFO  CheerioCrawler: Found 18 unique detail URLs on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/57/
+2026-01-26T05:22:51.457Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/6/
+2026-01-26T05:22:51.458Z INFO  CheerioCrawler: Found 16 unique detail URLs on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/6/
+2026-01-26T05:22:52.425Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/58/
+2026-01-26T05:22:52.426Z INFO  CheerioCrawler: Found 18 unique detail URLs on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/58/
+2026-01-26T05:22:53.490Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/59/
+2026-01-26T05:22:53.493Z INFO  CheerioCrawler: Found 17 unique detail URLs on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/59/
+2026-01-26T05:22:54.387Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/7/
+2026-01-26T05:22:54.389Z INFO  CheerioCrawler: Found 18 unique detail URLs on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/7/
+2026-01-26T05:22:55.375Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/76/
+2026-01-26T05:22:55.377Z INFO  CheerioCrawler: Found 20 unique detail URLs on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/76/
+2026-01-26T05:22:56.424Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/77/
+2026-01-26T05:22:56.426Z INFO  CheerioCrawler: Found 20 unique detail URLs on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/77/
+2026-01-26T05:22:57.447Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/60/
+2026-01-26T05:22:57.448Z INFO  CheerioCrawler: Found 18 unique detail URLs on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/60/
+2026-01-26T05:22:58.300Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/8/
+2026-01-26T05:22:58.301Z INFO  CheerioCrawler: Found 15 unique detail URLs on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/8/
+2026-01-26T05:23:37.764Z INFO  CheerioCrawler:Statistics: CheerioCrawler request statistics: {"requestAvgFailedDurationMillis":null,"requestAvgFinishedDurationMillis":980,"requestsFinishedPerMinute":20,"requestsFailedPerMinute":0,"requestTotalDurationMillis":19600,"requestsTotal":20,"crawlerRuntimeMillis":60889,"retryHistogram":[20]}
+2026-01-26T05:23:39.298Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/78/
+2026-01-26T05:23:39.336Z INFO  CheerioCrawler: Found 20 unique detail URLs on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/78/
+2026-01-26T05:23:40.359Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/61/
+2026-01-26T05:23:40.366Z INFO  CheerioCrawler: Found 16 unique detail URLs on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/61/
+2026-01-26T05:23:41.112Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/9/
+2026-01-26T05:23:41.114Z INFO  CheerioCrawler: Found 18 unique detail URLs on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/9/
+2026-01-26T05:23:42.129Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/62/
+2026-01-26T05:23:42.131Z INFO  CheerioCrawler: Found 18 unique detail URLs on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/62/
+2026-01-26T05:23:43.745Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/79/
+2026-01-26T05:23:43.747Z INFO  CheerioCrawler: Found 20 unique detail URLs on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/79/
+2026-01-26T05:23:44.754Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/10/
+2026-01-26T05:23:44.756Z INFO  CheerioCrawler: Found 15 unique detail URLs on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/10/
+2026-01-26T05:23:45.900Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/63/
+2026-01-26T05:23:45.906Z INFO  CheerioCrawler: Found 17 unique detail URLs on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/63/
+2026-01-26T05:23:46.958Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/11/
+2026-01-26T05:23:46.960Z INFO  CheerioCrawler: Found 14 unique detail URLs on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/11/
+2026-01-26T05:23:47.940Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/26/
+2026-01-26T05:23:47.942Z INFO  CheerioCrawler: Found 17 unique detail URLs on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/26/
+2026-01-26T05:23:48.102Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/80/
+2026-01-26T05:23:48.103Z INFO  CheerioCrawler: Found 0 unique detail URLs on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/80/
+2026-01-26T05:23:48.103Z WARN  CheerioCrawler: Page returned 4680 chars of HTML - might be blocked
+2026-01-26T05:23:48.892Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/12/
+2026-01-26T05:23:48.893Z INFO  CheerioCrawler: Found 0 unique detail URLs on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/12/
+2026-01-26T05:23:48.894Z WARN  CheerioCrawler: Page returned 4680 chars of HTML - might be blocked
+2026-01-26T05:23:49.015Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/64/
+2026-01-26T05:23:49.027Z INFO  CheerioCrawler: Found 0 unique detail URLs on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/64/
+2026-01-26T05:23:49.029Z WARN  CheerioCrawler: Page returned 4679 chars of HTML - might be blocked
+2026-01-26T05:23:50.004Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/27/
+2026-01-26T05:23:50.005Z INFO  CheerioCrawler: Found 0 unique detail URLs on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/27/
+2026-01-26T05:23:50.006Z WARN  CheerioCrawler: Page returned 4680 chars of HTML - might be blocked
+2026-01-26T05:23:51.117Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/81/
+2026-01-26T05:23:51.118Z INFO  CheerioCrawler: Found 0 unique detail URLs on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/81/
+2026-01-26T05:23:51.118Z WARN  CheerioCrawler: Page returned 4679 chars of HTML - might be blocked
+2026-01-26T05:23:52.249Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/65/
+2026-01-26T05:23:52.250Z INFO  CheerioCrawler: Found 0 unique detail URLs on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/65/
+2026-01-26T05:23:52.251Z WARN  CheerioCrawler: Page returned 4680 chars of HTML - might be blocked
+2026-01-26T05:23:53.386Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/28/
+2026-01-26T05:23:53.387Z INFO  CheerioCrawler: Found 0 unique detail URLs on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/28/
+2026-01-26T05:23:53.387Z WARN  CheerioCrawler: Page returned 4680 chars of HTML - might be blocked
+2026-01-26T05:23:54.013Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/82/
+2026-01-26T05:23:54.014Z INFO  CheerioCrawler: Found 0 unique detail URLs on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/82/
+2026-01-26T05:23:54.014Z WARN  CheerioCrawler: Page returned 4680 chars of HTML - might be blocked
+2026-01-26T05:23:55.110Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/13/
+2026-01-26T05:23:55.110Z INFO  CheerioCrawler: Found 0 unique detail URLs on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/13/
+2026-01-26T05:23:55.111Z WARN  CheerioCrawler: Page returned 4679 chars of HTML - might be blocked
+2026-01-26T05:23:56.207Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/66/
+2026-01-26T05:23:56.208Z INFO  CheerioCrawler: Found 0 unique detail URLs on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/66/
+2026-01-26T05:23:56.208Z WARN  CheerioCrawler: Page returned 4680 chars of HTML - might be blocked
+2026-01-26T05:23:57.364Z INFO  CheerioCrawler: Scraping page: https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/29/
+2026-01-26T05:23:57.365Z INFO  CheerioCrawler: Found 0 unique detail URLs on https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/29/
+2026-01-26T05:23:57.366Z WARN  CheerioCrawler: Page returned 4679 chars of HTML - might be blocked
