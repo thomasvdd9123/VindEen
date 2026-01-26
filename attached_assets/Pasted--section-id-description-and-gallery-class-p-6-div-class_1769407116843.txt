@@ -1,0 +1,59 @@
+<section id="description-and-gallery" class="p-6">
+            <div class="break-words traffic-descriptions">
+                            <h2 class="font-medium mb-4 text-xl">Ontwerp, aanleg en onderhoud van tuinen, contacteer Filip Goossens</h2>
+<p>Tuinaanleg Filip Goossens legt zich sinds 1999 toe op het o<b>ntwerp, de aanleg en onderhoud van privé- en bedrijfstuinen</b>. Dit na beëindiging van de opleiding Tuin- en Landschapsarchitectuur te Melle. Ons team van 5 tuinaanleggers zijn gespecialiseerd in het ontwerpen, plannen en uitvoeren van totaalprojecten. Van ontwerp, aanleg en onderhoud van tuinen tot grondwerken, rioleringswerken, bemestingswerken, schors aanbrengen, drainage van natte percelen, draadafsluiting, houten schermen, grasmatten plaatsen, gazon inzaaien, keerwanden plaatsen, Ook voor renovatie van uw tuin of gazon kan u bij ons team terecht. Wij voeren eventueel ook aanleg uit indien u al een ontwerpplan elders liet opmaken. Hiervoor maken wij graag een <b>gratis prijsofferte</b>.</p> <p>Onze firma heeft 3 pijlers:</p> <p><br>-leveren van kwaliteit, hoge afwerkingsgraad<br>-stipte afspraken voor uitvoering<br>-service en garantie na beëindigen werken</p> <p>We beschikken over een <b>uitgebreid machinepark</b> om onze werken uit te voeren. Hierdoor kan een vlotte opeenvolging van alle onderdelen gegarandeerd worden. Steeds meer mensen vinden daarom de weg naar ons bedrijf. Onder onze klanten bevinden zich zowel particulieren als bedrijven, kantoren, bouwfirma’s, scholen,...Wij maken vrijblijvend een offerte op maat!</p>                            <h2 class="font-medium mb-4 text-xl">Wenst U een terras, oprit of parking te laten aanleggen, aarzel niet en contacteer Filip Goossens</h2>
+<p>Wij bieden een totaalpakket aan van alle werken rond het huis. Al deze werken worden uitgevoerd door ons eigen team tuinspecialisten. U kan bij ons terecht voor de <b>aanleg van paden, opritten, terrassen, parkings, …</b> .En dit in diverse materialen: kleiklinkers, betonklinkers, gepolierde betontegels, hardhouten terrassen, natuursteen zoals kassei, platinnes, keramische tegels, arduintegels, gekloven arduin,... diverse soorten grind, grasdallen in beton, kunststof, eventueel met voorbegroeide tegels. Wij komen graag ter plaatse in regio Beveren, Sint-Niklaas, Temse, Sint-Gillis-Waas, Kruibeke voor advies en een <b>offerte op maat</b>!</p>            </div>
+        
+<script>
+    window.galleryImages = JSON.parse('["https://i.fcrmedia.com/goudengids.be/images/w650/000/283/146/283146493_goossens_filip_image.webp","https://i.fcrmedia.com/goudengids.be/images/w650/000/283/146/283146494_goossens_filip_image.webp"]');
+</script>
+
+            <div class="grid grid-cols-2 gap-2 h-52 mt-6">
+                <img src="https://i.fcrmedia.com/goudengids.be/images/w650/000/283/146/283146493_goossens_filip_image.webp" class="w-full h-full max-h-52 object-cover rounded-lg cursor-pointer" alt="" @click="$store.gallery.open('https://i.fcrmedia.com/goudengids.be/images/w650/000/283/146/283146493_goossens_filip_image.webp')">
+                <img src="https://i.fcrmedia.com/goudengids.be/images/w650/000/283/146/283146494_goossens_filip_image.webp" class="w-full h-full max-h-52 object-cover rounded-lg cursor-pointer" alt="" @click="$store.gallery.open('https://i.fcrmedia.com/goudengids.be/images/w650/000/283/146/283146494_goossens_filip_image.webp')">
+            </div>
+    <div id="lightbox" x-data="$store.gallery" class="fixed inset-0 z-[10000] hidden items-center justify-center bg-white/30 backdrop-blur-md">
+        <button @click="$store.gallery.close()" class="absolute top-10 right-6 w-8 h-8 pb-1 flex items-center justify-center rounded-md border border-gray-200 bg-gray-50 text-black text-2xl shadow-sm transition-all z-[10000] cursor-pointer">
+            ×
+        </button>
+        <div class="relative max-w-[90%] max-h-[90%]">
+            <img id="lightboxImage" src="" class="max-w-full max-h-[90vh] rounded shadow-lg" alt="Large View">
+        </div>
+        <!-- workaround template for alpine store, which loads store.gallery before Gallery -->
+        <!-- prev -->
+        <template x-if="$store.gallery">
+            <button x-show="$store.gallery.images.length &gt; 1" :disabled="$store.gallery.currentIndex === 0" @click="$store.gallery.prev()" class="absolute left-4 top-1/2 -translate-y-1/2 z-10 pb-1
+                   w-10 h-10 flex items-center justify-center rounded-full transition
+                   text-black
+                   bg-white border-gray-400 border
+                   disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white/50">
+                ‹
+            </button>
+        </template><button x-show="$store.gallery.images.length &gt; 1" :disabled="$store.gallery.currentIndex === 0" @click="$store.gallery.prev()" class="absolute left-4 top-1/2 -translate-y-1/2 z-10 pb-1
+                   w-10 h-10 flex items-center justify-center rounded-full transition
+                   text-black
+                   bg-white border-gray-400 border
+                   disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white/50" disabled="disabled" style="display: none;">
+                ‹
+            </button>
+        <!-- next -->
+        <template x-if="$store.gallery">
+            <button x-show="$store.gallery.images.length &gt; 1" :disabled="$store.gallery.currentIndex === $store.gallery.images.length - 1" @click="$store.gallery.next()" class="absolute right-4 top-1/2 -translate-y-1/2 z-10 pb-1
+                   w-10 h-10 flex items-center justify-center rounded-full transition
+                   text-black
+                   bg-white border-gray-300 border
+                   disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white/50">
+                ›
+            </button>
+        </template><button x-show="$store.gallery.images.length &gt; 1" :disabled="$store.gallery.currentIndex === $store.gallery.images.length - 1" @click="$store.gallery.next()" class="absolute right-4 top-1/2 -translate-y-1/2 z-10 pb-1
+                   w-10 h-10 flex items-center justify-center rounded-full transition
+                   text-black
+                   bg-white border-gray-300 border
+                   disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white/50" style="display: none;">
+                ›
+            </button>
+
+
+    </div>
+
+    </section>
