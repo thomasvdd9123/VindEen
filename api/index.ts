@@ -1487,13 +1487,24 @@ Sitemap: ${SITEMAP_BASE_URL}/sitemap.xml
                   }),
                 });
                 
-                if (!peppolResponse.ok) {
-                  const errorText = await peppolResponse.text();
-                  throw new Error(`Billit API error (${peppolResponse.status}): ${errorText}`);
+                const peppolResponseText = await peppolResponse.text();
+                let peppolResult: any;
+                try {
+                  peppolResult = JSON.parse(peppolResponseText);
+                } catch {
+                  peppolResult = { raw: peppolResponseText };
                 }
-                
-                const peppolResult = await peppolResponse.json();
-                console.log(`Sent Peppol invoice ${invoiceNumber} for profile ${metadata.profileId}, OrderID: ${peppolResult.OrderID}`);
+
+                if (!peppolResponse.ok) {
+                  const errorCode = peppolResult?.errors?.[0]?.Code;
+                  if (errorCode === "TheCustomerIsNotActiveOnPeppol") {
+                    console.log(`Peppol invoice skipped for ${invoiceNumber}: Customer ${account.vat_number} is not registered on Peppol network`);
+                  } else {
+                    console.error(`Billit API error (${peppolResponse.status}):`, peppolResult);
+                  }
+                } else {
+                  console.log(`Sent Peppol invoice ${invoiceNumber} for profile ${metadata.profileId}, OrderID: ${peppolResult.OrderID}`);
+                }
               }
             }
           } catch (peppolError) {
