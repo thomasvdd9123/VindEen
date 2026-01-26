@@ -1,0 +1,15 @@
+# Billit / Peppol Invoice Configuration
+# Copy these to Vercel Environment Variables
+
+BILLIT_SANDBOX=true
+PEPPOL_SUPPLIER_NAME=Vanden Driesch, Thomas
+PEPPOL_SUPPLIER_STREET=Baron d'Eynattenstraat
+PEPPOL_SUPPLIER_NUMBER=4
+PEPPOL_SUPPLIER_POSTCODE=3000
+PEPPOL_SUPPLIER_CITY=Leuven
+PEPPOL_SUPPLIER_VAT=BE0791920272
+PEPPOL_SUPPLIER_IBAN=BE37363162405928
+PEPPOL_SUPPLIER_BIC=BBRUBEBB
+
+# Note: Set BILLIT_SANDBOX=false when ready for production invoicing
+# Don't forget to also add your BILLIT_API_KEY in Vercel
