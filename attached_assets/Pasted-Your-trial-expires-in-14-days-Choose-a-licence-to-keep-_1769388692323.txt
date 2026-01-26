@@ -1,0 +1,116 @@
+Your trial expires in 14 days. Choose a licence to keep using all features. 
+
+Search
+EN 
+ 
+
+EcomVDD
+My company
+Dashboard
+Fast input
+Income
+Expenditure
+Documents
+Bank
+Products
+Customers
+Suppliers
+Projects
+Time registration
+Accountant
+Reports
+Settings
+© all rights reserved
+Terms and conditions - Cookies Privacy Policy
+ EcomVDD
+Company
+Bank
+Attachments
+Information
+History
+Company files
+E-invoicing
+VAT or CBE NO. *
+BE0791920272
+Subject to VAT
+Small business
+Corporate name
+EcomVDD
+Commercial name
+EcomVDD
+IBAN 
+BE37363162405928
+BIC
+BBRUBEBB
+Direct debit identification
+Default currency
+
+EUR
+VAT
+
+21%
+Salutation
+Mr
+First name manager
+EcomVDD
+Last name manager
+EcomVDD
+Legal entities register (LER)
+Email
+thomasvandendriesch@gmail.com
+Website
+EcomVDD
+Telephone
++32 488 35 97 56
+Mobile phone
+Fax
+Language
+
+English (EN)
+Invoicing address
+Attn
+Thomas vanden Vanden Driesch
+Commercial name
+Vanden Driesch, Thomas
+Country
+
+Belgium
+Street
+Jules Vanlaerstraat
+No.
+4
+PO Box
+707
+Zip code
+3000
+Town/city
+Leuven
+Telephone
++32 488 35 97 56
+Delivery address
+Same as billing address
+
+Company settings
+Logo (recommended size is width: 400px and height: 200px)
+Save your logo and terms and conditions here. They will be automatically added to your quotes, invoices, and credit notes.
+No file chosen
+Upload file
+Terms and conditions
+The general terms and conditions are automatically added to every invoice, quotation, order form, credit note.
+No file chosen
+Upload file
+Company name*
+This name is shown in the company selection dropdown in the menu
+EcomVDD
+Verification center
+A person with a legal mandate has signed.
+This account must be verified by a legal representative. Are you not authorized? Click ‘Verify’ and share the link in the next step with the appropriate person to complete the verification.
+Verified
+Licence and invoicing
+Email address licence invoice
+The licence invoice will be sent to this email address.
+Send e-mail when an invoice is received via the Peppol network
+Get an automatic email after an invoice has been received via the Peppol network.
+
+Comment
+Comment
