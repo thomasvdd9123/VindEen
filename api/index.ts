@@ -470,23 +470,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           return R * c;
         };
         
-        // Add distance to each profile
+        // Add distance to each profile (distanceKm for frontend compatibility)
         const profilesWithDistance = (allData || []).map((profile: any) => {
-          let distance = 0;
+          let distanceKm = 0;
           if (profile.location?.latitude && profile.location?.longitude) {
-            distance = calcDistance(
+            distanceKm = Math.round(calcDistance(
               searchLocationData!.lat,
               searchLocationData!.lng,
               profile.location.latitude,
               profile.location.longitude
-            );
+            ) * 10) / 10; // Round to 1 decimal place
           }
-          return { ...profile, distance };
+          return { ...profile, distanceKm };
         });
         
         // Sort by distance, then alphabetically
         profilesWithDistance.sort((a: any, b: any) => {
-          if (a.distance !== b.distance) return a.distance - b.distance;
+          if (a.distanceKm !== b.distanceKm) return a.distanceKm - b.distanceKm;
           return (a.name || '').localeCompare(b.name || '');
         });
         
