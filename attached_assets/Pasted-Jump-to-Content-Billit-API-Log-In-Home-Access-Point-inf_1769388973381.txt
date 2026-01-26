@@ -1,0 +1,96 @@
+Jump to Content
+Billit API
+Log In
+Home
+Access Point information
+
+Search
+CTRL-K
+Documentation
+Who is a typical Access Point as A Service Partner?
+Support
+Getting Started
+Step 1 : Preparation
+
+Sandbox VS Production
+Create Billit Master Account
+Documentation and Compliance Analysis
+Authentication
+Step 2: Create Entities
+
+Step 3: Entities are Identified
+
+Step 4: Integrations
+
+Step 5: Sending
+
+Step 6: Invoice Statuses and Files
+
+Step 7: Getting Received Invoices
+
+Step 8: Move to Production
+TOPICS
+Calculations
+External Data
+Types
+Odata
+Party Identifiers
+Ventilation Codes (VAT)
+Powered by 
+
+Authentication
+Secured Authentication
+
+Authentication Method: API Key
+Upon creating a Billit account, you gain immediate access to API authentication through an API Key, easily located in the Billit Application under the profile of the user. Make sure this is a user who has access to the master account. This key is unique to your account and is not limited to a single company within Billit, allowing for versatile use across multiple entities associated with your account.
+
+API Key Authentication
+
+**Getting Started:**Your API Key is found under 'Profile' -> 'Users & API Key'. It's crucial to keep this key confidential and store it securely.
+Usage instructions:
+For general API calls, include your API Key in the request header.
+To specify the company for the API call, include the Company/PartyID in the request. This detail is essential when your account is linked to multiple companies.
+For accountants managing multiple companies, include both the ContextCompanyID (accountant's ID) and the PartyID (company's ID) in the request headers.
+Where to find the API key
+
+Login with your user in MyBillit. Your API Key is found under 'My Profile'.
+
+API key in Detail Screen My Profile:
+
+
+From this interface, you can also renew the API key and apply this new key for your API-communication.
+
+Secret Keys
+🚧
+Billit places paramount importance on the security of your authentication keys. Under no circumstances will Billit request your secret keys.
+
+Sharing these keys poses a significant security risk. If you suspect that your keys have been compromised, please reach out to Billit immediately so we can take the necessary steps to secure your account.
+
+Include PartyID of Master account in header
+On production environment, a check will be done that you are entitled to use the API. This is why PartyID of master account needs to be present in the header.
+
+
+Explanation:
+
+Path/URL contains the RegistrationID of the entity/subaccount you are using
+Header contains partyID = the RegistrationID of the master account
+When partyID is needed:
+
+Environment	KYC identification API	Any other API
+Sandbox	Mandatory	Allowed
+Production	Mandatory	Mandatory
+Later Step : Renewal with token
+An additional Security layer will be in the future : with a refresh token access can be renewed and kept alive. There will be one active token for all your accounts.
+
+Information will be added when available.
+
+Updated about 2 months ago
+
+Documentation and Compliance Analysis
+Step 2: Create Entities
+Did this page help you?
+Table of Contents
+Authentication Method: API Key
+Secret Keys
+Include PartyID of Master account in header
+Later Step : Renewal with token
