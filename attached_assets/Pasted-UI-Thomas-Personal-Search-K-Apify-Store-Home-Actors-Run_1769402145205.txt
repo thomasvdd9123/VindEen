@@ -1,0 +1,91 @@
+UI
+Thomas
+
+Personal
+
+
+Search...
+
+K
+
+
+Apify Store
+Home
+Actors
+Runs
+Saved tasks
+Integrations
+Schedules
+Development
+My Actors
+Insights
+Messaging
+Proxy
+Storage
+Billing
+Settings
+RAM
+0 MB
+/
+32 GB
+Usage
+$0.01
+/
+$85
+
+
+
+Run
+MA
+My Actor
+
+Actor
+
+
+Actions
+API
+Share
+Export
+FailedThere was an uncaught exception during the run of the Actor and it was not handled.
+
+Report issue
+
+$0.000
+2026-01-26 05:35
+0 s
+
+More details
+Output
+0
+
+Log
+Input
+Storage
+Live view
+Triggered integrations
+0
+
+View full log
+
+
+2026-01-26T04:35:17.583Z ACTOR: Pulling container image of build 0VOZhnON8WJDi3U5f from registry.
+2026-01-26T04:35:17.585Z ACTOR: Creating container.
+2026-01-26T04:35:17.639Z ACTOR: Starting container.
+2026-01-26T04:35:17.641Z ACTOR: Running under "LIMITED_PERMISSIONS" permission level.
+2026-01-26T04:35:17.895Z node:internal/modules/package_json_reader:314
+2026-01-26T04:35:17.897Z   throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+2026-01-26T04:35:17.899Z         ^
+2026-01-26T04:35:17.900Z
+2026-01-26T04:35:17.902Z Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'crawlee' imported from /usr/src/app/src/main.js
+2026-01-26T04:35:17.904Z     at Object.getPackageJSONURL (node:internal/modules/package_json_reader:314:9)
+2026-01-26T04:35:17.906Z     at packageResolve (node:internal/modules/esm/resolve:767:81)
+2026-01-26T04:35:17.907Z     at moduleResolve (node:internal/modules/esm/resolve:853:18)
+2026-01-26T04:35:17.909Z     at defaultResolve (node:internal/modules/esm/resolve:983:11)
+2026-01-26T04:35:17.911Z     at #cachedDefaultResolve (node:internal/modules/esm/loader:731:20)
+2026-01-26T04:35:17.913Z     at ModuleLoader.resolve (node:internal/modules/esm/loader:708:38)
+2026-01-26T04:35:17.915Z     at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:310:38)
+2026-01-26T04:35:17.916Z     at ModuleJob._link (node:internal/modules/esm/module_job:182:49) {
+2026-01-26T04:35:17.918Z   code: 'ERR_MODULE_NOT_FOUND'
+2026-01-26T04:35:17.920Z }
+2026-01-26T04:35:17.922Z
+2026-01-26T04:35:17.923Z Node.js v22.21.1
