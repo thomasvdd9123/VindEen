@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { siteConfig } from "@/lib/theme.config";
 import type { Location } from "@shared/schema";
+import featuredGardenerImg from "@/assets/images/featured-gardener.jpg";
 
 // Quick start links (like "Snel starten" section)
 const quickStartLinks = [
@@ -125,9 +126,11 @@ export default function Home() {
               </CardHeader>
               <CardContent className="pt-0">
                 <div className="relative h-40 bg-muted rounded-md mb-4 overflow-hidden">
-                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-primary/5">
-                    <Leaf className="h-12 w-12 text-primary/40" />
-                  </div>
+                  <img 
+                    src={featuredGardenerImg} 
+                    alt="Tuinman aan het werk" 
+                    className="w-full h-full object-cover opacity-90"
+                  />
                 </div>
                 
                 <h4 className="font-medium mb-2">Vind de juiste tuinman</h4>
