@@ -164,16 +164,20 @@ BILLIT_SANDBOX=true       # Set to false for production
 - Sender address: `noreply@zoek-een-tuinman.be`
 
 ## Peppol Invoicing (Billit)
-- **Provider**: Billit Access Point (https://docs.accesspoint.billit.eu/)
-- **Endpoint**: `/v1/einvoices/registrations/{partyId}/commands/send` - JSON-based invoice sending
-- **Authentication**: `ApiKey` header (NOT `Authorization: Bearer`) + `PartyID` header
-- **Sandbox**: https://api.sandbox.billit.be (set BILLIT_SANDBOX=true)
-- **Production**: https://api.billit.be (set BILLIT_SANDBOX=false)
+- **Provider**: Billit (https://docs.billit.be/)
+- **Authentication**: `ApiKey` header + `PartyID` header
+- **Endpoints** (different per environment):
+  - **Production**: `POST /v1/peppol/sendOrder` - sends order directly
+  - **Sandbox**: `POST /v1/einvoices/registrations/{partyId}/commands/send` - uses Accesspoint API
+- **Environment URLs**:
+  - Sandbox: https://api.sandbox.billit.be (set BILLIT_SANDBOX=true)
+  - Production: https://api.billit.be (set BILLIT_SANDBOX=false)
 - Automatically sends Peppol invoice when:
   1. Payment succeeds via Mollie webhook
   2. Customer account has VAT number and billing address filled in
 - Invoice includes profile subscription details, VAT calculation (21%)
 - Supplier info is configured in the Billit account (PartyID), not via environment variables
+- Invoices arrive in customer's "Snelle Invoer" (Fast Input) if they're Peppol-registered
 
 ## Next Steps (Post-MVP)
 1. ~~Supabase database integration~~ (DONE - using production Supabase)
