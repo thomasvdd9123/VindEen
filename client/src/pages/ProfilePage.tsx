@@ -128,14 +128,25 @@ export default function ProfilePage() {
     ? profile.description.slice(0, 155) + (profile.description.length > 155 ? "..." : "")
     : `${profile.name} is een professionele tuinman${locationName ? ` in ${locationName}` : ""}. Bekijk het profiel, specialisaties en vraag direct een offerte aan.`;
 
+  const locationSlug = profile.location ? `${profile.location.postcode}-${profile.location.slug}` : null;
+  const categoryInLocation = profile.category && profile.location 
+    ? `${profile.category.name} in ${profile.location.name}`
+    : null;
+
   const breadcrumbItems = [
     { name: "Home", url: "/" },
-    { name: "Tuinmannen", url: "/zoek/alle" },
+    { name: "Zoek een tuinman", url: "/zoek" },
   ];
   if (profile.location) {
     breadcrumbItems.push({ 
       name: profile.location.name, 
-      url: `/zoek/${profile.location.postcode}-${profile.location.slug}` 
+      url: `/zoek/${locationSlug}` 
+    });
+  }
+  if (categoryInLocation && locationSlug) {
+    breadcrumbItems.push({ 
+      name: categoryInLocation, 
+      url: `/zoek/${locationSlug}/${profile.category!.slug}` 
     });
   }
   breadcrumbItems.push({ name: profile.name, url: `/bedrijf/${profile.slug}` });
@@ -176,27 +187,36 @@ export default function ProfilePage() {
                 </BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator />
-              {profile.category && (
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link href="/zoek" data-testid="breadcrumb-search">Zoek een tuinman</Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              {profile.location && (
                 <>
                   <BreadcrumbItem>
                     <BreadcrumbLink asChild>
-                      <Link href={`/zoek/${profile.category.slug}`} data-testid="breadcrumb-category">
-                        {profile.category.name}
+                      <Link 
+                        href={`/zoek/${locationSlug}`}
+                        data-testid="breadcrumb-location"
+                      >
+                        {profile.location.name}
                       </Link>
                     </BreadcrumbLink>
                   </BreadcrumbItem>
                   <BreadcrumbSeparator />
                 </>
               )}
-              {profile.location && (
+              {categoryInLocation && locationSlug && (
                 <>
                   <BreadcrumbItem>
                     <BreadcrumbLink asChild>
                       <Link 
-                        href={`/zoek/${profile.category?.slug || 'tuinaanlegger'}/${profile.location.slug}`}
-                        data-testid="breadcrumb-location"
+                        href={`/zoek/${locationSlug}/${profile.category!.slug}`}
+                        data-testid="breadcrumb-category-location"
                       >
-                        {profile.location.name}
+                        {categoryInLocation}
                       </Link>
                     </BreadcrumbLink>
                   </BreadcrumbItem>
