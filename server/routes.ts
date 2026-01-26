@@ -7,6 +7,7 @@ import multer from "multer";
 import { supabaseAdmin } from "./lib/supabase";
 import { createMolliePayment, getMolliePayment, isPaymentPaid, isPaymentFailed, PRICING_PLANS, PlanId } from "./lib/mollie";
 import { sendPaymentConfirmationEmail } from "./lib/resend";
+import { sendPeppolInvoice } from "./lib/billit";
 
 const BUCKET_NAME = "uploads";
 
@@ -726,6 +727,51 @@ export async function registerRoutes(
           }
         } catch (emailError) {
           console.error("Failed to send confirmation email:", emailError);
+        }
+
+        // Send Peppol invoice if account has VAT number and billing info
+        try {
+          const profile = await storage.getProfileById(metadata.profileId);
+          const account = await storage.getAccountByProfileId(metadata.profileId);
+          
+          if (account?.vatNumber && account?.billingStreet && account?.billingCity) {
+            const plan = PRICING_PLANS[metadata.planId as PlanId];
+            const priceExclVat = (plan?.price || 0) / 1.21; // Belgian VAT is 21%
+            const invoiceNumber = `INV-${new Date().getFullYear()}-${subscription.id.slice(0, 8).toUpperCase()}`;
+            
+            await sendPeppolInvoice({
+              // Supplier (zoek-een-tuinman.be) - from environment
+              supplierName: process.env.PEPPOL_SUPPLIER_NAME || "Zoek-een-tuinman.be",
+              supplierStreet: process.env.PEPPOL_SUPPLIER_STREET || "",
+              supplierStreetNumber: process.env.PEPPOL_SUPPLIER_NUMBER || "",
+              supplierZipcode: process.env.PEPPOL_SUPPLIER_POSTCODE || "",
+              supplierCity: process.env.PEPPOL_SUPPLIER_CITY || "",
+              supplierVatNumber: process.env.PEPPOL_SUPPLIER_VAT || "",
+              supplierIban: process.env.PEPPOL_SUPPLIER_IBAN,
+              supplierBic: process.env.PEPPOL_SUPPLIER_BIC,
+              // Customer (the gardening company)
+              customerName: account.companyName || profile?.name || "Unknown",
+              customerStreet: account.billingStreet,
+              customerStreetNumber: account.billingNumber || "",
+              customerZipcode: account.billingPostcode || "",
+              customerCity: account.billingCity,
+              customerVatNumber: account.vatNumber,
+              customerEmail: account.email,
+              // Invoice details
+              invoiceNumber,
+              invoiceDate: new Date(),
+              dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+              description: `Profielvermelding ${profile?.name || "profiel"} - ${metadata.years} jaar`,
+              amountExclVat: priceExclVat,
+              vatPercentage: 21,
+              isPaid: true,
+              paidDate: new Date(),
+            });
+            
+            console.log(`Sent Peppol invoice ${invoiceNumber} for profile ${metadata.profileId}`);
+          }
+        } catch (peppolError) {
+          console.error("Failed to send Peppol invoice:", peppolError);
         }
       } else if (isPaymentFailed(payment.status)) {
         // Payment failed
