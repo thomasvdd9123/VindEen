@@ -606,7 +606,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const { data, error } = await supabase
         .from("contact_requests")
         .insert({
-          profile_id: profileId,
+          profile_id: profile.id,
+          gardener_id: profile.id,
           visitor_name: visitorName,
           visitor_email: visitorEmail,
           telnr: telnr || null,
