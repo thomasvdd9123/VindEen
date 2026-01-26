@@ -33,6 +33,7 @@ const fieldMap: Record<string, string> = {
   emailVerified: "email_verified",
   emailVerifiedAt: "email_verified_at",
   profileId: "profile_id",
+  gardenerId: "gardener_id",
   visitorName: "visitor_name",
   visitorEmail: "visitor_email",
   mainCategory: "main_category",
@@ -557,8 +558,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const profileIds = profiles.map(p => p.id);
       const { data, error } = await supabase
         .from("contact_requests")
-        .select(`*, profile:profiles(name, slug)`)
-        .in("profile_id", profileIds)
+        .select(`*, profile:profiles!gardener_id(name, slug)`)
+        .in("gardener_id", profileIds)
         .order("created_at", { ascending: false });
       
       if (error) throw error;
@@ -605,7 +606,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const { data, error } = await supabase
         .from("contact_requests")
         .insert({
-          profile_id: profileId,
+          gardener_id: profileId,
           visitor_name: visitorName,
           visitor_email: visitorEmail,
           telnr: telnr || null,

@@ -63,10 +63,10 @@ export default function DashboardStatistics() {
     queryKey: ["/api/contact-requests/counts", account?.id],
     queryFn: async () => {
       if (!account?.id) return {};
-      const requests = await apiRequest("GET", `/api/contact-requests/${account.id}`) as { profileId: string }[];
+      const requests = await apiRequest("GET", `/api/contact-requests/${account.id}`) as { gardenerId: string }[];
       const counts: Record<string, number> = {};
       requests.forEach((req) => {
-        counts[req.profileId] = (counts[req.profileId] || 0) + 1;
+        counts[req.gardenerId] = (counts[req.gardenerId] || 0) + 1;
       });
       return counts;
     },
