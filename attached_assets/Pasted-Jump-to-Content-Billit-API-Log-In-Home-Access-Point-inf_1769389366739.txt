@@ -1,0 +1,119 @@
+Jump to Content
+Billit API
+Log In
+Home
+Access Point information
+
+Search
+CTRL-K
+Documentation
+Who is a typical Access Point as A Service Partner?
+Support
+Getting Started
+Step 1 : Preparation
+
+Step 2: Create Entities
+
+Get Entities
+Patching Entities
+Deactivate Entity
+Step 3: Entities are Identified
+
+Step 4: Integrations
+
+Step 5: Sending
+
+Step 6: Invoice Statuses and Files
+
+Step 7: Getting Received Invoices
+
+Step 8: Move to Production
+TOPICS
+Calculations
+External Data
+Types
+Odata
+Party Identifiers
+Ventilation Codes (VAT)
+Powered by 
+
+Step 2: Create Entities
+API Based Creation of Entities
+
+Registering a Company for Access Point Features
+To utilize the Access Point features for a company and enable integrations such as Peppol , a one-time API-based registration call is required. This call will gather essential company information to create the account. This is an automated process, no human intervention by a user of the entity or a Billit employee is needed. The entity is registered immediately.
+
+Example
+Below is an example JSON body for the registration call:
+
+POST Endpoint
+Endpoint: Host + "/v1/einvoices/registrations"
+For sandbox this is POST https://api.sandbox.billit.be/v1/einvoices/registrations
+
+Example
+
+JSON
+
+{
+    "TaxIdentifier" : "BE0123456789",
+    "CompanyName" : "Tech Corp INC.",
+    "CommercialName" : "Tech Corp",
+    "TaxDeductable" : true,
+    "TaxLiable" : true,
+    "IBAN" : "BE1234567890",  // typically IBAN Bank account number
+    "BIC" : "BBRUBEBB",
+    "Mobile": "+32499999999",
+	  "Phone": "+3225695875",
+    "Email" : "Tech@techcorp.dev",  //Make sure it is a real email, different from the other accounts you create.
+    "ContactFirstName" : "John",
+    "ContactLastName" : "Doe",
+    "Language" : "EN", 
+    "Identifiers": [  //fill only when extra identifiers are needed
+            {
+                "IdentifierType": "CBE",
+                "Identifier": "0123456789",
+
+            }
+    ],
+    "AccountSettings":{
+        "BulkInputCostUBLFastForward": true,  // when this acccount will also receive, with this parameter invoices will not be stopped in Fast Input first
+        "ProcessUBLPrepaidAmount": true  // when you are sending and some of your invoices are prepaid, then the invoice will not stop in fast input first 
+    },
+    "Addresses": [
+    {
+      "AddressType": "InvoiceAddress",
+      "Name": "Tech Corp",
+      "Street": "Tech Street",
+      "StreetNumber": "1",
+      "Box": "Floor 1",  
+      "Zipcode": "1000",
+      "City": "Tech City",
+      "CountryCode": "BE",
+      "Phone": "+32499999999"
+    },
+    {
+      "AddressType": "DeliveryAddress",  // only needed when you are using delivery addresses
+      "Name": "Tech Corp",
+      "Street": "Tech Street",
+      "StreetNumber": "2",
+      "Box": "14",  
+      "Zipcode": "1000",
+      "City": "Tech City",
+      "CountryCode": "BE",
+      "Phone": "+32499999998"
+    },      
+  ]
+}
+
+
+Updated about 2 months ago
+
+What’s Next
+Get Entities
+Patching Entities
+Deactivate Entity
+Did this page help you?
+Table of Contents
+Registering a Company for Access Point Features
+Example
+POST Endpoint

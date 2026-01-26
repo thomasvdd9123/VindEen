@@ -737,16 +737,6 @@ export async function registerRoutes(
             const invoiceNumber = `INV-${new Date().getFullYear()}-${subscription.id.slice(0, 8).toUpperCase()}`;
             
             await sendPeppolInvoice({
-              // Supplier (zoek-een-tuinman.be) - from environment
-              supplierName: process.env.PEPPOL_SUPPLIER_NAME || "Zoek-een-tuinman.be",
-              supplierStreet: process.env.PEPPOL_SUPPLIER_STREET || "",
-              supplierStreetNumber: process.env.PEPPOL_SUPPLIER_NUMBER || "",
-              supplierZipcode: process.env.PEPPOL_SUPPLIER_POSTCODE || "",
-              supplierCity: process.env.PEPPOL_SUPPLIER_CITY || "",
-              supplierVatNumber: process.env.PEPPOL_SUPPLIER_VAT || "",
-              supplierIban: process.env.PEPPOL_SUPPLIER_IBAN,
-              supplierBic: process.env.PEPPOL_SUPPLIER_BIC,
-              // Customer (the gardening company)
               customerName: account.companyName || profile.name || "Unknown",
               customerStreet: account.billingStreet,
               customerStreetNumber: account.billingNumber || "",
@@ -754,7 +744,6 @@ export async function registerRoutes(
               customerCity: account.billingCity,
               customerVatNumber: account.vatNumber,
               customerEmail: account.email,
-              // Invoice details
               invoiceNumber,
               invoiceDate: new Date(),
               dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days

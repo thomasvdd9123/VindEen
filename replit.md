@@ -152,17 +152,9 @@ VITE_SUPABASE_ANON_KEY=
 MOLLIE_API_KEY=           # Payment processing
 RESEND_API_KEY=           # Email notifications
 SESSION_SECRET=           # Session encryption
-BILLIT_API_KEY=           # Peppol invoicing via Billit
+BILLIT_API_KEY=           # Peppol invoicing via Billit (from MyBillit Profile)
+BILLIT_PARTY_ID=          # PartyID/RegistrationID from Billit (e.g., 1037520)
 BILLIT_SANDBOX=true       # Set to false for production
-# Supplier info for Peppol invoices
-PEPPOL_SUPPLIER_NAME=     # Your company name
-PEPPOL_SUPPLIER_STREET=   # Street name
-PEPPOL_SUPPLIER_NUMBER=   # House number
-PEPPOL_SUPPLIER_POSTCODE= # Postal code
-PEPPOL_SUPPLIER_CITY=     # City
-PEPPOL_SUPPLIER_VAT=      # VAT number (BE0123456789)
-PEPPOL_SUPPLIER_IBAN=     # Bank account (optional)
-PEPPOL_SUPPLIER_BIC=      # BIC code (optional)
 ```
 
 ## Email (Resend)
@@ -172,15 +164,16 @@ PEPPOL_SUPPLIER_BIC=      # BIC code (optional)
 - Sender address: `noreply@zoek-een-tuinman.be`
 
 ## Peppol Invoicing (Billit)
-- **Provider**: Billit Access Point (https://docs.billit.be/)
-- **Endpoint**: `/v1/peppol/sendOrder` - JSON-based invoice sending (auto-converts to UBL)
+- **Provider**: Billit Access Point (https://docs.accesspoint.billit.eu/)
+- **Endpoint**: `/v1/einvoices/registrations/{partyId}/commands/send` - JSON-based invoice sending
+- **Authentication**: `ApiKey` header (NOT `Authorization: Bearer`) + `PartyID` header
 - **Sandbox**: https://api.sandbox.billit.be (set BILLIT_SANDBOX=true)
 - **Production**: https://api.billit.be (set BILLIT_SANDBOX=false)
 - Automatically sends Peppol invoice when:
   1. Payment succeeds via Mollie webhook
   2. Customer account has VAT number and billing address filled in
 - Invoice includes profile subscription details, VAT calculation (21%)
-- Supplier info comes from PEPPOL_SUPPLIER_* environment variables
+- Supplier info is configured in the Billit account (PartyID), not via environment variables
 
 ## Next Steps (Post-MVP)
 1. ~~Supabase database integration~~ (DONE - using production Supabase)

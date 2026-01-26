@@ -3,35 +3,15 @@ const BILLIT_PRODUCTION_URL = "https://api.billit.be";
 
 interface BillitCustomer {
   Name: string;
-  Street: string;
-  StreetNumber: string;
+  Street?: string;
+  StreetNumber?: string;
   Box?: string;
-  Zipcode: string;
-  City: string;
-  CountryCode: string;
-  IBAN?: string;
-  BIC?: string;
-  Mobile?: string;
-  Email?: string;
-  Contact?: string;
+  Zipcode?: string;
+  City?: string;
+  CountryCode?: string;
   VATNumber: string;
   PartyType: "Customer";
-  VATLiable: boolean;
-}
-
-interface BillitSupplier {
-  Name: string;
-  Street: string;
-  StreetNumber: string;
-  Box?: string;
-  Zipcode: string;
-  City: string;
-  CountryCode: string;
-  IBAN?: string;
-  BIC?: string;
-  VATNumber: string;
-  PartyType: "Supplier";
-  VATLiable: boolean;
+  Email?: string;
 }
 
 interface BillitOrderLine {
@@ -41,34 +21,29 @@ interface BillitOrderLine {
   VATPercentage: number;
 }
 
-interface BillitInvoice {
-  Supplier?: BillitSupplier;
-  Customer: BillitCustomer;
-  OrderNumber: string;
-  OrderDate: string;
-  ExpiryDate: string;
+interface BillitOrder {
   OrderType: "Invoice";
   OrderDirection: "Income";
+  OrderDate: string;
+  ExpiryDate: string;
+  OrderNumber: string;
   OrderLines: BillitOrderLine[];
-  Paid: boolean;
+  Customer: BillitCustomer;
+  Paid?: boolean;
   PaidDate?: string;
-  Currency: string;
+}
+
+interface BillitSendRequest {
+  TransportType: "Peppol";
+  Order: BillitOrder;
 }
 
 interface SendPeppolInvoiceParams {
-  supplierName: string;
-  supplierStreet: string;
-  supplierStreetNumber: string;
-  supplierZipcode: string;
-  supplierCity: string;
-  supplierVatNumber: string;
-  supplierIban?: string;
-  supplierBic?: string;
   customerName: string;
-  customerStreet: string;
-  customerStreetNumber: string;
-  customerZipcode: string;
-  customerCity: string;
+  customerStreet?: string;
+  customerStreetNumber?: string;
+  customerZipcode?: string;
+  customerCity?: string;
   customerVatNumber: string;
   customerEmail?: string;
   invoiceNumber: string;
@@ -86,74 +61,89 @@ function getBaseUrl(): string {
   return useSandbox ? BILLIT_SANDBOX_URL : BILLIT_PRODUCTION_URL;
 }
 
+function formatDate(date: Date): string {
+  return date.toISOString().split('T')[0];
+}
+
 export async function sendPeppolInvoice(params: SendPeppolInvoiceParams): Promise<{ success: boolean; error?: string; data?: any }> {
   const apiKey = process.env.BILLIT_API_KEY;
+  const partyId = process.env.BILLIT_PARTY_ID || "1037520";
   
   if (!apiKey) {
     console.log("Billit API key not configured, skipping Peppol invoice");
     return { success: false, error: "Billit API key not configured" };
   }
 
-  const invoice: BillitInvoice = {
-    Supplier: {
-      Name: params.supplierName,
-      Street: params.supplierStreet,
-      StreetNumber: params.supplierStreetNumber,
-      Zipcode: params.supplierZipcode,
-      City: params.supplierCity,
-      CountryCode: "BE",
-      VATNumber: params.supplierVatNumber,
-      IBAN: params.supplierIban,
-      BIC: params.supplierBic,
-      PartyType: "Supplier",
-      VATLiable: true,
-    },
-    Customer: {
-      Name: params.customerName,
-      Street: params.customerStreet,
-      StreetNumber: params.customerStreetNumber,
-      Zipcode: params.customerZipcode,
-      City: params.customerCity,
-      CountryCode: "BE",
-      VATNumber: params.customerVatNumber,
-      Email: params.customerEmail,
-      PartyType: "Customer",
-      VATLiable: true,
-    },
-    OrderNumber: params.invoiceNumber,
-    OrderDate: params.invoiceDate.toISOString(),
-    ExpiryDate: params.dueDate.toISOString(),
-    OrderType: "Invoice",
-    OrderDirection: "Income",
-    OrderLines: [
-      {
-        Quantity: 1,
-        UnitPriceExcl: params.amountExclVat,
-        Description: params.description,
-        VATPercentage: params.vatPercentage,
+  const request: BillitSendRequest = {
+    TransportType: "Peppol",
+    Order: {
+      OrderType: "Invoice",
+      OrderDirection: "Income",
+      OrderDate: formatDate(params.invoiceDate),
+      ExpiryDate: formatDate(params.dueDate),
+      OrderNumber: params.invoiceNumber,
+      OrderLines: [
+        {
+          Quantity: 1,
+          UnitPriceExcl: params.amountExclVat,
+          Description: params.description,
+          VATPercentage: params.vatPercentage,
+        },
+      ],
+      Customer: {
+        Name: params.customerName,
+        VATNumber: params.customerVatNumber,
+        PartyType: "Customer",
+        Email: params.customerEmail,
+        Street: params.customerStreet,
+        StreetNumber: params.customerStreetNumber,
+        Zipcode: params.customerZipcode,
+        City: params.customerCity,
+        CountryCode: "BE",
       },
-    ],
-    Paid: params.isPaid,
-    PaidDate: params.paidDate?.toISOString(),
-    Currency: "EUR",
+      Paid: params.isPaid,
+      PaidDate: params.paidDate ? formatDate(params.paidDate) : undefined,
+    },
   };
 
   try {
     const baseUrl = getBaseUrl();
-    const response = await fetch(`${baseUrl}/v1/peppol/sendOrder`, {
+    const endpoint = `${baseUrl}/v1/einvoices/registrations/${partyId}/commands/send`;
+    
+    console.log("Sending Peppol invoice to Billit:", {
+      endpoint,
+      invoiceNumber: params.invoiceNumber,
+      customer: params.customerName,
+      vatNumber: params.customerVatNumber,
+      amount: params.amountExclVat,
+    });
+
+    const response = await fetch(endpoint, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${apiKey}`,
+        "Accept": "application/json",
+        "ApiKey": apiKey,
+        "PartyID": partyId,
       },
-      body: JSON.stringify(invoice),
+      body: JSON.stringify(request),
     });
 
-    const data = await response.json();
+    const responseText = await response.text();
+    let data: any;
+    try {
+      data = JSON.parse(responseText);
+    } catch {
+      data = { raw: responseText };
+    }
 
     if (!response.ok) {
-      console.error("Billit API error:", data);
-      return { success: false, error: data.message || "Failed to send Peppol invoice", data };
+      console.error("Billit API error:", { status: response.status, data });
+      return { 
+        success: false, 
+        error: data.message || data.errors?.[0]?.Code || "Failed to send Peppol invoice", 
+        data 
+      };
     }
 
     console.log("Peppol invoice sent successfully:", data);
@@ -166,6 +156,7 @@ export async function sendPeppolInvoice(params: SendPeppolInvoiceParams): Promis
 
 export async function checkPeppolRegistration(vatNumber: string): Promise<boolean> {
   const apiKey = process.env.BILLIT_API_KEY;
+  const partyId = process.env.BILLIT_PARTY_ID || "1037520";
   
   if (!apiKey) {
     return false;
@@ -175,7 +166,8 @@ export async function checkPeppolRegistration(vatNumber: string): Promise<boolea
     const baseUrl = getBaseUrl();
     const response = await fetch(`${baseUrl}/v1/peppol/lookup?vatNumber=${encodeURIComponent(vatNumber)}`, {
       headers: {
-        "Authorization": `Bearer ${apiKey}`,
+        "ApiKey": apiKey,
+        "PartyID": partyId,
       },
     });
 
