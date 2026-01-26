@@ -417,6 +417,20 @@ export class SupabaseStorage implements IStorage {
       return profile;
     });
 
+    // Sort by distance (closest first), then alphabetically by name
+    profiles.sort((a, b) => {
+      const distA = a.distanceKm ?? 0;
+      const distB = b.distanceKm ?? 0;
+      
+      // Primary sort: by distance (0 = exact match location comes first)
+      if (distA !== distB) {
+        return distA - distB;
+      }
+      
+      // Secondary sort: alphabetically by name
+      return a.name.localeCompare(b.name, 'nl');
+    });
+
     return {
       profiles,
       total,
