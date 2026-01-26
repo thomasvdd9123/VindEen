@@ -1440,7 +1440,7 @@ Sitemap: ${SITEMAP_BASE_URL}/sitemap.xml
                   ? "https://api.sandbox.billit.be" 
                   : "https://api.billit.be";
 
-                await fetch(`${billitBaseUrl}/v1/peppol/sendOrder`, {
+                const peppolResponse = await fetch(`${billitBaseUrl}/v1/peppol/sendOrder`, {
                   method: "POST",
                   headers: {
                     "Content-Type": "application/json",
@@ -1488,6 +1488,12 @@ Sitemap: ${SITEMAP_BASE_URL}/sitemap.xml
                     Currency: "EUR",
                   }),
                 });
+                
+                if (!peppolResponse.ok) {
+                  const errorText = await peppolResponse.text();
+                  throw new Error(`Billit API error (${peppolResponse.status}): ${errorText}`);
+                }
+                
                 console.log(`Sent Peppol invoice ${invoiceNumber} for profile ${metadata.profileId}`);
               }
             }

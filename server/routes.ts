@@ -710,13 +710,14 @@ export async function registerRoutes(
 
         console.log(`Activated subscription ${subscription.id} for profile ${metadata.profileId}`);
 
+        // Fetch profile and account once for emails and invoices
+        const profile = await storage.getProfileById(metadata.profileId);
+        const account = await storage.getAccountByProfileId(metadata.profileId);
+        const plan = PRICING_PLANS[metadata.planId as PlanId];
+
         // Send payment confirmation email
         try {
-          const profile = await storage.getProfileById(metadata.profileId);
-          const account = await storage.getAccountByProfileId(metadata.profileId);
-          
           if (account?.email && profile) {
-            const plan = PRICING_PLANS[metadata.planId as PlanId];
             await sendPaymentConfirmationEmail({
               to: account.email,
               profileName: profile.name,
@@ -731,11 +732,7 @@ export async function registerRoutes(
 
         // Send Peppol invoice if account has VAT number and billing info
         try {
-          const profile = await storage.getProfileById(metadata.profileId);
-          const account = await storage.getAccountByProfileId(metadata.profileId);
-          
-          if (account?.vatNumber && account?.billingStreet && account?.billingCity) {
-            const plan = PRICING_PLANS[metadata.planId as PlanId];
+          if (account?.vatNumber && account?.billingStreet && account?.billingCity && profile) {
             const priceExclVat = (plan?.price || 0) / 1.21; // Belgian VAT is 21%
             const invoiceNumber = `INV-${new Date().getFullYear()}-${subscription.id.slice(0, 8).toUpperCase()}`;
             
@@ -750,7 +747,7 @@ export async function registerRoutes(
               supplierIban: process.env.PEPPOL_SUPPLIER_IBAN,
               supplierBic: process.env.PEPPOL_SUPPLIER_BIC,
               // Customer (the gardening company)
-              customerName: account.companyName || profile?.name || "Unknown",
+              customerName: account.companyName || profile.name || "Unknown",
               customerStreet: account.billingStreet,
               customerStreetNumber: account.billingNumber || "",
               customerZipcode: account.billingPostcode || "",
@@ -761,7 +758,7 @@ export async function registerRoutes(
               invoiceNumber,
               invoiceDate: new Date(),
               dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
-              description: `Profielvermelding ${profile?.name || "profiel"} - ${metadata.years} jaar`,
+              description: `Profielvermelding ${profile.name} - ${metadata.years} jaar`,
               amountExclVat: priceExclVat,
               vatPercentage: 21,
               isPaid: true,
