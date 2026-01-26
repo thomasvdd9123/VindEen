@@ -1522,6 +1522,57 @@ Sitemap: ${SITEMAP_BASE_URL}/sitemap.xml
             console.error("Failed to send Peppol invoice:", peppolError);
           }
         }
+
+        // Send Discord notification
+        const discordWebhookUrl = process.env.DISCORD_WEBHOOK_URL;
+        if (discordWebhookUrl) {
+          try {
+            const { data: profile } = await supabase
+              .from("profiles")
+              .select("name, slug, account_id")
+              .eq("id", metadata.profileId)
+              .single();
+            
+            let companyName = "Onbekend";
+            let email = "";
+            if (profile?.account_id) {
+              const { data: account } = await supabase
+                .from("accounts")
+                .select("company_name, email")
+                .eq("id", profile.account_id)
+                .single();
+              companyName = account?.company_name || profile?.name || "Onbekend";
+              email = account?.email || "";
+            }
+
+            const profileUrl = `https://www.zoek-een-tuinman.be/bedrijf/${profile?.slug || ""}`;
+            const amount = payment.amount?.value || "0";
+
+            await fetch(discordWebhookUrl, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                embeds: [{
+                  title: "🌱 Nieuw Betaald Profiel!",
+                  color: 0x1B7340,
+                  fields: [
+                    { name: "Bedrijf", value: companyName, inline: true },
+                    { name: "Profiel", value: profile?.name || "Onbekend", inline: true },
+                    { name: "Bedrag", value: `€${amount}`, inline: true },
+                    { name: "Periode", value: `${metadata.years} jaar`, inline: true },
+                    { name: "Email", value: email || "Niet beschikbaar", inline: true },
+                    { name: "Link", value: `[Bekijk profiel](${profileUrl})`, inline: true },
+                  ],
+                  timestamp: new Date().toISOString(),
+                  footer: { text: "Zoek-een-tuinman.be" },
+                }],
+              }),
+            });
+            console.log(`Sent Discord notification for profile ${metadata.profileId}`);
+          } catch (discordError) {
+            console.error("Failed to send Discord notification:", discordError);
+          }
+        }
       } else if (["failed", "canceled", "expired"].includes(payment.status)) {
         // Payment failed
         await supabase
