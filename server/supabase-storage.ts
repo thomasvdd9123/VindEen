@@ -384,64 +384,78 @@ export class SupabaseStorage implements IStorage {
 
     const page = params.page || 1;
     const limit = params.limit || 12;
-
-    // IMPORTANT: When doing location-based search with distance sorting,
-    // we need to fetch ALL results first, sort by distance, THEN paginate
-    // Otherwise pagination happens before sorting and results are wrong
-    
-    const { data, error, count } = await query;
-    
-    if (error) throw error;
-
-    // Map profiles and calculate distance if we have a search location
-    let allProfiles = (data || []).map(d => {
-      const profile = this.mapProfileWithRelations(d) as ProfileWithRelations & { distanceKm?: number };
-      
-      // Calculate distance if search location and profile location have coordinates
-      if (searchLocationData && searchLocationData.lat && searchLocationData.lng && 
-          profile.location?.latitude && profile.location?.longitude) {
-        const distance = calculateDistance(
-          searchLocationData.lat,
-          searchLocationData.lng,
-          profile.location.latitude,
-          profile.location.longitude
-        );
-        // Only add distance if it's > 0 (not the same location)
-        if (distance > 0.1) {
-          profile.distanceKm = Math.round(distance * 10) / 10; // Round to 1 decimal
-        }
-      }
-      
-      return profile;
-    });
-
-    // Sort by distance (closest first), then alphabetically by name
-    allProfiles.sort((a, b) => {
-      const distA = a.distanceKm ?? 0;
-      const distB = b.distanceKm ?? 0;
-      
-      // Primary sort: by distance (0 = exact match location comes first)
-      if (distA !== distB) {
-        return distA - distB;
-      }
-      
-      // Secondary sort: alphabetically by name
-      return a.name.localeCompare(b.name, 'nl');
-    });
-
-    // Apply pagination AFTER sorting
-    const total = allProfiles.length;
-    const totalPages = Math.ceil(total / limit);
     const offset = (page - 1) * limit;
-    const paginatedProfiles = allProfiles.slice(offset, offset + limit);
 
-    return {
-      profiles: paginatedProfiles,
-      total,
-      page,
-      totalPages,
-      ...(searchLocationData && { searchLocation: { lat: searchLocationData.lat, lng: searchLocationData.lng, name: searchLocationData.name } }),
-    };
+    // OPTIMIZATION: Only fetch all results when we need distance sorting (location search)
+    // For non-location searches, use database pagination directly (faster for Vercel)
+    if (searchLocationData && searchLocationData.lat && searchLocationData.lng) {
+      // Location search: fetch all, sort by distance, then paginate in memory
+      const { data, error } = await query;
+      
+      if (error) throw error;
+
+      // Map profiles and calculate distance
+      let allProfiles = (data || []).map(d => {
+        const profile = this.mapProfileWithRelations(d) as ProfileWithRelations & { distanceKm?: number };
+        
+        if (profile.location?.latitude && profile.location?.longitude) {
+          const distance = calculateDistance(
+            searchLocationData.lat,
+            searchLocationData.lng,
+            profile.location.latitude,
+            profile.location.longitude
+          );
+          if (distance > 0.1) {
+            profile.distanceKm = Math.round(distance * 10) / 10;
+          }
+        }
+        
+        return profile;
+      });
+
+      // Sort by distance (closest first), then alphabetically
+      allProfiles.sort((a, b) => {
+        const distA = a.distanceKm ?? 0;
+        const distB = b.distanceKm ?? 0;
+        
+        if (distA !== distB) {
+          return distA - distB;
+        }
+        return a.name.localeCompare(b.name, 'nl');
+      });
+
+      // Apply pagination AFTER sorting
+      const total = allProfiles.length;
+      const totalPages = Math.ceil(total / limit);
+      const paginatedProfiles = allProfiles.slice(offset, offset + limit);
+
+      return {
+        profiles: paginatedProfiles,
+        total,
+        page,
+        totalPages,
+        searchLocation: { lat: searchLocationData.lat, lng: searchLocationData.lng, name: searchLocationData.name },
+      };
+    } else {
+      // Non-location search: use database pagination directly (faster)
+      query = query.order("name", { ascending: true });
+      query = query.range(offset, offset + limit - 1);
+      
+      const { data, error, count } = await query;
+      
+      if (error) throw error;
+
+      const profiles = (data || []).map(d => this.mapProfileWithRelations(d));
+      const total = count || 0;
+      const totalPages = Math.ceil(total / limit);
+
+      return {
+        profiles,
+        total,
+        page,
+        totalPages,
+      };
+    }
   }
 
   async createProfile(profile: InsertProfile): Promise<Profile> {
