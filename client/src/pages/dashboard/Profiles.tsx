@@ -76,23 +76,6 @@ export default function DashboardProfiles() {
       description="Beheer je bedrijfsprofielen en maak nieuwe aan."
     >
       <div className="space-y-6">
-        {/* Create new profile CTA */}
-        <Card className="border-dashed border-2 hover-elevate cursor-pointer bg-muted/30" data-testid="card-create-profile">
-          <CardContent className="py-8 text-center">
-            <PlusCircle className="h-12 w-12 text-primary/40 mx-auto mb-4" />
-            <h3 className="font-semibold text-lg mb-2">Nieuw profiel aanmaken</h3>
-            <p className="text-muted-foreground mb-4 max-w-md mx-auto">
-              Maak een nieuw bedrijfsprofiel aan om zichtbaar te worden voor potentiële klanten.
-            </p>
-            <Link href="/dashboard/profielen/nieuw">
-              <Button className="gap-2" data-testid="button-new-profile">
-                <PlusCircle className="h-4 w-4" />
-                Start nieuw profiel
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
-
         {/* Loading state */}
         {isLoading && (
           <div className="flex items-center justify-center py-12">
@@ -100,24 +83,41 @@ export default function DashboardProfiles() {
           </div>
         )}
 
+        {/* No profiles - show big CTA */}
+        {!isLoading && profiles.length === 0 && (
+          <Card className="border-dashed border-2 bg-muted/30" data-testid="card-create-profile">
+            <CardContent className="py-12 text-center">
+              <Leaf className="h-12 w-12 text-primary/40 mx-auto mb-4" />
+              <h3 className="font-semibold text-lg mb-2">Maak je eerste profiel aan</h3>
+              <p className="text-muted-foreground mb-4 max-w-md mx-auto">
+                Word zichtbaar voor potentiële klanten door een bedrijfsprofiel aan te maken.
+              </p>
+              <Link href="/dashboard/profielen/nieuw">
+                <Button className="gap-2" data-testid="button-new-profile">
+                  <PlusCircle className="h-4 w-4" />
+                  Start nieuw profiel
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Existing profiles */}
-        {!isLoading && profiles.length > 0 ? (
+        {!isLoading && profiles.length > 0 && (
           <div className="space-y-4">
             <h2 className="text-lg font-semibold">Je profielen</h2>
             {profiles.map((profile: Profile) => (
               <ProfileCard key={profile.id} profile={profile} onDelete={handleDelete} />
             ))}
+            
+            {/* Small add another profile button at bottom */}
+            <Link href="/dashboard/profielen/nieuw">
+              <Button variant="outline" className="w-full gap-2 border-dashed" data-testid="button-add-profile">
+                <PlusCircle className="h-4 w-4" />
+                Nog een profiel toevoegen
+              </Button>
+            </Link>
           </div>
-        ) : !isLoading && (
-          <Card>
-            <CardContent className="py-12 text-center">
-              <Leaf className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="font-semibold text-lg mb-2">Nog geen profielen</h3>
-              <p className="text-muted-foreground mb-4">
-                Je hebt nog geen bedrijfsprofielen aangemaakt. Maak je eerste profiel aan om zichtbaar te worden.
-              </p>
-            </CardContent>
-          </Card>
         )}
       </div>
     </DashboardLayout>
