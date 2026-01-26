@@ -1,0 +1,145 @@
+Skip to main content
+Google Cloud Documentation
+Technology areas
+
+Cross-product tools
+
+Search
+/
+Console
+
+
+English
+
+
+reCAPTCHA
+Overview
+Guides
+Reference
+Samples
+Resources
+Filter
+
+Home
+Documentation
+Security
+reCAPTCHA
+Reference
+Was this helpful?
+
+Send feedbackreCAPTCHA Enterprise API
+
+Help protect your website from fraudulent activity, spam, and abuse without creating friction.
+
+Service: recaptchaenterprise.googleapis.com
+To call this service, we recommend that you use the Google-provided client libraries. If your application needs to use your own libraries to call this service, use the following information when you make the API requests.
+
+Discovery document
+A Discovery Document is a machine-readable specification for describing and consuming REST APIs. It is used to build client libraries, IDE plugins, and other tools that interact with Google APIs. One service may provide multiple discovery documents. This service provides the following discovery documents:
+
+https://recaptchaenterprise.googleapis.com/$discovery/rest?version=v1
+https://recaptchaenterprise.googleapis.com/$discovery/rest?version=v1beta1
+Service endpoint
+A service endpoint is a base URL that specifies the network address of an API service. One service might have multiple service endpoints. This service has the following service endpoint and all URIs below are relative to this service endpoint:
+
+https://recaptchaenterprise.googleapis.com
+REST Resource: v1beta1.projects.assessments
+Methods
+annotate	POST /v1beta1/{name=projects/*/assessments/*}:annotate
+Annotates a previously created Assessment to provide additional information on whether the event turned out to be authentic or fradulent.
+create	POST /v1beta1/{parent=projects/*}/assessments
+Creates an Assessment of the likelihood an event is legitimate.
+REST Resource: v1.projects.assessments
+Methods
+annotate	POST /v1/{name=projects/*/assessments/*}:annotate
+Annotates a previously created Assessment to provide additional information on whether the event turned out to be authentic or fraudulent.
+create	POST /v1/{parent=projects/*}/assessments
+Creates an Assessment of the likelihood an event is legitimate.
+REST Resource: v1.projects.firewallpolicies
+Methods
+create	POST /v1/{parent=projects/*}/firewallpolicies
+Creates a new FirewallPolicy, specifying conditions at which reCAPTCHA Enterprise actions can be executed.
+delete	DELETE /v1/{name=projects/*/firewallpolicies/*}
+Deletes the specified firewall policy.
+get	GET /v1/{name=projects/*/firewallpolicies/*}
+Returns the specified firewall policy.
+list	GET /v1/{parent=projects/*}/firewallpolicies
+Returns the list of all firewall policies that belong to a project.
+patch	PATCH /v1/{firewallPolicy.name=projects/*/firewallpolicies/*}
+Updates the specified firewall policy.
+reorder	POST /v1/{parent=projects/*}/firewallpolicies:reorder
+Reorders all firewall policies.
+REST Resource: v1.projects.keys
+Methods
+addIpOverride	POST /v1/{name=projects/*/keys/*}:addIpOverride
+Adds an IP override to a key.
+create	POST /v1/{parent=projects/*}/keys
+Creates a new reCAPTCHA Enterprise key.
+delete	DELETE /v1/{name=projects/*/keys/*}
+Deletes the specified key.
+get	GET /v1/{name=projects/*/keys/*}
+Returns the specified key.
+getMetrics	GET /v1/{name=projects/*/keys/*/metrics}
+Get some aggregated metrics for a Key.
+list	GET /v1/{parent=projects/*}/keys
+Returns the list of all keys that belong to a project.
+listIpOverrides	GET /v1/{parent=projects/*/keys/*}:listIpOverrides
+Lists all IP overrides for a key.
+migrate	POST /v1/{name=projects/*/keys/*}:migrate
+Migrates an existing key from reCAPTCHA to reCAPTCHA Enterprise.
+patch	PATCH /v1/{key.name=projects/*/keys/*}
+Updates the specified key.
+removeIpOverride	POST /v1/{name=projects/*/keys/*}:removeIpOverride
+Removes an IP override from a key.
+retrieveLegacySecretKey	GET /v1/{key=projects/*/keys/*}:retrieveLegacySecretKey
+Returns the secret key related to the specified public key.
+REST Resource: v1.projects.relatedaccountgroupmemberships
+Methods
+search	POST /v1/{project=projects/*}/relatedaccountgroupmemberships:search
+Search group memberships related to a given account.
+REST Resource: v1.projects.relatedaccountgroups
+Methods
+list	GET /v1/{parent=projects/*}/relatedaccountgroups
+List groups of related accounts.
+REST Resource: v1.projects.relatedaccountgroups.memberships
+Methods
+list	GET /v1/{parent=projects/*/relatedaccountgroups/*}/memberships
+Get memberships in a group of related accounts.
+Was this helpful?
+
+Send feedback
+Except as otherwise noted, the content of this page is licensed under the Creative Commons Attribution 4.0 License, and code samples are licensed under the Apache 2.0 License. For details, see the Google Developers Site Policies. Java is a registered trademark of Oracle and/or its affiliates.
+
+Last updated 2025-05-14 UTC.
+
+Products and pricing
+See all products
+Google Cloud pricing
+Google Cloud Marketplace
+Contact sales
+Support
+Community forums
+Support
+Release Notes
+System status
+Resources
+GitHub
+Getting Started with Google Cloud
+Code samples
+Cloud Architecture Center
+Training and Certification
+Engage
+Blog
+Events
+X (Twitter)
+Google Cloud on YouTube
+Google Cloud Tech on YouTube
+About Google
+Privacy
+Site terms
+Google Cloud terms
+Our third decade of climate action: join us
+Sign up for the Google Cloud newsletter
+Subscribe
+
+English

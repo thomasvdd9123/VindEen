@@ -18,6 +18,7 @@ const fieldMap: Record<string, string> = {
   isVerified: "is_verified",
   hideAddress: "hide_address",
   viewCount: "view_count",
+  websiteClicks: "website_clicks",
   verificationStatus: "verification_status",
   verifiedAt: "verified_at",
   verifiedBy: "verified_by",
