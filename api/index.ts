@@ -1414,10 +1414,10 @@ Sitemap: ${SITEMAP_BASE_URL}/sitemap.xml
           }
         }
 
-        // Send Peppol invoice via Billit Accesspoint API if configured
+        // Send Peppol invoice via Billit API if configured
         const billitApiKey = process.env.BILLIT_API_KEY;
-        const billitPartyId = process.env.BILLIT_PARTY_ID || "1037520";
-        const billitSandbox = process.env.BILLIT_SANDBOX;
+        const billitPartyId = process.env.BILLIT_PARTY_ID;
+        const billitSandbox = process.env.BILLIT_SANDBOX === "true";
         console.log(`Billit config: key exists=${!!billitApiKey}, partyId=${billitPartyId}, sandbox=${billitSandbox}`);
         
         if (billitApiKey) {
@@ -1441,50 +1441,61 @@ Sitemap: ${SITEMAP_BASE_URL}/sitemap.xml
                 const today = new Date().toISOString().split('T')[0];
                 const dueDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
-                const billitBaseUrl = billitSandbox === "true" 
+                const billitBaseUrl = billitSandbox 
                   ? "https://api.sandbox.billit.be" 
                   : "https://api.billit.be";
                 
-                const billitEndpoint = `${billitBaseUrl}/v1/einvoices/registrations/${billitPartyId}/commands/send`;
+                const order = {
+                  OrderType: "Invoice",
+                  OrderDirection: "Income",
+                  OrderDate: today,
+                  ExpiryDate: dueDate,
+                  OrderNumber: invoiceNumber,
+                  OrderLines: [{
+                    Quantity: 1,
+                    UnitPriceExcl: priceExclVat,
+                    Description: `Profielvermelding ${profile.name || "profiel"} - ${metadata.years} jaar`,
+                    VATPercentage: 21,
+                  }],
+                  Customer: {
+                    Name: account.company_name || profile.name || "Unknown",
+                    VATNumber: account.vat_number,
+                    PartyType: "Customer",
+                    Email: account.email,
+                    Street: account.billing_street,
+                    StreetNumber: account.billing_number || "",
+                    Zipcode: account.billing_postcode || "",
+                    City: account.billing_city,
+                    CountryCode: "BE",
+                  },
+                  Paid: true,
+                  PaidDate: today,
+                };
+
+                let billitEndpoint: string;
+                let requestBody: any;
+                const headers: Record<string, string> = {
+                  "Content-Type": "application/json",
+                  "Accept": "application/json",
+                  "ApiKey": billitApiKey,
+                };
+
+                if (billitSandbox) {
+                  billitEndpoint = `${billitBaseUrl}/v1/einvoices/registrations/${billitPartyId}/commands/send`;
+                  requestBody = { TransportType: "Peppol", Order: order };
+                  if (billitPartyId) headers["PartyID"] = billitPartyId;
+                } else {
+                  billitEndpoint = `${billitBaseUrl}/v1/peppol/sendOrder`;
+                  requestBody = order;
+                  if (billitPartyId) headers["PartyID"] = billitPartyId;
+                }
+
                 console.log(`Billit endpoint: ${billitEndpoint}`);
 
                 const peppolResponse = await fetch(billitEndpoint, {
                   method: "POST",
-                  headers: {
-                    "Content-Type": "application/json",
-                    "Accept": "application/json",
-                    "ApiKey": billitApiKey,
-                    "PartyID": billitPartyId,
-                  },
-                  body: JSON.stringify({
-                    TransportType: "Peppol",
-                    Order: {
-                      OrderType: "Invoice",
-                      OrderDirection: "Income",
-                      OrderDate: today,
-                      ExpiryDate: dueDate,
-                      OrderNumber: invoiceNumber,
-                      OrderLines: [{
-                        Quantity: 1,
-                        UnitPriceExcl: priceExclVat,
-                        Description: `Profielvermelding ${profile.name || "profiel"} - ${metadata.years} jaar`,
-                        VATPercentage: 21,
-                      }],
-                      Customer: {
-                        Name: account.company_name || profile.name || "Unknown",
-                        VATNumber: account.vat_number,
-                        PartyType: "Customer",
-                        Email: account.email,
-                        Street: account.billing_street,
-                        StreetNumber: account.billing_number || "",
-                        Zipcode: account.billing_postcode || "",
-                        City: account.billing_city,
-                        CountryCode: "BE",
-                      },
-                      Paid: true,
-                      PaidDate: today,
-                    },
-                  }),
+                  headers,
+                  body: JSON.stringify(requestBody),
                 });
                 
                 const peppolResponseText = await peppolResponse.text();
@@ -1492,7 +1503,7 @@ Sitemap: ${SITEMAP_BASE_URL}/sitemap.xml
                 try {
                   peppolResult = JSON.parse(peppolResponseText);
                 } catch {
-                  peppolResult = { raw: peppolResponseText };
+                  peppolResult = { OrderID: peppolResponseText };
                 }
 
                 if (!peppolResponse.ok) {
@@ -1503,7 +1514,7 @@ Sitemap: ${SITEMAP_BASE_URL}/sitemap.xml
                     console.error(`Billit API error (${peppolResponse.status}):`, peppolResult);
                   }
                 } else {
-                  console.log(`Sent Peppol invoice ${invoiceNumber} for profile ${metadata.profileId}, OrderID: ${peppolResult.OrderID}`);
+                  console.log(`Sent Peppol invoice ${invoiceNumber} for profile ${metadata.profileId}, OrderID: ${peppolResult.OrderID || peppolResult}`);
                 }
               }
             }

@@ -33,11 +33,6 @@ interface BillitOrder {
   PaidDate?: string;
 }
 
-interface BillitSendRequest {
-  TransportType: "Peppol";
-  Order: BillitOrder;
-}
-
 interface SendPeppolInvoiceParams {
   customerName: string;
   customerStreet?: string;
@@ -56,9 +51,12 @@ interface SendPeppolInvoiceParams {
   paidDate?: Date;
 }
 
+function isSandbox(): boolean {
+  return process.env.BILLIT_SANDBOX === "true";
+}
+
 function getBaseUrl(): string {
-  const useSandbox = process.env.BILLIT_SANDBOX === "true" || !process.env.BILLIT_API_KEY?.startsWith("live_");
-  return useSandbox ? BILLIT_SANDBOX_URL : BILLIT_PRODUCTION_URL;
+  return isSandbox() ? BILLIT_SANDBOX_URL : BILLIT_PRODUCTION_URL;
 }
 
 function formatDate(date: Date): string {
@@ -67,66 +65,78 @@ function formatDate(date: Date): string {
 
 export async function sendPeppolInvoice(params: SendPeppolInvoiceParams): Promise<{ success: boolean; error?: string; data?: any }> {
   const apiKey = process.env.BILLIT_API_KEY;
-  const partyId = process.env.BILLIT_PARTY_ID || "1037520";
+  const partyId = process.env.BILLIT_PARTY_ID;
+  const sandbox = isSandbox();
   
   if (!apiKey) {
     console.log("Billit API key not configured, skipping Peppol invoice");
     return { success: false, error: "Billit API key not configured" };
   }
 
-  const request: BillitSendRequest = {
-    TransportType: "Peppol",
-    Order: {
-      OrderType: "Invoice",
-      OrderDirection: "Income",
-      OrderDate: formatDate(params.invoiceDate),
-      ExpiryDate: formatDate(params.dueDate),
-      OrderNumber: params.invoiceNumber,
-      OrderLines: [
-        {
-          Quantity: 1,
-          UnitPriceExcl: params.amountExclVat,
-          Description: params.description,
-          VATPercentage: params.vatPercentage,
-        },
-      ],
-      Customer: {
-        Name: params.customerName,
-        VATNumber: params.customerVatNumber,
-        PartyType: "Customer",
-        Email: params.customerEmail,
-        Street: params.customerStreet,
-        StreetNumber: params.customerStreetNumber,
-        Zipcode: params.customerZipcode,
-        City: params.customerCity,
-        CountryCode: "BE",
+  const order: BillitOrder = {
+    OrderType: "Invoice",
+    OrderDirection: "Income",
+    OrderDate: formatDate(params.invoiceDate),
+    ExpiryDate: formatDate(params.dueDate),
+    OrderNumber: params.invoiceNumber,
+    OrderLines: [
+      {
+        Quantity: 1,
+        UnitPriceExcl: params.amountExclVat,
+        Description: params.description,
+        VATPercentage: params.vatPercentage,
       },
-      Paid: params.isPaid,
-      PaidDate: params.paidDate ? formatDate(params.paidDate) : undefined,
+    ],
+    Customer: {
+      Name: params.customerName,
+      VATNumber: params.customerVatNumber,
+      PartyType: "Customer",
+      Email: params.customerEmail,
+      Street: params.customerStreet,
+      StreetNumber: params.customerStreetNumber,
+      Zipcode: params.customerZipcode,
+      City: params.customerCity,
+      CountryCode: "BE",
     },
+    Paid: params.isPaid,
+    PaidDate: params.paidDate ? formatDate(params.paidDate) : undefined,
   };
 
   try {
     const baseUrl = getBaseUrl();
-    const endpoint = `${baseUrl}/v1/einvoices/registrations/${partyId}/commands/send`;
+    let endpoint: string;
+    let requestBody: any;
+
+    if (sandbox) {
+      endpoint = `${baseUrl}/v1/einvoices/registrations/${partyId}/commands/send`;
+      requestBody = { TransportType: "Peppol", Order: order };
+    } else {
+      endpoint = `${baseUrl}/v1/peppol/sendOrder`;
+      requestBody = order;
+    }
     
     console.log("Sending Peppol invoice to Billit:", {
       endpoint,
+      sandbox,
       invoiceNumber: params.invoiceNumber,
       customer: params.customerName,
       vatNumber: params.customerVatNumber,
       amount: params.amountExclVat,
     });
 
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+      "Accept": "application/json",
+      "ApiKey": apiKey,
+    };
+    if (partyId) {
+      headers["PartyID"] = partyId;
+    }
+
     const response = await fetch(endpoint, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Accept": "application/json",
-        "ApiKey": apiKey,
-        "PartyID": partyId,
-      },
-      body: JSON.stringify(request),
+      headers,
+      body: JSON.stringify(requestBody),
     });
 
     const responseText = await response.text();
@@ -134,10 +144,15 @@ export async function sendPeppolInvoice(params: SendPeppolInvoiceParams): Promis
     try {
       data = JSON.parse(responseText);
     } catch {
-      data = { raw: responseText };
+      data = { OrderID: responseText };
     }
 
     if (!response.ok) {
+      const errorCode = data?.errors?.[0]?.Code;
+      if (errorCode === "TheCustomerIsNotActiveOnPeppol") {
+        console.log(`Peppol invoice skipped: Customer ${params.customerVatNumber} is not registered on Peppol network`);
+        return { success: false, error: "Customer not on Peppol", data };
+      }
       console.error("Billit API error:", { status: response.status, data });
       return { 
         success: false, 
@@ -156,7 +171,7 @@ export async function sendPeppolInvoice(params: SendPeppolInvoiceParams): Promis
 
 export async function checkPeppolRegistration(vatNumber: string): Promise<boolean> {
   const apiKey = process.env.BILLIT_API_KEY;
-  const partyId = process.env.BILLIT_PARTY_ID || "1037520";
+  const partyId = process.env.BILLIT_PARTY_ID;
   
   if (!apiKey) {
     return false;
@@ -164,16 +179,18 @@ export async function checkPeppolRegistration(vatNumber: string): Promise<boolea
 
   try {
     const baseUrl = getBaseUrl();
-    const response = await fetch(`${baseUrl}/v1/peppol/lookup?vatNumber=${encodeURIComponent(vatNumber)}`, {
-      headers: {
-        "ApiKey": apiKey,
-        "PartyID": partyId,
-      },
+    const headers: Record<string, string> = { "ApiKey": apiKey };
+    if (partyId) {
+      headers["PartyID"] = partyId;
+    }
+
+    const response = await fetch(`${baseUrl}/v1/peppol/participantInformation/${encodeURIComponent(vatNumber)}`, {
+      headers,
     });
 
     if (response.ok) {
       const data = await response.json();
-      return data.registered === true;
+      return data.Registered === true;
     }
     return false;
   } catch {
