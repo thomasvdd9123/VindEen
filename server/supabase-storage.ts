@@ -31,6 +31,11 @@ function calculateDistance(lat1: number, lng1: number, lat2: number, lng2: numbe
 // Radius in km for location search (hardcoded to 20km)
 const SEARCH_RADIUS_KM = 20;
 
+// Cache for locations (they rarely change)
+let cachedLocations: Location[] | null = null;
+let locationsCacheTime: number = 0;
+const LOCATIONS_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
 export class SupabaseStorage implements IStorage {
   // Categories
   async getCategories(): Promise<Category[]> {
@@ -75,6 +80,12 @@ export class SupabaseStorage implements IStorage {
 
   // Locations
   async getLocations(): Promise<Location[]> {
+    // Use cached locations if available and not expired
+    const now = Date.now();
+    if (cachedLocations && (now - locationsCacheTime) < LOCATIONS_CACHE_TTL) {
+      return cachedLocations;
+    }
+
     const { data, error } = await supabaseAdmin
       .from("locations")
       .select("*")
@@ -82,10 +93,23 @@ export class SupabaseStorage implements IStorage {
       .order("name");
     
     if (error) throw error;
-    return (data || []).map(this.mapLocation);
+    
+    const locations = (data || []).map(this.mapLocation);
+    
+    // Update cache
+    cachedLocations = locations;
+    locationsCacheTime = now;
+    
+    return locations;
   }
 
   async getLocationBySlug(slug: string): Promise<Location | undefined> {
+    // Try to find from cache first to avoid extra database call
+    const now = Date.now();
+    if (cachedLocations && (now - locationsCacheTime) < LOCATIONS_CACHE_TTL) {
+      return cachedLocations.find(loc => loc.slug === slug);
+    }
+
     const { data, error } = await supabaseAdmin
       .from("locations")
       .select("*")
