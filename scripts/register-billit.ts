@@ -1,11 +1,13 @@
 async function registerCompany() {
   const apiKey = process.env.BILLIT_API_KEY;
-  const baseUrl = process.env.BILLIT_SANDBOX === "true" 
-    ? "https://api.sandbox.billit.be" 
-    : "https://api.billit.be";
+  // Use sandbox URL
+  const baseUrl = "https://api.sandbox.billit.be";
   
   console.log("Registering company with Billit...");
   console.log("URL:", `${baseUrl}/v1/einvoices/registrations`);
+  console.log("API Key first 8 chars:", apiKey?.slice(0, 8));
+  console.log("API Key last 4 chars:", apiKey?.slice(-4));
+  console.log("API Key has whitespace:", apiKey !== apiKey?.trim());
   
   const registrationData = {
     TaxIdentifier: process.env.PEPPOL_SUPPLIER_VAT || "BE0791920272",
@@ -39,6 +41,7 @@ async function registerCompany() {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "Accept": "application/json",
         "Authorization": apiKey!,
       },
       body: JSON.stringify(registrationData),
