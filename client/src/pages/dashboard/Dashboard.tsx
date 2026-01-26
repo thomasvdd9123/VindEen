@@ -122,25 +122,27 @@ export default function Dashboard() {
         })}
       </div>
 
-      {/* Create profile CTA */}
-      <Card className="mb-8 border-primary/20 bg-primary/5">
-        <CardContent className="py-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div>
-              <h3 className="font-semibold text-lg mb-1">Maak je eerste profiel aan</h3>
-              <p className="text-muted-foreground">
-                Word zichtbaar voor potentiële klanten door een bedrijfsprofiel aan te maken.
-              </p>
+      {/* Create profile CTA - only show if no profiles */}
+      {profiles.length === 0 && !profilesLoading && (
+        <Card className="mb-8 border-primary/20 bg-primary/5">
+          <CardContent className="py-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div>
+                <h3 className="font-semibold text-lg mb-1">Maak je eerste profiel aan</h3>
+                <p className="text-muted-foreground">
+                  Word zichtbaar voor potentiële klanten door een bedrijfsprofiel aan te maken.
+                </p>
+              </div>
+              <Link href="/dashboard/profielen/nieuw">
+                <Button className="gap-2" data-testid="button-create-profile">
+                  <PlusCircle className="h-4 w-4" />
+                  Profiel aanmaken
+                </Button>
+              </Link>
             </div>
-            <Link href="/dashboard/profielen/nieuw">
-              <Button className="gap-2" data-testid="button-create-profile">
-                <PlusCircle className="h-4 w-4" />
-                Profiel aanmaken
-              </Button>
-            </Link>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Quick links grid */}
       <h2 className="text-lg font-semibold mb-4">Snelle navigatie</h2>
