@@ -15,6 +15,22 @@ import type {
 } from "@shared/schema";
 import type { IStorage } from "./storage";
 
+// Haversine formula to calculate distance between two coordinates in km
+function calculateDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371; // Earth's radius in kilometers
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = 
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+// Radius in km for location search (hardcoded to 10km)
+const SEARCH_RADIUS_KM = 10;
+
 export class SupabaseStorage implements IStorage {
   // Categories
   async getCategories(): Promise<Category[]> {
@@ -308,11 +324,34 @@ export class SupabaseStorage implements IStorage {
       }
     }
 
-    // Filter by location
+    // Filter by location with 10km radius search
     if (params.locationSlug) {
-      const location = await this.getLocationBySlug(params.locationSlug);
-      if (location) {
-        query = query.eq("location_id", location.id);
+      const searchLocation = await this.getLocationBySlug(params.locationSlug);
+      if (searchLocation && searchLocation.latitude && searchLocation.longitude) {
+        // Find all locations within 10km radius
+        const allLocations = await this.getLocations();
+        const nearbyLocationIds = allLocations
+          .filter(loc => {
+            if (!loc.latitude || !loc.longitude) return false;
+            const distance = calculateDistance(
+              searchLocation.latitude!,
+              searchLocation.longitude!,
+              loc.latitude,
+              loc.longitude
+            );
+            return distance <= SEARCH_RADIUS_KM;
+          })
+          .map(loc => loc.id);
+        
+        if (nearbyLocationIds.length > 0) {
+          query = query.in("location_id", nearbyLocationIds);
+        } else {
+          // Fallback to exact match if no nearby locations found
+          query = query.eq("location_id", searchLocation.id);
+        }
+      } else if (searchLocation) {
+        // No coordinates, use exact match
+        query = query.eq("location_id", searchLocation.id);
       }
     }
 
