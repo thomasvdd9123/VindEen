@@ -1,0 +1,48 @@
+{
+    "name": "Tuinen Hoveniersbedrijf Patrick & Nick",
+    "city": "L18625355",
+    "phone": "+32469164544",
+    "website": "https://adserver.fcrmedia.com/www/delivery/cl.php?bannerid=2107&zoneid=24&sig=6d7ec018ff1cba5b34247bc75902fdeb4daaebad105c4a197a0e8a774d56709f&oadest=https%3A%2F%2Fwww.daikin.be%2Fnl_be%2Fparticulier%2Facties%2Fmulti-split-actie.html",
+    "email": null,
+    "description": "Zoek u een tuinman die het onderhoud van uw tuin op zich kan nemen en die ook nieuwe planten kan zetten, zoals u het wil? Vertrouw op de tuinspecialisten van Tuinen Sarvan in...",
+    "imageUrl": "https://i.fcrmedia.com/goudengids.be/images/w460/000/460/612/460612450_hoveniersbedrijf_patrick_nick_logo.webp",
+    "detailUrl": "https://www.goudengids.be/bedrijf/L620347156/L18625355/Tuinen+Hoveniersbedrijf+Patrick+%26+Nick/",
+    "sourceUrl": "https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/4/",
+    "scrapedAt": "2026-01-26T04:41:02.018Z"
+  },
+  {
+    "name": "Tuinen Hoveniersbedrijf Patrick & Nick",
+    "city": "L18625355",
+    "phone": "+32469164544",
+    "website": null,
+    "email": null,
+    "description": "",
+    "imageUrl": "https://i.fcrmedia.com/goudengids.be/images/w460/000/460/612/460612450_hoveniersbedrijf_patrick_nick_logo.webp",
+    "detailUrl": "https://www.goudengids.be/bedrijf/L620347156/L18625355/Tuinen+Hoveniersbedrijf+Patrick+%26+Nick/",
+    "sourceUrl": "https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/4/",
+    "scrapedAt": "2026-01-26T04:41:02.019Z"
+  },
+  {
+    "name": "Green Quality",
+    "city": "Brecht",
+    "phone": "+3233137237",
+    "website": null,
+    "email": null,
+    "description": "",
+    "imageUrl": "https://i.fcrmedia.com/goudengids.be/images/w460/000/231/156/231156488_green_quality_logo.webp",
+    "detailUrl": "https://www.goudengids.be/bedrijf/Brecht/L10628156/Green+Quality/",
+    "sourceUrl": "https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/4/",
+    "scrapedAt": "2026-01-26T04:41:02.019Z"
+  },
+  {
+    "name": "DR Tuinen",
+    "city": "Hasselt",
+    "phone": "+3211874731",
+    "website": null,
+    "email": null,
+    "description": "",
+    "imageUrl": "https://i.fcrmedia.com/goudengids.be/images/w460/000/411/142/411142092_dr_tuinen_logo.webp",
+    "detailUrl": "https://www.goudengids.be/bedrijf/Hasselt/L14942136/DR+Tuinen/",
+    "sourceUrl": "https://www.goudengids.be/zoeken/tuinaanleg+%26+-onderhoud/4/",
+    "scrapedAt": "2026-01-26T04:41:02.020Z"
+  },
