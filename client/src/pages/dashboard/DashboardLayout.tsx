@@ -51,32 +51,50 @@ export function DashboardLayout({ children, title, description }: DashboardLayou
   // Prefetch all dashboard data when user enters dashboard
   useEffect(() => {
     if (user?.id) {
-      // Prefetch account data
-      queryClient.prefetchQuery({
-        queryKey: ["/api/accounts/by-auth", user.id],
-        staleTime: 1000 * 60 * 5,
-      });
-      
-      // Fetch account first, then prefetch related data
-      fetch(`/api/accounts/by-auth/${user.id}`)
+      // Fetch or create account first, then prefetch all related data
+      fetch("/api/accounts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ authUserId: user.id, email: user.email }),
+      })
         .then(res => res.json())
         .then((account: { id: string }) => {
           if (account?.id) {
-            // Prefetch profiles
+            // Cache the account
+            queryClient.setQueryData(["/api/accounts/by-user", user.id], account);
+            
+            // Prefetch profiles with queryFn
             queryClient.prefetchQuery({
               queryKey: ["/api/my-profiles", account.id],
+              queryFn: () => fetch(`/api/my-profiles/${account.id}`).then(r => r.json()),
               staleTime: 1000 * 60 * 5,
             });
-            // Prefetch contact requests (for all profiles)
+            
+            // Prefetch contact requests
             queryClient.prefetchQuery({
               queryKey: ["/api/contact-requests", account.id],
+              queryFn: () => fetch(`/api/contact-requests/${account.id}`).then(r => r.json()),
               staleTime: 1000 * 60 * 5,
+            });
+            
+            // Prefetch categories (for profile creation/editing)
+            queryClient.prefetchQuery({
+              queryKey: ["/api/categories"],
+              queryFn: () => fetch("/api/categories").then(r => r.json()),
+              staleTime: 1000 * 60 * 10,
+            });
+            
+            // Prefetch locations (for profile creation/editing)
+            queryClient.prefetchQuery({
+              queryKey: ["/api/locations"],
+              queryFn: () => fetch("/api/locations").then(r => r.json()),
+              staleTime: 1000 * 60 * 10,
             });
           }
         })
         .catch(() => {}); // Silently fail prefetch
     }
-  }, [user?.id]);
+  }, [user?.id, user?.email]);
 
   const handleSignOut = async () => {
     await signOut();
