@@ -806,6 +806,7 @@ export class SupabaseStorage implements IStorage {
       isVerified: (data.is_verified as boolean) ?? false,
       verificationStatus: (data.verification_status as Profile["verificationStatus"]) ?? "PENDING",
       viewCount: (data.view_count as number) ?? 0,
+      websiteClicks: (data.website_clicks as number) ?? 0,
       seoTitle: data.seo_title as string | null,
       seoDescription: data.seo_description as string | null,
       categoryId: data.category_id as string | null,
