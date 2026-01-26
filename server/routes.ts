@@ -897,11 +897,28 @@ export async function registerRoutes(
     }
   });
 
-  // Get contact requests for profile
-  app.get("/api/contact-requests/:profileId", async (req, res) => {
+  // Get contact requests for account (all profiles owned by account)
+  app.get("/api/contact-requests/:accountId", async (req, res) => {
     try {
-      const requests = await storage.getContactRequestsByProfileId(req.params.profileId);
-      res.json(requests);
+      const accountId = req.params.accountId;
+      
+      // Get all profiles for this account
+      const profiles = await storage.getProfilesByAccountId(accountId);
+      if (!profiles || profiles.length === 0) {
+        return res.json([]);
+      }
+      
+      // Get contact requests for all profiles
+      const allRequests = [];
+      for (const profile of profiles) {
+        const requests = await storage.getContactRequestsByProfileId(profile.id);
+        allRequests.push(...requests);
+      }
+      
+      // Sort by created_at descending
+      allRequests.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      
+      res.json(allRequests);
     } catch (error) {
       console.error("Error fetching contact requests:", error);
       res.status(500).json({ error: "Failed to fetch contact requests" });
