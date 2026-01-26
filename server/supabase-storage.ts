@@ -384,19 +384,17 @@ export class SupabaseStorage implements IStorage {
 
     const page = params.page || 1;
     const limit = params.limit || 12;
-    const offset = (page - 1) * limit;
 
-    query = query.range(offset, offset + limit - 1);
-
+    // IMPORTANT: When doing location-based search with distance sorting,
+    // we need to fetch ALL results first, sort by distance, THEN paginate
+    // Otherwise pagination happens before sorting and results are wrong
+    
     const { data, error, count } = await query;
     
     if (error) throw error;
 
-    const total = count || 0;
-    const totalPages = Math.ceil(total / limit);
-
     // Map profiles and calculate distance if we have a search location
-    const profiles = (data || []).map(d => {
+    let allProfiles = (data || []).map(d => {
       const profile = this.mapProfileWithRelations(d) as ProfileWithRelations & { distanceKm?: number };
       
       // Calculate distance if search location and profile location have coordinates
@@ -418,7 +416,7 @@ export class SupabaseStorage implements IStorage {
     });
 
     // Sort by distance (closest first), then alphabetically by name
-    profiles.sort((a, b) => {
+    allProfiles.sort((a, b) => {
       const distA = a.distanceKm ?? 0;
       const distB = b.distanceKm ?? 0;
       
@@ -431,8 +429,14 @@ export class SupabaseStorage implements IStorage {
       return a.name.localeCompare(b.name, 'nl');
     });
 
+    // Apply pagination AFTER sorting
+    const total = allProfiles.length;
+    const totalPages = Math.ceil(total / limit);
+    const offset = (page - 1) * limit;
+    const paginatedProfiles = allProfiles.slice(offset, offset + limit);
+
     return {
-      profiles,
+      profiles: paginatedProfiles,
       total,
       page,
       totalPages,
