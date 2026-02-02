@@ -176,6 +176,7 @@ export default function ProfilePage() {
         ogType="profile"
         ogImage={profile.logoUrl || undefined}
         structuredData={structuredData}
+        noindex={true}
       />
       <div className="bg-muted/30 border-b border-border">
         <div className="container mx-auto px-4 py-4">
