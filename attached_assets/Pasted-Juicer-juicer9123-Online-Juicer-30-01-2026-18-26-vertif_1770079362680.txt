@@ -1,0 +1,650 @@
+Juicer
+juicer9123
+Online
+
+Juicer
+
+ — 30/01/2026 18:26
+🤣 🤣 🤣
+vertified businessman
+https://www.companyweb.be/en/0503832450/ring-twice
+Companyweb.be
+Ring Twice (SA) - Braine-l'Alleud (1420) - BE0503832450
+Image
+in belgie moet elk BV bedrijf z'n cijfers publiceren
+oke nvm, ze hebben subscritpion, maar same here, vanaf ge uw tuinman hebt stopt ge me betalen
+Image
+en pakken 20% fee op betalinge, dus worst of both worlds
+Image
+Dus de persoon da een tuinman wilt laten langskomen moet per maand betalen en de tuinman moet 20% fee betalen, GG
+Juicer
+
+ — 30/01/2026 18:35
+https://ringtwice.be/nl/tuinman/leuven hebbe ook zelfde SEO/sitemap structuur
+Ring Twice
+Tuinman Leuven gezocht? Top 10 tuinmannen
+Tuinman gezocht in Leuven? Vind professionele vakmensen voor gras maaien, snoeiwerken, hagen scheren en meer. Ontvang gratis offertes.
+Tuinman Leuven gezocht? Top 10 tuinmannen
+This XML file does not appear to have any style information associated with it. The document tree is shown below.
+<sitemapindex xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/siteindex.xsd">
+<sitemap>
+<loc>https://ringtwice-production-assets.s3.amazonaws.com/sitemaps/sem.xml.gz</loc>
+<lastmod>2026-01-30T04:45:57+00:00</lastmod>
+</sitemap>
+<sitemap>
+<loc>https://ringtwice-production-assets.s3.amazonaws.com/sitemaps/sem1.xml.gz</loc>
+<lastmod>2026-01-30T04:45:57+00:00</lastmod>
+</sitemap>
+<sitemap>
+<loc>https://ringtwice-production-assets.s3.amazonaws.com/sitemaps/sem_sp.xml.gz</loc>
+<lastmod>2026-01-30T04:46:03+00:00</lastmod>
+</sitemap>
+<sitemap>
+<loc>https://ringtwice-production-assets.s3.amazonaws.com/sitemaps/themes.xml.gz</loc>
+<lastmod>2026-01-30T04:46:03+00:00</lastmod>
+</sitemap>
+<sitemap>
+<loc>https://ringtwice-production-assets.s3.amazonaws.com/sitemaps/others.xml.gz</loc>
+<lastmod>2026-01-30T04:46:03+00:00</lastmod>
+</sitemap>
+</sitemapindex>
+Juicer
+
+ — 01/02/2026 17:32
+ik krijg dees weekend ni vel gedaan voor projectr, maar vanaf maandag normaal wel
+then we knal da mvp
+NIghtmaRe — 01/02/2026 19:23
+ja same man
+gisteren verjaardag vandaag familiefeest
+geen kloten kunnen doen
+Juicer
+
+ — 01/02/2026 19:26
+it is what it is
+timing is swoieso cooked door die meeting da ni door kon gaan
+want die hadden eigenlijk al aa neht werk moeten zijn aan de rest
+NIghtmaRe — Yesterday at 22:58
+lil nigga
+Image
+op deze manier komen we dichste bij vind een psycholoog vgm
+ik zag dit op die website, dus kheb in profileservicecategory en profilespecialization nen ismain:bool toegevoegd
+Image
+en kheb ook offeredservice toegoevoegd, dan kunde bv category=architect, specialisatie=gazon en offeredservice=ontwerp, beplanting, onderhoud etc (op vind een psycholoog hebben die da 'ondersteuning bij' genoemd)
+Juicer
+
+ — Yesterday at 23:00
+Ait ait, da klinkt redelijk future proof
+Da moet ik in de sloppy steken dan?
+NIghtmaRe — Yesterday at 23:01
+address heb ik ook aan practitioner gehangen, op die manier hebt ge een billing address op accountniveau en ni ene per account
+gewoon zien dat die gele tabellen geseed worden
+dan kan slopper niks meer in UI hardcoden
+Juicer
+
+ — Yesterday at 23:01
+Ma dan ook service addressv
+NIghtmaRe — Yesterday at 23:01
+yes
+Profiel heeft 1 office adres en meerdere serviceareas
+Juicer
+
+ — Yesterday at 23:01
+Lesgo
+NIghtmaRe — Yesterday at 23:01
+Practitioner heeft 1 billing adres
+kzal sebiet wa voorbeelden doorsturen van hoe ik dacht die gele tabellen te seeden
+das mss wa makkelijker te begrijpen hoe die eruit zouden zien
+ma ff pauze
+lmao
+Juicer
+
+ — Yesterday at 23:02
+🤣🤣🤣
+Gucci, ik start sebiet ook op
+NIghtmaRe — Yesterday at 23:06
+als ge mijn voorbeelden van sebiet goedkeurd (kan zijn dat ge da anders ziet) dan zet ik ook ff die ERD om naar een DB schema, zodat die slopper da zeker ni kan opfucken, want da vorig schema is legit raar
+Juicer
+
+ — Yesterday at 23:08
+Ait dan ineens full db haulover
+De app gaat breken ma dan ineens alles
+Juist doen
+NIghtmaRe — Yesterday at 23:09
+yessir
+die gaat backend code full moeten aanpassen op basis van nieuwe entiteit(namen) en attributen, correct op de frontend moeten laten zien etc
+ge kunt da domeinmodel al wel is in nen AI smijten om te zien wa dat ding zegt
+kheb geen paid versions
+Juicer
+
+ — Yesterday at 23:11
+Ja das aids maar wegkomen er wel door
+Al vaker gedaan
+Gewoon alles testen
+Is gucci
+Juicer
+
+ — Yesterday at 23:40
+ja en honestly we moeten asap die echte data er in knallen da google indexing kan beginnen op de juiste data, want nu wachten voor de fake data te indexen is al even retarded
+ma kweet nog ni hoe da juist aan te pakken want da heeft gevolgen langst alle kanten
+NIghtmaRe — 00:27
+voor die seeded tabellen dacht ik:
+
+**PractionerType=alle mogelijke tuinmannen**
+Key:Licensed, Name:Licensed, Description:Legitieme nigga
+Key:Hobbyist, Name:Hobbyist, Description:Broke nigga
+
+**BillingCycle=alle mogelijke betaalintervallen**(kan uitgebreidt worden met betalingen per kwartaal oid)
+Key: Yearly, Interval: Yearly, isActive:Yes
+Key: Monthly, Interval: Monthly, isActive:No
+
+**PaymentProvider=alle mogelijke paymentproviders** (kan uitgebreidt worden met andere providers)
+Key:Mollie, Name:Mollie, isActive:True, ValidFrom:date.now, ValidUntil=max
+
+**SubscriptionPlan=alle mogelijke subscriptionplans** (TBD met marketingniggas)
+Key:Bronze, Name:Bronze, Price:120, GeneralInfo: blabla, IsActive:Yes, ValidFrom:date.now, ValidUntil=max
+Key:Silver, Name:Silver, Price:150, GeneralInfo: blabla, IsActive:Yes, ValidFrom:date.now, ValidUntil=max
+Key:Gold, Name:Gold, Price:180, GeneralInfo: blabla, IsActive:Yes, ValidFrom:date.now, ValidUntil=max
+
+**SubscriptionPlanOffer=alle mogelijke offers per plan** (hieronder voorbeelden voor bronze)
+DurationInYears:1, DiscountPercentage:0, TotalPrice:120, IsActive:Yes, ValidFrom:date.now, ValidUntil=max
+DurationInYears:2, DiscountPercentage:4, TotalPrice:230.4, IsActive:Yes, ValidFrom:date.now, ValidUntil=max
+DurationInYears:3, DiscountPercentage:8, TotalPrice:331.2, IsActive:Yes, ValidFrom:date.now, ValidUntil=max
+
+**ServiceArea=alle mogelijke gemeentes**
+Muncipality:Zemst, Postcode:1980, Province:Vlaam-Brabant, Region:Vlaanderen, Country:België, slug: zemst, Long:50.59, Lat:4.28
+Muncipality:Erps Kwerps, Postcode:3071, Province:Vlaam-Brabant, Region:Vlaanderen, Country:België, slug: erps-kwerps, Long:50.54, Lat:4.34
+Muncipality:Aarschot, Postcode:3200, Province:Vlaam-Brabant, Region:Vlaanderen, Country:België, slug: aarschot, Long:50.59, Lat:4.50
+
+**PracticalQuestion=alle mogelijke praktisch gerichte profielvragen**
+Key:Languages, Name:Languages, FieldType:OPTION, IsMulti:Yes, IsRequired:No
+Key:PriceHour, Name:PriceHour, FieldType:Double, IsMulti:No, IsRequired:No
+Key:YearsExperience, Name:YearsExperience, FieldType:int, IsMulti=No, IsRequired:No
+
+**PracticalOption=alle mogelijke opties indien praktijkvraag.type=option**
+Key:Afrikaans, Name:Afrikaans
+Key:Albanees, Name:Albanees
+Key:Armeens, Name:Armeens
+
+**ServiceCategory=alle mogelijke categorieën**
+Name=Architect, Slug=architect, Description: blabla, IsSystemDefined=Yes
+Name=Tuinonderhoud, Slug=tuinonderhoud, Description: blabla, IsSystemDefined=Yes
+Name=Tuinaanleg, Slug=tuinaanleg, Description: blabla, IsSystemDefined=Yes
+
+**Specialization=alle mogelijke specialisaties**
+Name=Gazon, Slug=gazon, Description: blabla, IsSystemDefined=Yes
+Name=Ecologisch Tuinieren, Slug=ecologisch-tuinieren, Description: blabla, IsSystemDefined=Yes
+Name=Ziekten & Plagen, Slug=ziekten-en-plagen, Description: blabla, IsSystemDefined=Yes
+Name=Water & Vijvers, Slug=water-en-vijvers, Description: blabla, IsSystemDefined=Yes
+Name=Houtbouw, Slug=houtbouw, Description: blabla, IsSystemDefined=Yes
+
+**OfferedService=alle mogelijke aangeboden diensten**
+Name=Snoeien, Slug=snoeien, Description: blabla, IsSystemDefined=Yes
+Name=Maaien, Slug=maaien, Description: blabla, IsSystemDefined=Yes
+Name=Sportgazon, Slug=sportgazon, Description: blabla, IsSystemDefined=Yes
+Name=Schutting, Slug=schutting, Description: blabla, IsSystemDefined=Yes
+Name=Belichting, Slug=berlichting, Description: blabla, IsSystemDefined=Yes
+
+message.txt
+4 KB
+Kijkt er nekeer naar
+NIghtmaRe — 00:28
+Ja het ding is, ge gaat google basically vertellen dat die test data moet indexeren
+Wat hayek is want sooner or later gaat die test data eruit gezwiert worden
+Juicer
+
+ — 00:28
+LEMME c
+en ja ook, ma eenmaal de real data er in. wa als een company da wij er in zetten zn info wilt aanpassen
+NIghtmaRe — 00:28
+En kdenk ni dat google houdt van veel wijzigingen in die sitemapper, dan moet die praktisch gans opnieuwb eginnen
+Juicer
+
+ — 00:29
+of er niet in wilt staan
+of uberhaubt wilt betalen maar ziet da hij er al in zit
+ja kga de current pages op no index zetten, fuck da, heeft geen zin
+Juicer
+
+ — 01:20
+https://simple-tune-page.replit.app/
+wa denkt ge van dit plan?
+
+MVP afmaken, algemene seed data
+test en iterate
+Launch tuinman
+Launch tegelijk 5  andere domains met slaagkans.
+zie welke het beste market, welke da doomed zijn
+kheb alle dynamic pages ook op noindex gezet tot da we ready zijn
+Juicer
+
+ — 01:29
+niks op tegen man, looks good. kweni of er iets vergeten is, maar alles wa er in staat makes sense. als gij content bent me de structuur is het voor mij ook goed. nu seed data, is da dan voor internal testing, of ook om mee live te gaan? als we er live mee willen gaan moeten we nog is goe nadenken hoe en wa. Want wa tf doen we als er een bedrijs is die zn shit ziet staan
+NIghtmaRe — 01:33
+DB schema aanmaken: (de auth.users referentie in Practitioner Table wordt normaal by default gemaakt door supabase)
+
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+CREATE TABLE practitioner_type (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    key TEXT UNIQUE NOT NULL,
+    name TEXT NOT NULL,
+    description TEXT
+);
+
+CREATE TABLE practitioner (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    auth_user_id UUID UNIQUE NOT NULL REFERENCES auth.users(id),
+
+    practitioner_type_id UUID NOT NULL REFERENCES practitioner_type(id),
+    billing_address_id UUID NOT NULL REFERENCES address(id),
+
+    email TEXT,
+    firstname TEXT,
+    lastname TEXT,
+    gender TEXT,
+    birthdate DATE,
+
+    show_age BOOLEAN DEFAULT false,
+    subject_to_vat BOOLEAN DEFAULT false,
+    vat TEXT,
+
+    created_at TIMESTAMP DEFAULT now()
+);
+
+
+CREATE TABLE admin (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    auth_user_id UUID UNIQUE NOT NULL REFERENCES auth.users(id),
+    created_at TIMESTAMP DEFAULT now()
+);
+
+CREATE TABLE address (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    street TEXT,
+    number TEXT,
+    municipality TEXT,
+    postcode INT,
+    province TEXT,
+    region TEXT,
+    country TEXT,
+    longitude DOUBLE PRECISION,
+    latitude DOUBLE PRECISION,
+
+    is_residential BOOLEAN DEFAULT false,
+    show_address BOOLEAN DEFAULT true,
+
+    valid_from DATE,
+    valid_until DATE
+);
+
+CREATE TABLE profile (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    practitioner_id UUID NOT NULL REFERENCES practitioner(id),
+    office_address_id UUID NOT NULL REFERENCES address(id),
+
+    company_name TEXT,
+    telnr TEXT,
+    contact_email TEXT,
+
+    title TEXT,
+    introduction TEXT,
+    logourl TEXT,
+    imageurls TEXT[],
+    websiteurl TEXT,
+    has_website BOOLEAN DEFAULT false,
+
+    is_active BOOLEAN DEFAULT false,
+    is_public BOOLEAN DEFAULT false,
+
+    slug TEXT UNIQUE NOT NULL,
+
+    created_at TIMESTAMP DEFAULT now()
+);
+
+CREATE TABLE service_area (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    municipality TEXT,
+    postcode INT,
+    province TEXT,
+    region TEXT,
+    country TEXT,
+    slug TEXT UNIQUE,
+    longitude DOUBLE PRECISION,
+    latitude DOUBLE PRECISION,
+    is_system_defined BOOLEAN DEFAULT true
+);
+
+CREATE TABLE profile_service_area (
+    profile_id UUID REFERENCES profile(id),
+    service_area_id UUID REFERENCES service_area(id),
+    PRIMARY KEY (profile_id, service_area_id)
+);
+
+... (172 lines left)
+
+message.txt
+8 KB
+Nog drie nota's bij da schema: als we die DB volsteken en merken dat een typed approach voor die answers (bv answerstring, answerint, answerdouble) kkr veel tijd nodig heeft om te queryen dan kan da nog altijd aangepast worden naar 1 tabel. punt 2: die foto's zijn nu gewoon een array in profile, kan opzich nog aparte entiteit worden. payment: geen idee of supabase zelf iets van entiteit voorziet of hoe die payment stuff geïntegreerd moet worden, maar dit is wa ik denk dat het moet zijn
+Da schema moet misschien nog lichtjes aangepast worden voor supabase, ma da kan die AI nigga wel
+NIghtmaRe — 01:36
+Kzou zeggen seed data voor internal testing
+No bueno om data van effectieve personen daarin te gaan steken
+Juicer
+
+ — 01:37
+hebt gij deze shit eventjes rawdogged?
+NIghtmaRe — 01:37
+in overleg met chadgpt
+ma die had daar vage dingen in gezet
+ngl
+dan vraag ik 'nigga wa is dees' en dan zegt die 'ah very good yes haha!'
+Juicer
+
+ — 01:38
+aaah yes very good, thank you for pointing out niigga
+NIghtmaRe — 01:38
+looks good
+Juicer
+
+ — 01:38
+ik denk da ik V2'tje ga maken in den DB voor deze shit
+of een backup
+ma dus die moet de frontend en backend ook volledig aanpassen right? Om die shit te kunnen gebruikenin den app
+NIghtmaRe — 01:39
+yes
+ik zou die oprecht echt gewoon de DB laten cleanen en da schema wipen, dan die tabellen erin zetten en diegene da ik geel had aangeduidt eerst laten seeden gebaseerd op die voorbeeldjes da ik had gestuurd
+en dan kan em beginnen met fake profiel in te laden en shenanigans
+ma in tandem moet em dan ook den backend gaan aanpassen want die spreekt ongetwijfeld nog tabellen/attributen aan die niet meer bestaan
+Juicer
+
+ — 01:40
+okay okay, dus nieuwen DB, de structuur daar, zien wa em nog nodig heeft, zorgen da niks ghardcoded is. dan alle gebroken shit terug fixen, seed data erin
+NIghtmaRe — 01:41
+en frontend de juste attributen plakken etc
+Juicer
+
+ — 01:41
+bro is NOT gonna have a good time, maar het moet gebeuren
+NIghtmaRe — 01:41
+bro does NOT have feelings
+slet moet werken
+﻿
+NIghtmaRe
+nightmare5648
+ 
+Letterboxd: https://letterboxd.com/jeuris/
+New vid: https://youtu.be/-yTr3D7h_ZQ
+DB schema aanmaken: (de auth.users referentie in Practitioner Table wordt normaal by default gemaakt door supabase)
+
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+CREATE TABLE practitioner_type (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    key TEXT UNIQUE NOT NULL,
+    name TEXT NOT NULL,
+    description TEXT
+);
+
+CREATE TABLE practitioner (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    auth_user_id UUID UNIQUE NOT NULL REFERENCES auth.users(id),
+
+    practitioner_type_id UUID NOT NULL REFERENCES practitioner_type(id),
+    billing_address_id UUID NOT NULL REFERENCES address(id),
+
+    email TEXT,
+    firstname TEXT,
+    lastname TEXT,
+    gender TEXT,
+    birthdate DATE,
+
+    show_age BOOLEAN DEFAULT false,
+    subject_to_vat BOOLEAN DEFAULT false,
+    vat TEXT,
+
+    created_at TIMESTAMP DEFAULT now()
+);
+
+
+CREATE TABLE admin (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    auth_user_id UUID UNIQUE NOT NULL REFERENCES auth.users(id),
+    created_at TIMESTAMP DEFAULT now()
+);
+
+CREATE TABLE address (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    street TEXT,
+    number TEXT,
+    municipality TEXT,
+    postcode INT,
+    province TEXT,
+    region TEXT,
+    country TEXT,
+    longitude DOUBLE PRECISION,
+    latitude DOUBLE PRECISION,
+
+    is_residential BOOLEAN DEFAULT false,
+    show_address BOOLEAN DEFAULT true,
+
+    valid_from DATE,
+    valid_until DATE
+);
+
+CREATE TABLE profile (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    practitioner_id UUID NOT NULL REFERENCES practitioner(id),
+    office_address_id UUID NOT NULL REFERENCES address(id),
+
+    company_name TEXT,
+    telnr TEXT,
+    contact_email TEXT,
+
+    title TEXT,
+    introduction TEXT,
+    logourl TEXT,
+    imageurls TEXT[],
+    websiteurl TEXT,
+    has_website BOOLEAN DEFAULT false,
+
+    is_active BOOLEAN DEFAULT false,
+    is_public BOOLEAN DEFAULT false,
+
+    slug TEXT UNIQUE NOT NULL,
+
+    created_at TIMESTAMP DEFAULT now()
+);
+
+CREATE TABLE service_area (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    municipality TEXT,
+    postcode INT,
+    province TEXT,
+    region TEXT,
+    country TEXT,
+    slug TEXT UNIQUE,
+    longitude DOUBLE PRECISION,
+    latitude DOUBLE PRECISION,
+    is_system_defined BOOLEAN DEFAULT true
+);
+
+CREATE TABLE profile_service_area (
+    profile_id UUID REFERENCES profile(id),
+    service_area_id UUID REFERENCES service_area(id),
+    PRIMARY KEY (profile_id, service_area_id)
+);
+
+CREATE TABLE service_category (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name TEXT NOT NULL,
+    slug TEXT UNIQUE NOT NULL,
+    description TEXT,
+    is_system_defined BOOLEAN DEFAULT true
+);
+
+CREATE TABLE specialization (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name TEXT NOT NULL,
+    slug TEXT UNIQUE NOT NULL,
+    description TEXT,
+    is_system_defined BOOLEAN DEFAULT true
+);
+
+CREATE TABLE offered_service (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name TEXT NOT NULL,
+    slug TEXT UNIQUE NOT NULL,
+    description TEXT,
+    is_system_defined BOOLEAN DEFAULT true
+);
+
+CREATE TABLE profile_service_category (
+    profile_id UUID REFERENCES profile(id),
+    service_category_id UUID REFERENCES service_category(id),
+    is_main BOOLEAN DEFAULT false,
+    PRIMARY KEY (profile_id, service_category_id)
+);
+
+CREATE TABLE profile_specialization (
+    profile_id UUID REFERENCES profile(id),
+    specialization_id UUID REFERENCES specialization(id),
+    is_main BOOLEAN DEFAULT false,
+    PRIMARY KEY (profile_id, specialization_id)
+);
+
+CREATE TABLE profile_offered_service (
+    profile_id UUID REFERENCES profile(id),
+    offered_service_id UUID REFERENCES offered_service(id),
+    PRIMARY KEY (profile_id, offered_service_id)
+);
+
+CREATE TABLE variable_type (
+    key TEXT PRIMARY KEY -- INT, STRING, DOUBLE, DATE, BOOLEAN, OPTION
+);
+
+CREATE TABLE practical_question (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    key TEXT UNIQUE NOT NULL,
+    name TEXT NOT NULL,
+    field_type TEXT NOT NULL REFERENCES variable_type(key),
+    is_multi BOOLEAN DEFAULT false,
+    is_required BOOLEAN DEFAULT false
+);
+
+CREATE TABLE practical_option (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    practical_question_id UUID NOT NULL REFERENCES practical_question(id),
+    key TEXT NOT NULL,
+    name TEXT NOT NULL
+);
+
+CREATE TABLE practical_answer (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    profile_id UUID NOT NULL REFERENCES profile(id),
+    practical_question_id UUID NOT NULL REFERENCES practical_question(id)
+);
+
+CREATE TABLE practical_answer_string (
+    practical_answer_id UUID PRIMARY KEY REFERENCES practical_answer(id),
+    value TEXT
+);
+
+CREATE TABLE practical_answer_int (
+    practical_answer_id UUID PRIMARY KEY REFERENCES practical_answer(id),
+    value INT
+);
+
+CREATE TABLE practical_answer_double (
+    practical_answer_id UUID PRIMARY KEY REFERENCES practical_answer(id),
+    value DOUBLE PRECISION
+);
+
+CREATE TABLE practical_answer_date (
+    practical_answer_id UUID PRIMARY KEY REFERENCES practical_answer(id),
+    value DATE
+);
+
+CREATE TABLE practical_answer_option (
+    practical_answer_id UUID REFERENCES practical_answer(id),
+    practical_option_id UUID REFERENCES practical_option(id),
+    PRIMARY KEY (practical_answer_id, practical_option_id)
+);
+
+CREATE TABLE billing_cycle (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    key TEXT UNIQUE NOT NULL,
+    interval TEXT NOT NULL,
+    is_active BOOLEAN DEFAULT true
+);
+
+CREATE TABLE subscription_plan (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    key TEXT UNIQUE NOT NULL,
+    name TEXT NOT NULL,
+    price DOUBLE PRECISION NOT NULL,
+    is_active BOOLEAN DEFAULT true,
+    valid_from DATE,
+    valid_until DATE
+);
+
+CREATE TABLE subscription_plan_offer (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    subscription_plan_id UUID NOT NULL REFERENCES subscription_plan(id),
+
+    duration_in_years INT,
+    discount_percentage INT,
+    total_price DOUBLE PRECISION,
+
+    is_popular BOOLEAN DEFAULT false,
+    is_active BOOLEAN DEFAULT true,
+
+    valid_from DATE,
+    valid_until DATE
+);
+
+CREATE TABLE profile_subscription (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    profile_id UUID NOT NULL REFERENCES profile(id),
+    subscription_plan_offer_id UUID NOT NULL REFERENCES subscription_plan_offer(id)
+    billing_cycle_id UUID NOT NULL REFERENCES billing_cycle(id),
+
+    start_date DATE,
+    end_date DATE,
+    auto_renew BOOLEAN DEFAULT false,
+
+    status TEXT, -- ACTIVE, EXPIRED, CANCELLED
+    grace_period_until DATE,
+    refunded_reason TEXT
+);
+
+CREATE TABLE payment_provider (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    key TEXT UNIQUE NOT NULL,
+    name TEXT NOT NULL,
+    is_active BOOLEAN DEFAULT true
+);
+
+CREATE TABLE payment (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    profile_subscription_id UUID NOT NULL REFERENCES profile_subscription(id),
+    payment_provider_id UUID NOT NULL REFERENCES payment_provider(id),
+
+    amount DOUBLE PRECISION NOT NULL,
+    status TEXT, -- PENDING, PAID, FAILED, REFUNDED
+    created_at TIMESTAMP DEFAULT now()
+);
+
+CREATE TABLE contact_request (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    profile_id UUID NOT NULL REFERENCES profile(id),
+
+    visitor_email TEXT,
+    visitor_name TEXT,
+    telnr TEXT,
+    subject TEXT,
+    message TEXT,
+
+    created_at TIMESTAMP DEFAULT now()
+);
+message.txt
+8 KB
