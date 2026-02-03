@@ -268,16 +268,13 @@ export default function CategoryPage() {
     generateBreadcrumbSchema(breadcrumbItems),
   ], [location?.name, specializationLabel, total, breadcrumbItems]);
 
-  // noindex pages with zero results to avoid thin content
-  const shouldNoindex = !isLoading && total === 0;
-
   return (
     <Layout>
       <SEO
         title={seoTitle}
         description={seoDescription}
         canonical={canonicalUrl}
-        noindex={shouldNoindex}
+        noindex={true}
         structuredData={structuredData}
       />
       
