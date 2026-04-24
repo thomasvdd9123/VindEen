@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "bVbmHIeR0qjHKR_Mzz7SD"
+uri = "file://BILLIT_PEPPOL_IMPLEMENTATION_GUIDE.md"
+type = "text"
+title = "Billit / Peppol Implementation Guide"
