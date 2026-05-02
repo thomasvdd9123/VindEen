@@ -56,7 +56,12 @@ export default function ProfilePayment() {
       const response = await authFetch("/api/mollie/create-payment", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ accountId: account.id, profileId, planId: selectedPlan }),
+        body: JSON.stringify({
+          accountId: account.id,
+          profileId,
+          planId: selectedPlan,
+          offerId: selected?.offerId,
+        }),
       });
 
       if (!response.ok) {

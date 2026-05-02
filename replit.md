@@ -140,16 +140,29 @@ The frontend has been refactored so a new vertical launches by editing
   sync with `<Route>` entries in `App.tsx`).
 - Helpers: `fillCopy("...{plural}/{singular}/{article}/{country}/...")`,
   `formatPrice(amount, { withCents })`, `legalValue()`, `legalAddress()`.
-- Hooks (no more hardcoded maps): `useSubscriptionOffers()` returns
-  `{ plans: PricingPlan[], defaultPlanId }` from `/api/subscription-plans`
-  (1 STANDARD plan × 1y/2y/3y offers). `useSpecializationMap()` returns
-  `{ slugToKey, keyToSlug, labelByKey, labelBySlug }` from
-  `/api/categories/grouped`.
+- Hooks (no more hardcoded maps):
+  - `useSubscriptionOffers()` → `{ plans: PricingPlan[], defaultPlanId }` from
+    `/api/subscription-plans`. Each plan exposes both legacy `id` ("{N}-year")
+    and the DB `offerId` (uuid); Mollie create-payment uses `offerId` directly
+    (legacy planId still accepted for back-compat).
+  - `useSpecializationMap()` → `{ slugToKey, keyToSlug, labelByKey, labelBySlug }`
+    from `/api/categories/grouped`. Used by SearchBox / CategoryPage /
+    ProfileEdit / ProfileCreate (no more TUINONDERHOUD/TUINAANLEG fallbacks).
+  - `useSiteConfig()` → currency, country, language, vatPercentage, postcode/
+    phone patterns from `/api/site-config` (with theme.config fallbacks).
 - Pages updated to consume the above: `Pricing.tsx`, `Onboarding.tsx`,
-  `dashboard/ProfilePayment.tsx`, `CategoryPage.tsx`, `Home.tsx`, `FAQ.tsx`,
+  `dashboard/ProfilePayment.tsx`, `dashboard/ProfileEdit.tsx`,
+  `dashboard/ProfileCreate.tsx`, `CategoryPage.tsx`, `Home.tsx`, `FAQ.tsx`,
   `Footer.tsx`, `SearchBox.tsx`.
-- Practical-question catalog (Languages/PriceHour/YearsExperience) in
-  Onboarding still hardcoded — deferred.
+- Race-condition fix: `SearchBox` now syncs local `selectedSpecialization`
+  state when its `initialSpecialization` prop resolves async (CategoryPage
+  resolves the slug→key map after mount).
+- Rebrand example: `client/src/lib/theme.config.kapper.example.ts`,
+  `scripts/seed/seed-kapper-example.ts`, and `REBRAND.md` at repo root document
+  the swap procedure.
+- Practical-question catalog (Languages/PriceHour/YearsExperience) UI is not
+  yet rendered in onboarding/profile-edit. Backend tables + API hydration
+  exist; the form rendering remains deferred.
 
 ## Schema Migration (May 2026) — Normalized / Vertical-Agnostic
 The DB has been fully migrated from the gardening-specific schema to a normalized

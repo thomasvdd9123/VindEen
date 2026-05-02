@@ -422,25 +422,25 @@ export default function ProfileEdit() {
   
   // Build lookup objects from API data (memoized to prevent unnecessary re-renders)
   const mainCategoryLabels = useMemo(() => {
-    return groupedCategories?.mainCategories?.reduce((acc, cat) => {
+    return (groupedCategories?.mainCategories || []).reduce((acc, cat) => {
       acc[cat.key] = cat.name;
       return acc;
-    }, {} as Record<string, string>) || { TUINONDERHOUD: "Tuinonderhoud", TUINAANLEG: "Tuinaanleg" };
+    }, {} as Record<string, string>);
   }, [groupedCategories]);
-  
+
   const specializationLabels = useMemo(() => {
     return Object.values(groupedCategories?.specializations || {}).flat().reduce((acc, spec) => {
       acc[spec.key] = spec.name;
       return acc;
-    }, {} as Record<string, string>) || {};
+    }, {} as Record<string, string>);
   }, [groupedCategories]);
-  
-  const specializationsByCategory = useMemo(() => {
-    return groupedCategories?.specializations 
+
+  const specializationsByCategory = useMemo<Record<string, string[]>>(() => {
+    return groupedCategories?.specializations
       ? Object.fromEntries(
-          Object.entries(groupedCategories.specializations).map(([key, specs]) => [key, specs.map(s => s.key)])
+          Object.entries(groupedCategories.specializations).map(([key, specs]) => [key, specs.map((s) => s.key)]),
         )
-      : { TUINONDERHOUD: [], TUINAANLEG: [] };
+      : {};
   }, [groupedCategories]);
 
   const form = useForm<ProfileFormData>({
@@ -475,19 +475,14 @@ export default function ProfileEdit() {
 
   useEffect(() => {
     // Only run when we have real data (not just default empty arrays)
-    const hasRealData = specializationsByCategory.TUINONDERHOUD?.length > 0 || specializationsByCategory.TUINAANLEG?.length > 0;
+    const categoryKeys = Object.keys(specializationsByCategory);
+    const hasRealData = categoryKeys.some((k) => specializationsByCategory[k]?.length > 0);
     if (profile && hasRealData) {
-      // Derive main categories from specializations
-      const derivedMainCategories: string[] = [];
-      const tuinonderhoudSpecs = specializationsByCategory.TUINONDERHOUD || [];
-      const tuinaanlegSpecs = specializationsByCategory.TUINAANLEG || [];
-      
-      if (profile.specializations?.some((s: string) => tuinonderhoudSpecs.includes(s))) {
-        derivedMainCategories.push("TUINONDERHOUD");
-      }
-      if (profile.specializations?.some((s: string) => tuinaanlegSpecs.includes(s))) {
-        derivedMainCategories.push("TUINAANLEG");
-      }
+      // Derive main categories from specializations (generic — works for any vertical)
+      const derivedMainCategories: string[] = categoryKeys.filter((catKey) => {
+        const specs = specializationsByCategory[catKey] || [];
+        return profile.specializations?.some((s: string) => specs.includes(s));
+      });
       
       form.reset({
         name: profile.name || "",
@@ -922,9 +917,8 @@ export default function ProfileEdit() {
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           {Object.entries(mainCategoryLabels).map(([key, label]) => {
                             const isSelected = field.value?.includes(key) || false;
-                            const description = key === "TUINONDERHOUD" 
-                              ? "Onderhoud van bestaande tuinen: maaien, snoeien, hagen knippen, etc."
-                              : "Aanleg van nieuwe tuinen: terrassen, paden, vijvers, gazon, etc.";
+                            const catMeta = groupedCategories?.mainCategories?.find((c) => c.key === key);
+                            const description = catMeta?.description || "";
                             
                             const handleToggle = (checked: boolean) => {
                               const current = field.value || [];

@@ -344,6 +344,7 @@ function OnboardingContent() {
           accountId: createdAccountId,
           profileId: createdProfileId,
           planId: selectedPlan,
+          offerId: plan.offerId,
         }),
       });
 

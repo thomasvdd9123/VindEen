@@ -125,25 +125,25 @@ export default function ProfileCreate() {
   
   // Build lookup objects from API data (memoized to prevent unnecessary re-renders)
   const mainCategoryLabels = useMemo(() => {
-    return groupedCategories?.mainCategories?.reduce((acc, cat) => {
+    return (groupedCategories?.mainCategories || []).reduce((acc, cat) => {
       acc[cat.key] = cat.name;
       return acc;
-    }, {} as Record<string, string>) || { TUINONDERHOUD: "Tuinonderhoud", TUINAANLEG: "Tuinaanleg" };
+    }, {} as Record<string, string>);
   }, [groupedCategories]);
-  
+
   const specializationLabels = useMemo(() => {
     return Object.values(groupedCategories?.specializations || {}).flat().reduce((acc, spec) => {
       acc[spec.key] = spec.name;
       return acc;
-    }, {} as Record<string, string>) || {};
+    }, {} as Record<string, string>);
   }, [groupedCategories]);
-  
-  const specializationsByCategory = useMemo(() => {
-    return groupedCategories?.specializations 
+
+  const specializationsByCategory = useMemo<Record<string, string[]>>(() => {
+    return groupedCategories?.specializations
       ? Object.fromEntries(
-          Object.entries(groupedCategories.specializations).map(([key, specs]) => [key, specs.map(s => s.key)])
+          Object.entries(groupedCategories.specializations).map(([key, specs]) => [key, specs.map((s) => s.key)]),
         )
-      : { TUINONDERHOUD: [], TUINAANLEG: [] };
+      : {};
   }, [groupedCategories]);
 
   const form = useForm<ProfileFormData>({
@@ -561,9 +561,8 @@ export default function ProfileCreate() {
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           {Object.entries(mainCategoryLabels).map(([key, label]) => {
                             const isSelected = field.value?.includes(key) || false;
-                            const description = key === "TUINONDERHOUD" 
-                              ? "Onderhoud van bestaande tuinen: maaien, snoeien, hagen knippen, etc."
-                              : "Aanleg van nieuwe tuinen: terrassen, paden, vijvers, gazon, etc.";
+                            const catMeta = groupedCategories?.mainCategories?.find((c) => c.key === key);
+                            const description = catMeta?.description || "";
                             
                             const handleToggle = (checked: boolean) => {
                               const current = field.value || [];

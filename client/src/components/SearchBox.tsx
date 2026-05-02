@@ -45,6 +45,14 @@ export function SearchBox({
   const [cityQuery, setCityQuery] = useState(initialLocation || "");
   const [selectedMainCategory, setSelectedMainCategory] = useState(initialCategory || "all");
   const [selectedSpecialization, setSelectedSpecialization] = useState(initialSpecialization || "all");
+
+  // CategoryPage may resolve initialSpecialization async (slug→key map). Sync local state when prop changes.
+  useEffect(() => {
+    if (initialSpecialization && initialSpecialization !== selectedSpecialization) {
+      setSelectedSpecialization(initialSpecialization);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialSpecialization]);
   const [keyword, setKeyword] = useState(initialQuery);
   const [filteredLocations, setFilteredLocations] = useState<Location[]>([]);
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
@@ -57,25 +65,25 @@ export function SearchBox({
   
   // Build lookup objects from API data (memoized for performance)
   const mainCategoryLabels = useMemo(() => {
-    return groupedCategories?.mainCategories?.reduce((acc, cat) => {
+    return (groupedCategories?.mainCategories || []).reduce((acc, cat) => {
       acc[cat.key] = cat.name;
       return acc;
-    }, {} as Record<string, string>) || { TUINONDERHOUD: "Tuinonderhoud", TUINAANLEG: "Tuinaanleg" };
+    }, {} as Record<string, string>);
   }, [groupedCategories]);
-  
+
   const specializationLabels = useMemo(() => {
     return Object.values(groupedCategories?.specializations || {}).flat().reduce((acc, spec) => {
       acc[spec.key] = spec.name;
       return acc;
-    }, {} as Record<string, string>) || {};
+    }, {} as Record<string, string>);
   }, [groupedCategories]);
-  
-  const specializationsByCategory = useMemo(() => {
-    return groupedCategories?.specializations 
+
+  const specializationsByCategory = useMemo<Record<string, string[]>>(() => {
+    return groupedCategories?.specializations
       ? Object.fromEntries(
-          Object.entries(groupedCategories.specializations).map(([key, specs]) => [key, specs.map(s => s.key)])
+          Object.entries(groupedCategories.specializations).map(([key, specs]) => [key, specs.map((s) => s.key)]),
         )
-      : { TUINONDERHOUD: [], TUINAANLEG: [] };
+      : {};
   }, [groupedCategories]);
 
   // Get available specializations based on selected main category

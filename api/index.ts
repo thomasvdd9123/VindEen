@@ -1210,8 +1210,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (method === "POST" && path === "/api/mollie/create-payment") {
       const auth = await getAuthContext(req);
       if (!auth || !auth.practitionerId) return res.status(401).json({ error: "Unauthorized" });
-      const { profileId, accountId, planId } = req.body || {};
-      if (!profileId || !planId) return res.status(400).json({ error: "Missing fields" });
+      const { profileId, accountId, planId, offerId } = req.body || {};
+      if (!profileId || (!planId && !offerId)) return res.status(400).json({ error: "Missing fields" });
       const { data: ownerCheck } = await supabase.from("profile").select("practitioner_id").eq("id", profileId).maybeSingle();
       if (!ownerCheck) return res.status(404).json({ error: "Profile not found" });
       if ((ownerCheck as { practitioner_id: string }).practitioner_id !== auth.practitionerId) return res.status(403).json({ error: "Forbidden" });
@@ -1219,18 +1219,30 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const mollieApiKey = process.env.MOLLIE_API_KEY;
       if (!mollieApiKey) return res.status(503).json({ error: "Payment service not configured" });
 
-      // map legacy planId "1-year"/"2-year"/"3-year" → duration_in_years
-      const years = parseInt(String(planId).split("-")[0]);
-      if (!years) return res.status(400).json({ error: "Invalid planId" });
-
-      const { data: offer } = await supabase
-        .from("subscription_plan_offer")
-        .select("*, subscription_plan(*)")
-        .eq("duration_in_years", years)
-        .eq("is_active", true)
-        .limit(1)
-        .single();
+      // Prefer offerId (DB uuid). Fallback: legacy planId "{N}-year" → duration_in_years for back-compat.
+      let offer: any = null;
+      if (offerId) {
+        const { data } = await supabase
+          .from("subscription_plan_offer")
+          .select("*, subscription_plan(*)")
+          .eq("id", offerId)
+          .eq("is_active", true)
+          .maybeSingle();
+        offer = data;
+      } else {
+        const years = parseInt(String(planId).split("-")[0]);
+        if (!years) return res.status(400).json({ error: "Invalid planId" });
+        const { data } = await supabase
+          .from("subscription_plan_offer")
+          .select("*, subscription_plan(*)")
+          .eq("duration_in_years", years)
+          .eq("is_active", true)
+          .limit(1)
+          .maybeSingle();
+        offer = data;
+      }
       if (!offer) return res.status(400).json({ error: "Plan not found" });
+      const years = (offer as any).duration_in_years;
 
       const { data: profile } = await supabase.from("profile").select("id, company_name").eq("id", profileId).single();
       if (!profile) return res.status(404).json({ error: "Profile not found" });
