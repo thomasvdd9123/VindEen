@@ -1,5 +1,34 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { createClient } from "@supabase/supabase-js";
+// @ts-expect-error - busboy heeft geen type declaraties geïnstalleerd
+import BusboyImport from "busboy";
+const Busboy = BusboyImport as unknown as (opts: { headers: Record<string, string>; limits?: { fileSize?: number; files?: number } }) => NodeJS.WritableStream & {
+  on(event: "field", cb: (name: string, val: string) => void): void;
+  on(event: "file", cb: (name: string, file: NodeJS.ReadableStream, info: { filename: string; mimeType: string }) => void): void;
+  on(event: "finish" | "close", cb: () => void): void;
+  on(event: "error", cb: (err: Error) => void): void;
+};
+
+async function parseMultipartFile(req: VercelRequest): Promise<{ filename: string; mime: string; buffer: Buffer; type: string } | null> {
+  return new Promise((resolve, reject) => {
+    try {
+      const bb = Busboy({ headers: req.headers as Record<string, string>, limits: { fileSize: 8 * 1024 * 1024, files: 1 } });
+      let result: { filename: string; mime: string; buffer: Buffer; type: string } | null = null;
+      let typeField = "extra";
+      bb.on("field", (name: string, val: string) => { if (name === "type") typeField = val; });
+      bb.on("file", (_name, file, info) => {
+        const chunks: Buffer[] = [];
+        file.on("data", (c: Buffer) => chunks.push(c));
+        file.on("end", () => {
+          result = { filename: info.filename, mime: info.mimeType, buffer: Buffer.concat(chunks), type: typeField };
+        });
+      });
+      bb.on("finish", () => resolve(result));
+      bb.on("error", reject);
+      (req as unknown as NodeJS.ReadableStream).pipe(bb as unknown as NodeJS.WritableStream);
+    } catch (e) { reject(e); }
+  });
+}
 
 const supabaseUrl = process.env.SUPABASE_URL!;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -586,6 +615,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const id = path.split("/").pop();
       const { data } = await supabase.from("profile").select("*").eq("id", id).single();
       if (!data) return res.status(404).json({ error: "Profile not found" });
+      const row = data as { is_active?: boolean; practitioner_id: string };
+      // Publieke toegang enkel voor actieve profielen; eigenaar mag altijd zijn eigen profiel zien
+      if (!row.is_active) {
+        const auth = await getAuthContext(req);
+        if (!auth || auth.practitionerId !== row.practitioner_id) {
+          return res.status(403).json({ error: "Forbidden" });
+        }
+      }
       res.setHeader("Cache-Control", "no-store");
       return res.status(200).json(await hydrateProfile(data, { withPracticals: true }));
     }
@@ -863,6 +900,34 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       await applyProfileJunctions((data as { id: string }).id, body);
       const fresh = await supabase.from("profile").select("*").eq("id", (data as { id: string }).id).single();
       return res.status(201).json(await hydrateProfile(fresh.data));
+    }
+
+    if (method === "POST" && path.match(/^\/api\/profiles\/[^/]+\/upload$/)) {
+      const auth = await getAuthContext(req);
+      if (!auth || !auth.practitionerId) return res.status(401).json({ error: "Unauthorized" });
+      const profileId = path.split("/")[3];
+      const { data: prof } = await supabase.from("profile").select("practitioner_id, logourl, imageurls").eq("id", profileId).maybeSingle();
+      if (!prof) return res.status(404).json({ error: "Profile not found" });
+      const profRow = prof as { practitioner_id: string; logourl: string | null; imageurls: string[] | null };
+      if (profRow.practitioner_id !== auth.practitionerId) return res.status(403).json({ error: "Forbidden" });
+
+      const file = await parseMultipartFile(req);
+      if (!file) return res.status(400).json({ error: "No file uploaded" });
+
+      const ext = (file.filename.split(".").pop() || "bin").toLowerCase().replace(/[^a-z0-9]/g, "");
+      const key = `profiles/${profileId}/${file.type}-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("uploads").upload(key, file.buffer, { contentType: file.mime, upsert: false });
+      if (upErr) return res.status(500).json({ error: upErr.message });
+      const { data: pub } = supabase.storage.from("uploads").getPublicUrl(key);
+      const url = pub.publicUrl;
+
+      if (file.type === "profile" || file.type === "logo") {
+        await supabase.from("profile").update({ logourl: url }).eq("id", profileId);
+      } else {
+        const imgs = Array.isArray(profRow.imageurls) ? profRow.imageurls : [];
+        await supabase.from("profile").update({ imageurls: [...imgs, url] }).eq("id", profileId);
+      }
+      return res.status(200).json({ url, type: file.type });
     }
 
     if ((method === "PUT" || method === "PATCH") && path.match(/^\/api\/profiles\/[^/]+$/) && !path.includes("/by-id/") && !path.endsWith("/track-click")) {
@@ -1169,8 +1234,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (method === "GET" && path.match(/^\/api\/mollie\/payment-status\/[^/]+$/)) {
       const subscriptionId = path.split("/").pop();
+      const auth = await getAuthContext(req);
+      if (!auth || !auth.practitionerId) return res.status(401).json({ error: "Unauthorized" });
       const { data: sub } = await supabase.from("profile_subscription").select("*").eq("id", subscriptionId).single();
       if (!sub) return res.status(404).json({ error: "Subscription not found" });
+      const subRow = sub as { profile_id: string };
+      const { data: ownerProfile } = await supabase.from("profile").select("practitioner_id").eq("id", subRow.profile_id).maybeSingle();
+      if (!ownerProfile || (ownerProfile as { practitioner_id: string }).practitioner_id !== auth.practitionerId) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
       const { data: pay } = await supabase
         .from("payment")
         .select("*")
