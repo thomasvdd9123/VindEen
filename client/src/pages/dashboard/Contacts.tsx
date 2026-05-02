@@ -213,11 +213,21 @@ function ContactCard({ contact }: { contact: ContactRequest }) {
     window.location.href = `mailto:${contact.visitorEmail}?subject=${subject}&body=${body}`;
   };
 
+  const deleteMutation = useMutation({
+    mutationFn: async () => apiRequest("DELETE", `/api/contact-requests/${contact.id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/contact-requests"] });
+      toast({ title: "Contactverzoek verwijderd" });
+    },
+    onError: () => {
+      toast({ title: "Verwijderen mislukt", variant: "destructive" });
+    },
+  });
+
   const handleArchive = () => {
-    toast({
-      title: "Binnenkort beschikbaar",
-      description: "De archiveringsfunctie wordt binnenkort toegevoegd.",
-    });
+    if (confirm("Dit contactverzoek definitief verwijderen?")) {
+      deleteMutation.mutate();
+    }
   };
 
   return (
@@ -284,7 +294,7 @@ function ContactCard({ contact }: { contact: ContactRequest }) {
                   data-testid={`button-archive-${contact.id}`}
                 >
                   <Archive className="h-3.5 w-3.5" />
-                  Archiveren
+                  Verwijderen
                 </Button>
               </div>
             </div>

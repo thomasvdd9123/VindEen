@@ -830,6 +830,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json(toCamelCase(enriched));
     }
 
+    if (method === "DELETE" && path.match(/^\/api\/contact-requests\/[^/]+$/)) {
+      const reqId = path.split("/").pop()!;
+      const auth = await getAuthContext(req);
+      if (!auth || !auth.practitionerId) return res.status(401).json({ error: "Unauthorized" });
+      const { data: cr } = await supabase.from("contact_request").select("profile_id").eq("id", reqId).maybeSingle();
+      if (!cr) return res.status(404).json({ error: "Not found" });
+      const { data: prof } = await supabase.from("profile").select("practitioner_id").eq("id", (cr as { profile_id: string }).profile_id).maybeSingle();
+      if (!prof || (prof as { practitioner_id: string }).practitioner_id !== auth.practitionerId) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+      const { error } = await supabase.from("contact_request").delete().eq("id", reqId);
+      if (error) throw error;
+      return res.status(200).json({ success: true });
+    }
+
     if (method === "POST" && path.match(/^\/api\/contact\/[^/]+$/)) {
       const profileId = path.split("/").pop();
       const { data: profile } = await supabase.from("profile").select("id, company_name, contact_email, is_active, is_public").eq("id", profileId).single();

@@ -28,7 +28,6 @@ import {
   Euro,
   CreditCard,
   Briefcase,
-  GraduationCap,
   TreeDeciduous,
   ArrowLeft,
   ExternalLink,
@@ -318,20 +317,6 @@ export default function ProfilePage() {
               </Card>
             )}
 
-
-            {profile.education && (
-              <Card data-testid="card-profile-education">
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <GraduationCap className="h-5 w-5 text-primary" />
-                    Opleiding
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">{profile.education}</p>
-                </CardContent>
-              </Card>
-            )}
 
             {profile.practical && (
               <Card data-testid="card-profile-practical">
