@@ -3,6 +3,24 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 // ---------------------------------------------------------------------------
+// CORE: country (currency / VAT / phone-format als data, niet hardcoded)
+// ---------------------------------------------------------------------------
+export const country = pgTable("country", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  code: text("code").notNull().unique(),
+  name: text("name").notNull(),
+  currencyCode: text("currency_code").notNull(),
+  currencySymbol: text("currency_symbol").notNull(),
+  defaultVatPercentage: doublePrecision("default_vat_percentage").notNull(),
+  phoneCountryCode: text("phone_country_code"),
+  postcodePattern: text("postcode_pattern"),
+  isActive: boolean("is_active").default(true),
+});
+export const insertCountrySchema = createInsertSchema(country).omit({ id: true });
+export type InsertCountry = z.infer<typeof insertCountrySchema>;
+export type Country = typeof country.$inferSelect;
+
+// ---------------------------------------------------------------------------
 // CORE: address
 // ---------------------------------------------------------------------------
 export const address = pgTable("address", {
@@ -332,7 +350,7 @@ export const payment = pgTable("payment", {
   profileSubscriptionId: uuid("profile_subscription_id").notNull().references(() => profileSubscription.id, { onDelete: "cascade" }),
   paymentProviderId: uuid("payment_provider_id").notNull().references(() => paymentProvider.id),
   amount: doublePrecision("amount").notNull(),
-  currency: text("currency").default("EUR"),
+  currency: text("currency").notNull(),
   status: text("status").default("PENDING"),
   externalPaymentId: text("external_payment_id"),
   externalInvoiceId: text("external_invoice_id"),

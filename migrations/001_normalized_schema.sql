@@ -391,7 +391,7 @@ CREATE TABLE payment (
     payment_provider_id UUID NOT NULL REFERENCES payment_provider(id),
 
     amount DOUBLE PRECISION NOT NULL,
-    currency TEXT DEFAULT 'EUR',
+    currency TEXT NOT NULL,                       -- bepaald door site_config / country, geen hardcoded default
     status TEXT DEFAULT 'PENDING',                -- PENDING, PAID, FAILED, REFUNDED
 
     -- Provider-side identifiers (Mollie/Stripe/etc)

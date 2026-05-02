@@ -4,8 +4,33 @@ import { createClient } from "@supabase/supabase-js";
 const supabaseUrl = process.env.SUPABASE_URL!;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY!;
 
 const SITEMAP_BASE_URL = "https://www.zoek-een-tuinman.be";
+
+// ---------------------------------------------------------------------------
+// AUTH — verify Supabase Bearer token uit Authorization header
+// ---------------------------------------------------------------------------
+type AuthCtx = { authUserId: string; practitionerId: string | null };
+
+async function getAuthContext(req: VercelRequest): Promise<AuthCtx | null> {
+  const header = (req.headers["authorization"] || req.headers["Authorization"]) as string | undefined;
+  if (!header || !header.toLowerCase().startsWith("bearer ")) return null;
+  const token = header.slice(7).trim();
+  if (!token) return null;
+  const userClient = createClient(supabaseUrl, supabaseAnonKey, {
+    global: { headers: { Authorization: `Bearer ${token}` } },
+  });
+  const { data, error } = await userClient.auth.getUser();
+  if (error || !data?.user) return null;
+  const authUserId = data.user.id;
+  const { data: prac } = await supabase
+    .from("practitioner")
+    .select("id")
+    .eq("auth_user_id", authUserId)
+    .maybeSingle();
+  return { authUserId, practitionerId: (prac as { id: string } | null)?.id ?? null };
+}
 
 function generateSlug(name: string): string {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
@@ -101,6 +126,104 @@ function legacyLocationFromArea(a: any) {
     longitude: a.longitude,
     is_active: true,
   };
+}
+
+// Apply junction-table updates (categories, specs, service areas, office addr, practicals)
+async function applyProfileJunctions(profileId: string, body: Record<string, any>) {
+  const { specializations, serviceCategories, serviceAreas } = await getCatalogs();
+
+  if (Array.isArray(body.specializations)) {
+    await supabase.from("profile_specialization").delete().eq("profile_id", profileId);
+    const rows = body.specializations
+      .map((slug: string) => specializations.find((s) => s.slug === slug || s.slug === String(slug).toLowerCase().replace(/_/g, "-")))
+      .filter(Boolean)
+      .map((sp: any, i: number) => ({ profile_id: profileId, specialization_id: sp.id, is_main: i === 0 }));
+    if (rows.length) await supabase.from("profile_specialization").insert(rows);
+  }
+
+  if (Array.isArray(body.mainCategories)) {
+    await supabase.from("profile_service_category").delete().eq("profile_id", profileId);
+    const rows = body.mainCategories
+      .map((key: string) => serviceCategories.find((c) => mainCategoryKey(c.slug) === String(key).toUpperCase() || c.slug === String(key).toLowerCase().replace(/_/g, "-")))
+      .filter(Boolean)
+      .map((sc: any, i: number) => ({ profile_id: profileId, service_category_id: sc.id, is_main: i === 0 }));
+    if (rows.length) await supabase.from("profile_service_category").insert(rows);
+  }
+
+  if (Array.isArray(body.serviceAreas)) {
+    await supabase.from("profile_service_area").delete().eq("profile_id", profileId);
+    const rows = body.serviceAreas
+      .map((slugOrId: string) => serviceAreas.find((a) => a.id === slugOrId || a.slug === slugOrId))
+      .filter(Boolean)
+      .map((a: any) => ({ profile_id: profileId, service_area_id: a.id }));
+    if (rows.length) await supabase.from("profile_service_area").insert(rows);
+  }
+
+  if (body.office || body.officeStreet !== undefined || body.officePostcode !== undefined) {
+    const o = body.office || {
+      street: body.officeStreet,
+      number: body.officeNumber,
+      municipality: body.officeTown,
+      postcode: body.officePostcode,
+    };
+    const { data: prof } = await supabase.from("profile").select("office_address_id").eq("id", profileId).single();
+    const existingAddrId = (prof as { office_address_id: string | null } | null)?.office_address_id || null;
+    const { data: cfg } = await supabase.from("site_config").select("default_country_name").limit(1).single();
+    const payload: Record<string, any> = {
+      street: o.street ?? null,
+      number: o.number ?? null,
+      municipality: o.municipality ?? o.town ?? null,
+      postcode: o.postcode ?? null,
+      country: o.country ?? (cfg as { default_country_name: string } | null)?.default_country_name ?? null,
+      latitude: o.latitude ?? null,
+      longitude: o.longitude ?? null,
+      show_address: o.showAddress ?? o.show_address ?? true,
+    };
+    if (existingAddrId) {
+      await supabase.from("address").update(payload).eq("id", existingAddrId);
+    } else {
+      const { data: addr } = await supabase.from("address").insert(payload).select("id").single();
+      if (addr) await supabase.from("profile").update({ office_address_id: (addr as { id: string }).id }).eq("id", profileId);
+    }
+  }
+
+  if (body.practical && typeof body.practical === "object") {
+    const { data: questions } = await supabase.from("practical_question").select("*");
+    if (questions) {
+      for (const q of questions as any[]) {
+        const camelKey = q.key.charAt(0).toLowerCase() + q.key.slice(1);
+        const value = body.practical[camelKey] ?? body.practical[q.key];
+        if (value === undefined) continue;
+        const { data: prevAnswers } = await supabase.from("practical_answer").select("id").eq("profile_id", profileId).eq("practical_question_id", q.id);
+        for (const pa of (prevAnswers as { id: string }[] | null) || []) {
+          await supabase.from("practical_answer").delete().eq("id", pa.id);
+        }
+        const { data: ans } = await supabase
+          .from("practical_answer")
+          .insert({ profile_id: profileId, practical_question_id: q.id })
+          .select("id")
+          .single();
+        if (!ans) continue;
+        const ansId = (ans as { id: string }).id;
+        if (q.field_type === "OPTION" && Array.isArray(value)) {
+          const { data: opts } = await supabase.from("practical_option").select("id, name").eq("practical_question_id", q.id);
+          const optRows = (value as string[])
+            .map((v) => (opts as { id: string; name: string }[] | null)?.find((o) => o.name === v || o.name.toLowerCase() === String(v).toLowerCase()))
+            .filter(Boolean)
+            .map((o: any) => ({ practical_answer_id: ansId, practical_option_id: o.id }));
+          if (optRows.length) await supabase.from("practical_answer_option").insert(optRows);
+        } else if (q.field_type === "INT") {
+          await supabase.from("practical_answer_int").insert({ practical_answer_id: ansId, value: parseInt(String(value), 10) });
+        } else if (q.field_type === "DOUBLE") {
+          await supabase.from("practical_answer_double").insert({ practical_answer_id: ansId, value: parseFloat(String(value)) });
+        } else if (q.field_type === "STRING") {
+          await supabase.from("practical_answer_string").insert({ practical_answer_id: ansId, value: String(value) });
+        } else if (q.field_type === "DATE") {
+          await supabase.from("practical_answer_date").insert({ practical_answer_id: ansId, value });
+        }
+      }
+    }
+  }
 }
 
 // Hydrate a profile row with related data in legacy-frontend shape
@@ -380,13 +503,28 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
       }
 
-      // Location → 20km radius using office address coords
+      // Location:
+      //  1) eerst intersect via profile_service_area (genormaliseerde coverage)
+      //  2) dan optionele 20km-radius op office_address voor sortering/back-fill
       let searchLocationData: { lat: number; lng: number; name: string; id: string } | null = null;
       const SEARCH_RADIUS_KM = 20;
       if (location) {
         const loc = serviceAreas.find((a) => a.slug === location);
         if (loc && loc.latitude && loc.longitude) {
           searchLocationData = { lat: loc.latitude, lng: loc.longitude, name: loc.municipality, id: loc.id };
+          const { data: areaProfiles } = await supabase
+            .from("profile_service_area")
+            .select("profile_id")
+            .eq("service_area_id", loc.id);
+          const areaIds = (areaProfiles || []).map((r) => (r as { profile_id: string }).profile_id);
+          // Coverage-based filter heeft voorrang als er resultaten zijn; anders fallback radius
+          if (areaIds.length) {
+            candidateIds = candidateIds ? candidateIds.filter((id) => areaIds.includes(id)) : areaIds;
+            if (!candidateIds.length) {
+              if (isCount) return res.status(200).json({ total: 0, count: 0 });
+              return res.status(200).json({ profiles: [], total: 0, page, totalPages: 0, searchLocation: searchLocationData });
+            }
+          }
         }
       }
 
@@ -461,6 +599,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // ACCOUNTS / PRACTITIONERS (legacy alias: account = practitioner)
     // -----------------------------------------------------------------------
     if (method === "GET" && path.match(/^\/api\/my-profiles\/[^/]+$/)) {
+      const reqPractitionerId = path.split("/").pop();
+      const auth0 = await getAuthContext(req);
+      if (!auth0 || auth0.practitionerId !== reqPractitionerId) return res.status(403).json({ error: "Forbidden" });
       const practitionerId = path.split("/").pop();
       const { data } = await supabase.from("profile").select("*").eq("practitioner_id", practitionerId);
       const hydrated = await Promise.all((data || []).map((p) => hydrateProfile(p)));
@@ -468,8 +609,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     if (method === "POST" && path === "/api/accounts") {
+      const auth = await getAuthContext(req);
+      if (!auth) return res.status(401).json({ error: "Unauthorized" });
       const { authUserId, email } = req.body;
       if (!authUserId) return res.status(400).json({ error: "authUserId required" });
+      if (authUserId !== auth.authUserId) return res.status(403).json({ error: "Forbidden" });
       const { data: existing } = await supabase.from("practitioner").select("*").eq("auth_user_id", authUserId).maybeSingle();
       if (existing) return res.status(200).json(toCamelCase({ ...existing, account_id: (existing as any).id, role: "GARDENER", email_verified: true }));
       // get default practitioner type from site_config
@@ -492,6 +636,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (method === "GET" && path.match(/^\/api\/accounts\/[^/]+$/) && !path.includes("/by-auth/")) {
       const id = path.split("/").pop();
+      const auth = await getAuthContext(req);
+      if (!auth || auth.practitionerId !== id) return res.status(403).json({ error: "Forbidden" });
       const { data } = await supabase.from("practitioner").select("*").eq("id", id).maybeSingle();
       if (!data) return res.status(404).json({ error: "Account not found" });
       return res.status(200).json(toCamelCase({ ...data, account_id: (data as any).id, role: "GARDENER", email_verified: true }));
@@ -499,6 +645,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (method === "PATCH" && path.match(/^\/api\/accounts\/[^/]+$/) && !path.includes("/by-auth/")) {
       const id = path.split("/").pop();
+      const auth = await getAuthContext(req);
+      if (!auth || auth.practitionerId !== id) return res.status(403).json({ error: "Forbidden" });
       const body = req.body || {};
       // Map legacy fields onto practitioner + billing address
       const practUpdate: Record<string, any> = {};
@@ -572,6 +720,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // -----------------------------------------------------------------------
     if (method === "GET" && path.match(/^\/api\/contact-requests\/[^/]+$/)) {
       const practitionerId = path.split("/").pop();
+      const auth = await getAuthContext(req);
+      if (!auth || auth.practitionerId !== practitionerId) return res.status(403).json({ error: "Forbidden" });
       const { data: profiles } = await supabase.from("profile").select("id, slug, company_name").eq("practitioner_id", practitionerId);
       if (!profiles || !profiles.length) return res.status(200).json([]);
       const profileIds = profiles.map((p) => (p as any).id);
@@ -656,6 +806,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     if (method === "DELETE" && path === "/api/account/delete") {
+      const auth = await getAuthContext(req);
+      if (!auth || !auth.practitionerId) return res.status(401).json({ error: "Unauthorized" });
+      // Verwijder profielen + alle gerelateerde data via FK CASCADE op practitioner
+      await supabase.from("practitioner").delete().eq("id", auth.practitionerId);
+      // Auth user verwijdering vereist admin client
+      try { await supabase.auth.admin.deleteUser(auth.authUserId); } catch {}
       return res.status(200).json({ success: true });
     }
 
@@ -663,9 +819,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // PROFILE CRUD
     // -----------------------------------------------------------------------
     if (method === "POST" && path === "/api/profiles") {
+      const auth = await getAuthContext(req);
+      if (!auth || !auth.practitionerId) return res.status(401).json({ error: "Unauthorized" });
       const body = req.body || {};
-      const practitionerId = body.accountId || body.practitionerId;
-      if (!practitionerId) return res.status(400).json({ error: "accountId/practitionerId required" });
+      const requested = body.accountId || body.practitionerId;
+      if (requested && requested !== auth.practitionerId) return res.status(403).json({ error: "Forbidden" });
+      const practitionerId = auth.practitionerId;
 
       let baseSlug = generateSlug(body.name || body.companyName || "profiel");
       let slug = baseSlug;
@@ -694,12 +853,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         .select()
         .single();
       if (error) throw error;
-      return res.status(201).json(await hydrateProfile(data));
+      await applyProfileJunctions((data as { id: string }).id, body);
+      const fresh = await supabase.from("profile").select("*").eq("id", (data as { id: string }).id).single();
+      return res.status(201).json(await hydrateProfile(fresh.data));
     }
 
     if ((method === "PUT" || method === "PATCH") && path.match(/^\/api\/profiles\/[^/]+$/) && !path.includes("/by-id/") && !path.endsWith("/track-click")) {
-      const id = path.split("/").pop();
+      const id = path.split("/").pop()!;
       if (id === "featured" || id === "count" || id === "search") return res.status(404).json({ error: "Not found" });
+      const auth = await getAuthContext(req);
+      if (!auth || !auth.practitionerId) return res.status(401).json({ error: "Unauthorized" });
+      const { data: existing } = await supabase.from("profile").select("practitioner_id").eq("id", id).maybeSingle();
+      if (!existing) return res.status(404).json({ error: "Profile not found" });
+      if ((existing as { practitioner_id: string }).practitioner_id !== auth.practitionerId) return res.status(403).json({ error: "Forbidden" });
+
       const body = req.body || {};
       const update: Record<string, any> = {};
       if (body.name !== undefined) update.company_name = body.name;
@@ -720,23 +887,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       const { data, error } = await supabase.from("profile").update(update).eq("id", id).select().single();
       if (error) throw error;
-
-      // junctions: specializations array of slugs
-      if (Array.isArray(body.specializations)) {
-        const { specializations } = await getCatalogs();
-        await supabase.from("profile_specialization").delete().eq("profile_id", id);
-        for (const slug of body.specializations) {
-          const sp = specializations.find((s) => s.slug === slug);
-          if (sp) await supabase.from("profile_specialization").insert({ profile_id: id, specialization_id: sp.id, is_main: false });
-        }
-      }
+      await applyProfileJunctions(id, body);
       res.setHeader("Cache-Control", "no-store");
-      return res.status(200).json(await hydrateProfile(data));
+      const fresh = await supabase.from("profile").select("*").eq("id", id).single();
+      return res.status(200).json(await hydrateProfile(fresh.data, { withPracticals: true }));
     }
 
     if (method === "DELETE" && path.match(/^\/api\/profiles\/[^/]+$/) && !path.includes("/by-id/")) {
-      const id = path.split("/").pop();
+      const id = path.split("/").pop()!;
       if (id === "featured" || id === "count" || id === "search") return res.status(404).json({ error: "Not found" });
+      const auth = await getAuthContext(req);
+      if (!auth || !auth.practitionerId) return res.status(401).json({ error: "Unauthorized" });
+      const { data: existing } = await supabase.from("profile").select("practitioner_id").eq("id", id).maybeSingle();
+      if (!existing) return res.status(404).json({ error: "Profile not found" });
+      if ((existing as { practitioner_id: string }).practitioner_id !== auth.practitionerId) return res.status(403).json({ error: "Forbidden" });
       const { error } = await supabase.from("profile").delete().eq("id", id);
       if (error) throw error;
       return res.status(200).json({ success: true });
