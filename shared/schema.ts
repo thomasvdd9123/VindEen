@@ -399,6 +399,7 @@ export const siteConfig = pgTable("site_config", {
   supportEmail: text("support_email").notNull(),
   defaultCountryCode: text("default_country_code").notNull(),
   defaultCountryName: text("default_country_name").notNull(),
+  defaultCountryId: uuid("default_country_id").references(() => country.id),
   defaultRegion: text("default_region"),
   defaultLanguage: text("default_language").notNull(),
   defaultCurrencyCode: text("default_currency_code").notNull(),
