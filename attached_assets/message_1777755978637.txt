@@ -1,0 +1,272 @@
+DB schema aanmaken: (de auth.users referentie in Practitioner Table wordt normaal by default gemaakt door supabase)
+
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+CREATE TABLE practitioner_type (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    key TEXT UNIQUE NOT NULL,
+    name TEXT NOT NULL,
+    description TEXT
+);
+
+CREATE TABLE practitioner (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    auth_user_id UUID UNIQUE NOT NULL REFERENCES auth.users(id),
+
+    practitioner_type_id UUID NOT NULL REFERENCES practitioner_type(id),
+    billing_address_id UUID NOT NULL REFERENCES address(id),
+
+    email TEXT,
+    firstname TEXT,
+    lastname TEXT,
+    gender TEXT,
+    birthdate DATE,
+
+    show_age BOOLEAN DEFAULT false,
+    subject_to_vat BOOLEAN DEFAULT false,
+    vat TEXT,
+
+    created_at TIMESTAMP DEFAULT now()
+);
+
+
+CREATE TABLE admin (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    auth_user_id UUID UNIQUE NOT NULL REFERENCES auth.users(id),
+    created_at TIMESTAMP DEFAULT now()
+);
+
+CREATE TABLE address (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    street TEXT,
+    number TEXT,
+    municipality TEXT,
+    postcode INT,
+    province TEXT,
+    region TEXT,
+    country TEXT,
+    longitude DOUBLE PRECISION,
+    latitude DOUBLE PRECISION,
+
+    is_residential BOOLEAN DEFAULT false,
+    show_address BOOLEAN DEFAULT true,
+
+    valid_from DATE,
+    valid_until DATE
+);
+
+CREATE TABLE profile (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    practitioner_id UUID NOT NULL REFERENCES practitioner(id),
+    office_address_id UUID NOT NULL REFERENCES address(id),
+
+    company_name TEXT,
+    telnr TEXT,
+    contact_email TEXT,
+
+    title TEXT,
+    introduction TEXT,
+    logourl TEXT,
+    imageurls TEXT[],
+    websiteurl TEXT,
+    has_website BOOLEAN DEFAULT false,
+
+    is_active BOOLEAN DEFAULT false,
+    is_public BOOLEAN DEFAULT false,
+
+    slug TEXT UNIQUE NOT NULL,
+
+    created_at TIMESTAMP DEFAULT now()
+);
+
+CREATE TABLE service_area (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    municipality TEXT,
+    postcode INT,
+    province TEXT,
+    region TEXT,
+    country TEXT,
+    slug TEXT UNIQUE,
+    longitude DOUBLE PRECISION,
+    latitude DOUBLE PRECISION,
+    is_system_defined BOOLEAN DEFAULT true
+);
+
+CREATE TABLE profile_service_area (
+    profile_id UUID REFERENCES profile(id),
+    service_area_id UUID REFERENCES service_area(id),
+    PRIMARY KEY (profile_id, service_area_id)
+);
+
+CREATE TABLE service_category (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name TEXT NOT NULL,
+    slug TEXT UNIQUE NOT NULL,
+    description TEXT,
+    is_system_defined BOOLEAN DEFAULT true
+);
+
+CREATE TABLE specialization (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name TEXT NOT NULL,
+    slug TEXT UNIQUE NOT NULL,
+    description TEXT,
+    is_system_defined BOOLEAN DEFAULT true
+);
+
+CREATE TABLE offered_service (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name TEXT NOT NULL,
+    slug TEXT UNIQUE NOT NULL,
+    description TEXT,
+    is_system_defined BOOLEAN DEFAULT true
+);
+
+CREATE TABLE profile_service_category (
+    profile_id UUID REFERENCES profile(id),
+    service_category_id UUID REFERENCES service_category(id),
+    is_main BOOLEAN DEFAULT false,
+    PRIMARY KEY (profile_id, service_category_id)
+);
+
+CREATE TABLE profile_specialization (
+    profile_id UUID REFERENCES profile(id),
+    specialization_id UUID REFERENCES specialization(id),
+    is_main BOOLEAN DEFAULT false,
+    PRIMARY KEY (profile_id, specialization_id)
+);
+
+CREATE TABLE profile_offered_service (
+    profile_id UUID REFERENCES profile(id),
+    offered_service_id UUID REFERENCES offered_service(id),
+    PRIMARY KEY (profile_id, offered_service_id)
+);
+
+CREATE TABLE variable_type (
+    key TEXT PRIMARY KEY -- INT, STRING, DOUBLE, DATE, BOOLEAN, OPTION
+);
+
+CREATE TABLE practical_question (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    key TEXT UNIQUE NOT NULL,
+    name TEXT NOT NULL,
+    field_type TEXT NOT NULL REFERENCES variable_type(key),
+    is_multi BOOLEAN DEFAULT false,
+    is_required BOOLEAN DEFAULT false
+);
+
+CREATE TABLE practical_option (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    practical_question_id UUID NOT NULL REFERENCES practical_question(id),
+    key TEXT NOT NULL,
+    name TEXT NOT NULL
+);
+
+CREATE TABLE practical_answer (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    profile_id UUID NOT NULL REFERENCES profile(id),
+    practical_question_id UUID NOT NULL REFERENCES practical_question(id)
+);
+
+CREATE TABLE practical_answer_string (
+    practical_answer_id UUID PRIMARY KEY REFERENCES practical_answer(id),
+    value TEXT
+);
+
+CREATE TABLE practical_answer_int (
+    practical_answer_id UUID PRIMARY KEY REFERENCES practical_answer(id),
+    value INT
+);
+
+CREATE TABLE practical_answer_double (
+    practical_answer_id UUID PRIMARY KEY REFERENCES practical_answer(id),
+    value DOUBLE PRECISION
+);
+
+CREATE TABLE practical_answer_date (
+    practical_answer_id UUID PRIMARY KEY REFERENCES practical_answer(id),
+    value DATE
+);
+
+CREATE TABLE practical_answer_option (
+    practical_answer_id UUID REFERENCES practical_answer(id),
+    practical_option_id UUID REFERENCES practical_option(id),
+    PRIMARY KEY (practical_answer_id, practical_option_id)
+);
+
+CREATE TABLE billing_cycle (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    key TEXT UNIQUE NOT NULL,
+    interval TEXT NOT NULL,
+    is_active BOOLEAN DEFAULT true
+);
+
+CREATE TABLE subscription_plan (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    key TEXT UNIQUE NOT NULL,
+    name TEXT NOT NULL,
+    price DOUBLE PRECISION NOT NULL,
+    is_active BOOLEAN DEFAULT true,
+    valid_from DATE,
+    valid_until DATE
+);
+
+CREATE TABLE subscription_plan_offer (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    subscription_plan_id UUID NOT NULL REFERENCES subscription_plan(id),
+
+    duration_in_years INT,
+    discount_percentage INT,
+    total_price DOUBLE PRECISION,
+
+    is_popular BOOLEAN DEFAULT false,
+    is_active BOOLEAN DEFAULT true,
+
+    valid_from DATE,
+    valid_until DATE
+);
+
+CREATE TABLE profile_subscription (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    profile_id UUID NOT NULL REFERENCES profile(id),
+    subscription_plan_offer_id UUID NOT NULL REFERENCES subscription_plan_offer(id)
+    billing_cycle_id UUID NOT NULL REFERENCES billing_cycle(id),
+
+    start_date DATE,
+    end_date DATE,
+    auto_renew BOOLEAN DEFAULT false,
+
+    status TEXT, -- ACTIVE, EXPIRED, CANCELLED
+    grace_period_until DATE,
+    refunded_reason TEXT
+);
+
+CREATE TABLE payment_provider (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    key TEXT UNIQUE NOT NULL,
+    name TEXT NOT NULL,
+    is_active BOOLEAN DEFAULT true
+);
+
+CREATE TABLE payment (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    profile_subscription_id UUID NOT NULL REFERENCES profile_subscription(id),
+    payment_provider_id UUID NOT NULL REFERENCES payment_provider(id),
+
+    amount DOUBLE PRECISION NOT NULL,
+    status TEXT, -- PENDING, PAID, FAILED, REFUNDED
+    created_at TIMESTAMP DEFAULT now()
+);
+
+CREATE TABLE contact_request (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    profile_id UUID NOT NULL REFERENCES profile(id),
+
+    visitor_email TEXT,
+    visitor_name TEXT,
+    telnr TEXT,
+    subject TEXT,
+    message TEXT,
+
+    created_at TIMESTAMP DEFAULT now()
+);

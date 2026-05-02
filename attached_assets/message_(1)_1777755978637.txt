@@ -1,0 +1,56 @@
+voor die seeded tabellen dacht ik:
+
+**PractionerType=alle mogelijke tuinmannen**
+Key:Licensed, Name:Licensed, Description:Legitieme nigga
+Key:Hobbyist, Name:Hobbyist, Description:Broke nigga
+
+**BillingCycle=alle mogelijke betaalintervallen**(kan uitgebreidt worden met betalingen per kwartaal oid)
+Key: Yearly, Interval: Yearly, isActive:Yes
+Key: Monthly, Interval: Monthly, isActive:No
+
+**PaymentProvider=alle mogelijke paymentproviders** (kan uitgebreidt worden met andere providers)
+Key:Mollie, Name:Mollie, isActive:True, ValidFrom:date.now, ValidUntil=max
+
+**SubscriptionPlan=alle mogelijke subscriptionplans** (TBD met marketingniggas)
+Key:Bronze, Name:Bronze, Price:120, GeneralInfo: blabla, IsActive:Yes, ValidFrom:date.now, ValidUntil=max
+Key:Silver, Name:Silver, Price:150, GeneralInfo: blabla, IsActive:Yes, ValidFrom:date.now, ValidUntil=max
+Key:Gold, Name:Gold, Price:180, GeneralInfo: blabla, IsActive:Yes, ValidFrom:date.now, ValidUntil=max
+
+**SubscriptionPlanOffer=alle mogelijke offers per plan** (hieronder voorbeelden voor bronze)
+DurationInYears:1, DiscountPercentage:0, TotalPrice:120, IsActive:Yes, ValidFrom:date.now, ValidUntil=max
+DurationInYears:2, DiscountPercentage:4, TotalPrice:230.4, IsActive:Yes, ValidFrom:date.now, ValidUntil=max
+DurationInYears:3, DiscountPercentage:8, TotalPrice:331.2, IsActive:Yes, ValidFrom:date.now, ValidUntil=max
+
+**ServiceArea=alle mogelijke gemeentes**
+Muncipality:Zemst, Postcode:1980, Province:Vlaam-Brabant, Region:Vlaanderen, Country:België, slug: zemst, Long:50.59, Lat:4.28
+Muncipality:Erps Kwerps, Postcode:3071, Province:Vlaam-Brabant, Region:Vlaanderen, Country:België, slug: erps-kwerps, Long:50.54, Lat:4.34
+Muncipality:Aarschot, Postcode:3200, Province:Vlaam-Brabant, Region:Vlaanderen, Country:België, slug: aarschot, Long:50.59, Lat:4.50
+
+**PracticalQuestion=alle mogelijke praktisch gerichte profielvragen**
+Key:Languages, Name:Languages, FieldType:OPTION, IsMulti:Yes, IsRequired:No
+Key:PriceHour, Name:PriceHour, FieldType:Double, IsMulti:No, IsRequired:No
+Key:YearsExperience, Name:YearsExperience, FieldType:int, IsMulti=No, IsRequired:No
+
+**PracticalOption=alle mogelijke opties indien praktijkvraag.type=option**
+Key:Afrikaans, Name:Afrikaans
+Key:Albanees, Name:Albanees
+Key:Armeens, Name:Armeens
+
+**ServiceCategory=alle mogelijke categorieën**
+Name=Architect, Slug=architect, Description: blabla, IsSystemDefined=Yes
+Name=Tuinonderhoud, Slug=tuinonderhoud, Description: blabla, IsSystemDefined=Yes
+Name=Tuinaanleg, Slug=tuinaanleg, Description: blabla, IsSystemDefined=Yes
+
+**Specialization=alle mogelijke specialisaties**
+Name=Gazon, Slug=gazon, Description: blabla, IsSystemDefined=Yes
+Name=Ecologisch Tuinieren, Slug=ecologisch-tuinieren, Description: blabla, IsSystemDefined=Yes
+Name=Ziekten & Plagen, Slug=ziekten-en-plagen, Description: blabla, IsSystemDefined=Yes
+Name=Water & Vijvers, Slug=water-en-vijvers, Description: blabla, IsSystemDefined=Yes
+Name=Houtbouw, Slug=houtbouw, Description: blabla, IsSystemDefined=Yes
+
+**OfferedService=alle mogelijke aangeboden diensten**
+Name=Snoeien, Slug=snoeien, Description: blabla, IsSystemDefined=Yes
+Name=Maaien, Slug=maaien, Description: blabla, IsSystemDefined=Yes
+Name=Sportgazon, Slug=sportgazon, Description: blabla, IsSystemDefined=Yes
+Name=Schutting, Slug=schutting, Description: blabla, IsSystemDefined=Yes
+Name=Belichting, Slug=berlichting, Description: blabla, IsSystemDefined=Yes
