@@ -220,6 +220,8 @@ async function applyProfileJunctions(profileId: string, body: Record<string, any
           await supabase.from("practical_answer_string").insert({ practical_answer_id: ansId, value: String(value) });
         } else if (q.field_type === "DATE") {
           await supabase.from("practical_answer_date").insert({ practical_answer_id: ansId, value });
+        } else if (q.field_type === "BOOLEAN") {
+          await supabase.from("practical_answer_boolean").insert({ practical_answer_id: ansId, value: !!value });
         }
       }
     }
@@ -306,6 +308,9 @@ async function hydrateProfile(p: any, opts: { withPracticals?: boolean } = {}) {
           if (v) practical[key] = v.value;
         } else if (q.field_type === "DATE") {
           const { data: v } = await supabase.from("practical_answer_date").select("value").eq("practical_answer_id", a.id).single();
+          if (v) practical[key] = v.value;
+        } else if (q.field_type === "BOOLEAN") {
+          const { data: v } = await supabase.from("practical_answer_boolean").select("value").eq("practical_answer_id", a.id).single();
           if (v) practical[key] = v.value;
         }
       }
@@ -629,6 +634,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (method === "GET" && path.match(/^\/api\/accounts\/by-auth\/[^/]+$/)) {
       const authUserId = path.split("/").pop();
+      const auth = await getAuthContext(req);
+      if (!auth || auth.authUserId !== authUserId) return res.status(403).json({ error: "Forbidden" });
       const { data } = await supabase.from("practitioner").select("*").eq("auth_user_id", authUserId).maybeSingle();
       if (!data) return res.status(404).json({ error: "Account not found" });
       return res.status(200).json(toCamelCase({ ...data, account_id: (data as any).id, role: "GARDENER", email_verified: true }));
@@ -1031,7 +1038,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // SUBSCRIPTIONS / MOLLIE
     // -----------------------------------------------------------------------
     if (method === "GET" && path.match(/^\/api\/subscriptions\/profile\/[^/]+$/)) {
-      const profileId = path.split("/").pop();
+      const profileId = path.split("/").pop()!;
+      const auth = await getAuthContext(req);
+      if (!auth || !auth.practitionerId) return res.status(401).json({ error: "Unauthorized" });
+      const { data: prof } = await supabase.from("profile").select("practitioner_id").eq("id", profileId).maybeSingle();
+      if (!prof) return res.status(404).json({ error: "Profile not found" });
+      if ((prof as { practitioner_id: string }).practitioner_id !== auth.practitionerId) return res.status(403).json({ error: "Forbidden" });
       const { data } = await supabase
         .from("profile_subscription")
         .select("*, subscription_plan_offer(*, subscription_plan(*))")
@@ -1049,8 +1061,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     if (method === "POST" && path === "/api/mollie/create-payment") {
+      const auth = await getAuthContext(req);
+      if (!auth || !auth.practitionerId) return res.status(401).json({ error: "Unauthorized" });
       const { profileId, accountId, planId } = req.body || {};
       if (!profileId || !planId) return res.status(400).json({ error: "Missing fields" });
+      const { data: ownerCheck } = await supabase.from("profile").select("practitioner_id").eq("id", profileId).maybeSingle();
+      if (!ownerCheck) return res.status(404).json({ error: "Profile not found" });
+      if ((ownerCheck as { practitioner_id: string }).practitioner_id !== auth.practitionerId) return res.status(403).json({ error: "Forbidden" });
 
       const mollieApiKey = process.env.MOLLIE_API_KEY;
       if (!mollieApiKey) return res.status(503).json({ error: "Payment service not configured" });

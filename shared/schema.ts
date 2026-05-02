@@ -272,6 +272,14 @@ export const practicalAnswerDate = pgTable("practical_answer_date", {
   value: date("value"),
 });
 
+export const practicalAnswerBoolean = pgTable("practical_answer_boolean", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  practicalAnswerId: uuid("practical_answer_id").notNull().references(() => practicalAnswer.id, { onDelete: "cascade" }),
+  value: boolean("value").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+export type PracticalAnswerBoolean = typeof practicalAnswerBoolean.$inferSelect;
+
 export const practicalAnswerOption = pgTable("practical_answer_option", {
   practicalAnswerId: uuid("practical_answer_id").references(() => practicalAnswer.id, { onDelete: "cascade" }),
   practicalOptionId: uuid("practical_option_id").references(() => practicalOption.id, { onDelete: "cascade" }),
@@ -350,7 +358,7 @@ export const payment = pgTable("payment", {
   profileSubscriptionId: uuid("profile_subscription_id").notNull().references(() => profileSubscription.id, { onDelete: "cascade" }),
   paymentProviderId: uuid("payment_provider_id").notNull().references(() => paymentProvider.id),
   amount: doublePrecision("amount").notNull(),
-  currency: text("currency").notNull(),
+  currency: text("currency").notNull(), // bepaald door site_config / country
   status: text("status").default("PENDING"),
   externalPaymentId: text("external_payment_id"),
   externalInvoiceId: text("external_invoice_id"),
