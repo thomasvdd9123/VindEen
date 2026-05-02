@@ -3,39 +3,19 @@ import { Button } from "@/components/ui/button";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { SEO } from "@/components/SEO";
-import { siteConfig } from "@/lib/theme.config";
+import { siteConfig, fillCopy } from "@/lib/theme.config";
 import { Link } from "wouter";
-import { Users, Target, Shield, Leaf } from "lucide-react";
+import { Users, Target, Shield, Leaf, type LucideIcon } from "lucide-react";
 
-const values = [
-  {
-    icon: Users,
-    title: "Verbinding",
-    description: "We brengen tuinprofessionals en klanten samen voor succesvolle samenwerkingen."
-  },
-  {
-    icon: Target,
-    title: "Kwaliteit",
-    description: "We selecteren alleen betrouwbare en gekwalificeerde tuinprofessionals."
-  },
-  {
-    icon: Shield,
-    title: "Vertrouwen",
-    description: "Transparantie en eerlijkheid staan centraal in alles wat we doen."
-  },
-  {
-    icon: Leaf,
-    title: "Duurzaamheid",
-    description: "We moedigen ecologisch verantwoorde tuinpraktijken aan."
-  }
-];
+const ICONS: Record<string, LucideIcon> = { Users, Target, Shield, Leaf };
 
 export default function About() {
+  const copy = siteConfig.pages.about;
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <SEO
         title="Over ons"
-        description="Leer meer over Zoek-een-tuinman.be. Wij verbinden tuinprofessionals met klanten in heel België."
+        description={fillCopy(copy.seoDescription)}
         canonical="/over-ons"
       />
       <Header />
@@ -46,7 +26,7 @@ export default function About() {
               Over {siteConfig.name}
             </h1>
             <p className="text-muted-foreground mt-2 max-w-2xl">
-              Het platform dat tuinprofessionals en klanten samenbrengt in België.
+              {fillCopy(copy.heroSubtitle)}
             </p>
           </div>
         </div>
@@ -59,17 +39,8 @@ export default function About() {
                   <CardTitle>Onze missie</CardTitle>
                 </CardHeader>
                 <CardContent className="prose prose-slate dark:prose-invert max-w-none">
-                  <p className="text-muted-foreground leading-relaxed">
-                    {siteConfig.name} is ontstaan vanuit een eenvoudige vraag: hoe vind je een betrouwbare 
-                    tuinman in je buurt? We merkten dat veel mensen moeite hadden om de juiste 
-                    tuinprofessional te vinden, terwijl er tegelijkertijd vele bekwame tuinmannen zijn 
-                    die zoeken naar nieuwe klanten.
-                  </p>
-                  <p className="text-muted-foreground leading-relaxed mt-4">
-                    Ons platform biedt een oplossing door tuinprofessionals een plek te geven waar ze 
-                    hun expertise kunnen tonen, en klanten de mogelijkheid geeft om gemakkelijk de 
-                    perfecte match te vinden voor hun tuinproject.
-                  </p>
+                  <p className="text-muted-foreground leading-relaxed">{fillCopy(copy.missionPara1)}</p>
+                  <p className="text-muted-foreground leading-relaxed mt-4">{fillCopy(copy.missionPara2)}</p>
                 </CardContent>
               </Card>
             </section>
@@ -77,37 +48,36 @@ export default function About() {
             <section>
               <h2 className="text-2xl font-semibold mb-6">Onze waarden</h2>
               <div className="grid sm:grid-cols-2 gap-4">
-                {values.map((value, index) => (
-                  <Card key={index} data-testid={`card-value-${index}`}>
-                    <CardContent className="pt-6">
-                      <div className="flex items-start gap-4">
-                        <div className="p-2 rounded-lg bg-primary/10">
-                          <value.icon className="h-6 w-6 text-primary" />
+                {copy.values.map((value, index) => {
+                  const Icon = ICONS[value.icon] || Leaf;
+                  return (
+                    <Card key={index} data-testid={`card-value-${index}`}>
+                      <CardContent className="pt-6">
+                        <div className="flex items-start gap-4">
+                          <div className="p-2 rounded-lg bg-primary/10">
+                            <Icon className="h-6 w-6 text-primary" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold">{value.title}</h3>
+                            <p className="text-muted-foreground text-sm mt-1">
+                              {fillCopy(value.description)}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <h3 className="font-semibold">{value.title}</h3>
-                          <p className="text-muted-foreground text-sm mt-1">
-                            {value.description}
-                          </p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
             </section>
 
             <section>
               <Card>
                 <CardHeader>
-                  <CardTitle>Voor tuinprofessionals</CardTitle>
+                  <CardTitle>{fillCopy(copy.forBusinessesTitle)}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-muted-foreground mb-4">
-                    Ben je een tuinman, hovenier, tuinarchitect of boomverzorger? Registreer je 
-                    profiel en bereik klanten in heel België. Met een professioneel profiel 
-                    presenteer je je werk en specialisaties aan potentiële klanten.
-                  </p>
+                  <p className="text-muted-foreground mb-4">{fillCopy(copy.forBusinessesBody)}</p>
                   <div className="flex gap-4">
                     <Button asChild>
                       <Link href="/registreren">Registreer nu</Link>
@@ -123,16 +93,12 @@ export default function About() {
             <section>
               <Card>
                 <CardHeader>
-                  <CardTitle>Voor particulieren en bedrijven</CardTitle>
+                  <CardTitle>{copy.forCustomersTitle}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-muted-foreground mb-4">
-                    Op zoek naar een tuinman voor je project? Blader door onze database van 
-                    gekwalificeerde tuinprofessionals, bekijk hun portfolio en neem direct contact 
-                    op. Gratis en vrijblijvend.
-                  </p>
+                  <p className="text-muted-foreground mb-4">{fillCopy(copy.forCustomersBody)}</p>
                   <Button variant="outline" asChild>
-                    <Link href="/zoek/tuinaanlegger">Vind een tuinman</Link>
+                    <Link href={copy.findCtaHref}>{fillCopy(copy.findCtaLabel)}</Link>
                   </Button>
                 </CardContent>
               </Card>

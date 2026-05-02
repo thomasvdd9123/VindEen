@@ -22,6 +22,7 @@ import { Progress } from "@/components/ui/progress";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import type { Category, Location, Profile } from "@shared/schema";
 import { siteConfig } from "@/lib/theme.config";
+import { PracticalQuestionsForm } from "@/components/PracticalQuestionsForm";
 
 // Types for grouped categories API response
 interface CategoryOption {
@@ -467,6 +468,11 @@ export default function ProfileEdit() {
     },
   });
 
+  // Practical-question answers — vertical-agnostic, fully data-driven via
+  // /api/practical-questions. Hydrated from profile.practical on load and sent
+  // back as part of the PUT body.
+  const [practicalAnswers, setPracticalAnswers] = useState<Record<string, any>>({});
+
   // Watch main categories at component level to avoid infinite loops
   const watchedMainCategories = useWatch({
     control: form.control,
@@ -504,6 +510,7 @@ export default function ProfileEdit() {
         officeTown: (profile as any).office?.town || "",
         officePostcode: (profile as any).office?.postcode || "",
       });
+      setPracticalAnswers((profile as any).practical || {});
     }
   }, [profile, form, specializationsByCategory]);
 
@@ -521,6 +528,7 @@ export default function ProfileEdit() {
           town: data.officeTown,
           postcode: data.officePostcode,
         },
+        practical: practicalAnswers,
       });
     },
     onSuccess: () => {
@@ -1046,6 +1054,15 @@ export default function ProfileEdit() {
                     );
                   }}
                 />
+
+                {/* Practical questions — same reusable component as Onboarding */}
+                <div className="rounded-lg border p-4">
+                  <PracticalQuestionsForm
+                    values={practicalAnswers}
+                    onChange={setPracticalAnswers}
+                    heading="Praktische info"
+                  />
+                </div>
 
                 {/* Active/Inactive Toggle */}
                 <FormField

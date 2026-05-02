@@ -12,7 +12,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/lib/auth";
 import { Leaf, Loader2, ArrowRight } from "lucide-react";
-import { siteConfig } from "@/lib/theme.config";
+import { siteConfig, fillCopy } from "@/lib/theme.config";
 
 const loginSchema = z.object({
   email: z.string().email("Ongeldig email adres"),
@@ -86,7 +86,7 @@ export default function Login() {
     <Layout>
       <SEO
         title="Inloggen"
-        description="Log in op je Zoek-een-tuinman.be account om je profiel te beheren."
+        description={fillCopy(siteConfig.pages.login.seoDescription)}
         noindex={true}
       />
       <div className="min-h-[calc(100vh-200px)] flex items-center justify-center py-12 px-4">

@@ -10,7 +10,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { SEO } from "@/components/SEO";
-import { siteConfig } from "@/lib/theme.config";
+import { siteConfig, fillCopy } from "@/lib/theme.config";
 import { useToast } from "@/hooks/use-toast";
 import { Mail, Phone, MapPin, Send, Loader2 } from "lucide-react";
 
@@ -70,7 +70,7 @@ export default function Contact() {
     <div className="min-h-screen flex flex-col bg-background">
       <SEO
         title="Contact"
-        description="Neem contact op met Zoek-een-tuinman.be. Heb je vragen of feedback? We helpen je graag verder."
+        description={fillCopy(siteConfig.pages.contact.seoDescription)}
         canonical="/contact"
       />
       <Header />
@@ -194,7 +194,7 @@ export default function Contact() {
                     <MapPin className="h-5 w-5 text-primary mt-0.5" />
                     <div>
                       <p className="font-medium">Locatie</p>
-                      <p className="text-muted-foreground">België</p>
+                      <p className="text-muted-foreground">{siteConfig.country}</p>
                     </div>
                   </div>
                 </CardContent>

@@ -465,6 +465,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         sortOrder: s.sort_order,
       })));
     }
+    // Catalog of services offered (vertical-agnostic). UI uses this to let
+    // practitioners tag their profile with concrete deliverables.
+    if (method === "GET" && path === "/api/offered-services") {
+      const { data, error } = await supabase
+        .from("offered_service")
+        .select("id,key,name,slug,description,sort_order,service_category_id")
+        .order("sort_order");
+      if (error) return res.status(500).json({ error: error.message });
+      return res.status(200).json((data || []).map((o: any) => ({
+        id: o.id, key: o.key, name: o.name, slug: o.slug,
+        description: o.description, sortOrder: o.sort_order,
+        serviceCategoryId: o.service_category_id,
+      })));
+    }
     if (method === "GET" && path === "/api/practical-questions") {
       const { data: questions } = await supabase
         .from("practical_question").select("*").order("sort_order");

@@ -55,6 +55,66 @@ export const siteConfig = {
   currency: "EUR",
   currencySymbol: "€",
 
+  // Per-page copy/SEO. All vertical-specific words live here so a rebrand
+  // never requires touching page components. Use {plural}/{singular}/
+  // {country}/{siteName} placeholders that fillCopy() resolves at runtime.
+  pages: {
+    pricing: {
+      tagline: "Eén vermelding, meerdere looptijden. Hoe langer je kiest, hoe meer je bespaart.",
+      seoDescription: "Bekijk de prijzen voor een vermelding op {siteName}. Kies het abonnement dat bij jou past.",
+      features: [
+        "Volledig profiel met logo en foto's",
+        "Onbeperkt contactaanvragen",
+        "Vermelding op zoek- en specialisatiepagina's",
+      ],
+      perYearLabel: "/ jaar",
+      totalLabel: "totaal",
+      ctaLabel: "Aan de slag",
+    },
+    about: {
+      seoDescription: "Leer meer over {siteName}. Wij verbinden {professionalPlural} met klanten in heel {country}.",
+      heroSubtitle: "Het platform dat {professionalPlural} en klanten samenbrengt in {country}.",
+      missionPara1: "{siteName} is ontstaan vanuit een eenvoudige vraag: hoe vind je {article} betrouwbare {singular} in je buurt? We merkten dat veel mensen moeite hadden om de juiste {professional} te vinden, terwijl er tegelijkertijd vele bekwame {plural} zijn die zoeken naar nieuwe klanten.",
+      missionPara2: "Ons platform biedt een oplossing door {professionalPlural} een plek te geven waar ze hun expertise kunnen tonen, en klanten de mogelijkheid geeft om gemakkelijk de perfecte match te vinden voor hun project.",
+      forBusinessesTitle: "Voor {professionalPlural}",
+      forBusinessesBody: "Ben je {article} of vakprofessional? Registreer je profiel en bereik klanten in heel {country}. Met een professioneel profiel presenteer je je werk en specialisaties aan potentiële klanten.",
+      forCustomersTitle: "Voor particulieren en bedrijven",
+      forCustomersBody: "Op zoek naar {article} voor je project? Blader door onze database van gekwalificeerde {professionalPlural}, bekijk hun portfolio en neem direct contact op. Gratis en vrijblijvend.",
+      findCtaLabel: "Vind {article}",
+      findCtaHref: "/zoek",
+      values: [
+        { icon: "Users", title: "Verbinding", description: "We brengen {professionalPlural} en klanten samen voor succesvolle samenwerkingen." },
+        { icon: "Target", title: "Kwaliteit", description: "We selecteren alleen betrouwbare en gekwalificeerde {professionalPlural}." },
+        { icon: "Shield", title: "Vertrouwen", description: "Transparantie en eerlijkheid staan centraal in alles wat we doen." },
+        { icon: "Leaf", title: "Duurzaamheid", description: "We moedigen ecologisch verantwoorde praktijken aan." },
+      ],
+    },
+    contact: {
+      seoDescription: "Neem contact op met {siteName}. Heb je vragen of feedback? We helpen je graag verder.",
+    },
+    register: {
+      seoTitle: "Registreren als {singular}",
+      seoDescription: "Registreer je gratis als {singular} op {siteName} en bereik duizenden potentiële klanten in {country}.",
+      heroTitle: "Word lid van {country}'s grootste {plural} platform",
+      heroBody: "Registreer je gratis en maak je bedrijf zichtbaar voor duizenden potentiële klanten in heel {country}.",
+      benefits: [
+        "Bereik duizenden potentiële klanten",
+        "Eigen professioneel bedrijfsprofiel",
+        "Ontvang direct contactaanvragen",
+        "Beheer je zichtbaarheid zelf",
+      ],
+    },
+    login: {
+      seoDescription: "Log in op je {siteName} account om je profiel te beheren.",
+    },
+    profile: {
+      seoTitle: "{name} - {singular} in {location}",
+      seoDescriptionWithLocation: "{name} is een professionele {singular} in {location}. Bekijk het profiel, specialisaties en vraag direct een offerte aan.",
+      seoDescriptionNoLocation: "{name} is een professionele {singular}. Bekijk het profiel, specialisaties en vraag direct een offerte aan.",
+      breadcrumbSearchLabel: "Zoek {article}",
+    },
+  },
+
   // Form placeholders (per-vertical examples shown in input fields)
   placeholders: {
     profileTitle: "bv. Tuinarchitect, Tuinonderhoud specialist",

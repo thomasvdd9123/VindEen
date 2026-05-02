@@ -7,7 +7,7 @@ import { SEO } from "@/components/SEO";
 import { Check, Loader2, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Link } from "wouter";
-import { siteConfig } from "@/lib/theme.config";
+import { siteConfig, fillCopy } from "@/lib/theme.config";
 import { useSubscriptionOffers } from "@/lib/useSubscriptionOffers";
 import { useSiteConfig } from "@/lib/useSiteConfig";
 
@@ -19,7 +19,7 @@ export default function Pricing() {
     <div className="min-h-screen flex flex-col bg-background">
       <SEO
         title="Prijzen en abonnementen"
-        description={`Bekijk de prijzen voor een vermelding op ${siteConfig.name}. Kies het abonnement dat bij jou past.`}
+        description={fillCopy(siteConfig.pages.pricing.seoDescription)}
         canonical="/prijzen"
       />
       <Header />
@@ -30,7 +30,7 @@ export default function Pricing() {
               Prijzen
             </h1>
             <p className="text-muted-foreground mt-2 max-w-2xl mx-auto">
-              Eén vermelding, drie looptijden. Hoe langer je kiest, hoe meer je bespaart.
+              {fillCopy(siteConfig.pages.pricing.tagline)}
             </p>
           </div>
         </div>
@@ -74,25 +74,21 @@ export default function Pricing() {
                       <span className="text-4xl font-bold" data-testid={`text-price-${plan.id}`}>
                         {formatPrice(plan.totalPrice, { withCents: true })}
                       </span>
-                      <span className="text-muted-foreground"> totaal</span>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {formatPrice(plan.pricePerYear, { withCents: true })} / jaar
-                      </p>
+                      <span className="text-muted-foreground"> {siteConfig.pages.pricing.totalLabel}</span>
+                      {plan.years > 1 && (
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {formatPrice(plan.pricePerYear, { withCents: true })} {siteConfig.pages.pricing.perYearLabel}
+                        </p>
+                      )}
                     </div>
 
                     <ul className="space-y-3 text-left mb-6">
-                      <li className="flex items-start gap-2">
-                        <Check className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                        <span className="text-sm">Volledig profiel met logo en foto's</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <Check className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                        <span className="text-sm">Onbeperkt contactaanvragen</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <Check className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                        <span className="text-sm">Vermelding op zoek- en specialisatiepagina's</span>
-                      </li>
+                      {siteConfig.pages.pricing.features.map((f) => (
+                        <li key={f} className="flex items-start gap-2">
+                          <Check className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                          <span className="text-sm">{fillCopy(f)}</span>
+                        </li>
+                      ))}
                       {plan.discount > 0 && (
                         <li className="flex items-start gap-2">
                           <Check className="h-5 w-5 text-primary shrink-0 mt-0.5" />
@@ -106,7 +102,7 @@ export default function Pricing() {
                       variant={plan.popular ? "default" : "outline"}
                       asChild
                     >
-                      <Link href="/registreren">Aan de slag</Link>
+                      <Link href="/registreren">{siteConfig.pages.pricing.ctaLabel}</Link>
                     </Button>
                   </CardContent>
                 </Card>

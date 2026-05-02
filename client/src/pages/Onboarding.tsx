@@ -40,6 +40,7 @@ import type { Category, Location } from "@shared/schema";
 import { formatPrice, siteConfig } from "@/lib/theme.config";
 import { useSubscriptionOffers } from "@/lib/useSubscriptionOffers";
 import { usePracticalQuestions } from "@/lib/usePracticalQuestions";
+import { PracticalQuestionsForm } from "@/components/PracticalQuestionsForm";
 import { Checkbox } from "@/components/ui/checkbox";
 
 const personalSchema = z.object({
@@ -770,70 +771,12 @@ function OnboardingContent() {
                     </div>
 
                     {practicalQuestions.length > 0 && (
-                      <div className="space-y-4 pt-4 border-t" data-testid="section-practicals">
-                        <h3 className="text-sm font-medium">Praktische info (optioneel)</h3>
-                        {practicalQuestions.map((q) => {
-                          const v = practicalAnswers[q.camelKey];
-                          if (q.fieldType === "OPTION" && q.isMulti) {
-                            const arr: string[] = Array.isArray(v) ? v : [];
-                            return (
-                              <div key={q.id} className="space-y-2">
-                                <Label>{q.name}</Label>
-                                <div className="flex flex-wrap gap-3">
-                                  {q.options.map((o) => {
-                                    const checked = arr.includes(o.name);
-                                    return (
-                                      <label key={o.id} className="flex items-center gap-2 text-sm" data-testid={`option-${q.camelKey}-${o.key}`}>
-                                        <Checkbox
-                                          checked={checked}
-                                          onCheckedChange={(c) => {
-                                            const next = c
-                                              ? [...arr, o.name]
-                                              : arr.filter((x) => x !== o.name);
-                                            setPracticalAnswers((p) => ({ ...p, [q.camelKey]: next }));
-                                          }}
-                                        />
-                                        {o.name}
-                                      </label>
-                                    );
-                                  })}
-                                </div>
-                              </div>
-                            );
-                          }
-                          if (q.fieldType === "INT" || q.fieldType === "DOUBLE") {
-                            return (
-                              <div key={q.id} className="space-y-2">
-                                <Label>{q.name}</Label>
-                                <Input
-                                  type="number"
-                                  step={q.fieldType === "DOUBLE" ? "0.01" : "1"}
-                                  value={v ?? ""}
-                                  onChange={(e) =>
-                                    setPracticalAnswers((p) => ({
-                                      ...p,
-                                      [q.camelKey]: e.target.value === "" ? undefined : Number(e.target.value),
-                                    }))
-                                  }
-                                  data-testid={`input-${q.camelKey}`}
-                                />
-                              </div>
-                            );
-                          }
-                          if (q.fieldType === "STRING") {
-                            return (
-                              <div key={q.id} className="space-y-2">
-                                <Label>{q.name}</Label>
-                                <Input
-                                  value={v ?? ""}
-                                  onChange={(e) => setPracticalAnswers((p) => ({ ...p, [q.camelKey]: e.target.value }))}
-                                  data-testid={`input-${q.camelKey}`}
-                                />
-                              </div>
-                            );
-                          }
-                          return null;
-                        })}
+                      <div className="pt-4 border-t">
+                        <PracticalQuestionsForm
+                          values={practicalAnswers}
+                          onChange={setPracticalAnswers}
+                          heading="Praktische info (optioneel)"
+                        />
                       </div>
                     )}
 

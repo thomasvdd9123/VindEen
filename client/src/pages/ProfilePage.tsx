@@ -34,6 +34,7 @@ import {
 } from "lucide-react";
 import type { ProfileWithRelations } from "@shared/schema";
 import { specializationLabels } from "@shared/schema";
+import { siteConfig, fillCopy } from "@/lib/theme.config";
 
 export default function ProfilePage() {
   const params = useParams<{ slug: string }>();
@@ -120,12 +121,15 @@ export default function ProfilePage() {
   const locationName = office?.municipality || office?.town || profile.location?.name || "";
   
   const seoTitle = locationName 
-    ? `${profile.name} - Tuinman in ${locationName}`
+    ? fillCopy(siteConfig.pages.profile.seoTitle).replace("{name}", profile.name).replace("{location}", locationName)
     : profile.name;
-  
-  const seoDescription = profile.description 
+
+  const seoDescription = profile.description
     ? profile.description.slice(0, 155) + (profile.description.length > 155 ? "..." : "")
-    : `${profile.name} is een professionele tuinman${locationName ? ` in ${locationName}` : ""}. Bekijk het profiel, specialisaties en vraag direct een offerte aan.`;
+    : fillCopy(locationName
+        ? siteConfig.pages.profile.seoDescriptionWithLocation
+        : siteConfig.pages.profile.seoDescriptionNoLocation
+      ).replace("{name}", profile.name).replace("{location}", locationName);
 
   const locationSlug = profile.location ? `${profile.location.postcode}-${profile.location.slug}` : null;
   const categoryInLocation = profile.category && profile.location 
@@ -134,7 +138,7 @@ export default function ProfilePage() {
 
   const breadcrumbItems = [
     { name: "Home", url: "/" },
-    { name: "Zoek een tuinman", url: "/zoek" },
+    { name: fillCopy(siteConfig.pages.profile.breadcrumbSearchLabel), url: "/zoek" },
   ];
   if (profile.location) {
     breadcrumbItems.push({ 
@@ -189,7 +193,7 @@ export default function ProfilePage() {
               <BreadcrumbSeparator />
               <BreadcrumbItem>
                 <BreadcrumbLink asChild>
-                  <Link href="/zoek" data-testid="breadcrumb-search">Zoek een tuinman</Link>
+                  <Link href="/zoek" data-testid="breadcrumb-search">{fillCopy(siteConfig.pages.profile.breadcrumbSearchLabel)}</Link>
                 </BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator />
@@ -437,7 +441,7 @@ export default function ProfilePage() {
                           <p className="font-medium">{profile.office.street} {profile.office.number}</p>
                         )}
                         <p className={profile.hideAddress ? "font-medium" : "text-muted-foreground"}>{profile.office.postcode} {profile.office.town}</p>
-                        <p className="text-muted-foreground">België</p>
+                        <p className="text-muted-foreground">{siteConfig.country}</p>
                       </div>
                     </div>
                   </>

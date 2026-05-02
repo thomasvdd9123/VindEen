@@ -40,6 +40,25 @@ import TuinmanVsHovenier from "@/pages/info/TuinmanVsHovenier";
 import KostenPrijzen from "@/pages/info/KostenPrijzen";
 import VoorTuinmannen from "@/pages/info/VoorTuinmannen";
 import NotFound from "@/pages/not-found";
+import { siteConfig } from "@/lib/theme.config";
+
+// Info-page registry: maps each info-route slot to its concrete component.
+// Paths are sourced from siteConfig.infoRoutes so a rebrand only edits
+// theme.config.ts — App.tsx never needs to change.
+const INFO_ROUTE_COMPONENTS: Record<keyof typeof siteConfig.infoRoutes, React.ComponentType<any>> = {
+  aboutBusiness: DeTuinman,
+  findGoodBusiness: GoedeTuinmanVinden,
+  pricing: KostenPrijzen,
+  forBusinesses: VoorTuinmannen,
+};
+
+// Static info pages with no slot in siteConfig.infoRoutes (vertical-specific
+// supplementary content). These keep their hard-coded paths because they are
+// optional extras that ship per-vertical.
+const EXTRA_INFO_ROUTES: { path: string; component: React.ComponentType<any> }[] = [
+  { path: "/info/hoe-werkt-tuinaanleg", component: HoeWerktTuinaanleg },
+  { path: "/info/tuinman-vs-hovenier", component: TuinmanVsHovenier },
+];
 
 function Router() {
   return (
@@ -70,12 +89,14 @@ function Router() {
       <Route path="/prijzen" component={Pricing} />
       <Route path="/artikelen" component={Artikelen} />
       <Route path="/ervaringen" component={Ervaringen} />
-      <Route path="/info/de-tuinman" component={DeTuinman} />
-      <Route path="/info/goede-tuinman-vinden" component={GoedeTuinmanVinden} />
-      <Route path="/info/hoe-werkt-tuinaanleg" component={HoeWerktTuinaanleg} />
-      <Route path="/info/tuinman-vs-hovenier" component={TuinmanVsHovenier} />
-      <Route path="/info/kosten-prijzen" component={KostenPrijzen} />
-      <Route path="/info/voor-tuinmannen" component={VoorTuinmannen} />
+      {(Object.entries(siteConfig.infoRoutes) as [keyof typeof siteConfig.infoRoutes, string][]).map(
+        ([slot, path]) => (
+          <Route key={slot} path={path} component={INFO_ROUTE_COMPONENTS[slot]} />
+        )
+      )}
+      {EXTRA_INFO_ROUTES.map(({ path, component }) => (
+        <Route key={path} path={path} component={component} />
+      ))}
       <Route path="/privacy" component={Privacy} />
       <Route path="/algemene-voorwaarden" component={Terms} />
       <Route path="/cookies" component={Cookies} />

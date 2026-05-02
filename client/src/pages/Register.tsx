@@ -13,7 +13,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDes
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/lib/auth";
 import { Leaf, Loader2, ArrowRight, CheckCircle, Mail } from "lucide-react";
-import { siteConfig } from "@/lib/theme.config";
+import { siteConfig, fillCopy } from "@/lib/theme.config";
 
 const registerSchema = z.object({
   email: z.string().email("Ongeldig email adres"),
@@ -79,12 +79,7 @@ export default function Register() {
     }
   };
 
-  const benefits = [
-    "Bereik duizenden potentiële klanten",
-    "Eigen professioneel bedrijfsprofiel",
-    "Ontvang direct contactaanvragen",
-    "Beheer je zichtbaarheid zelf",
-  ];
+  const benefits = siteConfig.pages.register.benefits;
 
   if (showConfirmation) {
     return (
@@ -125,8 +120,8 @@ export default function Register() {
   return (
     <Layout>
       <SEO
-        title="Registreren als tuinman"
-        description="Registreer je gratis als tuinman op Zoek-een-tuinman.be en bereik duizenden potentiële klanten in België."
+        title={fillCopy(siteConfig.pages.register.seoTitle)}
+        description={fillCopy(siteConfig.pages.register.seoDescription)}
         noindex={true}
       />
       <div className="min-h-[calc(100vh-200px)] py-12 px-4">
@@ -142,10 +137,10 @@ export default function Register() {
                 </div>
 
                 <h1 className="text-3xl font-bold mb-4">
-                  Word lid van {siteConfig.country}'s grootste tuinmannen platform
+                  {fillCopy(siteConfig.pages.register.heroTitle)}
                 </h1>
                 <p className="text-muted-foreground mb-8">
-                  Registreer je gratis en maak je bedrijf zichtbaar voor duizenden potentiële klanten in heel België.
+                  {fillCopy(siteConfig.pages.register.heroBody)}
                 </p>
 
                 <ul className="space-y-4">

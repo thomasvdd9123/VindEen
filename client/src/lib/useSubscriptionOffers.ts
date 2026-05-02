@@ -31,13 +31,13 @@ export interface PricingPlan {
 function offerToPlan(o: SubscriptionOffer): PricingPlan {
   const years = o.years ?? o.durationInYears ?? 1;
   return {
-    id: `${years}-year`,
+    id: o.id,
     offerId: o.id,
     years,
     discount: o.discountPercentage ?? 0,
     totalPrice: o.totalPrice ?? o.price ?? 0,
     pricePerYear: years > 0 ? Math.round(((o.totalPrice ?? 0) / years) * 100) / 100 : 0,
-    label: years === 1 ? "1 jaar" : `${years} jaar`,
+    label: o.name || `${years}y`,
     popular: !!o.isPopular,
   };
 }
@@ -45,6 +45,7 @@ function offerToPlan(o: SubscriptionOffer): PricingPlan {
 export function useSubscriptionOffers() {
   const query = useQuery<SubscriptionOffer[]>({
     queryKey: ["/api/subscription-plans"],
+    staleTime: Infinity,
   });
   const plans = useMemo(() => (query.data || []).map(offerToPlan).sort((a, b) => a.years - b.years), [query.data]);
   const defaultPlanId = useMemo(() => {
