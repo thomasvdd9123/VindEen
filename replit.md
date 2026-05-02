@@ -130,7 +130,32 @@ shared/
 ## Seed Data
 Includes Belgian categories (Tuinonderhoud, Tuinaanleg) with specializations, major cities (Gent, Antwerpen, Brussel, Brugge, Leuven, Hasselt, Kortrijk) with sample verified profiles.
 
-## Recent Schema Changes (Jan 2026)
+## Schema Migration (May 2026) — Normalized / Vertical-Agnostic
+The DB has been fully migrated from the gardening-specific schema to a normalized
+schema where ALL catalogs are data, not enums or columns:
+- `migrations/001_normalized_schema.sql` — applied via Supabase Session Pooler
+- `scripts/seed/seed-catalogs.ts` — seeds all reference data + 6 test practitioners
+  (tuinman1@test.be … tuinman6@test.be, password `Test1234!`)
+- 31 tables: `address`, `practitioner` (was accounts), `practitioner_type`,
+  `profile`, `service_category`, `specialization`, `offered_service`,
+  `service_area` (was locations, 572 BE municipalities), `practical_question` +
+  `practical_option`, `subscription_plan` + `subscription_plan_offer` +
+  `profile_subscription`, `payment`, `contact_request`, `site_config`, etc.
+- `shared/schema.ts` rewritten in Drizzle to mirror the new DB. Backwards-compat
+  type aliases (`Category`, `Location`, `Account`, `ProfileWithRelations`,
+  `specializationLabels`, `contactFormSchema`) are appended at the bottom so the
+  existing frontend keeps compiling.
+- `api/index.ts` (~700 lines, single Vercel-compatible handler) hydrates the
+  legacy camelCase shape from the new tables so the React app keeps working
+  without page rewrites.
+- `server/routes.ts` mounts the handler for `/api`, `/sitemap.xml`, `/robots.txt`,
+  `/sitemaps/*` and Google verification HTML files.
+- Old files deleted: `server/storage.ts`, `server/supabase-storage.ts`.
+- Deferred (must be re-added after verticals decision): Resend email hook on
+  payment success, Discord webhook notifications, Billit/Peppol invoice push
+  inside the Mollie webhook.
+
+## Earlier Schema Changes (Jan 2026)
 - **Accounts Naming**: Renamed `businesses` table to `accounts` with clear hierarchy: **Accounts** (login, VAT, billing) → **Profiles** (service listings) → **Offices** (locations)
 - **Belgian B2B Fields**: Added VAT number (BE0123456789 format), company name, and billing address fields to accounts table
 - **Auth User ID**: Changed `accountId` to `authUserId` in accounts table to clearly reference Supabase Auth UUID

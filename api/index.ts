@@ -5,342 +5,329 @@ const supabaseUrl = process.env.SUPABASE_URL!;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// Map camelCase keys to snake_case for database - only known fields
-const fieldMap: Record<string, string> = {
-  accountId: "account_id",
-  categoryId: "category_id",
-  locationId: "location_id",
-  logoUrl: "logo_url",
-  imageUrls: "image_urls",
-  hasWebsite: "has_website",
-  isActive: "is_active",
-  isPublic: "is_public",
-  isVerified: "is_verified",
-  hideAddress: "hide_address",
-  viewCount: "view_count",
-  websiteClicks: "website_clicks",
-  verificationStatus: "verification_status",
-  verifiedAt: "verified_at",
-  verifiedBy: "verified_by",
-  rejectionReason: "rejection_reason",
-  seoTitle: "seo_title",
-  seoDescription: "seo_description",
-  // offeredServices: "offered_services", // Column doesn't exist in database
-  createdAt: "created_at",
-  updatedAt: "updated_at",
-  sortOrder: "sort_order",
-  authUserId: "auth_user_id",
-  emailVerified: "email_verified",
-  emailVerifiedAt: "email_verified_at",
-  profileId: "profile_id",
-  gardenerId: "gardener_id",
-  visitorName: "visitor_name",
-  visitorEmail: "visitor_email",
-  mainCategory: "main_category",
-  experienceYears: "experience_years",
-  vatNumber: "vat_number",
-  companyName: "company_name",
-  billingStreet: "billing_street",
-  billingNumber: "billing_number",
-  billingPostcode: "billing_postcode",
-  billingCity: "billing_city",
-};
+const SITEMAP_BASE_URL = "https://www.zoek-een-tuinman.be";
 
-// Fields that should be ignored (don't exist in profiles table - separate tables or UI-only)
-const ignoreFields = new Set([
-  "offeredServices",
-  "offered_services",
-  "mainCategories",
-  "main_categories",
-  "office",
-  "practicals",
-  "officeStreet",
-  "officeNumber",
-  "officeTown",
-  "officePostcode",
-  "office_street",
-  "office_number",
-  "office_town",
-  "office_postcode",
-]);
-
-function toSnakeCase(obj: Record<string, any>): Record<string, any> {
-  const result: Record<string, any> = {};
-  for (const key in obj) {
-    // Skip fields that don't exist in the database
-    if (ignoreFields.has(key)) continue;
-    // Use mapping if exists, otherwise keep original key
-    const snakeKey = fieldMap[key] || key;
-    // Also skip if the mapped key is in ignore list
-    if (ignoreFields.has(snakeKey)) continue;
-    result[snakeKey] = obj[key];
-  }
-  return result;
+function generateSlug(name: string): string {
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 }
 
-// Reverse mapping: snake_case to camelCase
-const reverseFieldMap: Record<string, string> = Object.fromEntries(
-  Object.entries(fieldMap).map(([camel, snake]) => [snake, camel])
-);
+function snakeToCamel(s: string): string {
+  return s.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
+}
+function camelToSnake(s: string): string {
+  return s.replace(/[A-Z]/g, (c) => "_" + c.toLowerCase());
+}
+function toCamelCase(o: any): any {
+  if (!o || typeof o !== "object") return o;
+  if (Array.isArray(o)) return o.map(toCamelCase);
+  const r: any = {};
+  for (const k in o) {
+    const v = o[k];
+    r[snakeToCamel(k)] = (v && typeof v === "object" && !Array.isArray(v)) ? toCamelCase(v) : Array.isArray(v) ? v.map((x) => (x && typeof x === "object" ? toCamelCase(x) : x)) : v;
+  }
+  return r;
+}
+function toSnakeCase(o: Record<string, any>): Record<string, any> {
+  const r: any = {};
+  for (const k in o) r[camelToSnake(k)] = o[k];
+  return r;
+}
 
-function toCamelCase(obj: Record<string, any>): Record<string, any> {
-  if (!obj || typeof obj !== 'object') return obj;
-  if (Array.isArray(obj)) return obj.map(item => toCamelCase(item));
-  
-  const result: Record<string, any> = {};
-  for (const key in obj) {
-    const camelKey = reverseFieldMap[key] || key;
-    const value = obj[key];
-    // Recursively convert nested objects (but not arrays of primitives)
-    if (value && typeof value === 'object' && !Array.isArray(value)) {
-      result[camelKey] = toCamelCase(value);
-    } else if (Array.isArray(value) && value.length > 0 && typeof value[0] === 'object') {
-      result[camelKey] = value.map(item => toCamelCase(item));
-    } else {
-      result[camelKey] = value;
+const toRad = (deg: number) => (deg * Math.PI) / 180;
+function calcDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
+  const R = 6371;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+  return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+// ---------------------------------------------------------------------------
+// In-memory caches voor catalogi (refreshen zelden)
+// ---------------------------------------------------------------------------
+let _catalogCache: {
+  serviceCategories: any[];
+  specializations: any[];
+  serviceAreas: any[];
+  ts: number;
+} | null = null;
+const CATALOG_TTL_MS = 60_000;
+
+async function getCatalogs() {
+  if (_catalogCache && Date.now() - _catalogCache.ts < CATALOG_TTL_MS) return _catalogCache;
+  const [{ data: cats }, { data: specs }, { data: areas }] = await Promise.all([
+    supabase.from("service_category").select("*").order("sort_order"),
+    supabase.from("specialization").select("*").order("sort_order"),
+    supabase.from("service_area").select("*"),
+  ]);
+  _catalogCache = {
+    serviceCategories: cats || [],
+    specializations: specs || [],
+    serviceAreas: areas || [],
+    ts: Date.now(),
+  };
+  return _catalogCache;
+}
+
+function mainCategoryKey(slug: string | null | undefined): string {
+  return (slug || "").toUpperCase().replace(/-/g, "_");
+}
+
+// Synthesize "category" object in old shape from a specialization row + parent service_category
+function legacyCategoryFromSpec(spec: any, cats: any[]) {
+  const parent = cats.find((c) => c.id === spec.service_category_id);
+  return {
+    id: spec.id,
+    slug: spec.slug,
+    name: spec.name,
+    description: spec.description,
+    main_category: mainCategoryKey(parent?.slug),
+    is_active: true,
+    sort_order: spec.sort_order,
+  };
+}
+
+// Convert service_area row to old "location" shape
+function legacyLocationFromArea(a: any) {
+  return {
+    id: a.id,
+    slug: a.slug,
+    name: a.municipality,
+    postcode: a.postcode,
+    province: a.province,
+    region: a.region,
+    latitude: a.latitude,
+    longitude: a.longitude,
+    is_active: true,
+  };
+}
+
+// Hydrate a profile row with related data in legacy-frontend shape
+async function hydrateProfile(p: any, opts: { withPracticals?: boolean } = {}) {
+  const { specializations, serviceCategories, serviceAreas } = await getCatalogs();
+
+  // office address
+  let office: any = null;
+  if (p.office_address_id) {
+    const { data: addr } = await supabase.from("address").select("*").eq("id", p.office_address_id).single();
+    if (addr) {
+      office = {
+        id: addr.id,
+        street: addr.street,
+        number: addr.number,
+        town: addr.municipality,
+        postcode: addr.postcode,
+        province: addr.province,
+        region: addr.region,
+        country: addr.country,
+        latitude: addr.latitude,
+        longitude: addr.longitude,
+        showAddress: addr.show_address,
+      };
     }
   }
-  return result;
+
+  // junctions
+  const [{ data: pSpecs }, { data: pCats }, { data: pAreas }] = await Promise.all([
+    supabase.from("profile_specialization").select("specialization_id, is_main").eq("profile_id", p.id),
+    supabase.from("profile_service_category").select("service_category_id, is_main").eq("profile_id", p.id),
+    supabase.from("profile_service_area").select("service_area_id").eq("profile_id", p.id),
+  ]);
+
+  const specSlugs = (pSpecs || []).map((j: any) => specializations.find((s) => s.id === j.specialization_id)?.slug).filter(Boolean);
+  const firstSpec = (pSpecs || [])[0]
+    ? specializations.find((s) => s.id === (pSpecs as any[])[0].specialization_id)
+    : null;
+  const category = firstSpec ? legacyCategoryFromSpec(firstSpec, serviceCategories) : null;
+  const firstArea = (pAreas || [])[0] ? serviceAreas.find((a) => a.id === (pAreas as any[])[0].service_area_id) : null;
+  const location = firstArea ? legacyLocationFromArea(firstArea) : null;
+
+  // mainCategories (uppercase keys derived from service_category slugs)
+  const mainCats = (pCats || []).map((j: any) => {
+    const sc = serviceCategories.find((c) => c.id === j.service_category_id);
+    return mainCategoryKey(sc?.slug);
+  }).filter(Boolean);
+
+  // practicals
+  let practical: any = null;
+  if (opts.withPracticals) {
+    const { data: questions } = await supabase.from("practical_question").select("*");
+    const { data: answers } = await supabase.from("practical_answer").select("id, practical_question_id").eq("profile_id", p.id);
+    if (answers && answers.length && questions) {
+      practical = {};
+      for (const a of answers as any[]) {
+        const q = questions.find((q: any) => q.id === a.practical_question_id);
+        if (!q) continue;
+        const key = q.key.charAt(0).toLowerCase() + q.key.slice(1); // languages, priceHour, yearsExperience
+        if (q.field_type === "OPTION") {
+          const { data: opts } = await supabase
+            .from("practical_answer_option")
+            .select("practical_option_id")
+            .eq("practical_answer_id", a.id);
+          if (opts && opts.length) {
+            const { data: optDetails } = await supabase
+              .from("practical_option")
+              .select("name")
+              .in("id", (opts as any[]).map((o) => o.practical_option_id));
+            practical[key] = (optDetails || []).map((o: any) => o.name);
+          }
+        } else if (q.field_type === "INT") {
+          const { data: v } = await supabase.from("practical_answer_int").select("value").eq("practical_answer_id", a.id).single();
+          if (v) practical[key] = v.value;
+        } else if (q.field_type === "DOUBLE") {
+          const { data: v } = await supabase.from("practical_answer_double").select("value").eq("practical_answer_id", a.id).single();
+          if (v) practical[key] = v.value;
+        } else if (q.field_type === "STRING") {
+          const { data: v } = await supabase.from("practical_answer_string").select("value").eq("practical_answer_id", a.id).single();
+          if (v) practical[key] = v.value;
+        } else if (q.field_type === "DATE") {
+          const { data: v } = await supabase.from("practical_answer_date").select("value").eq("practical_answer_id", a.id).single();
+          if (v) practical[key] = v.value;
+        }
+      }
+    }
+  }
+
+  return toCamelCase({
+    id: p.id,
+    slug: p.slug,
+    name: p.company_name,
+    company_name: p.company_name,
+    email: p.contact_email,
+    contact_email: p.contact_email,
+    telnr: p.telnr,
+    title: p.title,
+    introduction: p.introduction,
+    description: p.introduction,
+    website: p.websiteurl,
+    websiteurl: p.websiteurl,
+    has_website: p.has_website,
+    logo_url: p.logourl,
+    image_urls: p.imageurls || [],
+    is_active: p.is_active,
+    is_public: p.is_public,
+    is_verified: p.is_verified,
+    verification_status: p.verification_status,
+    view_count: p.view_count,
+    website_clicks: p.website_clicks,
+    practitioner_id: p.practitioner_id,
+    account_id: p.practitioner_id, // legacy alias
+    office_address_id: p.office_address_id,
+    created_at: p.created_at,
+    updated_at: p.updated_at,
+    category,
+    category_id: firstSpec?.id || null,
+    location,
+    location_id: firstArea?.id || null,
+    office,
+    practical,
+    specializations: specSlugs,
+    main_categories: mainCats,
+  });
 }
 
-// Generate slug from name
-function generateSlug(name: string): string {
-  return name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "");
-}
-
+// ---------------------------------------------------------------------------
+// Handler
+// ---------------------------------------------------------------------------
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const { method } = req;
   const url = new URL(req.url!, `https://${req.headers.host}`);
   const path = url.pathname;
-
   res.setHeader("Content-Type", "application/json");
 
   try {
-    // GET /api/config/recaptcha - public site key
+    // -----------------------------------------------------------------------
+    // CONFIG
+    // -----------------------------------------------------------------------
     if (method === "GET" && path === "/api/config/recaptcha") {
       const siteKey = process.env.RECAPTCHA_SITE_KEY;
-      if (!siteKey) {
-        return res.status(503).json({ error: "reCAPTCHA not configured" });
-      }
+      if (!siteKey) return res.status(503).json({ error: "reCAPTCHA not configured" });
       return res.status(200).json({ siteKey });
     }
 
-    // GET /api/categories
-    if (method === "GET" && path === "/api/categories") {
-      const { data, error } = await supabase
-        .from("categories")
-        .select("*")
-        .eq("is_active", true)
-        .order("sort_order", { ascending: true });
-      
-      if (error) throw error;
-      return res.status(200).json(data || []);
+    if (method === "GET" && path === "/api/site-config") {
+      const { data } = await supabase.from("site_config").select("*").limit(1).single();
+      if (!data) return res.status(404).json({ error: "Site config not initialized" });
+      // Strip sensitive fields for public consumption
+      const { company_vat_number, ...publicCfg } = data as any;
+      return res.status(200).json(toCamelCase(publicCfg));
     }
 
-    // GET /api/categories/grouped - MUST be before :slug route
-    if (method === "GET" && path === "/api/categories/grouped") {
-      const { data: categories, error } = await supabase
-        .from("categories")
-        .select("*")
-        .eq("is_active", true)
-        .order("sort_order", { ascending: true });
-      
-      if (error) throw error;
+    // -----------------------------------------------------------------------
+    // CATEGORIES (mapped from specialization)
+    // -----------------------------------------------------------------------
+    if (method === "GET" && path === "/api/categories") {
+      const { specializations, serviceCategories } = await getCatalogs();
+      return res.status(200).json(specializations.map((s) => legacyCategoryFromSpec(s, serviceCategories)));
+    }
 
-      // Group categories by mainCategory
-      const grouped: Record<string, { key: string; name: string; slug: string; description: string | null }[]> = {
-        TUINONDERHOUD: [],
-        TUINAANLEG: [],
-      };
-      
-      for (const cat of categories || []) {
-        if (cat.main_category && grouped[cat.main_category]) {
-          grouped[cat.main_category].push({
-            key: cat.slug.toUpperCase().replace(/-/g, "_"),
-            name: cat.name,
-            slug: cat.slug,
-            description: cat.description,
-          });
-        }
+    if (method === "GET" && path === "/api/categories/grouped") {
+      const { specializations, serviceCategories } = await getCatalogs();
+      const mainCategories = serviceCategories.map((c) => ({
+        key: mainCategoryKey(c.slug),
+        name: c.name,
+        description: c.description,
+        slug: c.slug,
+      }));
+      const grouped: Record<string, any[]> = {};
+      for (const c of serviceCategories) grouped[mainCategoryKey(c.slug)] = [];
+      for (const s of specializations) {
+        const parent = serviceCategories.find((c) => c.id === s.service_category_id);
+        const key = mainCategoryKey(parent?.slug);
+        if (!grouped[key]) grouped[key] = [];
+        grouped[key].push({
+          key: mainCategoryKey(s.slug),
+          name: s.name,
+          slug: s.slug,
+          description: s.description,
+        });
       }
-      
-      // Also return main category labels
-      const mainCategories = [
-        { key: "TUINONDERHOUD", name: "Tuinonderhoud", description: "Onderhoud van bestaande tuinen" },
-        { key: "TUINAANLEG", name: "Tuinaanleg", description: "Aanleg van nieuwe tuinen" },
-      ];
-      
       return res.status(200).json({ mainCategories, specializations: grouped });
     }
 
-    // GET /api/categories/:slug
     if (method === "GET" && path.match(/^\/api\/categories\/[^/]+$/)) {
       const slug = path.split("/").pop();
-      const { data, error } = await supabase
-        .from("categories")
-        .select("*")
-        .eq("slug", slug)
-        .single();
-      
-      if (error && error.code !== "PGRST116") throw error;
-      if (!data) return res.status(404).json({ error: "Category not found" });
-      return res.status(200).json(data);
+      const { specializations, serviceCategories } = await getCatalogs();
+      const spec = specializations.find((s) => s.slug === slug);
+      if (!spec) return res.status(404).json({ error: "Category not found" });
+      return res.status(200).json(legacyCategoryFromSpec(spec, serviceCategories));
     }
 
-    // GET /api/locations
+    // -----------------------------------------------------------------------
+    // LOCATIONS (mapped from service_area)
+    // -----------------------------------------------------------------------
     if (method === "GET" && path === "/api/locations") {
-      const { data, error } = await supabase
-        .from("locations")
-        .select("*")
-        .eq("is_active", true)
-        .order("name", { ascending: true });
-      
-      if (error) throw error;
-      return res.status(200).json(data || []);
+      const { serviceAreas } = await getCatalogs();
+      const sorted = [...serviceAreas].sort((a, b) => (a.municipality || "").localeCompare(b.municipality || ""));
+      return res.status(200).json(sorted.map(legacyLocationFromArea));
     }
 
-    // GET /api/locations/:slug
     if (method === "GET" && path.match(/^\/api\/locations\/[^/]+$/)) {
       const slug = path.split("/").pop();
-      const { data, error } = await supabase
-        .from("locations")
-        .select("*")
-        .eq("slug", slug)
-        .single();
-      
-      if (error && error.code !== "PGRST116") throw error;
-      if (!data) return res.status(404).json({ error: "Location not found" });
-      return res.status(200).json(data);
+      const { serviceAreas } = await getCatalogs();
+      const area = serviceAreas.find((a) => a.slug === slug);
+      if (!area) return res.status(404).json({ error: "Location not found" });
+      return res.status(200).json(legacyLocationFromArea(area));
     }
 
-    // GET /api/profiles/featured - now returns verified profiles with high view counts
+    // -----------------------------------------------------------------------
+    // PROFILES
+    // -----------------------------------------------------------------------
     if (method === "GET" && path === "/api/profiles/featured") {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select(`
-          *,
-          category:categories(*),
-          location:locations(*),
-          office:offices(*),
-          practical:practicals(*)
-        `)
+      const { data } = await supabase
+        .from("profile")
+        .select("*")
         .eq("is_active", true)
         .eq("is_public", true)
         .eq("is_verified", true)
         .order("view_count", { ascending: false })
         .limit(6);
-      
-      if (error) throw error;
-      return res.status(200).json(toCamelCase(data || []));
+      const hydrated = await Promise.all((data || []).map((p) => hydrateProfile(p, { withPracticals: true })));
+      return res.status(200).json(hydrated);
     }
 
-    // GET /api/profiles/count
-    if (method === "GET" && path === "/api/profiles/count") {
-      const category = url.searchParams.get("category");
-      const location = url.searchParams.get("location");
-      const query = url.searchParams.get("q");
-      const mainCategory = url.searchParams.get("mainCategory");
-      const spec = url.searchParams.get("spec");
-
-      let queryBuilder = supabase
-        .from("profiles")
-        .select("*", { count: "exact", head: true })
-        .eq("is_active", true)
-        .eq("is_public", true);
-
-      // Filter by category slug
-      if (category) {
-        const { data: cat } = await supabase
-          .from("categories")
-          .select("id")
-          .eq("slug", category)
-          .single();
-        if (cat) {
-          queryBuilder = queryBuilder.eq("category_id", cat.id);
-        }
-      }
-
-      // Filter by location with 20km radius search
-      const SEARCH_RADIUS_KM = 20;
-      if (location) {
-        const { data: loc } = await supabase
-          .from("locations")
-          .select("*")
-          .eq("slug", location)
-          .single();
-        
-        if (loc && loc.latitude && loc.longitude) {
-          // Get all locations for radius search
-          const { data: allLocations } = await supabase
-            .from("locations")
-            .select("id, latitude, longitude")
-            .eq("is_active", true);
-          
-          if (allLocations && allLocations.length > 0) {
-            // Calculate distance using Haversine formula
-            const toRad = (deg: number) => deg * Math.PI / 180;
-            const calcDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
-              const R = 6371;
-              const dLat = toRad(lat2 - lat1);
-              const dLon = toRad(lon2 - lon1);
-              const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                        Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
-                        Math.sin(dLon/2) * Math.sin(dLon/2);
-              const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-              return R * c;
-            };
-            
-            const nearbyLocationIds = allLocations
-              .filter(l => l.latitude && l.longitude && 
-                calcDistance(loc.latitude, loc.longitude, l.latitude, l.longitude) <= SEARCH_RADIUS_KM)
-              .map(l => l.id);
-            
-            if (nearbyLocationIds.length > 0) {
-              queryBuilder = queryBuilder.in("location_id", nearbyLocationIds);
-            } else {
-              queryBuilder = queryBuilder.eq("location_id", loc.id);
-            }
-          } else {
-            queryBuilder = queryBuilder.eq("location_id", loc.id);
-          }
-        } else if (loc) {
-          queryBuilder = queryBuilder.eq("location_id", loc.id);
-        }
-      }
-
-      // Filter by main category (TUINONDERHOUD or TUINAANLEG)
-      if (mainCategory) {
-        const { data: cats } = await supabase
-          .from("categories")
-          .select("id")
-          .eq("main_category", mainCategory);
-        if (cats && cats.length > 0) {
-          const categoryIds = cats.map(c => c.id);
-          queryBuilder = queryBuilder.in("category_id", categoryIds);
-        }
-      }
-
-      // Filter by specialization
-      if (spec) {
-        queryBuilder = queryBuilder.contains("specializations", [spec]);
-      }
-
-      // Filter by search query
-      if (query) {
-        queryBuilder = queryBuilder.or(`name.ilike.%${query}%,introduction.ilike.%${query}%,title.ilike.%${query}%`);
-      }
-
-      const { count, error } = await queryBuilder;
-      
-      if (error) throw error;
-      return res.status(200).json({ total: count || 0 });
-    }
-
-    // GET /api/profiles/search
-    if (method === "GET" && path === "/api/profiles/search") {
+    if (method === "GET" && (path === "/api/profiles/count" || path === "/api/profiles/search")) {
+      const isCount = path === "/api/profiles/count";
       const category = url.searchParams.get("category");
       const location = url.searchParams.get("location");
       const query = url.searchParams.get("query") || url.searchParams.get("q");
@@ -350,402 +337,275 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const limit = parseInt(url.searchParams.get("limit") || "12");
       const offset = (page - 1) * limit;
 
-      let queryBuilder = supabase
-        .from("profiles")
-        .select(`
-          *,
-          category:categories(*),
-          location:locations(*),
-          office:offices(*),
-          practical:practicals(*)
-        `, { count: "exact" })
-        .eq("is_active", true)
-        .eq("is_public", true);
+      const { specializations, serviceCategories, serviceAreas } = await getCatalogs();
 
-      if (category) {
-        const { data: cat } = await supabase
-          .from("categories")
-          .select("id")
-          .eq("slug", category)
-          .single();
-        if (cat) {
-          queryBuilder = queryBuilder.eq("category_id", cat.id);
+      // Resolve filter ids
+      let specId: string | null = null;
+      const specSlug = category || spec;
+      if (specSlug) {
+        specId = specializations.find((s) => s.slug === specSlug)?.id || null;
+      }
+
+      let categoryIdsForMain: string[] | null = null;
+      if (mainCategory) {
+        const targetSlug = mainCategory.toLowerCase().replace(/_/g, "-");
+        const sc = serviceCategories.find((c) => c.slug === targetSlug || mainCategoryKey(c.slug) === mainCategory.toUpperCase());
+        if (sc) categoryIdsForMain = [sc.id];
+      }
+
+      // Find candidate profile IDs via junctions
+      let candidateIds: string[] | null = null;
+      if (specId) {
+        const { data } = await supabase.from("profile_specialization").select("profile_id").eq("specialization_id", specId);
+        candidateIds = (data || []).map((r: any) => r.profile_id);
+        if (!candidateIds.length) {
+          if (isCount) return res.status(200).json({ count: 0 });
+          return res.status(200).json({ profiles: [], total: 0, page, totalPages: 0 });
+        }
+      }
+      if (categoryIdsForMain) {
+        const { data } = await supabase
+          .from("profile_service_category")
+          .select("profile_id")
+          .in("service_category_id", categoryIdsForMain);
+        const ids = (data || []).map((r: any) => r.profile_id);
+        candidateIds = candidateIds ? candidateIds.filter((id) => ids.includes(id)) : ids;
+        if (!candidateIds.length) {
+          if (isCount) return res.status(200).json({ count: 0 });
+          return res.status(200).json({ profiles: [], total: 0, page, totalPages: 0 });
         }
       }
 
-      // Store location data for distance calculation
+      // Location → 20km radius using office address coords
       let searchLocationData: { lat: number; lng: number; name: string; id: string } | null = null;
       const SEARCH_RADIUS_KM = 20;
-
       if (location) {
-        const { data: loc } = await supabase
-          .from("locations")
-          .select("*")
-          .eq("slug", location)
-          .single();
-        
+        const loc = serviceAreas.find((a) => a.slug === location);
         if (loc && loc.latitude && loc.longitude) {
-          searchLocationData = {
-            lat: loc.latitude,
-            lng: loc.longitude,
-            name: loc.name,
-            id: loc.id,
-          };
-          
-          // Get all locations for radius search
-          const { data: allLocations } = await supabase
-            .from("locations")
-            .select("id, latitude, longitude")
-            .eq("is_active", true);
-          
-          if (allLocations && allLocations.length > 0) {
-            // Calculate distance using Haversine formula
-            const toRad = (deg: number) => deg * Math.PI / 180;
-            const calcDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
-              const R = 6371;
-              const dLat = toRad(lat2 - lat1);
-              const dLon = toRad(lon2 - lon1);
-              const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                        Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
-                        Math.sin(dLon/2) * Math.sin(dLon/2);
-              const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-              return R * c;
-            };
-            
-            const nearbyLocationIds = allLocations
-              .filter(l => l.latitude && l.longitude && 
-                calcDistance(loc.latitude, loc.longitude, l.latitude, l.longitude) <= SEARCH_RADIUS_KM)
-              .map(l => l.id);
-            
-            if (nearbyLocationIds.length > 0) {
-              queryBuilder = queryBuilder.in("location_id", nearbyLocationIds);
-            } else {
-              queryBuilder = queryBuilder.eq("location_id", loc.id);
-            }
-          } else {
-            queryBuilder = queryBuilder.eq("location_id", loc.id);
-          }
-        } else if (loc) {
-          queryBuilder = queryBuilder.eq("location_id", loc.id);
+          searchLocationData = { lat: loc.latitude, lng: loc.longitude, name: loc.municipality, id: loc.id };
         }
       }
 
-      if (mainCategory) {
-        // Filter by main category through category relation
-        const { data: cats } = await supabase
-          .from("categories")
-          .select("id")
-          .eq("main_category", mainCategory);
-        if (cats && cats.length > 0) {
-          const categoryIds = cats.map(c => c.id);
-          queryBuilder = queryBuilder.in("category_id", categoryIds);
-        }
-      }
+      // Build profile query
+      let q = supabase.from("profile").select("*", { count: "exact" }).eq("is_active", true).eq("is_public", true);
+      if (candidateIds) q = q.in("id", candidateIds);
+      if (query) q = q.or(`company_name.ilike.%${query}%,introduction.ilike.%${query}%,title.ilike.%${query}%`);
 
-      // Filter by specialization
-      if (spec) {
-        queryBuilder = queryBuilder.contains("specializations", [spec]);
-      }
-
-      if (query) {
-        queryBuilder = queryBuilder.or(`name.ilike.%${query}%,introduction.ilike.%${query}%,title.ilike.%${query}%`);
-      }
-
-      // If we have a search location, fetch ALL results first for distance sorting
-      if (searchLocationData) {
-        const { data: allData, count: totalCount, error: allError } = await queryBuilder;
-        
-        if (allError) throw allError;
-        
-        // Calculate distance using Haversine formula
-        const toRad = (deg: number) => deg * Math.PI / 180;
-        const calcDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
-          const R = 6371;
-          const dLat = toRad(lat2 - lat1);
-          const dLon = toRad(lon2 - lon1);
-          const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
-                    Math.sin(dLon/2) * Math.sin(dLon/2);
-          const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-          return R * c;
-        };
-        
-        // Add distance to each profile (distanceKm for frontend compatibility)
-        const profilesWithDistance = (allData || []).map((profile: any) => {
-          let distanceKm = 0;
-          if (profile.location?.latitude && profile.location?.longitude) {
-            distanceKm = Math.round(calcDistance(
-              searchLocationData!.lat,
-              searchLocationData!.lng,
-              profile.location.latitude,
-              profile.location.longitude
-            ) * 10) / 10; // Round to 1 decimal place
-          }
-          return { ...profile, distanceKm };
-        });
-        
-        // Sort by distance, then alphabetically
-        profilesWithDistance.sort((a: any, b: any) => {
-          if (a.distanceKm !== b.distanceKm) return a.distanceKm - b.distanceKm;
-          return (a.name || '').localeCompare(b.name || '');
-        });
-        
-        // Apply pagination AFTER sorting
-        const paginatedProfiles = profilesWithDistance.slice(offset, offset + limit);
-        const total = totalCount || profilesWithDistance.length;
-        const totalPages = Math.ceil(total / limit);
-        
-        return res.status(200).json({
-          profiles: toCamelCase(paginatedProfiles),
-          total,
-          page,
-          totalPages,
-          searchLocation: searchLocationData,
-        });
-      }
-
-      // No location search - use standard pagination
-      const { data, count, error } = await queryBuilder
-        .range(offset, offset + limit - 1);
-
+      // Always fetch all matching first if we need distance filter/sort
+      const { data: rawProfiles, count, error } = await q;
       if (error) throw error;
+      let profiles = rawProfiles || [];
 
-      const total = count || 0;
-      const totalPages = Math.ceil(total / limit);
+      // Distance filter + sort
+      if (searchLocationData) {
+        // Need office addresses for filtering
+        const ids = profiles.map((p) => p.office_address_id).filter(Boolean);
+        const { data: addrs } = await supabase.from("address").select("id, latitude, longitude").in("id", ids);
+        const addrMap: Record<string, any> = {};
+        for (const a of addrs || []) addrMap[(a as any).id] = a;
+        const filtered: any[] = [];
+        for (const p of profiles) {
+          const a = p.office_address_id ? addrMap[p.office_address_id] : null;
+          if (a && a.latitude && a.longitude) {
+            const d = calcDistance(searchLocationData.lat, searchLocationData.lng, a.latitude, a.longitude);
+            if (d <= SEARCH_RADIUS_KM) filtered.push({ ...p, _distanceKm: Math.round(d * 10) / 10 });
+          }
+        }
+        filtered.sort((a, b) => a._distanceKm - b._distanceKm || (a.company_name || "").localeCompare(b.company_name || ""));
+        profiles = filtered;
+      }
 
+      const total = searchLocationData ? profiles.length : count || profiles.length;
+      if (isCount) return res.status(200).json({ count: total });
+
+      const paginated = profiles.slice(offset, offset + limit);
+      const hydrated = await Promise.all(paginated.map((p) => hydrateProfile(p, { withPracticals: true })));
+      // Reattach distance
+      if (searchLocationData) {
+        for (let i = 0; i < hydrated.length; i++) {
+          (hydrated[i] as any).distanceKm = (paginated[i] as any)._distanceKm;
+        }
+      }
       return res.status(200).json({
-        profiles: toCamelCase(data || []),
+        profiles: hydrated,
         total,
         page,
-        totalPages,
+        totalPages: Math.ceil(total / limit),
+        ...(searchLocationData ? { searchLocation: searchLocationData } : {}),
       });
     }
 
-    // GET /api/profiles/by-id/:id
     if (method === "GET" && path.match(/^\/api\/profiles\/by-id\/[^/]+$/)) {
       const id = path.split("/").pop();
-      const { data, error } = await supabase
-        .from("profiles")
-        .select(`
-          *,
-          category:categories(*),
-          location:locations(*),
-          office:offices(*),
-          practical:practicals(*)
-        `)
-        .eq("id", id)
-        .single();
-      
-      if (error && error.code !== "PGRST116") throw error;
+      const { data } = await supabase.from("profile").select("*").eq("id", id).single();
       if (!data) return res.status(404).json({ error: "Profile not found" });
-      res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
-      return res.status(200).json(toCamelCase(data));
+      res.setHeader("Cache-Control", "no-store");
+      return res.status(200).json(await hydrateProfile(data, { withPracticals: true }));
     }
 
-    // GET /api/profiles/:slug (must be after other /api/profiles/ routes)
     if (method === "GET" && path.match(/^\/api\/profiles\/[^/]+$/) && !path.includes("/by-id/")) {
       const slug = path.split("/").pop();
-      if (slug === "featured" || slug === "count" || slug === "search") {
-        return res.status(404).json({ error: "Not found" });
-      }
-      
-      const { data, error } = await supabase
-        .from("profiles")
-        .select(`
-          *,
-          category:categories(*),
-          location:locations(*),
-          office:offices(*),
-          practical:practicals(*)
-        `)
-        .eq("slug", slug)
-        .eq("is_active", true)
-        .single();
-      
-      if (error && error.code !== "PGRST116") throw error;
+      if (slug === "featured" || slug === "count" || slug === "search") return res.status(404).json({ error: "Not found" });
+      const { data } = await supabase.from("profile").select("*").eq("slug", slug).eq("is_active", true).single();
       if (!data) return res.status(404).json({ error: "Profile not found" });
-      
-      // Increment view count (fire and forget)
-      (async () => {
-        try {
-          await supabase
-            .from("profiles")
-            .update({ view_count: (data.view_count || 0) + 1 })
-            .eq("id", data.id);
-        } catch (err) {
-          console.error("Error incrementing view count:", err);
-        }
-      })();
-      
-      return res.status(200).json(toCamelCase(data));
+      // fire & forget view increment
+      supabase.from("profile").update({ view_count: ((data as any).view_count || 0) + 1 }).eq("id", (data as any).id).then(() => {});
+      return res.status(200).json(await hydrateProfile(data, { withPracticals: true }));
     }
 
-    // GET /api/my-profiles/:accountId
+    // -----------------------------------------------------------------------
+    // ACCOUNTS / PRACTITIONERS (legacy alias: account = practitioner)
+    // -----------------------------------------------------------------------
     if (method === "GET" && path.match(/^\/api\/my-profiles\/[^/]+$/)) {
-      const accountId = path.split("/").pop();
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("account_id", accountId);
-      
-      if (error) throw error;
-      return res.status(200).json(toCamelCase(data || []));
+      const practitionerId = path.split("/").pop();
+      const { data } = await supabase.from("profile").select("*").eq("practitioner_id", practitionerId);
+      const hydrated = await Promise.all((data || []).map((p) => hydrateProfile(p)));
+      return res.status(200).json(hydrated);
     }
 
-    // POST /api/accounts - get or create account
     if (method === "POST" && path === "/api/accounts") {
       const { authUserId, email } = req.body;
-      
-      const { data: existing } = await supabase
-        .from("accounts")
-        .select("*")
-        .eq("auth_user_id", authUserId)
-        .single();
-      
-      if (existing) {
-        return res.status(200).json(toCamelCase(existing));
-      }
-      
+      if (!authUserId) return res.status(400).json({ error: "authUserId required" });
+      const { data: existing } = await supabase.from("practitioner").select("*").eq("auth_user_id", authUserId).maybeSingle();
+      if (existing) return res.status(200).json(toCamelCase({ ...existing, account_id: (existing as any).id, role: "GARDENER", email_verified: true }));
+      // get default practitioner type from site_config
+      const { data: cfg } = await supabase.from("site_config").select("default_practitioner_type_id").limit(1).single();
       const { data, error } = await supabase
-        .from("accounts")
-        .insert({
-          auth_user_id: authUserId,
-          email,
-          role: "GARDENER",
-          email_verified: true,
-        })
+        .from("practitioner")
+        .insert({ auth_user_id: authUserId, email, practitioner_type_id: (cfg as any)?.default_practitioner_type_id })
         .select()
         .single();
-      
       if (error) throw error;
-      return res.status(200).json(toCamelCase(data));
+      return res.status(200).json(toCamelCase({ ...data, account_id: (data as any).id, role: "GARDENER", email_verified: true }));
     }
 
-    // GET /api/accounts/by-auth/:authUserId
     if (method === "GET" && path.match(/^\/api\/accounts\/by-auth\/[^/]+$/)) {
       const authUserId = path.split("/").pop();
-      const { data, error } = await supabase
-        .from("accounts")
-        .select("*")
-        .eq("auth_user_id", authUserId)
-        .single();
-      
-      if (error && error.code !== "PGRST116") throw error;
+      const { data } = await supabase.from("practitioner").select("*").eq("auth_user_id", authUserId).maybeSingle();
       if (!data) return res.status(404).json({ error: "Account not found" });
-      return res.status(200).json(toCamelCase(data));
+      return res.status(200).json(toCamelCase({ ...data, account_id: (data as any).id, role: "GARDENER", email_verified: true }));
     }
 
-    // GET /api/accounts/:id
     if (method === "GET" && path.match(/^\/api\/accounts\/[^/]+$/) && !path.includes("/by-auth/")) {
       const id = path.split("/").pop();
-      const { data, error } = await supabase
-        .from("accounts")
-        .select("*")
-        .eq("id", id)
-        .single();
-      
-      if (error && error.code !== "PGRST116") throw error;
+      const { data } = await supabase.from("practitioner").select("*").eq("id", id).maybeSingle();
       if (!data) return res.status(404).json({ error: "Account not found" });
-      return res.status(200).json(toCamelCase(data));
+      return res.status(200).json(toCamelCase({ ...data, account_id: (data as any).id, role: "GARDENER", email_verified: true }));
     }
 
-    // PATCH /api/accounts/:id
     if (method === "PATCH" && path.match(/^\/api\/accounts\/[^/]+$/) && !path.includes("/by-auth/")) {
       const id = path.split("/").pop();
-      const updates = toSnakeCase(req.body);
-      updates.updated_at = new Date().toISOString();
-      
-      const { data, error } = await supabase
-        .from("accounts")
-        .update(updates)
-        .eq("id", id)
-        .select()
-        .single();
-      
-      if (error) throw error;
-      return res.status(200).json(toCamelCase(data));
-    }
+      const body = req.body || {};
+      // Map legacy fields onto practitioner + billing address
+      const practUpdate: Record<string, any> = {};
+      if (body.email !== undefined) practUpdate.email = body.email;
+      if (body.firstname !== undefined) practUpdate.firstname = body.firstname;
+      if (body.lastname !== undefined) practUpdate.lastname = body.lastname;
+      if (body.companyName !== undefined) practUpdate.company_name = body.companyName;
+      if (body.vatNumber !== undefined) practUpdate.vat = body.vatNumber;
+      if (body.subjectToVat !== undefined) practUpdate.subject_to_vat = body.subjectToVat;
+      practUpdate.updated_at = new Date().toISOString();
 
-    // GET /api/subscription-plans
-    if (method === "GET" && path === "/api/subscription-plans") {
-      const { data, error } = await supabase
-        .from("subscription_plans")
-        .select("*")
-        .eq("is_active", true)
-        .order("sort_order", { ascending: true });
-      
-      if (error) throw error;
-      return res.status(200).json(data || []);
-    }
-
-    // GET /api/contact-requests/:accountId
-    if (method === "GET" && path.match(/^\/api\/contact-requests\/[^/]+$/)) {
-      const accountId = path.split("/").pop();
-      // Contact requests are linked to profiles owned by this account
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("account_id", accountId);
-      
-      if (!profiles || profiles.length === 0) {
-        return res.status(200).json([]);
+      const billingFields = ["billingStreet", "billingNumber", "billingPostcode", "billingCity"];
+      const hasBilling = billingFields.some((f) => body[f] !== undefined);
+      let billingAddressId: string | null = null;
+      if (hasBilling) {
+        const { data: prac } = await supabase.from("practitioner").select("billing_address_id").eq("id", id).single();
+        billingAddressId = (prac as any)?.billing_address_id || null;
+        const billingPayload: Record<string, any> = {
+          street: body.billingStreet,
+          number: body.billingNumber,
+          postcode: body.billingPostcode,
+          municipality: body.billingCity,
+        };
+        if (billingAddressId) {
+          await supabase.from("address").update(billingPayload).eq("id", billingAddressId);
+        } else {
+          // get default country from site_config
+          const { data: cfg } = await supabase.from("site_config").select("default_country_name").limit(1).single();
+          billingPayload.country = (cfg as any)?.default_country_name || null;
+          const { data: addr } = await supabase.from("address").insert(billingPayload).select().single();
+          if (addr) {
+            billingAddressId = (addr as any).id;
+            practUpdate.billing_address_id = billingAddressId;
+          }
+        }
       }
 
-      const profileIds = profiles.map(p => p.id);
-      const { data, error } = await supabase
-        .from("contact_requests")
-        .select(`*, profile:profiles!profile_id(name, slug)`)
+      const { data, error } = await supabase.from("practitioner").update(practUpdate).eq("id", id).select().single();
+      if (error) throw error;
+      return res.status(200).json(toCamelCase({ ...data, account_id: (data as any).id }));
+    }
+
+    // -----------------------------------------------------------------------
+    // SUBSCRIPTION PLANS (return offers in legacy plan-shape)
+    // -----------------------------------------------------------------------
+    if (method === "GET" && path === "/api/subscription-plans") {
+      const { data: offers } = await supabase
+        .from("subscription_plan_offer")
+        .select("*, subscription_plan(*)")
+        .eq("is_active", true)
+        .order("duration_in_years");
+      const result = (offers || []).map((o: any) => ({
+        id: o.id,
+        plan_id: o.subscription_plan_id,
+        type: o.subscription_plan?.key || "STANDARD",
+        name: `${o.subscription_plan?.name || "Standaard"} (${o.duration_in_years} jaar)`,
+        durationInYears: o.duration_in_years,
+        years: o.duration_in_years,
+        price: o.total_price,
+        total_price: o.total_price,
+        discount_percentage: o.discount_percentage,
+        is_popular: o.is_popular,
+        is_active: o.is_active,
+        sort_order: o.duration_in_years,
+      }));
+      return res.status(200).json(toCamelCase(result));
+    }
+
+    // -----------------------------------------------------------------------
+    // CONTACT REQUESTS
+    // -----------------------------------------------------------------------
+    if (method === "GET" && path.match(/^\/api\/contact-requests\/[^/]+$/)) {
+      const practitionerId = path.split("/").pop();
+      const { data: profiles } = await supabase.from("profile").select("id, slug, company_name").eq("practitioner_id", practitionerId);
+      if (!profiles || !profiles.length) return res.status(200).json([]);
+      const profileIds = profiles.map((p) => (p as any).id);
+      const { data } = await supabase
+        .from("contact_request")
+        .select("*")
         .in("profile_id", profileIds)
         .order("created_at", { ascending: false });
-      
-      if (error) throw error;
-      // Transform to camelCase for frontend
-      const transformed = (data || []).map((item: Record<string, any>) => toCamelCase(item));
-      return res.status(200).json(transformed);
+      const enriched = (data || []).map((cr: any) => {
+        const prof = profiles.find((p) => (p as any).id === cr.profile_id);
+        return { ...cr, profile: { name: (prof as any)?.company_name, slug: (prof as any)?.slug } };
+      });
+      return res.status(200).json(toCamelCase(enriched));
     }
 
-    // POST /api/contact/:profileId (simplified - no status tracking)
     if (method === "POST" && path.match(/^\/api\/contact\/[^/]+$/)) {
       const profileId = path.split("/").pop();
-      
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("id, name, email")
-        .eq("id", profileId)
-        .single();
-      
-      if (!profile) {
-        return res.status(404).json({ error: "Profile not found" });
-      }
-      
-      // Verify reCAPTCHA token
+      const { data: profile } = await supabase.from("profile").select("id, company_name, contact_email").eq("id", profileId).single();
+      if (!profile) return res.status(404).json({ error: "Profile not found" });
+
       const recaptchaSecretKey = process.env.RECAPTCHA_SECRET_KEY;
       const { recaptchaToken, visitorName, visitorEmail, telnr, subject, message } = req.body;
-      
-      if (recaptchaSecretKey) {
-        if (!recaptchaToken) {
-          return res.status(400).json({ error: "reCAPTCHA verificatie mislukt" });
-        }
-
-        const recaptchaResponse = await fetch("https://www.google.com/recaptcha/api/siteverify", {
+      if (recaptchaSecretKey && recaptchaToken) {
+        const r = await fetch("https://www.google.com/recaptcha/api/siteverify", {
           method: "POST",
           headers: { "Content-Type": "application/x-www-form-urlencoded" },
           body: `secret=${recaptchaSecretKey}&response=${recaptchaToken}`,
         });
-        
-        const recaptchaResult = await recaptchaResponse.json() as { success: boolean; score?: number };
-        
-        if (!recaptchaResult.success || (recaptchaResult.score !== undefined && recaptchaResult.score < 0.5)) {
-          console.log("reCAPTCHA failed:", recaptchaResult);
-          return res.status(400).json({ error: "reCAPTCHA verificatie mislukt. Probeer het opnieuw." });
+        const result = (await r.json()) as { success: boolean; score?: number };
+        if (!result.success || (result.score !== undefined && result.score < 0.5)) {
+          return res.status(400).json({ error: "reCAPTCHA verificatie mislukt" });
         }
       }
-      
+
       const { data, error } = await supabase
-        .from("contact_requests")
+        .from("contact_request")
         .insert({
-          profile_id: profile.id,
-          gardener_id: profile.id,
+          profile_id: (profile as any).id,
           visitor_name: visitorName,
           visitor_email: visitorEmail,
           telnr: telnr || null,
@@ -754,159 +614,71 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         })
         .select()
         .single();
-      
       if (error) throw error;
 
-      // Send email notification to the profile's contact email via Resend
+      // Email notification
       const resendApiKey = process.env.RESEND_API_KEY;
-      if (resendApiKey && profile.email) {
+      const targetEmail = (profile as any).contact_email;
+      if (resendApiKey && targetEmail) {
         try {
           await fetch("https://api.resend.com/emails", {
             method: "POST",
-            headers: {
-              "Authorization": `Bearer ${resendApiKey}`,
-              "Content-Type": "application/json",
-            },
+            headers: { Authorization: `Bearer ${resendApiKey}`, "Content-Type": "application/json" },
             body: JSON.stringify({
               from: "Zoek-een-tuinman.be <noreply@zoek-een-tuinman.be>",
-              to: [profile.email],
+              to: [targetEmail],
               reply_to: visitorEmail,
               subject: `Nieuw contactverzoek: ${subject}`,
-              html: `
-                <!DOCTYPE html>
-                <html>
-                <head>
-                  <meta charset="utf-8">
-                  <style>
-                    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f5f5f5; }
-                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                    .header { background: #1B7340; color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
-                    .header h1 { margin: 0; font-size: 24px; }
-                    .content { background: white; padding: 30px; border-radius: 0 0 8px 8px; }
-                    .details { background: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0; }
-                    .detail-row { padding: 10px 0; border-bottom: 1px solid #eee; }
-                    .detail-row:last-child { border-bottom: none; }
-                    .label { color: #666; font-weight: bold; }
-                    .message-box { background: #fff; border: 1px solid #e0e0e0; padding: 20px; border-radius: 8px; margin-top: 20px; white-space: pre-wrap; }
-                    .footer { text-align: center; margin-top: 20px; color: #666; font-size: 14px; }
-                    .button { display: inline-block; background: #1B7340; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; }
-                  </style>
-                </head>
-                <body>
-                  <div class="container">
-                    <div class="header">
-                      <h1>Nieuw Contactverzoek</h1>
-                    </div>
-                    <div class="content">
-                      <p>Beste ${profile.name},</p>
-                      <p>Je hebt een nieuw contactverzoek ontvangen via Zoek-een-tuinman.be!</p>
-                      
-                      <div class="details">
-                        <div class="detail-row">
-                          <span class="label">Van:</span> ${visitorName}
-                        </div>
-                        <div class="detail-row">
-                          <span class="label">Email:</span> <a href="mailto:${visitorEmail}">${visitorEmail}</a>
-                        </div>
-                        ${telnr ? `<div class="detail-row"><span class="label">Telefoon:</span> <a href="tel:${telnr}">${telnr}</a></div>` : ''}
-                        <div class="detail-row">
-                          <span class="label">Onderwerp:</span> ${subject}
-                        </div>
-                      </div>
-
-                      <p><strong>Bericht:</strong></p>
-                      <div class="message-box">${message}</div>
-
-                      <p style="margin-top: 30px; text-align: center;">
-                        <a href="mailto:${visitorEmail}?subject=Re: ${encodeURIComponent(subject)}" class="button">Beantwoord dit bericht</a>
-                      </p>
-
-                      <p style="margin-top: 30px; color: #666; font-size: 14px;">
-                        Je kunt ook alle contactverzoeken bekijken in je <a href="https://www.zoek-een-tuinman.be/dashboard/contacten">dashboard</a>.
-                      </p>
-                    </div>
-                    <div class="footer">
-                      <p>© ${new Date().getFullYear()} Zoek-een-tuinman.be - Alle rechten voorbehouden</p>
-                    </div>
-                  </div>
-                </body>
-                </html>
-              `,
+              html: `<p>Je hebt een nieuw contactverzoek ontvangen van <b>${visitorName}</b> (${visitorEmail}).</p>
+                <p>${telnr ? `Telefoon: ${telnr}<br>` : ""}Onderwerp: ${subject}</p>
+                <pre>${message}</pre>`,
             }),
           });
-          console.log(`Sent contact notification email to ${profile.email} for profile ${profile.id}`);
-        } catch (emailError) {
-          console.error("Failed to send contact notification email:", emailError);
-          // Don't fail the request if email fails - contact is still saved
+        } catch (e) {
+          console.error("contact email failed:", e);
         }
       }
-
-      return res.status(201).json({ success: true, id: data.id });
+      return res.status(201).json({ success: true, id: (data as any).id });
     }
 
-    // POST /api/contact-owner (platform contact form)
     if (method === "POST" && path === "/api/contact-owner") {
       const { name, email, subject, message } = req.body;
-      
-      if (!name || !email || !subject || !message) {
-        return res.status(400).json({ error: "All fields are required" });
-      }
-      
-      console.log("Platform contact request:", { name, email, subject, message });
+      if (!name || !email || !subject || !message) return res.status(400).json({ error: "All fields are required" });
+      console.log("Platform contact:", { name, email, subject });
       return res.status(200).json({ success: true });
     }
 
-    // DELETE /api/account/delete
     if (method === "DELETE" && path === "/api/account/delete") {
       return res.status(200).json({ success: true });
     }
 
-    // POST /api/profiles
+    // -----------------------------------------------------------------------
+    // PROFILE CRUD
+    // -----------------------------------------------------------------------
     if (method === "POST" && path === "/api/profiles") {
-      const profileData = req.body;
-      
-      if (!profileData.accountId) {
-        return res.status(400).json({ error: "accountId is required" });
-      }
-      
-      // Generate slug from name
-      let baseSlug = generateSlug(profileData.name);
+      const body = req.body || {};
+      const practitionerId = body.accountId || body.practitionerId;
+      if (!practitionerId) return res.status(400).json({ error: "accountId/practitionerId required" });
+
+      let baseSlug = generateSlug(body.name || body.companyName || "profiel");
       let slug = baseSlug;
-      let counter = 1;
-      
-      // Check for existing slugs
-      let { data: existing } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("slug", slug)
-        .single();
-      
-      while (existing) {
-        slug = `${baseSlug}-${counter}`;
-        counter++;
-        const result = await supabase
-          .from("profiles")
-          .select("id")
-          .eq("slug", slug)
-          .single();
-        existing = result.data;
+      let n = 1;
+      while ((await supabase.from("profile").select("id").eq("slug", slug).maybeSingle()).data) {
+        slug = `${baseSlug}-${n++}`;
       }
-      
+
       const { data, error } = await supabase
-        .from("profiles")
+        .from("profile")
         .insert({
-          account_id: profileData.accountId,
+          practitioner_id: practitionerId,
           slug,
-          name: profileData.name,
-          email: profileData.email,
-          telnr: profileData.telnr || "",
-          website: profileData.website || "",
-          has_website: profileData.hasWebsite || false,
-          title: profileData.title || "",
-          introduction: profileData.introduction || "",
-          description: profileData.description || "",
-          category_id: profileData.categoryId,
-          location_id: profileData.locationId,
+          company_name: body.name || body.companyName,
+          contact_email: body.email || body.contactEmail,
+          telnr: body.telnr || "",
+          websiteurl: body.website || "",
+          has_website: body.hasWebsite || false,
+          title: body.title || "",
+          introduction: body.introduction || body.description || "",
           is_active: true,
           is_public: false,
           is_verified: false,
@@ -914,958 +686,374 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         })
         .select()
         .single();
-      
       if (error) throw error;
-      return res.status(201).json(toCamelCase(data));
+      return res.status(201).json(await hydrateProfile(data));
     }
 
-    // PUT /api/profiles/:id (alias for PATCH)
-    if (method === "PUT" && path.match(/^\/api\/profiles\/[^/]+$/) && !path.includes("/by-id/")) {
+    if ((method === "PUT" || method === "PATCH") && path.match(/^\/api\/profiles\/[^/]+$/) && !path.includes("/by-id/") && !path.endsWith("/track-click")) {
       const id = path.split("/").pop();
-      const slug = path.split("/").pop();
-      if (slug === "featured" || slug === "count" || slug === "search") {
-        return res.status(404).json({ error: "Not found" });
-      }
-      
-      const updates = toSnakeCase(req.body);
-      const { data, error } = await supabase
-        .from("profiles")
-        .update(updates)
-        .eq("id", id)
-        .select()
-        .single();
-      
+      if (id === "featured" || id === "count" || id === "search") return res.status(404).json({ error: "Not found" });
+      const body = req.body || {};
+      const update: Record<string, any> = {};
+      if (body.name !== undefined) update.company_name = body.name;
+      if (body.companyName !== undefined) update.company_name = body.companyName;
+      if (body.email !== undefined) update.contact_email = body.email;
+      if (body.contactEmail !== undefined) update.contact_email = body.contactEmail;
+      if (body.telnr !== undefined) update.telnr = body.telnr;
+      if (body.website !== undefined) update.websiteurl = body.website;
+      if (body.hasWebsite !== undefined) update.has_website = body.hasWebsite;
+      if (body.introduction !== undefined) update.introduction = body.introduction;
+      if (body.description !== undefined) update.introduction = body.description;
+      if (body.title !== undefined) update.title = body.title;
+      if (body.logoUrl !== undefined) update.logourl = body.logoUrl;
+      if (body.imageUrls !== undefined) update.imageurls = body.imageUrls;
+      if (body.isActive !== undefined) update.is_active = body.isActive;
+      if (body.isPublic !== undefined) update.is_public = body.isPublic;
+      update.updated_at = new Date().toISOString();
+
+      const { data, error } = await supabase.from("profile").update(update).eq("id", id).select().single();
       if (error) throw error;
-      return res.status(200).json(toCamelCase(data));
+
+      // junctions: specializations array of slugs
+      if (Array.isArray(body.specializations)) {
+        const { specializations } = await getCatalogs();
+        await supabase.from("profile_specialization").delete().eq("profile_id", id);
+        for (const slug of body.specializations) {
+          const sp = specializations.find((s) => s.slug === slug);
+          if (sp) await supabase.from("profile_specialization").insert({ profile_id: id, specialization_id: sp.id, is_main: false });
+        }
+      }
+      res.setHeader("Cache-Control", "no-store");
+      return res.status(200).json(await hydrateProfile(data));
     }
 
-    // PATCH /api/profiles/:id
-    if (method === "PATCH" && path.match(/^\/api\/profiles\/[^/]+$/) && !path.includes("/by-id/")) {
-      const id = path.split("/").pop();
-      if (id === "featured" || id === "count" || id === "search") {
-        return res.status(404).json({ error: "Not found" });
-      }
-      
-      // Ensure we have a body
-      if (!req.body || Object.keys(req.body).length === 0) {
-        return res.status(400).json({ error: "No update data provided" });
-      }
-      
-      // Use whitelist approach like dev server - only pick known profile fields
-      const body = req.body;
-      const updateData: Record<string, unknown> = {};
-      if (body.name !== undefined) updateData.name = body.name;
-      if (body.email !== undefined) updateData.email = body.email;
-      if (body.telnr !== undefined) updateData.telnr = body.telnr;
-      if (body.website !== undefined) updateData.website = body.website;
-      if (body.hasWebsite !== undefined) updateData.has_website = body.hasWebsite;
-      if (body.description !== undefined) updateData.description = body.description;
-      if (body.introduction !== undefined) updateData.introduction = body.introduction;
-      if (body.title !== undefined) updateData.title = body.title;
-      if (body.education !== undefined) updateData.education = body.education;
-      if (body.specializations !== undefined) updateData.specializations = body.specializations;
-      if (body.logoUrl !== undefined) updateData.logo_url = body.logoUrl;
-      if (body.imageUrls !== undefined) updateData.image_urls = body.imageUrls;
-      if (body.isActive !== undefined) updateData.is_active = body.isActive;
-      if (body.isPublic !== undefined) updateData.is_public = body.isPublic;
-      if (body.hideAddress !== undefined) updateData.hide_address = body.hideAddress;
-      if (body.categoryId !== undefined) updateData.category_id = body.categoryId;
-      if (body.locationId !== undefined) updateData.location_id = body.locationId;
-      if (body.seoTitle !== undefined) updateData.seo_title = body.seoTitle;
-      if (body.seoDescription !== undefined) updateData.seo_description = body.seoDescription;
-      updateData.updated_at = new Date().toISOString();
-      
-      console.log("PATCH /api/profiles/:id - Updating profile:", id, "with:", updateData);
-      
-      const { data, error } = await supabase
-        .from("profiles")
-        .update(updateData)
-        .eq("id", id)
-        .select()
-        .single();
-      
-      if (error) {
-        console.error("PATCH /api/profiles/:id - Error:", error);
-        throw error;
-      }
-      
-      console.log("PATCH /api/profiles/:id - Success:", data?.id);
-      res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
-      return res.status(200).json(toCamelCase(data));
-    }
-
-    // DELETE /api/profiles/:id
     if (method === "DELETE" && path.match(/^\/api\/profiles\/[^/]+$/) && !path.includes("/by-id/")) {
       const id = path.split("/").pop();
-      const slug = path.split("/").pop();
-      if (slug === "featured" || slug === "count" || slug === "search") {
-        return res.status(404).json({ error: "Not found" });
-      }
-      
-      const { error } = await supabase
-        .from("profiles")
-        .delete()
-        .eq("id", id);
-      
+      if (id === "featured" || id === "count" || id === "search") return res.status(404).json({ error: "Not found" });
+      const { error } = await supabase.from("profile").delete().eq("id", id);
       if (error) throw error;
       return res.status(200).json({ success: true });
     }
 
-    // POST /api/profiles/:id/track-click
     if (method === "POST" && path.match(/^\/api\/profiles\/[^/]+\/track-click$/)) {
       const parts = path.split("/");
       const id = parts[parts.length - 2];
-      const { type } = req.body;
-      
+      const { type } = req.body || {};
       if (type === "website") {
-        const { data } = await supabase
-          .from("profiles")
-          .select("website_clicks")
-          .eq("id", id)
-          .single();
-        
-        if (data) {
-          await supabase
-            .from("profiles")
-            .update({ website_clicks: ((data as any).website_clicks || 0) + 1 })
-            .eq("id", id);
-        }
+        const { data } = await supabase.from("profile").select("website_clicks").eq("id", id).single();
+        if (data) await supabase.from("profile").update({ website_clicks: ((data as any).website_clicks || 0) + 1 }).eq("id", id);
       }
-      
       return res.status(200).json({ success: true });
     }
 
-    // ========================================================================
-    // SITEMAPS - Multi-sitemap structure for SEO
-    // ========================================================================
-    const SITEMAP_BASE_URL = "https://www.zoek-een-tuinman.be";
-    
-    const specializationSlugs: Record<string, string> = {
-      GRAS_MAAIEN: "gras-maaien",
-      SNOEIEN_BOMEN: "bomen-snoeien",
-      SNOEIEN_STRUIKEN: "struiken-snoeien",
-      HAAG_KNIPPEN: "hagen-knippen",
-      ONKRUID_VERWIJDEREN: "onkruid-verwijderen",
-      BLADEREN_RUIMEN: "bladeren-ruimen",
-      BEMESTING: "bemesting",
-      GAZONONDERHOUD: "gazononderhoud",
-      GRASAANLEG: "grasaanleg",
-      PADEN_TERRASSEN: "paden-terrassen",
-      HOUTEN_CONSTRUCTIES: "houten-constructies",
-      AFSLUITINGEN: "afsluitingen",
-      VIJVERS: "vijvers",
-      BESTRATING: "bestrating",
-      BEPLANTING: "beplanting",
-      IRRIGATIE: "irrigatie",
-    };
-    const allSpecializations = Object.entries(specializationSlugs);
-
-    // GET /robots.txt
+    // -----------------------------------------------------------------------
+    // SITEMAPS (dynamic from DB)
+    // -----------------------------------------------------------------------
     if (method === "GET" && path === "/robots.txt") {
-      const robots = `User-agent: *
-Allow: /
-
-Sitemap: ${SITEMAP_BASE_URL}/sitemap.xml
-`;
       res.setHeader("Content-Type", "text/plain");
-      return res.send(robots);
+      return res.send(`User-agent: *\nAllow: /\n\nSitemap: ${SITEMAP_BASE_URL}/sitemap.xml\n`);
     }
 
-    // GET /sitemap.xml - Main sitemap index
     if (method === "GET" && path === "/sitemap.xml") {
       const today = new Date().toISOString().split("T")[0];
-      const { data: locations } = await supabase.from("locations").select("id");
-      const locationCount = locations?.length || 572;
-      const totalLocationSpecs = locationCount * allSpecializations.length;
-      const locationSpecSitemapCount = Math.ceil(totalLocationSpecs / 5000);
-
-      let xml = `<?xml version="1.0" encoding="UTF-8"?>
-<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <sitemap>
-    <loc>${SITEMAP_BASE_URL}/sitemaps/site/sitemap.xml</loc>
-    <lastmod>${today}</lastmod>
-  </sitemap>
-  <sitemap>
-    <loc>${SITEMAP_BASE_URL}/sitemaps/info/sitemap.xml</loc>
-    <lastmod>${today}</lastmod>
-  </sitemap>
-  <sitemap>
-    <loc>${SITEMAP_BASE_URL}/sitemaps/profiles/sitemap.xml</loc>
-    <lastmod>${today}</lastmod>
-  </sitemap>
-  <sitemap>
-    <loc>${SITEMAP_BASE_URL}/sitemaps/locations/sitemap.xml</loc>
-    <lastmod>${today}</lastmod>
-  </sitemap>
-  <sitemap>
-    <loc>${SITEMAP_BASE_URL}/sitemaps/specializations/sitemap.xml</loc>
-    <lastmod>${today}</lastmod>
-  </sitemap>
-`;
-      for (let i = 1; i <= locationSpecSitemapCount; i++) {
-        xml += `  <sitemap>
-    <loc>${SITEMAP_BASE_URL}/sitemaps/location-specs/sitemap-${i}.xml</loc>
-    <lastmod>${today}</lastmod>
-  </sitemap>
-`;
+      const { specializations, serviceAreas } = await getCatalogs();
+      const totalLocSpecs = serviceAreas.length * specializations.length;
+      const locSpecPages = Math.ceil(totalLocSpecs / 5000);
+      let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
+      for (const seg of ["site", "info", "profiles", "locations", "specializations"]) {
+        xml += `  <sitemap><loc>${SITEMAP_BASE_URL}/sitemaps/${seg}/sitemap.xml</loc><lastmod>${today}</lastmod></sitemap>\n`;
+      }
+      for (let i = 1; i <= locSpecPages; i++) {
+        xml += `  <sitemap><loc>${SITEMAP_BASE_URL}/sitemaps/location-specs/sitemap-${i}.xml</loc><lastmod>${today}</lastmod></sitemap>\n`;
       }
       xml += `</sitemapindex>`;
       res.setHeader("Content-Type", "application/xml");
       return res.send(xml);
     }
 
-    // GET /sitemaps/site/sitemap.xml
     if (method === "GET" && path === "/sitemaps/site/sitemap.xml") {
-      const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>${SITEMAP_BASE_URL}/</loc>
-    <changefreq>daily</changefreq>
-    <priority>1.0</priority>
-  </url>
-  <url>
-    <loc>${SITEMAP_BASE_URL}/login</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.3</priority>
-  </url>
-  <url>
-    <loc>${SITEMAP_BASE_URL}/registreren</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.4</priority>
-  </url>
+      const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>${SITEMAP_BASE_URL}/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>
+  <url><loc>${SITEMAP_BASE_URL}/login</loc><changefreq>monthly</changefreq><priority>0.3</priority></url>
+  <url><loc>${SITEMAP_BASE_URL}/registreren</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
 </urlset>`;
       res.setHeader("Content-Type", "application/xml");
       return res.send(xml);
     }
 
-    // GET /sitemaps/info/sitemap.xml
     if (method === "GET" && path === "/sitemaps/info/sitemap.xml") {
-      const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>${SITEMAP_BASE_URL}/over-ons</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>${SITEMAP_BASE_URL}/contact</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>${SITEMAP_BASE_URL}/faq</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>${SITEMAP_BASE_URL}/prijzen</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>${SITEMAP_BASE_URL}/hoe-werkt-het</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>${SITEMAP_BASE_URL}/voor-tuinmannen</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-</urlset>`;
+      const pages = ["over-ons", "contact", "faq", "prijzen", "hoe-werkt-het", "voor-tuinmannen"];
+      let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
+      for (const p of pages) {
+        xml += `  <url><loc>${SITEMAP_BASE_URL}/${p}</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>\n`;
+      }
+      xml += `</urlset>`;
       res.setHeader("Content-Type", "application/xml");
       return res.send(xml);
     }
 
-    // GET /sitemaps/profiles/sitemap.xml
     if (method === "GET" && path === "/sitemaps/profiles/sitemap.xml") {
       const today = new Date().toISOString().split("T")[0];
-      const { data: profiles } = await supabase.from("profiles").select("slug").eq("is_public", true);
-      let xml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-`;
-      for (const profile of profiles || []) {
-        xml += `  <url>
-    <loc>${SITEMAP_BASE_URL}/bedrijf/${profile.slug}</loc>
-    <lastmod>${today}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.3</priority>
-  </url>
-`;
+      const { data: profiles } = await supabase.from("profile").select("slug").eq("is_public", true);
+      let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
+      for (const p of profiles || []) {
+        xml += `  <url><loc>${SITEMAP_BASE_URL}/bedrijf/${(p as any).slug}</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.3</priority></url>\n`;
       }
       xml += `</urlset>`;
       res.setHeader("Content-Type", "application/xml");
       return res.send(xml);
     }
 
-    // GET /sitemaps/locations/sitemap.xml
     if (method === "GET" && path === "/sitemaps/locations/sitemap.xml") {
       const today = new Date().toISOString().split("T")[0];
-      const { data: locations } = await supabase.from("locations").select("slug, postcode");
-      let xml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-`;
-      for (const loc of locations || []) {
-        xml += `  <url>
-    <loc>${SITEMAP_BASE_URL}/zoek/${loc.postcode}-${loc.slug}</loc>
-    <lastmod>${today}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-`;
+      const { serviceAreas } = await getCatalogs();
+      let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
+      for (const a of serviceAreas) {
+        xml += `  <url><loc>${SITEMAP_BASE_URL}/zoek/${a.postcode}-${a.slug}</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>\n`;
       }
       xml += `</urlset>`;
       res.setHeader("Content-Type", "application/xml");
       return res.send(xml);
     }
 
-    // GET /sitemaps/specializations/sitemap.xml
     if (method === "GET" && path === "/sitemaps/specializations/sitemap.xml") {
       const today = new Date().toISOString().split("T")[0];
-      let xml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-`;
-      for (const [, slug] of allSpecializations) {
-        xml += `  <url>
-    <loc>${SITEMAP_BASE_URL}/zoek/${slug}</loc>
-    <lastmod>${today}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-`;
+      const { specializations } = await getCatalogs();
+      let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
+      for (const s of specializations) {
+        xml += `  <url><loc>${SITEMAP_BASE_URL}/zoek/${s.slug}</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>\n`;
       }
       xml += `</urlset>`;
       res.setHeader("Content-Type", "application/xml");
       return res.send(xml);
     }
 
-    // GET /sitemaps/location-specs/sitemap-{n}.xml
-    const locationSpecMatch = path.match(/^\/sitemaps\/location-specs\/sitemap-(\d+)\.xml$/);
-    if (method === "GET" && locationSpecMatch) {
-      const page = parseInt(locationSpecMatch[1]) || 1;
+    const locSpecMatch = path.match(/^\/sitemaps\/location-specs\/sitemap-(\d+)\.xml$/);
+    if (method === "GET" && locSpecMatch) {
+      const page = parseInt(locSpecMatch[1]) || 1;
       const perPage = 5000;
       const today = new Date().toISOString().split("T")[0];
-      const { data: locations } = await supabase.from("locations").select("slug, postcode");
-
-      const allCombos: { locationSlug: string; specSlug: string }[] = [];
-      for (const loc of locations || []) {
-        const locationSlug = `${loc.postcode}-${loc.slug}`;
-        for (const [, specSlug] of allSpecializations) {
-          allCombos.push({ locationSlug, specSlug });
+      const { specializations, serviceAreas } = await getCatalogs();
+      const combos: { loc: string; spec: string }[] = [];
+      for (const a of serviceAreas) {
+        for (const s of specializations) {
+          combos.push({ loc: `${a.postcode}-${a.slug}`, spec: s.slug });
         }
       }
-
-      const startIndex = (page - 1) * perPage;
-      const endIndex = startIndex + perPage;
-      const pageCombos = allCombos.slice(startIndex, endIndex);
-
-      if (pageCombos.length === 0) {
-        return res.status(404).send("Sitemap page not found");
-      }
-
-      let xml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-`;
-      for (const combo of pageCombos) {
-        xml += `  <url>
-    <loc>${SITEMAP_BASE_URL}/zoek/${combo.locationSlug}/${combo.specSlug}</loc>
-    <lastmod>${today}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-`;
+      const slice = combos.slice((page - 1) * perPage, page * perPage);
+      if (!slice.length) return res.status(404).send("Sitemap page not found");
+      let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
+      for (const c of slice) {
+        xml += `  <url><loc>${SITEMAP_BASE_URL}/zoek/${c.loc}/${c.spec}</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>\n`;
       }
       xml += `</urlset>`;
       res.setHeader("Content-Type", "application/xml");
       return res.send(xml);
     }
 
-    // GET /googlec82c9dc9a541d03e.html (Google Search Console verification)
     if (method === "GET" && path === "/googlec82c9dc9a541d03e.html") {
       res.setHeader("Content-Type", "text/html");
       return res.send("google-site-verification: googlec82c9dc9a541d03e.html");
     }
 
-    // ============================================
-    // MOLLIE PAYMENT ROUTES
-    // ============================================
-
-    // Pricing plans
-    const PRICING_PLANS: Record<string, { years: number; price: number; label: string }> = {
-      "1-year": { years: 1, price: 149, label: "1 Jaar" },
-      "2-year": { years: 2, price: 249, label: "2 Jaar" },
-      "3-year": { years: 3, price: 349, label: "3 Jaar" },
-    };
-
-    // GET /api/subscriptions/profile/:profileId
+    // -----------------------------------------------------------------------
+    // SUBSCRIPTIONS / MOLLIE
+    // -----------------------------------------------------------------------
     if (method === "GET" && path.match(/^\/api\/subscriptions\/profile\/[^/]+$/)) {
       const profileId = path.split("/").pop();
-      const { data, error } = await supabase
-        .from("subscription_items")
-        .select("*")
+      const { data } = await supabase
+        .from("profile_subscription")
+        .select("*, subscription_plan_offer(*, subscription_plan(*))")
         .eq("profile_id", profileId)
         .order("created_at", { ascending: false })
         .limit(1)
-        .single();
-      
-      if (error && error.code !== "PGRST116") throw error;
+        .maybeSingle();
       if (!data) return res.status(404).json({ error: "No subscription found" });
-      return res.status(200).json(toCamelCase(data));
+      const offer = (data as any).subscription_plan_offer;
+      return res.status(200).json(toCamelCase({
+        ...data,
+        years: offer?.duration_in_years,
+        total_amount: offer?.total_price,
+      }));
     }
 
-    // POST /api/mollie/create-payment
     if (method === "POST" && path === "/api/mollie/create-payment") {
-      try {
-        const { profileId, accountId, planId } = req.body;
-        
-        console.log("Create payment request:", { profileId, accountId, planId });
-        
-        if (!profileId || !accountId || !planId) {
-          return res.status(400).json({ error: "Missing required fields: profileId, accountId, planId" });
-        }
+      const { profileId, accountId, planId } = req.body || {};
+      if (!profileId || !planId) return res.status(400).json({ error: "Missing fields" });
 
-        if (!PRICING_PLANS[planId]) {
-          return res.status(400).json({ error: "Invalid plan selected" });
-        }
+      const mollieApiKey = process.env.MOLLIE_API_KEY;
+      if (!mollieApiKey) return res.status(503).json({ error: "Payment service not configured" });
 
-        // Check Mollie API key early
-        const mollieApiKey = process.env.MOLLIE_API_KEY;
-        if (!mollieApiKey) {
-          console.error("MOLLIE_API_KEY not configured");
-          return res.status(500).json({ error: "Payment service not configured" });
-        }
+      // map legacy planId "1-year"/"2-year"/"3-year" → duration_in_years
+      const years = parseInt(String(planId).split("-")[0]);
+      if (!years) return res.status(400).json({ error: "Invalid planId" });
 
-        const { data: profile, error: profileError } = await supabase
-          .from("profiles")
-          .select("id, name")
-          .eq("id", profileId)
-          .single();
+      const { data: offer } = await supabase
+        .from("subscription_plan_offer")
+        .select("*, subscription_plan(*)")
+        .eq("duration_in_years", years)
+        .eq("is_active", true)
+        .limit(1)
+        .single();
+      if (!offer) return res.status(400).json({ error: "Plan not found" });
 
-        if (profileError) {
-          console.error("Profile lookup error:", profileError);
-          return res.status(500).json({ error: "Database error looking up profile" });
-        }
+      const { data: profile } = await supabase.from("profile").select("id, company_name").eq("id", profileId).single();
+      if (!profile) return res.status(404).json({ error: "Profile not found" });
 
-        if (!profile) {
-          return res.status(404).json({ error: "Profile not found" });
-        }
+      const { data: yearlyCycle } = await supabase.from("billing_cycle").select("id").eq("key", "Yearly").single();
+      const { data: mollieProvider } = await supabase.from("payment_provider").select("id").eq("key", "Mollie").single();
 
-      const plan = PRICING_PLANS[planId];
-
-      // Check for existing subscription
-      const { data: existingSubscription } = await supabase
-        .from("subscription_items")
+      // Find or create profile_subscription in PENDING
+      const { data: existing } = await supabase
+        .from("profile_subscription")
         .select("*")
         .eq("profile_id", profileId)
         .order("created_at", { ascending: false })
         .limit(1)
-        .single();
-
-      let subscriptionItem;
-      const startDate = new Date();
-      const endDate = new Date();
-      endDate.setFullYear(endDate.getFullYear() + plan.years);
-
-      if (existingSubscription) {
-        // Update existing subscription to PENDING
-        const { data, error } = await supabase
-          .from("subscription_items")
+        .maybeSingle();
+      let subscription;
+      if (existing) {
+        const { data } = await supabase
+          .from("profile_subscription")
           .update({
+            subscription_plan_offer_id: (offer as any).id,
+            billing_cycle_id: (yearlyCycle as any).id,
             status: "PENDING",
-            years: plan.years,
-            total_amount: plan.price.toString(),
             updated_at: new Date().toISOString(),
           })
-          .eq("id", existingSubscription.id)
+          .eq("id", (existing as any).id)
           .select()
           .single();
-        
-        if (error) throw error;
-        subscriptionItem = data;
+        subscription = data;
       } else {
-        // Create new subscription in PENDING status
-        const { data, error } = await supabase
-          .from("subscription_items")
+        const { data } = await supabase
+          .from("profile_subscription")
           .insert({
-            gardener_id: accountId,
             profile_id: profileId,
-            start_date: startDate.toISOString(),
-            end_date: endDate.toISOString(),
-            years: plan.years,
-            total_amount: plan.price.toString(),
-            auto_renew: false,
-            payment_frequency: "YEARLY",
+            subscription_plan_offer_id: (offer as any).id,
+            billing_cycle_id: (yearlyCycle as any).id,
             status: "PENDING",
+            auto_renew: false,
           })
           .select()
           .single();
-        
-        if (error) throw error;
-        subscriptionItem = data;
+        subscription = data;
       }
 
-      // Create Mollie payment
       const baseUrl = "https://www.zoek-een-tuinman.be";
-      const mollieResponse = await fetch("https://api.mollie.com/v2/payments", {
+      const total = (offer as any).total_price;
+      const mollieResp = await fetch("https://api.mollie.com/v2/payments", {
         method: "POST",
-        headers: {
-          "Authorization": `Bearer ${mollieApiKey}`,
-          "Content-Type": "application/json",
-        },
+        headers: { Authorization: `Bearer ${mollieApiKey}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          amount: {
-            currency: "EUR",
-            value: plan.price.toFixed(2),
-          },
-          description: `Zoek-een-tuinman.be - ${plan.label} abonnement voor ${profile.name}`,
-          redirectUrl: `${baseUrl}/dashboard/profielen/${profileId}/betaling-status?payment_id=${subscriptionItem.id}`,
+          amount: { currency: "EUR", value: total.toFixed(2) },
+          description: `${(offer as any).subscription_plan?.name || "Abonnement"} - ${years} jaar voor ${(profile as any).company_name}`,
+          redirectUrl: `${baseUrl}/dashboard/profielen/${profileId}/betaling-status?payment_id=${(subscription as any).id}`,
           webhookUrl: `${baseUrl}/api/mollie/webhook`,
-          metadata: {
-            profileId,
-            accountId,
-            planId,
-            years: plan.years,
-          },
+          metadata: { profileId, accountId, planId, years, subscriptionId: (subscription as any).id },
         }),
       });
-
-      if (!mollieResponse.ok) {
-        const errorData = await mollieResponse.json();
-        console.error("Mollie API error:", errorData);
+      if (!mollieResp.ok) {
+        const err = await mollieResp.json();
+        console.error("Mollie error:", err);
         return res.status(500).json({ error: "Failed to create payment" });
       }
+      const molliePayment = await mollieResp.json();
 
-      const molliePayment = await mollieResponse.json();
-
-      // Store Mollie payment ID
-      await supabase
-        .from("subscription_items")
-        .update({ mollie_payment_id: molliePayment.id })
-        .eq("id", subscriptionItem.id);
-
-      console.log(`Created Mollie payment ${molliePayment.id} for profile ${profileId}`);
+      // create payment row
+      await supabase.from("payment").insert({
+        profile_subscription_id: (subscription as any).id,
+        payment_provider_id: (mollieProvider as any).id,
+        amount: total,
+        currency: "EUR",
+        status: "PENDING",
+        external_payment_id: molliePayment.id,
+      });
 
       return res.status(200).json({
         paymentUrl: molliePayment._links.checkout.href,
         paymentId: molliePayment.id,
-        subscriptionId: subscriptionItem.id,
+        subscriptionId: (subscription as any).id,
       });
-      } catch (paymentError: any) {
-        console.error("Payment creation error:", paymentError);
-        return res.status(500).json({ error: paymentError.message || "Payment creation failed" });
-      }
     }
 
-    // GET /api/mollie/payment-status/:subscriptionId
     if (method === "GET" && path.match(/^\/api\/mollie\/payment-status\/[^/]+$/)) {
       const subscriptionId = path.split("/").pop();
-      
-      const { data: subscription, error } = await supabase
-        .from("subscription_items")
+      const { data: sub } = await supabase.from("profile_subscription").select("*").eq("id", subscriptionId).single();
+      if (!sub) return res.status(404).json({ error: "Subscription not found" });
+      const { data: pay } = await supabase
+        .from("payment")
         .select("*")
-        .eq("id", subscriptionId)
-        .single();
-      
-      if (error || !subscription) {
-        return res.status(404).json({ error: "Subscription not found" });
-      }
-
-      // If we have a Mollie payment ID, check its current status
-      if (subscription.mollie_payment_id) {
-        const mollieApiKey = process.env.MOLLIE_API_KEY;
-        if (mollieApiKey) {
-          try {
-            const mollieResponse = await fetch(`https://api.mollie.com/v2/payments/${subscription.mollie_payment_id}`, {
-              headers: { "Authorization": `Bearer ${mollieApiKey}` },
-            });
-            
-            if (mollieResponse.ok) {
-              const payment = await mollieResponse.json();
-              
-              // Update local status based on Mollie status
-              if (payment.status === "paid" && subscription.status !== "ACTIVE") {
-                const metadata = payment.metadata as { years: number };
-                const startDate = new Date();
-                const endDate = new Date();
-                endDate.setFullYear(endDate.getFullYear() + (metadata?.years || 1));
-
-                await supabase
-                  .from("subscription_items")
-                  .update({
-                    status: "ACTIVE",
-                    start_date: startDate.toISOString(),
-                    end_date: endDate.toISOString(),
-                    paid_at: new Date().toISOString(),
-                    updated_at: new Date().toISOString(),
-                  })
-                  .eq("id", subscription.id);
-
-                return res.status(200).json({
-                  status: "ACTIVE",
-                  mollieStatus: payment.status,
-                  message: "Payment successful - subscription activated",
-                });
-              }
-
-              return res.status(200).json({
-                status: subscription.status,
-                mollieStatus: payment.status,
-              });
-            }
-          } catch (mollieError) {
-            console.error("Error checking Mollie payment:", mollieError);
+        .eq("profile_subscription_id", subscriptionId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      const mollieApiKey = process.env.MOLLIE_API_KEY;
+      if (pay && (pay as any).external_payment_id && mollieApiKey) {
+        const mr = await fetch(`https://api.mollie.com/v2/payments/${(pay as any).external_payment_id}`, {
+          headers: { Authorization: `Bearer ${mollieApiKey}` },
+        });
+        if (mr.ok) {
+          const mp = await mr.json();
+          if (mp.status === "paid" && (sub as any).status !== "ACTIVE") {
+            const meta = mp.metadata as { years: number };
+            const startDate = new Date();
+            const endDate = new Date();
+            endDate.setFullYear(endDate.getFullYear() + (meta?.years || 1));
+            await supabase
+              .from("profile_subscription")
+              .update({
+                status: "ACTIVE",
+                start_date: startDate.toISOString().split("T")[0],
+                end_date: endDate.toISOString().split("T")[0],
+                updated_at: new Date().toISOString(),
+              })
+              .eq("id", (sub as any).id);
+            await supabase.from("payment").update({ status: "PAID", paid_at: new Date().toISOString() }).eq("id", (pay as any).id);
+            return res.status(200).json({ status: "ACTIVE", mollieStatus: mp.status });
           }
+          return res.status(200).json({ status: (sub as any).status, mollieStatus: mp.status });
         }
       }
-
-      return res.status(200).json({
-        status: subscription.status,
-        mollieStatus: null,
-      });
+      return res.status(200).json({ status: (sub as any).status, mollieStatus: null });
     }
 
-    // POST /api/mollie/webhook
     if (method === "POST" && path === "/api/mollie/webhook") {
-      const { id: paymentId } = req.body;
-      
-      if (!paymentId) {
-        console.log("Mollie webhook: No payment ID received");
-        return res.status(200).send("OK");
-      }
-
-      console.log(`Mollie webhook received for payment: ${paymentId}`);
-
-      // Get payment from Mollie
+      const { id: paymentId } = req.body || {};
+      if (!paymentId) return res.status(200).send("OK");
       const mollieApiKey = process.env.MOLLIE_API_KEY;
-      if (!mollieApiKey) {
-        console.error("Mollie API key not configured");
-        return res.status(200).send("OK");
-      }
+      if (!mollieApiKey) return res.status(200).send("OK");
 
-      const mollieResponse = await fetch(`https://api.mollie.com/v2/payments/${paymentId}`, {
-        headers: {
-          "Authorization": `Bearer ${mollieApiKey}`,
-        },
+      const mr = await fetch(`https://api.mollie.com/v2/payments/${paymentId}`, {
+        headers: { Authorization: `Bearer ${mollieApiKey}` },
       });
+      if (!mr.ok) return res.status(200).send("OK");
+      const payment = await mr.json();
+      const meta = payment.metadata as { profileId: string; subscriptionId: string; years: number };
+      if (!meta?.subscriptionId) return res.status(200).send("OK");
 
-      if (!mollieResponse.ok) {
-        console.error("Failed to fetch payment from Mollie");
-        return res.status(200).send("OK");
-      }
-
-      const payment = await mollieResponse.json();
-      const metadata = payment.metadata as { profileId: string; accountId: string; planId: string; years: number };
-
-      if (!metadata?.profileId) {
-        console.error("Mollie webhook: No profileId in payment metadata");
-        return res.status(200).send("OK");
-      }
-
-      // Find subscription by Mollie payment ID
-      const { data: subscription } = await supabase
-        .from("subscription_items")
-        .select("*")
-        .eq("mollie_payment_id", paymentId)
-        .single();
-      
-      if (!subscription) {
-        console.error(`Mollie webhook: No subscription found for payment ${paymentId}`);
-        return res.status(200).send("OK");
-      }
+      const { data: pay } = await supabase.from("payment").select("*").eq("external_payment_id", paymentId).maybeSingle();
+      if (!pay) return res.status(200).send("OK");
 
       if (payment.status === "paid") {
-        // Payment successful - activate subscription
         const startDate = new Date();
         const endDate = new Date();
-        endDate.setFullYear(endDate.getFullYear() + metadata.years);
-
+        endDate.setFullYear(endDate.getFullYear() + (meta.years || 1));
         await supabase
-          .from("subscription_items")
+          .from("profile_subscription")
           .update({
             status: "ACTIVE",
-            start_date: startDate.toISOString(),
-            end_date: endDate.toISOString(),
-            paid_at: new Date().toISOString(),
+            start_date: startDate.toISOString().split("T")[0],
+            end_date: endDate.toISOString().split("T")[0],
             updated_at: new Date().toISOString(),
           })
-          .eq("id", subscription.id);
-
-        console.log(`Activated subscription ${subscription.id} for profile ${metadata.profileId}`);
-
-        // Send payment confirmation email
-        const resendApiKey = process.env.RESEND_API_KEY;
-        if (resendApiKey) {
-          try {
-            // Get profile and account info
-            const { data: profile } = await supabase
-              .from("profiles")
-              .select("name, account_id")
-              .eq("id", metadata.profileId)
-              .single();
-            
-            if (profile?.account_id) {
-              const { data: account } = await supabase
-                .from("accounts")
-                .select("email")
-                .eq("id", profile.account_id)
-                .single();
-              
-              if (account?.email && profile?.name) {
-                const formattedEndDate = endDate.toLocaleDateString("nl-BE", {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                });
-
-                await fetch("https://api.resend.com/emails", {
-                  method: "POST",
-                  headers: {
-                    "Authorization": `Bearer ${resendApiKey}`,
-                    "Content-Type": "application/json",
-                  },
-                  body: JSON.stringify({
-                    from: "Zoek-een-tuinman.be <noreply@zoek-een-tuinman.be>",
-                    to: [account.email],
-                    subject: `Betalingsbevestiging - ${profile.name}`,
-                    html: `
-                      <!DOCTYPE html>
-                      <html>
-                      <head>
-                        <meta charset="utf-8">
-                        <style>
-                          body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; }
-                          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                          .header { background: #1B7340; color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
-                          .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px; }
-                          .details { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; }
-                          .detail-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; }
-                          .detail-row:last-child { border-bottom: none; }
-                          .label { color: #666; }
-                          .value { font-weight: bold; }
-                          .footer { text-align: center; margin-top: 20px; color: #666; font-size: 14px; }
-                        </style>
-                      </head>
-                      <body>
-                        <div class="container">
-                          <div class="header">
-                            <h1 style="margin: 0;">Betaling Geslaagd!</h1>
-                          </div>
-                          <div class="content">
-                            <p>Beste klant,</p>
-                            <p>Hartelijk dank voor uw betaling. Uw profiel is nu actief op Zoek-een-tuinman.be!</p>
-                            
-                            <div class="details">
-                              <div class="detail-row">
-                                <span class="label">Profiel:</span>
-                                <span class="value">${profile.name}</span>
-                              </div>
-                              <div class="detail-row">
-                                <span class="label">Bedrag:</span>
-                                <span class="value">€${payment.amount?.value || "0"}</span>
-                              </div>
-                              <div class="detail-row">
-                                <span class="label">Periode:</span>
-                                <span class="value">${metadata.years} jaar</span>
-                              </div>
-                              <div class="detail-row">
-                                <span class="label">Geldig tot:</span>
-                                <span class="value">${formattedEndDate}</span>
-                              </div>
-                            </div>
-
-                            <p>Uw profiel is nu zichtbaar voor potentiële klanten. U kunt uw profiel beheren via uw dashboard.</p>
-                            
-                            <p>Met vriendelijke groeten,<br>Het Zoek-een-tuinman.be Team</p>
-                          </div>
-                          <div class="footer">
-                            <p>© ${new Date().getFullYear()} Zoek-een-tuinman.be - Alle rechten voorbehouden</p>
-                          </div>
-                        </div>
-                      </body>
-                      </html>
-                    `,
-                  }),
-                });
-                console.log(`Sent payment confirmation email to ${account.email}`);
-              }
-            }
-          } catch (emailError) {
-            console.error("Failed to send confirmation email:", emailError);
-          }
-        }
-
-        // Send Peppol invoice via Billit API if configured
-        const billitApiKey = process.env.BILLIT_API_KEY;
-        const billitPartyId = process.env.BILLIT_PARTY_ID;
-        const billitSandbox = process.env.BILLIT_SANDBOX === "true";
-        console.log(`Billit config: key exists=${!!billitApiKey}, partyId=${billitPartyId}, sandbox=${billitSandbox}`);
-        
-        if (billitApiKey) {
-          try {
-            const { data: profile } = await supabase
-              .from("profiles")
-              .select("name, account_id")
-              .eq("id", metadata.profileId)
-              .single();
-            
-            if (profile?.account_id) {
-              const { data: account } = await supabase
-                .from("accounts")
-                .select("email, vat_number, company_name, billing_street, billing_number, billing_postcode, billing_city")
-                .eq("id", profile.account_id)
-                .single();
-              
-              if (account?.vat_number && account?.billing_street && account?.billing_city) {
-                const priceExclVat = parseFloat(payment.amount?.value || "0") / 1.21;
-                const invoiceNumber = `INV-${new Date().getFullYear()}-${subscription.id.slice(0, 8).toUpperCase()}`;
-                const today = new Date().toISOString().split('T')[0];
-                const dueDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-
-                const billitBaseUrl = billitSandbox 
-                  ? "https://api.sandbox.billit.be" 
-                  : "https://api.billit.be";
-                
-                const order = {
-                  OrderType: "Invoice",
-                  OrderDirection: "Income",
-                  OrderDate: today,
-                  ExpiryDate: dueDate,
-                  OrderNumber: invoiceNumber,
-                  OrderLines: [{
-                    Quantity: 1,
-                    UnitPriceExcl: priceExclVat,
-                    Description: `Profielvermelding ${profile.name || "profiel"} - ${metadata.years} jaar`,
-                    VATPercentage: 21,
-                  }],
-                  Customer: {
-                    Name: account.company_name || profile.name || "Unknown",
-                    VATNumber: account.vat_number,
-                    PartyType: "Customer",
-                    Email: account.email,
-                    Street: account.billing_street,
-                    StreetNumber: account.billing_number || "",
-                    Zipcode: account.billing_postcode || "",
-                    City: account.billing_city,
-                    CountryCode: "BE",
-                  },
-                  Paid: true,
-                  PaidDate: today,
-                };
-
-                let billitEndpoint: string;
-                let requestBody: any;
-                const headers: Record<string, string> = {
-                  "Content-Type": "application/json",
-                  "Accept": "application/json",
-                  "ApiKey": billitApiKey,
-                };
-
-                if (billitSandbox) {
-                  billitEndpoint = `${billitBaseUrl}/v1/einvoices/registrations/${billitPartyId}/commands/send`;
-                  requestBody = { TransportType: "Peppol", Order: order };
-                  if (billitPartyId) headers["PartyID"] = billitPartyId;
-                } else {
-                  billitEndpoint = `${billitBaseUrl}/v1/peppol/sendOrder`;
-                  requestBody = order;
-                  if (billitPartyId) headers["PartyID"] = billitPartyId;
-                }
-
-                console.log(`Billit endpoint: ${billitEndpoint}`);
-
-                const peppolResponse = await fetch(billitEndpoint, {
-                  method: "POST",
-                  headers,
-                  body: JSON.stringify(requestBody),
-                });
-                
-                const peppolResponseText = await peppolResponse.text();
-                let peppolResult: any;
-                try {
-                  peppolResult = JSON.parse(peppolResponseText);
-                } catch {
-                  peppolResult = { OrderID: peppolResponseText };
-                }
-
-                if (!peppolResponse.ok) {
-                  const errorCode = peppolResult?.errors?.[0]?.Code;
-                  if (errorCode === "TheCustomerIsNotActiveOnPeppol") {
-                    console.log(`Peppol invoice skipped for ${invoiceNumber}: Customer ${account.vat_number} is not registered on Peppol network`);
-                  } else {
-                    console.error(`Billit API error (${peppolResponse.status}):`, peppolResult);
-                  }
-                } else {
-                  console.log(`Sent Peppol invoice ${invoiceNumber} for profile ${metadata.profileId}, OrderID: ${peppolResult.OrderID || peppolResult}`);
-                }
-              }
-            }
-          } catch (peppolError) {
-            console.error("Failed to send Peppol invoice:", peppolError);
-          }
-        }
-
-        // Send Discord notification
-        const discordWebhookUrl = process.env.DISCORD_WEBHOOK_URL;
-        if (discordWebhookUrl) {
-          try {
-            const { data: profile } = await supabase
-              .from("profiles")
-              .select("name, slug, account_id")
-              .eq("id", metadata.profileId)
-              .single();
-            
-            let companyName = "Onbekend";
-            let email = "";
-            if (profile?.account_id) {
-              const { data: account } = await supabase
-                .from("accounts")
-                .select("company_name, email")
-                .eq("id", profile.account_id)
-                .single();
-              companyName = account?.company_name || profile?.name || "Onbekend";
-              email = account?.email || "";
-            }
-
-            const profileUrl = `https://www.zoek-een-tuinman.be/bedrijf/${profile?.slug || ""}`;
-            const amount = payment.amount?.value || "0";
-
-            await fetch(discordWebhookUrl, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                embeds: [{
-                  title: "🌱 Nieuw Betaald Profiel!",
-                  color: 0x1B7340,
-                  fields: [
-                    { name: "Bedrijf", value: companyName, inline: true },
-                    { name: "Profiel", value: profile?.name || "Onbekend", inline: true },
-                    { name: "Bedrag", value: `€${amount}`, inline: true },
-                    { name: "Periode", value: `${metadata.years} jaar`, inline: true },
-                    { name: "Email", value: email || "Niet beschikbaar", inline: true },
-                    { name: "Link", value: `[Bekijk profiel](${profileUrl})`, inline: true },
-                  ],
-                  timestamp: new Date().toISOString(),
-                  footer: { text: "Zoek-een-tuinman.be" },
-                }],
-              }),
-            });
-            console.log(`Sent Discord notification for profile ${metadata.profileId}`);
-          } catch (discordError) {
-            console.error("Failed to send Discord notification:", discordError);
-          }
-        }
+          .eq("id", meta.subscriptionId);
+        await supabase.from("payment").update({ status: "PAID", paid_at: new Date().toISOString() }).eq("id", (pay as any).id);
+        // (Email/Discord/Billit hooks weggehaald in deze refactor — kunnen terugkomen via aparte taak)
       } else if (["failed", "canceled", "expired"].includes(payment.status)) {
-        // Payment failed
-        await supabase
-          .from("subscription_items")
-          .update({
-            status: "CANCELLED",
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", subscription.id);
-
-        console.log(`Cancelled subscription ${subscription.id} due to payment status: ${payment.status}`);
+        await supabase.from("profile_subscription").update({ status: "CANCELLED" }).eq("id", meta.subscriptionId);
+        await supabase.from("payment").update({ status: "FAILED" }).eq("id", (pay as any).id);
       }
-
       return res.status(200).send("OK");
     }
 

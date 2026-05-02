@@ -6,13 +6,10 @@ export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
-  // Route all /api requests through the Vercel handler using middleware
-  app.use("/api", async (req: Request, res: Response, next: NextFunction) => {
+  const callHandler = async (req: Request, res: Response) => {
     try {
-      // Restore original URL for the handler
       const originalUrl = req.originalUrl;
       Object.defineProperty(req, 'url', { value: originalUrl, writable: true });
-      
       await handler(req as any, res as any);
     } catch (error) {
       console.error("API handler error:", error);
@@ -20,7 +17,16 @@ export async function registerRoutes(
         res.status(500).json({ error: "Internal server error" });
       }
     }
-  });
+  };
+
+  // /api/* requests
+  app.use("/api", callHandler);
+
+  // SEO / static endpoints handled inside api/index.ts
+  app.get("/sitemap.xml", callHandler);
+  app.get("/robots.txt", callHandler);
+  app.use("/sitemaps", callHandler);
+  app.get(/^\/google[a-z0-9]+\.html$/, callHandler);
 
   return httpServer;
 }

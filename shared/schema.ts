@@ -1,426 +1,484 @@
-import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, boolean, timestamp, integer, doublePrecision, pgEnum } from "drizzle-orm/pg-core";
+import { pgTable, text, uuid, integer, doublePrecision, boolean, timestamp, date, primaryKey } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-// Enums
-export const accountRoleEnum = pgEnum("account_role", ["ADMIN", "MODERATOR", "GARDENER"]);
-export const verificationStatusEnum = pgEnum("verification_status", ["PENDING", "APPROVED", "REJECTED"]);
-export const subscriptionStatusEnum = pgEnum("subscription_status", ["PENDING", "ACTIVE", "EXPIRED", "CANCELLED"]);
-export const subscriptionTypeEnum = pgEnum("subscription_type", ["BRONZE", "SILVER", "GOLD", "BASIC", "PREMIUM"]);
-export const paymentFrequencyEnum = pgEnum("payment_frequency", ["MONTHLY", "YEARLY"]);
-export const paymentStatusEnum = pgEnum("payment_status", ["PENDING", "PAID", "FAILED", "REFUNDED"]);
-export const paymentProviderEnum = pgEnum("payment_provider", ["MOLLIE", "STRIPE", "PAYPAL", "BANKACCOUNT"]);
-
-// Belgian Provinces Enum
-export const belgianProvinceEnum = pgEnum("belgian_province", [
-  "ANTWERPEN",
-  "LIMBURG",
-  "OOST_VLAANDEREN",
-  "VLAAMS_BRABANT",
-  "WEST_VLAANDEREN",
-  "BRABANT_WALLON",
-  "HAINAUT",
-  "LIEGE",
-  "LUXEMBOURG",
-  "NAMUR",
-  "BRUSSEL"
-]);
-
-// Belgian Regions Enum
-export const belgianRegionEnum = pgEnum("belgian_region", [
-  "VLAANDEREN",
-  "WALLONIE",
-  "BRUSSEL"
-]);
-
-// Language Enum
-export const languageEnum = pgEnum("language", [
-  "NL",
-  "FR",
-  "DE",
-  "EN"
-]);
-
-// Main Category Enum (Tuinonderhoud vs Tuinaanleg)
-export const mainCategoryEnum = pgEnum("main_category", [
-  "TUINONDERHOUD",
-  "TUINAANLEG"
-]);
-
-// Specialization Enum - subcategories under main categories
-export const specializationTypeEnum = pgEnum("specialization_type", [
-  // Tuinonderhoud subcategories
-  "GRAS_MAAIEN",
-  "SNOEIEN_BOMEN",
-  "SNOEIEN_STRUIKEN",
-  "HAAG_KNIPPEN",
-  "ONKRUID_VERWIJDEREN",
-  "BLADEREN_RUIMEN",
-  "BEMESTING",
-  "GAZONONDERHOUD",
-  // Tuinaanleg subcategories
-  "GRASAANLEG",
-  "PADEN_TERRASSEN",
-  "HOUTEN_CONSTRUCTIES",
-  "AFSLUITINGEN",
-  "VIJVERS",
-  "BESTRATING",
-  "BEPLANTING",
-  "IRRIGATIE"
-]);
-
-// Categories Table (now represents main categories: Tuinonderhoud/Tuinaanleg)
-export const categories = pgTable("categories", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  name: text("name").notNull(),
-  slug: text("slug").notNull().unique(),
-  mainCategory: mainCategoryEnum("main_category").notNull(),
-  description: text("description"),
-  isActive: boolean("is_active").default(true).notNull(),
-  sortOrder: integer("sort_order").default(0),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
-
-// Locations Table (Belgian cities/municipalities)
-export const locations = pgTable("locations", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  name: text("name").notNull(),
-  slug: text("slug").notNull().unique(),
-  postcode: text("postcode").notNull(),
-  municipality: text("municipality").notNull(),
-  province: belgianProvinceEnum("province"),
-  region: belgianRegionEnum("region"),
-  latitude: doublePrecision("latitude"),
+// ---------------------------------------------------------------------------
+// CORE: address
+// ---------------------------------------------------------------------------
+export const address = pgTable("address", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  street: text("street"),
+  number: text("number"),
+  municipality: text("municipality"),
+  postcode: text("postcode"),
+  province: text("province"),
+  region: text("region"),
+  country: text("country"),
   longitude: doublePrecision("longitude"),
-  isActive: boolean("is_active").default(true).notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  latitude: doublePrecision("latitude"),
+  isResidential: boolean("is_residential").default(false),
+  showAddress: boolean("show_address").default(true),
+  validFrom: date("valid_from"),
+  validUntil: date("valid_until"),
+  createdAt: timestamp("created_at").defaultNow(),
 });
+export const insertAddressSchema = createInsertSchema(address).omit({ id: true, createdAt: true });
+export type InsertAddress = z.infer<typeof insertAddressSchema>;
+export type Address = typeof address.$inferSelect;
 
-// Accounts Table (Account holders - login, VAT, billing address)
-export const accounts = pgTable("accounts", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  authUserId: varchar("auth_user_id").notNull().unique(), // Supabase Auth user UUID
-  email: text("email").notNull(),
-  role: accountRoleEnum("role").default("GARDENER").notNull(),
-  // VAT and billing info for Belgian B2B
-  vatNumber: text("vat_number"), // Belgian VAT format: BE0123456789
-  companyName: text("company_name"),
-  billingStreet: text("billing_street"),
-  billingNumber: text("billing_number"),
-  billingPostcode: text("billing_postcode"),
-  billingCity: text("billing_city"),
-  emailVerified: boolean("email_verified").default(false),
-  emailVerifiedAt: timestamp("email_verified_at"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
-
-// Profiles Table (service listings belonging to an account)
-export const profiles = pgTable("profiles", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  accountId: varchar("account_id").notNull().references(() => accounts.id),
-  slug: text("slug").notNull().unique(),
+// ---------------------------------------------------------------------------
+// CORE: practitioner_type, practitioner, admin
+// ---------------------------------------------------------------------------
+export const practitionerType = pgTable("practitioner_type", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  key: text("key").notNull().unique(),
   name: text("name").notNull(),
-  email: text("email").notNull(),
-  telnr: text("telnr"),
-  website: text("website"),
-  hasWebsite: boolean("has_website").default(false),
   description: text("description"),
-  introduction: text("introduction"),
+});
+export const insertPractitionerTypeSchema = createInsertSchema(practitionerType).omit({ id: true });
+export type InsertPractitionerType = z.infer<typeof insertPractitionerTypeSchema>;
+export type PractitionerType = typeof practitionerType.$inferSelect;
+
+export const practitioner = pgTable("practitioner", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  authUserId: uuid("auth_user_id").notNull().unique(),
+  practitionerTypeId: uuid("practitioner_type_id").references(() => practitionerType.id),
+  billingAddressId: uuid("billing_address_id").references(() => address.id),
+  email: text("email"),
+  firstname: text("firstname"),
+  lastname: text("lastname"),
+  gender: text("gender"),
+  birthdate: date("birthdate"),
+  showAge: boolean("show_age").default(false),
+  subjectToVat: boolean("subject_to_vat").default(false),
+  vat: text("vat"),
+  companyName: text("company_name"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+export const insertPractitionerSchema = createInsertSchema(practitioner).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertPractitioner = z.infer<typeof insertPractitionerSchema>;
+export type Practitioner = typeof practitioner.$inferSelect;
+
+export const admin = pgTable("admin", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  authUserId: uuid("auth_user_id").notNull().unique(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+export const insertAdminSchema = createInsertSchema(admin).omit({ id: true, createdAt: true });
+export type InsertAdmin = z.infer<typeof insertAdminSchema>;
+export type Admin = typeof admin.$inferSelect;
+
+// ---------------------------------------------------------------------------
+// CORE: profile
+// ---------------------------------------------------------------------------
+export const profile = pgTable("profile", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  practitionerId: uuid("practitioner_id").notNull().references(() => practitioner.id, { onDelete: "cascade" }),
+  officeAddressId: uuid("office_address_id").references(() => address.id),
+  companyName: text("company_name"),
+  telnr: text("telnr"),
+  contactEmail: text("contact_email"),
   title: text("title"),
-  education: text("education"),
-  specializations: text("specializations").array(),
-  logoUrl: text("logo_url"),
-  imageUrls: text("image_urls").array(),
-  isActive: boolean("is_active").default(true).notNull(),
-  isPublic: boolean("is_public").default(false).notNull(),
+  introduction: text("introduction"),
+  logourl: text("logourl"),
+  imageurls: text("imageurls").array(),
+  websiteurl: text("websiteurl"),
+  hasWebsite: boolean("has_website").default(false),
+  isActive: boolean("is_active").default(false),
+  isPublic: boolean("is_public").default(false),
   isVerified: boolean("is_verified").default(false),
-  hideAddress: boolean("hide_address").default(false),
-  verificationStatus: verificationStatusEnum("verification_status").default("PENDING"),
+  verificationStatus: text("verification_status").default("PENDING"),
   viewCount: integer("view_count").default(0),
   websiteClicks: integer("website_clicks").default(0),
-  seoTitle: text("seo_title"),
-  seoDescription: text("seo_description"),
-  categoryId: varchar("category_id").references(() => categories.id),
-  locationId: varchar("location_id").references(() => locations.id),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  slug: text("slug").notNull().unique(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
+export const insertProfileSchema = createInsertSchema(profile).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertProfile = z.infer<typeof insertProfileSchema>;
+export type Profile = typeof profile.$inferSelect;
 
-// Profile Status History Table (tracks verification status changes over time)
-export const profileStatusHistory = pgTable("profile_status_history", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  profileId: varchar("profile_id").notNull().references(() => profiles.id),
-  status: verificationStatusEnum("status").notNull(),
+// ---------------------------------------------------------------------------
+// VERIFICATION EVENT TRAIL
+// ---------------------------------------------------------------------------
+export const practitionerVerificationEvent = pgTable("practitioner_verification_event", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  profileId: uuid("profile_id").notNull().references(() => profile.id, { onDelete: "cascade" }),
+  fromStatus: text("from_status"),
+  toStatus: text("to_status").notNull(),
   reason: text("reason"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  actorAdminId: uuid("actor_admin_id").references(() => admin.id),
+  createdAt: timestamp("created_at").defaultNow(),
 });
+export const insertVerificationEventSchema = createInsertSchema(practitionerVerificationEvent).omit({ id: true, createdAt: true });
+export type InsertVerificationEvent = z.infer<typeof insertVerificationEventSchema>;
+export type VerificationEvent = typeof practitionerVerificationEvent.$inferSelect;
 
-// Offices Table (business address)
-export const offices = pgTable("offices", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  profileId: varchar("profile_id").notNull().references(() => profiles.id).unique(),
-  street: text("street").notNull(),
-  number: text("number").notNull(),
-  town: text("town").notNull(),
-  municipality: text("municipality").notNull(),
-  postcode: text("postcode").notNull(),
-  province: belgianProvinceEnum("province"),
-  latitude: doublePrecision("latitude"),
+// ---------------------------------------------------------------------------
+// SERVICE AREA
+// ---------------------------------------------------------------------------
+export const serviceArea = pgTable("service_area", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  municipality: text("municipality"),
+  postcode: text("postcode"),
+  province: text("province"),
+  region: text("region"),
+  country: text("country"),
+  slug: text("slug"),
   longitude: doublePrecision("longitude"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  latitude: doublePrecision("latitude"),
+  isSystemDefined: boolean("is_system_defined").default(true),
+});
+export const insertServiceAreaSchema = createInsertSchema(serviceArea).omit({ id: true });
+export type InsertServiceArea = z.infer<typeof insertServiceAreaSchema>;
+export type ServiceArea = typeof serviceArea.$inferSelect;
+
+export const profileServiceArea = pgTable("profile_service_area", {
+  profileId: uuid("profile_id").references(() => profile.id, { onDelete: "cascade" }),
+  serviceAreaId: uuid("service_area_id").references(() => serviceArea.id, { onDelete: "cascade" }),
+}, (t) => ({ pk: primaryKey({ columns: [t.profileId, t.serviceAreaId] }) }));
+
+// ---------------------------------------------------------------------------
+// TAXONOMIE
+// ---------------------------------------------------------------------------
+export const serviceCategory = pgTable("service_category", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull(),
+  slug: text("slug").notNull().unique(),
+  description: text("description"),
+  sortOrder: integer("sort_order").default(0),
+  isSystemDefined: boolean("is_system_defined").default(true),
+});
+export const insertServiceCategorySchema = createInsertSchema(serviceCategory).omit({ id: true });
+export type InsertServiceCategory = z.infer<typeof insertServiceCategorySchema>;
+export type ServiceCategory = typeof serviceCategory.$inferSelect;
+
+export const specialization = pgTable("specialization", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull(),
+  slug: text("slug").notNull().unique(),
+  description: text("description"),
+  serviceCategoryId: uuid("service_category_id").references(() => serviceCategory.id),
+  sortOrder: integer("sort_order").default(0),
+  isSystemDefined: boolean("is_system_defined").default(true),
+});
+export const insertSpecializationSchema = createInsertSchema(specialization).omit({ id: true });
+export type InsertSpecialization = z.infer<typeof insertSpecializationSchema>;
+export type Specialization = typeof specialization.$inferSelect;
+
+export const offeredService = pgTable("offered_service", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull(),
+  slug: text("slug").notNull().unique(),
+  description: text("description"),
+  sortOrder: integer("sort_order").default(0),
+  isSystemDefined: boolean("is_system_defined").default(true),
+});
+export const insertOfferedServiceSchema = createInsertSchema(offeredService).omit({ id: true });
+export type InsertOfferedService = z.infer<typeof insertOfferedServiceSchema>;
+export type OfferedService = typeof offeredService.$inferSelect;
+
+export const profileServiceCategory = pgTable("profile_service_category", {
+  profileId: uuid("profile_id").references(() => profile.id, { onDelete: "cascade" }),
+  serviceCategoryId: uuid("service_category_id").references(() => serviceCategory.id, { onDelete: "cascade" }),
+  isMain: boolean("is_main").default(false),
+}, (t) => ({ pk: primaryKey({ columns: [t.profileId, t.serviceCategoryId] }) }));
+
+export const profileSpecialization = pgTable("profile_specialization", {
+  profileId: uuid("profile_id").references(() => profile.id, { onDelete: "cascade" }),
+  specializationId: uuid("specialization_id").references(() => specialization.id, { onDelete: "cascade" }),
+  isMain: boolean("is_main").default(false),
+}, (t) => ({ pk: primaryKey({ columns: [t.profileId, t.specializationId] }) }));
+
+export const profileOfferedService = pgTable("profile_offered_service", {
+  profileId: uuid("profile_id").references(() => profile.id, { onDelete: "cascade" }),
+  offeredServiceId: uuid("offered_service_id").references(() => offeredService.id, { onDelete: "cascade" }),
+}, (t) => ({ pk: primaryKey({ columns: [t.profileId, t.offeredServiceId] }) }));
+
+// ---------------------------------------------------------------------------
+// PRACTICAL QUESTIONS
+// ---------------------------------------------------------------------------
+export const variableType = pgTable("variable_type", {
+  key: text("key").primaryKey(),
 });
 
-// Practicals Table
-export const practicals = pgTable("practicals", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  profileId: varchar("profile_id").notNull().references(() => profiles.id).unique(),
-  experienceYears: integer("experience_years"),
-  languages: languageEnum("languages").array(),
-  tariff: text("tariff"),
-  acceptedPaymentMethods: text("accepted_payment_methods"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+export const practicalQuestion = pgTable("practical_question", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  key: text("key").notNull().unique(),
+  name: text("name").notNull(),
+  fieldType: text("field_type").notNull(),
+  isMulti: boolean("is_multi").default(false),
+  isRequired: boolean("is_required").default(false),
+  sortOrder: integer("sort_order").default(0),
+});
+export const insertPracticalQuestionSchema = createInsertSchema(practicalQuestion).omit({ id: true });
+export type InsertPracticalQuestion = z.infer<typeof insertPracticalQuestionSchema>;
+export type PracticalQuestion = typeof practicalQuestion.$inferSelect;
+
+export const practicalOption = pgTable("practical_option", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  practicalQuestionId: uuid("practical_question_id").notNull().references(() => practicalQuestion.id, { onDelete: "cascade" }),
+  key: text("key").notNull(),
+  name: text("name").notNull(),
+  sortOrder: integer("sort_order").default(0),
+});
+export const insertPracticalOptionSchema = createInsertSchema(practicalOption).omit({ id: true });
+export type InsertPracticalOption = z.infer<typeof insertPracticalOptionSchema>;
+export type PracticalOption = typeof practicalOption.$inferSelect;
+
+export const practicalAnswer = pgTable("practical_answer", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  profileId: uuid("profile_id").notNull().references(() => profile.id, { onDelete: "cascade" }),
+  practicalQuestionId: uuid("practical_question_id").notNull().references(() => practicalQuestion.id, { onDelete: "cascade" }),
 });
 
-// Subscription Plans Table
-export const subscriptionPlans = pgTable("subscription_plans", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  type: subscriptionTypeEnum("type").notNull(),
+export const practicalAnswerString = pgTable("practical_answer_string", {
+  practicalAnswerId: uuid("practical_answer_id").primaryKey().references(() => practicalAnswer.id, { onDelete: "cascade" }),
+  value: text("value"),
+});
+
+export const practicalAnswerInt = pgTable("practical_answer_int", {
+  practicalAnswerId: uuid("practical_answer_id").primaryKey().references(() => practicalAnswer.id, { onDelete: "cascade" }),
+  value: integer("value"),
+});
+
+export const practicalAnswerDouble = pgTable("practical_answer_double", {
+  practicalAnswerId: uuid("practical_answer_id").primaryKey().references(() => practicalAnswer.id, { onDelete: "cascade" }),
+  value: doublePrecision("value"),
+});
+
+export const practicalAnswerDate = pgTable("practical_answer_date", {
+  practicalAnswerId: uuid("practical_answer_id").primaryKey().references(() => practicalAnswer.id, { onDelete: "cascade" }),
+  value: date("value"),
+});
+
+export const practicalAnswerOption = pgTable("practical_answer_option", {
+  practicalAnswerId: uuid("practical_answer_id").references(() => practicalAnswer.id, { onDelete: "cascade" }),
+  practicalOptionId: uuid("practical_option_id").references(() => practicalOption.id, { onDelete: "cascade" }),
+}, (t) => ({ pk: primaryKey({ columns: [t.practicalAnswerId, t.practicalOptionId] }) }));
+
+// ---------------------------------------------------------------------------
+// BILLING & SUBSCRIPTIONS
+// ---------------------------------------------------------------------------
+export const billingCycle = pgTable("billing_cycle", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  key: text("key").notNull().unique(),
+  interval: text("interval").notNull(),
+  isActive: boolean("is_active").default(true),
+});
+export const insertBillingCycleSchema = createInsertSchema(billingCycle).omit({ id: true });
+export type BillingCycle = typeof billingCycle.$inferSelect;
+
+export const subscriptionPlan = pgTable("subscription_plan", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  key: text("key").notNull().unique(),
   name: text("name").notNull(),
   price: doublePrecision("price").notNull(),
-  molliepriceId: text("mollie_price_id"),
-  mollieProductId: text("mollie_product_id"),
-  generalInfo: text("general_info"),
-  features: text("features"),
-  isActive: boolean("is_active").default(true).notNull(),
+  description: text("description"),
+  isActive: boolean("is_active").default(true),
   sortOrder: integer("sort_order").default(0),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  validFrom: date("valid_from"),
+  validUntil: date("valid_until"),
 });
+export const insertSubscriptionPlanSchema = createInsertSchema(subscriptionPlan).omit({ id: true });
+export type SubscriptionPlan = typeof subscriptionPlan.$inferSelect;
 
-// Subscription Items Table
-export const subscriptionItems = pgTable("subscription_items", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  accountId: varchar("account_id").notNull().references(() => accounts.id),
-  profileId: varchar("profile_id").references(() => profiles.id),
-  subscriptionPlanId: varchar("subscription_plan_id").references(() => subscriptionPlans.id),
-  mollieSubscriptionId: text("mollie_subscription_id"),
-  mollieCustomerId: text("mollie_customer_id"),
-  molliePaymentId: text("mollie_payment_id"),
-  startDate: timestamp("start_date").notNull(),
-  endDate: timestamp("end_date").notNull(),
-  currentPeriodStart: timestamp("current_period_start"),
-  currentPeriodEnd: timestamp("current_period_end"),
-  years: integer("years").default(1),
-  totalAmount: text("total_amount"),
-  paidAt: timestamp("paid_at"),
-  autoRenew: boolean("auto_renew").default(true),
-  paymentFrequency: paymentFrequencyEnum("payment_frequency").default("YEARLY"),
-  status: subscriptionStatusEnum("status").default("ACTIVE").notNull(),
-  mailInvoice: boolean("mail_invoice").default(true),
-  gracePeriodUntil: timestamp("grace_period_until"),
-  cancelAtPeriodEnd: boolean("cancel_at_period_end").default(false),
-  canceledAt: timestamp("canceled_at"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+export const subscriptionPlanOffer = pgTable("subscription_plan_offer", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  subscriptionPlanId: uuid("subscription_plan_id").notNull().references(() => subscriptionPlan.id, { onDelete: "cascade" }),
+  durationInYears: integer("duration_in_years"),
+  discountPercentage: integer("discount_percentage"),
+  totalPrice: doublePrecision("total_price"),
+  isPopular: boolean("is_popular").default(false),
+  isActive: boolean("is_active").default(true),
+  validFrom: date("valid_from"),
+  validUntil: date("valid_until"),
 });
+export const insertSubscriptionPlanOfferSchema = createInsertSchema(subscriptionPlanOffer).omit({ id: true });
+export type SubscriptionPlanOffer = typeof subscriptionPlanOffer.$inferSelect;
 
-// Payments Table
-export const payments = pgTable("payments", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  subscriptionItemId: varchar("subscription_item_id").references(() => subscriptionItems.id),
+export const profileSubscription = pgTable("profile_subscription", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  profileId: uuid("profile_id").notNull().references(() => profile.id, { onDelete: "cascade" }),
+  subscriptionPlanOfferId: uuid("subscription_plan_offer_id").notNull().references(() => subscriptionPlanOffer.id),
+  billingCycleId: uuid("billing_cycle_id").notNull().references(() => billingCycle.id),
+  startDate: date("start_date"),
+  endDate: date("end_date"),
+  autoRenew: boolean("auto_renew").default(false),
+  status: text("status").default("PENDING"),
+  gracePeriodUntil: date("grace_period_until"),
+  refundedReason: text("refunded_reason"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+export const insertProfileSubscriptionSchema = createInsertSchema(profileSubscription).omit({ id: true, createdAt: true, updatedAt: true });
+export type ProfileSubscription = typeof profileSubscription.$inferSelect;
+
+// ---------------------------------------------------------------------------
+// PAYMENTS
+// ---------------------------------------------------------------------------
+export const paymentProvider = pgTable("payment_provider", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  key: text("key").notNull().unique(),
+  name: text("name").notNull(),
+  isActive: boolean("is_active").default(true),
+});
+export type PaymentProvider = typeof paymentProvider.$inferSelect;
+
+export const payment = pgTable("payment", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  profileSubscriptionId: uuid("profile_subscription_id").notNull().references(() => profileSubscription.id, { onDelete: "cascade" }),
+  paymentProviderId: uuid("payment_provider_id").notNull().references(() => paymentProvider.id),
   amount: doublePrecision("amount").notNull(),
-  currency: text("currency").default("EUR").notNull(),
-  status: paymentStatusEnum("status").default("PENDING").notNull(),
-  provider: paymentProviderEnum("provider").default("MOLLIE").notNull(),
-  paidAt: timestamp("paid_at"),
-  molliePaymentIntentId: text("mollie_payment_intent_id"),
-  mollieInvoiceId: text("mollie_invoice_id"),
+  currency: text("currency").default("EUR"),
+  status: text("status").default("PENDING"),
+  externalPaymentId: text("external_payment_id"),
+  externalInvoiceId: text("external_invoice_id"),
   invoiceUrl: text("invoice_url"),
-  invoicePdfUrl: text("invoice_pdf_url"),
   refundReason: text("refund_reason"),
+  paidAt: timestamp("paid_at"),
   refundedAt: timestamp("refunded_at"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
 });
+export const insertPaymentSchema = createInsertSchema(payment).omit({ id: true, createdAt: true });
+export type Payment = typeof payment.$inferSelect;
 
-// Contact Requests Table (simplified - no status tracking, just log of contact attempts)
-export const contactRequests = pgTable("contact_requests", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  profileId: varchar("profile_id").notNull().references(() => profiles.id),
-  visitorName: text("visitor_name").notNull(),
-  visitorEmail: text("visitor_email").notNull(),
+// ---------------------------------------------------------------------------
+// CONTACT REQUESTS
+// ---------------------------------------------------------------------------
+export const contactRequest = pgTable("contact_request", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  profileId: uuid("profile_id").notNull().references(() => profile.id, { onDelete: "cascade" }),
+  visitorEmail: text("visitor_email"),
+  visitorName: text("visitor_name"),
   telnr: text("telnr"),
-  subject: text("subject").notNull(),
-  message: text("message").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  subject: text("subject"),
+  message: text("message"),
+  createdAt: timestamp("created_at").defaultNow(),
 });
-
-// Insert Schemas
-export const insertCategorySchema = createInsertSchema(categories).omit({ id: true, createdAt: true, updatedAt: true });
-export const insertLocationSchema = createInsertSchema(locations).omit({ id: true, createdAt: true, updatedAt: true });
-export const insertAccountSchema = createInsertSchema(accounts).omit({ id: true, createdAt: true, updatedAt: true });
-export const insertProfileSchema = createInsertSchema(profiles).omit({ id: true, createdAt: true, updatedAt: true });
-export const insertProfileStatusHistorySchema = createInsertSchema(profileStatusHistory).omit({ id: true, createdAt: true });
-export const insertOfficeSchema = createInsertSchema(offices).omit({ id: true, createdAt: true, updatedAt: true });
-export const insertPracticalSchema = createInsertSchema(practicals).omit({ id: true, createdAt: true, updatedAt: true });
-export const insertSubscriptionPlanSchema = createInsertSchema(subscriptionPlans).omit({ id: true, createdAt: true, updatedAt: true });
-export const insertSubscriptionItemSchema = createInsertSchema(subscriptionItems).omit({ id: true, createdAt: true, updatedAt: true });
-export const insertPaymentSchema = createInsertSchema(payments).omit({ id: true, createdAt: true });
-export const insertContactRequestSchema = createInsertSchema(contactRequests).omit({ id: true, createdAt: true });
-
-// Types
-export type Category = typeof categories.$inferSelect;
-export type InsertCategory = z.infer<typeof insertCategorySchema>;
-
-export type Location = typeof locations.$inferSelect;
-export type InsertLocation = z.infer<typeof insertLocationSchema>;
-
-export type Account = typeof accounts.$inferSelect;
-export type InsertAccount = z.infer<typeof insertAccountSchema>;
-
-// Legacy aliases for backwards compatibility
-export type Business = Account;
-export type InsertBusiness = InsertAccount;
-
-export type Profile = typeof profiles.$inferSelect;
-export type InsertProfile = z.infer<typeof insertProfileSchema>;
-
-export type ProfileStatusHistory = typeof profileStatusHistory.$inferSelect;
-export type InsertProfileStatusHistory = z.infer<typeof insertProfileStatusHistorySchema>;
-
-export type Office = typeof offices.$inferSelect;
-export type InsertOffice = z.infer<typeof insertOfficeSchema>;
-
-export type Practical = typeof practicals.$inferSelect;
-export type InsertPractical = z.infer<typeof insertPracticalSchema>;
-
-export type SubscriptionPlan = typeof subscriptionPlans.$inferSelect;
-export type InsertSubscriptionPlan = z.infer<typeof insertSubscriptionPlanSchema>;
-
-export type SubscriptionItem = typeof subscriptionItems.$inferSelect;
-export type InsertSubscriptionItem = z.infer<typeof insertSubscriptionItemSchema>;
-
-export type Payment = typeof payments.$inferSelect;
-export type InsertPayment = z.infer<typeof insertPaymentSchema>;
-
-export type ContactRequest = typeof contactRequests.$inferSelect;
+export const insertContactRequestSchema = createInsertSchema(contactRequest).omit({ id: true, createdAt: true });
 export type InsertContactRequest = z.infer<typeof insertContactRequestSchema>;
+export type ContactRequest = typeof contactRequest.$inferSelect;
 
-// Extended types for API responses
+// ---------------------------------------------------------------------------
+// SITE_CONFIG
+// ---------------------------------------------------------------------------
+export const siteConfig = pgTable("site_config", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  siteName: text("site_name").notNull(),
+  siteTagline: text("site_tagline"),
+  supportEmail: text("support_email").notNull(),
+  defaultCountryCode: text("default_country_code").notNull(),
+  defaultCountryName: text("default_country_name").notNull(),
+  defaultRegion: text("default_region"),
+  defaultLanguage: text("default_language").notNull(),
+  defaultCurrencyCode: text("default_currency_code").notNull(),
+  defaultVatPercentage: doublePrecision("default_vat_percentage").notNull(),
+  companyVatNumber: text("company_vat_number"),
+  companyLegalName: text("company_legal_name"),
+  defaultPractitionerTypeId: uuid("default_practitioner_type_id").references(() => practitionerType.id),
+  defaultSubscriptionPlanId: uuid("default_subscription_plan_id").references(() => subscriptionPlan.id),
+  postcodePattern: text("postcode_pattern"),
+  phonePattern: text("phone_pattern"),
+  phoneCountryCode: text("phone_country_code"),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+export type SiteConfig = typeof siteConfig.$inferSelect;
+
+// ---------------------------------------------------------------------------
+// BACKWARDS-COMPAT EXPORTS (frontend uses legacy names; api/index.ts hydrates)
+// ---------------------------------------------------------------------------
+
+// specialization → Dutch label proxy: converts kebab-slug to Title Case
+export const specializationLabels = new Proxy({} as Record<string, string>, {
+  get(_t, prop: string) {
+    if (typeof prop !== "string") return undefined;
+    return prop.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+  },
+});
+
+// Legacy type aliases (loose, since api hydrates camelCase + nested relations)
+export type Category = {
+  id: string;
+  slug: string;
+  name: string;
+  description?: string | null;
+  mainCategory?: string;
+  isActive?: boolean;
+  sortOrder?: number;
+};
+
+export type Location = {
+  id: string;
+  slug: string;
+  name: string;
+  postcode: string;
+  province?: string | null;
+  region?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  isActive?: boolean;
+};
+
+export type Account = {
+  id: string;
+  authUserId: string;
+  email?: string | null;
+  firstname?: string | null;
+  lastname?: string | null;
+  companyName?: string | null;
+  vat?: string | null;
+  subjectToVat?: boolean | null;
+  billingAddress?: Address | null;
+  createdAt?: string | Date | null;
+  updatedAt?: string | Date | null;
+};
+
+export type SubscriptionItem = {
+  id: string;
+  accountId: string;
+  profileId?: string | null;
+  planId?: string | null;
+  status?: string | null;
+  startDate?: string | Date | null;
+  endDate?: string | Date | null;
+  createdAt?: string | Date | null;
+};
+
+export type SubscriptionPlanLegacy = {
+  id: string;
+  name: string;
+  price: number;
+  currency: string;
+  durationInYears?: number;
+  description?: string | null;
+};
+export type { SubscriptionPlanLegacy as SubscriptionPlan };
+
 export type ProfileWithRelations = Profile & {
-  category?: Category;
-  location?: Location;
-  office?: Office;
-  practical?: Practical;
+  category?: Category | null;
+  categoryId?: string | null;
+  location?: Location | null;
+  locationId?: string | null;
+  office?: any;
+  practical?: any;
+  specializations?: string[];
+  companyName?: string | null;
+  contactEmail?: string | null;
+  telnr?: string | null;
+  hasWebsite?: boolean;
+  websiteurl?: string | null;
+  distanceKm?: number;
 };
 
-// Contact form validation schema
+// Contact form schema (visitor → profile)
 export const contactFormSchema = z.object({
-  visitorName: z.string().min(2, "Naam moet minimaal 2 karakters bevatten"),
-  visitorEmail: z.string().email("Ongeldig email adres"),
+  visitorName: z.string().min(2, "Naam is verplicht"),
+  visitorEmail: z.string().email("Geldig e-mailadres vereist"),
   telnr: z.string().optional(),
-  subject: z.string().min(5, "Onderwerp moet minimaal 5 karakters bevatten"),
-  message: z.string().min(20, "Bericht moet minimaal 20 karakters bevatten"),
+  subject: z.string().optional(),
+  message: z.string().min(10, "Bericht moet minstens 10 tekens bevatten"),
+  recaptchaToken: z.string().optional(),
 });
-
 export type ContactFormData = z.infer<typeof contactFormSchema>;
-
-// Search params schema
-export const searchParamsSchema = z.object({
-  query: z.string().optional(),
-  categorySlug: z.string().optional(),
-  locationSlug: z.string().optional(),
-  mainCategory: z.enum(["TUINONDERHOUD", "TUINAANLEG"]).optional(),
-  specializations: z.array(z.string()).optional(),
-  page: z.number().default(1),
-  limit: z.number().default(12),
-});
-
-export type SearchParams = z.infer<typeof searchParamsSchema>;
-
-// Main category labels
-export const mainCategoryLabels: Record<string, string> = {
-  TUINONDERHOUD: "Tuinonderhoud",
-  TUINAANLEG: "Tuinaanleg",
-};
-
-// Specialization labels for display (grouped by main category)
-export const specializationLabels: Record<string, string> = {
-  // Tuinonderhoud
-  GRAS_MAAIEN: "Gras maaien",
-  SNOEIEN_BOMEN: "Bomen snoeien",
-  SNOEIEN_STRUIKEN: "Struiken snoeien",
-  HAAG_KNIPPEN: "Hagen knippen",
-  ONKRUID_VERWIJDEREN: "Onkruid verwijderen",
-  BLADEREN_RUIMEN: "Bladeren ruimen",
-  BEMESTING: "Bemesting",
-  GAZONONDERHOUD: "Gazononderhoud",
-  // Tuinaanleg
-  GRASAANLEG: "Grasaanleg",
-  PADEN_TERRASSEN: "Paden & terrassen",
-  HOUTEN_CONSTRUCTIES: "Houten constructies",
-  AFSLUITINGEN: "Afsluitingen & hekwerk",
-  VIJVERS: "Vijvers & waterpartijen",
-  BESTRATING: "Bestrating",
-  BEPLANTING: "Beplanting",
-  IRRIGATIE: "Irrigatiesystemen",
-};
-
-// Group specializations by main category
-export const specializationsByCategory: Record<string, string[]> = {
-  TUINONDERHOUD: [
-    "GRAS_MAAIEN",
-    "SNOEIEN_BOMEN",
-    "SNOEIEN_STRUIKEN",
-    "HAAG_KNIPPEN",
-    "ONKRUID_VERWIJDEREN",
-    "BLADEREN_RUIMEN",
-    "BEMESTING",
-    "GAZONONDERHOUD",
-  ],
-  TUINAANLEG: [
-    "GRASAANLEG",
-    "PADEN_TERRASSEN",
-    "HOUTEN_CONSTRUCTIES",
-    "AFSLUITINGEN",
-    "VIJVERS",
-    "BESTRATING",
-    "BEPLANTING",
-    "IRRIGATIE",
-  ],
-};
-
-// Belgian province labels
-export const provinceLabels: Record<string, string> = {
-  ANTWERPEN: "Antwerpen",
-  LIMBURG: "Limburg",
-  OOST_VLAANDEREN: "Oost-Vlaanderen",
-  VLAAMS_BRABANT: "Vlaams-Brabant",
-  WEST_VLAANDEREN: "West-Vlaanderen",
-  BRABANT_WALLON: "Waals-Brabant",
-  HAINAUT: "Henegouwen",
-  LIEGE: "Luik",
-  LUXEMBOURG: "Luxemburg",
-  NAMUR: "Namen",
-  BRUSSEL: "Brussel",
-};
-
-// Belgian region labels
-export const regionLabels: Record<string, string> = {
-  VLAANDEREN: "Vlaanderen",
-  WALLONIE: "Wallonië",
-  BRUSSEL: "Brussels Hoofdstedelijk Gewest",
-};
-
-// Language labels
-export const languageLabels: Record<string, string> = {
-  NL: "Nederlands",
-  FR: "Frans",
-  DE: "Duits",
-  EN: "Engels",
-};
