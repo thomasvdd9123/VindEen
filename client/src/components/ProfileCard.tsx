@@ -100,7 +100,7 @@ export function ProfileCard({ profile }: ProfileCardProps) {
                       className={`text-xs font-normal ${slug ? 'cursor-pointer' : ''}`}
                       data-testid={`badge-spec-${spec.toLowerCase()}`}
                     >
-                      {specializationLabels[spec] || spec}{/* legacy */}
+                      {specializationLabels[spec] || spec}
                     </Badge>
                   );
                   return slug ? (
