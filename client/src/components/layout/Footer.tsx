@@ -1,6 +1,7 @@
 import { Link } from "wouter";
 import { Leaf, ExternalLink } from "lucide-react";
 import { siteConfig } from "@/lib/theme.config";
+import { openCookieSettings } from "@/lib/cookieConsent";
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
@@ -22,7 +23,8 @@ export function Footer() {
   const infoLinks = [
     { href: "/prijzen", label: "Prijzen" },
     { href: "/privacy", label: "Privacybeleid" },
-    { href: "/voorwaarden", label: "Algemene voorwaarden" },
+    { href: "/algemene-voorwaarden", label: "Algemene voorwaarden" },
+    { href: "/cookies", label: "Cookiebeleid" },
   ];
 
   return (
@@ -89,6 +91,16 @@ export function Footer() {
                   </Link>
                 </li>
               ))}
+              <li>
+                <button
+                  type="button"
+                  onClick={openCookieSettings}
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors text-left"
+                  data-testid="button-cookie-settings-footer"
+                >
+                  Cookie-instellingen
+                </button>
+              </li>
             </ul>
           </div>
         </div>

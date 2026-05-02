@@ -6,6 +6,10 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/lib/auth";
 import { UnderConstructionOverlay } from "@/components/UnderConstructionOverlay";
+import { CookieConsent } from "@/components/CookieConsent";
+import Privacy from "@/pages/legal/Privacy";
+import Terms from "@/pages/legal/Terms";
+import Cookies from "@/pages/legal/Cookies";
 import Home from "@/pages/Home";
 import CategoryPage from "@/pages/CategoryPage";
 import ProfilePage from "@/pages/ProfilePage";
@@ -72,6 +76,9 @@ function Router() {
       <Route path="/info/tuinman-vs-hovenier" component={TuinmanVsHovenier} />
       <Route path="/info/kosten-prijzen" component={KostenPrijzen} />
       <Route path="/info/voor-tuinmannen" component={VoorTuinmannen} />
+      <Route path="/privacy" component={Privacy} />
+      <Route path="/algemene-voorwaarden" component={Terms} />
+      <Route path="/cookies" component={Cookies} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -86,6 +93,7 @@ function App() {
             <UnderConstructionOverlay />
             <Toaster />
             <Router />
+            <CookieConsent />
           </TooltipProvider>
         </AuthProvider>
       </QueryClientProvider>
