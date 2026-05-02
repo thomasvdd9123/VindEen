@@ -1,13 +1,9 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { createClient } from "@supabase/supabase-js";
-// @ts-expect-error - busboy heeft geen type declaraties geïnstalleerd
-import BusboyImport from "busboy";
-const Busboy = BusboyImport as unknown as (opts: { headers: Record<string, string>; limits?: { fileSize?: number; files?: number } }) => NodeJS.WritableStream & {
-  on(event: "field", cb: (name: string, val: string) => void): void;
-  on(event: "file", cb: (name: string, file: NodeJS.ReadableStream, info: { filename: string; mimeType: string }) => void): void;
-  on(event: "finish" | "close", cb: () => void): void;
-  on(event: "error", cb: (err: Error) => void): void;
-};
+import Busboy from "busboy";
+
+const ALLOWED_IMAGE_MIMES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
+const ALLOWED_IMAGE_EXTS = new Set(["jpg", "jpeg", "png", "webp", "gif"]);
 
 async function parseMultipartFile(req: VercelRequest): Promise<{ filename: string; mime: string; buffer: Buffer; type: string } | null> {
   return new Promise((resolve, reject) => {
@@ -15,7 +11,7 @@ async function parseMultipartFile(req: VercelRequest): Promise<{ filename: strin
       const bb = Busboy({ headers: req.headers as Record<string, string>, limits: { fileSize: 8 * 1024 * 1024, files: 1 } });
       let result: { filename: string; mime: string; buffer: Buffer; type: string } | null = null;
       let typeField = "extra";
-      bb.on("field", (name: string, val: string) => { if (name === "type") typeField = val; });
+      bb.on("field", (name, val) => { if (name === "type") typeField = val; });
       bb.on("file", (_name, file, info) => {
         const chunks: Buffer[] = [];
         file.on("data", (c: Buffer) => chunks.push(c));
@@ -25,9 +21,18 @@ async function parseMultipartFile(req: VercelRequest): Promise<{ filename: strin
       });
       bb.on("finish", () => resolve(result));
       bb.on("error", reject);
-      (req as unknown as NodeJS.ReadableStream).pipe(bb as unknown as NodeJS.WritableStream);
+      req.pipe(bb);
     } catch (e) { reject(e); }
   });
+}
+
+function escapeHtml(s: string): string {
+  return String(s ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 const supabaseUrl = process.env.SUPABASE_URL!;
@@ -876,9 +881,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               to: [targetEmail],
               reply_to: visitorEmail,
               subject: `Nieuw contactverzoek: ${subject}`,
-              html: `<p>Je hebt een nieuw contactverzoek ontvangen van <b>${visitorName}</b> (${visitorEmail}).</p>
-                <p>${telnr ? `Telefoon: ${telnr}<br>` : ""}Onderwerp: ${subject}</p>
-                <pre>${message}</pre>`,
+              html: `<p>Je hebt een nieuw contactverzoek ontvangen van <b>${escapeHtml(visitorName)}</b> (${escapeHtml(visitorEmail)}).</p>
+                <p>${telnr ? `Telefoon: ${escapeHtml(telnr)}<br>` : ""}Onderwerp: ${escapeHtml(subject)}</p>
+                <pre>${escapeHtml(message)}</pre>`,
             }),
           });
         } catch (e) {
@@ -961,6 +966,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (!file) return res.status(400).json({ error: "No file uploaded" });
 
       const ext = (file.filename.split(".").pop() || "bin").toLowerCase().replace(/[^a-z0-9]/g, "");
+      if (!ALLOWED_IMAGE_MIMES.has(file.mime.toLowerCase()) || !ALLOWED_IMAGE_EXTS.has(ext)) {
+        return res.status(400).json({ error: "Only JPEG, PNG, WebP or GIF images are allowed" });
+      }
       const key = `profiles/${profileId}/${file.type}-${Date.now()}.${ext}`;
       const { error: upErr } = await supabase.storage.from("uploads").upload(key, file.buffer, { contentType: file.mime, upsert: false });
       if (upErr) return res.status(500).json({ error: upErr.message });
