@@ -14,25 +14,12 @@ import {
   GraduationCap,
   Users,
 } from "lucide-react";
-import { siteConfig } from "@/lib/theme.config";
+import { siteConfig, fillCopy } from "@/lib/theme.config";
 import type { Location } from "@shared/schema";
 import featuredGardenerImg from "@/assets/images/featured-gardener.jpg";
 
-// Quick start links (like "Snel starten" section)
-const quickStartLinks = [
-  { title: "De tuinman", href: "/info/de-tuinman", arrow: true },
-  { title: "Hoe vind ik een goede tuinman?", href: "/info/goede-tuinman-vinden", arrow: true },
-  { title: "Hoe werkt tuinaanleg?", href: "/info/hoe-werkt-tuinaanleg", arrow: true },
-  { title: "Verschil tussen tuinman en hovenier?", href: "/info/tuinman-vs-hovenier", arrow: true },
-  { title: "Kosten & prijzen", href: "/info/kosten-prijzen", arrow: true },
-  { title: "Artikelen", href: "/artikelen", arrow: true },
-  { title: "Veelgestelde vragen (FAQ)", href: "/faq", arrow: true },
-];
-
-// Experiences section links
-const experienceLinks = [
-  { title: "Lees wat tuinprojecten reeds betekend hebben voor anderen", href: "/ervaringen", arrow: true },
-];
+const quickStartLinks = siteConfig.homepage.quickStartLinks;
+const experienceLinks = siteConfig.homepage.experienceLinks;
 
 export default function Home() {
   const { data: locations = [], isLoading: locationsLoading } = useQuery<Location[]>({
@@ -47,8 +34,8 @@ export default function Home() {
   return (
     <Layout>
       <SEO
-        title="Vind de beste tuinmannen in België"
-        description="Zoek en vergelijk tuinmannen in jouw regio. Bekijk profielen, specialisaties en vraag gratis offertes aan. De grootste directory van tuinprofessionals in België."
+        title={fillCopy("Vind de beste {plural} in {country}")}
+        description={fillCopy("Zoek en vergelijk {plural} in jouw regio. Bekijk profielen, specialisaties en vraag gratis offertes aan. De grootste directory van {professionalPlural} in {country}.")}
         canonical="/"
         structuredData={structuredData}
       />
@@ -104,7 +91,7 @@ export default function Home() {
                 </nav>
 
                 <div className="mt-6 pt-4 border-t border-border">
-                  <h4 className="font-semibold text-base mb-3">Ervaringen met tuinmannen</h4>
+                  <h4 className="font-semibold text-base mb-3">{fillCopy("Ervaringen met {plural}")}</h4>
                   {experienceLinks.map((link, index) => (
                     <Link key={index} href={link.href}>
                       <span className="text-sm text-muted-foreground hover:text-primary transition-colors cursor-pointer">
@@ -128,19 +115,19 @@ export default function Home() {
                 <div className="relative h-40 bg-muted rounded-md mb-4 overflow-hidden">
                   <img 
                     src={featuredGardenerImg} 
-                    alt="Tuinman aan het werk" 
+                    alt={siteConfig.homepage.featuredImageAlt} 
                     className="w-full h-full object-cover opacity-90"
                   />
                 </div>
                 
-                <h4 className="font-medium mb-2">Vind de juiste tuinman</h4>
+                <h4 className="font-medium mb-2">{siteConfig.homepage.featuredHeading}</h4>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Bekijk onze uitgelichte professionals en ontdek wie het beste bij jouw project past.
+                  {siteConfig.homepage.featuredBody}
                 </p>
                 
-                <Link href="/zoek/tuinman">
+                <Link href="/zoek/alle">
                   <span className="text-sm text-primary hover:underline cursor-pointer">
-                    Bekijk alle tuinmannen <ArrowRight className="h-3 w-3 inline" />
+                    {fillCopy("Bekijk alle {plural}")} <ArrowRight className="h-3 w-3 inline" />
                   </span>
                 </Link>
               </CardContent>
@@ -203,7 +190,7 @@ export default function Home() {
           <div className="max-w-3xl mx-auto text-center">
             <Users className="h-12 w-12 mx-auto mb-4 opacity-80" />
             <h2 className="text-2xl sm:text-3xl font-bold mb-4">
-              Ben je tuinman?
+              {siteConfig.homepage.ctaTitle}
             </h2>
             <p className="text-primary-foreground/80 mb-8 text-lg">
               Word lid van {siteConfig.name} en bereik duizenden potentiële klanten in heel {siteConfig.country}.
@@ -216,9 +203,9 @@ export default function Home() {
                   Registreer gratis
                 </Button>
               </Link>
-              <Link href="/info/voor-tuinmannen">
+              <Link href={siteConfig.homepage.ctaInfoHref}>
                 <Button size="lg" variant="outline" className="gap-2 border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10">
-                  Meer informatie
+                  {siteConfig.homepage.ctaInfoLabel}
                 </Button>
               </Link>
             </div>

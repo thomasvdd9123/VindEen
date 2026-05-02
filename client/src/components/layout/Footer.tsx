@@ -1,24 +1,20 @@
 import { Link } from "wouter";
 import { Leaf, ExternalLink } from "lucide-react";
-import { siteConfig } from "@/lib/theme.config";
+import { siteConfig, fillCopy } from "@/lib/theme.config";
 import { openCookieSettings } from "@/lib/cookieConsent";
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
 
-  const categoryLinks = [
-    { href: "/zoek/tuinaanlegger", label: "Tuinaanleggers" },
-    { href: "/zoek/tuinarchitect", label: "Tuinarchitecten" },
-    { href: "/zoek/hovenier", label: "Hoveniers" },
-    { href: "/zoek/boomverzorger", label: "Boomverzorgers" },
-  ];
+  const categoryLinks = siteConfig.footer.categoryLinks.map((c) => ({
+    href: `/zoek/${c.slug}`,
+    label: c.label,
+  }));
 
-  const locationLinks = [
-    { href: "/zoek/tuinaanlegger/gent", label: "Tuinmannen Gent" },
-    { href: "/zoek/tuinaanlegger/antwerpen", label: "Tuinmannen Antwerpen" },
-    { href: "/zoek/tuinaanlegger/brussel", label: "Tuinmannen Brussel" },
-    { href: "/zoek/tuinaanlegger/brugge", label: "Tuinmannen Brugge" },
-  ];
+  const locationLinks = siteConfig.footer.popularCities.map((c) => ({
+    href: `/zoek/${c.postcode}-${c.slug}`,
+    label: fillCopy("{plural} ") + c.label,
+  }));
 
   const infoLinks = [
     { href: "/prijzen", label: "Prijzen" },
@@ -110,7 +106,7 @@ export function Footer() {
             <p className="text-sm text-muted-foreground">
               © {currentYear} {siteConfig.name}. Alle rechten voorbehouden.
             </p>
-            <a 
+            <a
               href={siteConfig.parentCompany.url}
               target="_blank"
               rel="noopener noreferrer"

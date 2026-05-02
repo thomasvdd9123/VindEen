@@ -130,6 +130,27 @@ shared/
 ## Seed Data
 Includes Belgian categories (Tuinonderhoud, Tuinaanleg) with specializations, major cities (Gent, Antwerpen, Brussel, Brugge, Leuven, Hasselt, Kortrijk) with sample verified profiles.
 
+## Rebrandable Theme (May 2026 — Task #2)
+The frontend has been refactored so a new vertical launches by editing
+`client/src/lib/theme.config.ts` + reseeding the DB catalogs. Concretely:
+- `siteConfig` now owns: businessType (singular/plural/article/professional),
+  country/currency, legal block, footer.categoryLinks + popularCities, full
+  homepage copy (quickStartLinks, experienceLinks, featured*, cta*),
+  faq.{forCustomers,forBusinesses,general}, and infoRoutes (must stay in
+  sync with `<Route>` entries in `App.tsx`).
+- Helpers: `fillCopy("...{plural}/{singular}/{article}/{country}/...")`,
+  `formatPrice(amount, { withCents })`, `legalValue()`, `legalAddress()`.
+- Hooks (no more hardcoded maps): `useSubscriptionOffers()` returns
+  `{ plans: PricingPlan[], defaultPlanId }` from `/api/subscription-plans`
+  (1 STANDARD plan × 1y/2y/3y offers). `useSpecializationMap()` returns
+  `{ slugToKey, keyToSlug, labelByKey, labelBySlug }` from
+  `/api/categories/grouped`.
+- Pages updated to consume the above: `Pricing.tsx`, `Onboarding.tsx`,
+  `dashboard/ProfilePayment.tsx`, `CategoryPage.tsx`, `Home.tsx`, `FAQ.tsx`,
+  `Footer.tsx`, `SearchBox.tsx`.
+- Practical-question catalog (Languages/PriceHour/YearsExperience) in
+  Onboarding still hardcoded — deferred.
+
 ## Schema Migration (May 2026) — Normalized / Vertical-Agnostic
 The DB has been fully migrated from the gardening-specific schema to a normalized
 schema where ALL catalogs are data, not enums or columns:

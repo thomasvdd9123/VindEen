@@ -20,27 +20,12 @@ import {
 import { ChevronLeft, ChevronRight, Leaf, MapPin, ArrowRight, List, Map } from "lucide-react";
 import type { Category, Location, ProfileWithRelations } from "@shared/schema";
 import { specializationLabels } from "@shared/schema";
-import { siteConfig } from "@/lib/theme.config";
+import { siteConfig, fillCopy } from "@/lib/theme.config";
+import { useSpecializationMap } from "@/lib/useSpecializations";
 
-// Specialization slug mapping (URL slug -> display name and API key)
-const specializationMap: Record<string, { key: string; label: string }> = {
-  "gras-maaien": { key: "GRAS_MAAIEN", label: "Gras maaien" },
-  "bomen-snoeien": { key: "SNOEIEN_BOMEN", label: "Bomen snoeien" },
-  "struiken-snoeien": { key: "SNOEIEN_STRUIKEN", label: "Struiken snoeien" },
-  "hagen-knippen": { key: "HAAG_KNIPPEN", label: "Hagen knippen" },
-  "onkruid-verwijderen": { key: "ONKRUID_VERWIJDEREN", label: "Onkruid verwijderen" },
-  "bladeren-ruimen": { key: "BLADEREN_RUIMEN", label: "Bladeren ruimen" },
-  "bemesting": { key: "BEMESTING", label: "Bemesting" },
-  "gazononderhoud": { key: "GAZONONDERHOUD", label: "Gazononderhoud" },
-  "grasaanleg": { key: "GRASAANLEG", label: "Grasaanleg" },
-  "paden-terrassen": { key: "PADEN_TERRASSEN", label: "Paden & terrassen" },
-  "houten-constructies": { key: "HOUTEN_CONSTRUCTIES", label: "Houten constructies" },
-  "afsluitingen": { key: "AFSLUITINGEN", label: "Afsluitingen & hekwerk" },
-  "vijvers": { key: "VIJVERS", label: "Vijvers & waterpartijen" },
-  "bestrating": { key: "BESTRATING", label: "Bestrating" },
-  "beplanting": { key: "BEPLANTING", label: "Beplanting" },
-  "irrigatie": { key: "IRRIGATIE", label: "Irrigatiesystemen" },
-};
+const businessPluralCap =
+  siteConfig.businessTypePlural.charAt(0).toUpperCase() +
+  siteConfig.businessTypePlural.slice(1);
 
 // Check if a slug looks like a location (starts with digits like "9000-gent")
 function isLocationSlug(slug: string): boolean {
@@ -69,6 +54,8 @@ export default function CategoryPage() {
   const urlParams = new URLSearchParams(searchString);
   const queryParam = urlParams.get("q") || "";
   const mainCategoryParam = urlParams.get("cat") || "";
+
+  const { slugToKey, labelBySlug } = useSpecializationMap();
 
   // Parse URL to determine location and specialization
   // New URL structure:
@@ -99,8 +86,8 @@ export default function CategoryPage() {
         locationPostcode: parsed?.postcode,
         fullLocationSlug: firstParam,
         specializationSlug: secondParam || null,
-        specializationKey: secondParam ? specializationMap[secondParam]?.key : null,
-        specializationLabel: secondParam ? specializationMap[secondParam]?.label : null,
+        specializationKey: secondParam ? slugToKey[secondParam] ?? null : null,
+        specializationLabel: secondParam ? labelBySlug[secondParam] ?? null : null,
         showAll: false,
       };
     } else {
@@ -110,12 +97,12 @@ export default function CategoryPage() {
         locationPostcode: null,
         fullLocationSlug: null,
         specializationSlug: firstParam,
-        specializationKey: specializationMap[firstParam]?.key || null,
-        specializationLabel: specializationMap[firstParam]?.label || null,
+        specializationKey: slugToKey[firstParam] ?? null,
+        specializationLabel: labelBySlug[firstParam] ?? null,
         showAll: false,
       };
     }
-  }, [params.locationOrSpec, params.specialization]);
+  }, [params.locationOrSpec, params.specialization, slugToKey, labelBySlug]);
 
   const { locationSlug, fullLocationSlug, specializationSlug, specializationKey, specializationLabel, showAll } = parsedUrl;
 
@@ -181,56 +168,53 @@ export default function CategoryPage() {
   // Build page title based on URL structure
   const pageTitle = useMemo(() => {
     if (showAll) {
-      return "Alle tuinmannen";
+      return `Alle ${siteConfig.businessTypePlural}`;
     }
-    
+
     const parts: string[] = [];
-    
     if (specializationLabel) {
       parts.push(specializationLabel);
     } else {
-      parts.push("Tuinmannen");
+      parts.push(businessPluralCap);
     }
-    
     if (location?.name) {
       parts.push(`in ${location.name}`);
     }
-    
     return parts.join(" ");
   }, [showAll, specializationLabel, location?.name]);
 
   // SEO: Generate unique title and description for each location/specialization combo
   const seoTitle = useMemo(() => {
     if (showAll) {
-      return "Alle tuinmannen in België - Vind jouw tuinprofessional";
+      return fillCopy(`Alle {plural} in {country} - Vind jouw {professional}`);
     }
     if (location && specializationLabel) {
-      return `${specializationLabel} in ${location.name} (${location.postcode}) - Tuinmannen`;
+      return `${specializationLabel} in ${location.name} (${location.postcode}) - ${businessPluralCap}`;
     }
     if (location) {
-      return `Tuinmannen in ${location.name} (${location.postcode}) - Vind lokale tuinprofessionals`;
+      return fillCopy(`${businessPluralCap} in ${location.name} (${location.postcode}) - Vind lokale {professionalPlural}`);
     }
     if (specializationLabel) {
-      return `${specializationLabel} - Gespecialiseerde tuinmannen in België`;
+      return fillCopy(`${specializationLabel} - Gespecialiseerde {plural} in {country}`);
     }
-    return "Tuinmannen in België";
+    return fillCopy(`${businessPluralCap} in {country}`);
   }, [showAll, location, specializationLabel]);
 
   const seoDescription = useMemo(() => {
-    const resultText = total > 0 ? `${total} tuinmannen gevonden.` : "";
+    const resultText = total > 0 ? `${total} ${siteConfig.businessTypePlural} gevonden.` : "";
     if (showAll) {
-      return `Bekijk alle tuinmannen in België. ${resultText} Vergelijk profielen, bekijk specialisaties en vraag gratis offertes aan.`;
+      return fillCopy(`Bekijk alle {plural} in {country}. ${resultText} Vergelijk profielen, bekijk specialisaties en vraag gratis offertes aan.`);
     }
     if (location && specializationLabel) {
-      return `Zoek ${specializationLabel.toLowerCase()} in ${location.name}. ${resultText} Bekijk profielen van lokale tuinprofessionals en vraag direct een offerte aan.`;
+      return fillCopy(`Zoek ${specializationLabel.toLowerCase()} in ${location.name}. ${resultText} Bekijk profielen van lokale {professionalPlural} en vraag direct een offerte aan.`);
     }
     if (location) {
-      return `Vind de beste tuinmannen in ${location.name} (${location.postcode}). ${resultText} Bekijk profielen, specialisaties en contacteer direct.`;
+      return fillCopy(`Vind de beste {plural} in ${location.name} (${location.postcode}). ${resultText} Bekijk profielen, specialisaties en contacteer direct.`);
     }
     if (specializationLabel) {
-      return `Zoek tuinmannen gespecialiseerd in ${specializationLabel.toLowerCase()}. ${resultText} Vergelijk professionals in heel België.`;
+      return fillCopy(`Zoek {plural} gespecialiseerd in ${specializationLabel.toLowerCase()}. ${resultText} Vergelijk professionals in heel {country}.`);
     }
-    return "Zoek en vergelijk tuinmannen in België.";
+    return fillCopy(`Zoek en vergelijk {plural} in {country}.`);
   }, [showAll, location, specializationLabel, total]);
 
   // Build canonical URL (without query params to avoid duplicates)
@@ -313,7 +297,7 @@ export default function CategoryPage() {
               <BreadcrumbSeparator />
               <BreadcrumbItem>
                 <BreadcrumbLink asChild>
-                  <Link href="/" data-testid="breadcrumb-tuinman">Zoek een tuinman</Link>
+                  <Link href="/" data-testid="breadcrumb-search">{fillCopy("Zoek {article}")}</Link>
                 </BreadcrumbLink>
               </BreadcrumbItem>
               {/* Location breadcrumb (if present) */}
@@ -435,7 +419,7 @@ export default function CategoryPage() {
             <div className="text-center py-16">
               <Leaf className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
               <h3 className="font-semibold text-xl mb-2">
-                Geen {specializationLabel?.toLowerCase() || "tuinmannen"} gevonden
+                Geen {specializationLabel?.toLowerCase() || siteConfig.businessTypePlural} gevonden
                 {location && ` in ${location.name}`}
               </h3>
               <p className="text-muted-foreground mb-6 max-w-md mx-auto">
@@ -459,8 +443,8 @@ export default function CategoryPage() {
                 )}
                 {locationSlug && !specializationSlug && (
                   <Link href="/">
-                    <Button variant="outline" data-testid="button-search-all-belgium">
-                      Zoek in heel België
+                    <Button variant="outline" data-testid="button-search-all-country">
+                      Zoek in heel {siteConfig.country}
                     </Button>
                   </Link>
                 )}

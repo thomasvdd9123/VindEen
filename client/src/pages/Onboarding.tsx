@@ -37,20 +37,8 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import type { Category, Location } from "@shared/schema";
-
-const BELGIAN_PROVINCES = [
-  "Antwerpen",
-  "Brussel",
-  "Henegouwen",
-  "Limburg",
-  "Luik",
-  "Luxemburg",
-  "Namen",
-  "Oost-Vlaanderen",
-  "Vlaams-Brabant",
-  "Waals-Brabant",
-  "West-Vlaanderen",
-];
+import { formatPrice } from "@/lib/theme.config";
+import { useSubscriptionOffers } from "@/lib/useSubscriptionOffers";
 
 const personalSchema = z.object({
   firstName: z.string().min(2, "Voornaam is verplicht"),
@@ -100,45 +88,19 @@ const steps = [
   { id: 5, title: "Betaling", icon: CreditCard },
 ];
 
-// Pricing plans: 1 year, 2 years (5% discount), 3 years (10% discount)
-const BASE_YEARLY_PRICE = 156;
-const pricingPlans = [
-  { 
-    id: "1-year", 
-    years: 1, 
-    discount: 0, 
-    totalPrice: BASE_YEARLY_PRICE,
-    pricePerYear: BASE_YEARLY_PRICE,
-    label: "1 jaar",
-    popular: false
-  },
-  { 
-    id: "2-year", 
-    years: 2, 
-    discount: 5, 
-    totalPrice: Math.round(BASE_YEARLY_PRICE * 2 * 0.95 * 100) / 100,
-    pricePerYear: Math.round(BASE_YEARLY_PRICE * 0.95 * 100) / 100,
-    label: "2 jaar",
-    popular: true
-  },
-  { 
-    id: "3-year", 
-    years: 3, 
-    discount: 10, 
-    totalPrice: Math.round(BASE_YEARLY_PRICE * 3 * 0.90 * 100) / 100,
-    pricePerYear: Math.round(BASE_YEARLY_PRICE * 0.90 * 100) / 100,
-    label: "3 jaar",
-    popular: false
-  },
-];
-
 function OnboardingContent() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const { user, updateUserMetadata, getUserMetadata } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState("2-year"); // Default to popular option
+  const { plans: pricingPlans, defaultPlanId } = useSubscriptionOffers();
+  const [selectedPlan, setSelectedPlan] = useState<string>("");
+  useEffect(() => {
+    if (!selectedPlan && defaultPlanId) setSelectedPlan(defaultPlanId);
+  }, [defaultPlanId, selectedPlan]);
+  const baseYearlyPrice = pricingPlans.find((p) => p.years === 1)?.pricePerYear
+    ?? (pricingPlans[0]?.pricePerYear ?? 0);
   const [createdProfileId, setCreatedProfileId] = useState<string | null>(null);
   const [createdAccountId, setCreatedAccountId] = useState<string | null>(null);
   
@@ -1007,15 +969,15 @@ function OnboardingContent() {
                               )}
                             </div>
                             <p className="text-sm text-muted-foreground">
-                              €{plan.pricePerYear.toFixed(2)}/jaar
+                              {formatPrice(plan.pricePerYear, { withCents: true })}/jaar
                             </p>
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="font-bold text-lg">€{plan.totalPrice.toFixed(2)}</div>
-                          {plan.discount > 0 && (
+                          <div className="font-bold text-lg">{formatPrice(plan.totalPrice, { withCents: true })}</div>
+                          {plan.discount > 0 && baseYearlyPrice > 0 && (
                             <div className="text-xs text-muted-foreground line-through">
-                              €{(BASE_YEARLY_PRICE * plan.years).toFixed(2)}
+                              {formatPrice(baseYearlyPrice * plan.years, { withCents: true })}
                             </div>
                           )}
                         </div>
@@ -1067,7 +1029,7 @@ function OnboardingContent() {
                   </Button>
                   <Button 
                     onClick={handlePaymentSubmit} 
-                    disabled={isSubmitting} 
+                    disabled={isSubmitting || !selectedPlan || pricingPlans.length === 0} 
                     className="gap-2" 
                     data-testid="button-pay"
                   >
@@ -1076,7 +1038,10 @@ function OnboardingContent() {
                     ) : (
                       <CreditCard className="h-4 w-4" />
                     )}
-                    Betalen - €{pricingPlans.find(p => p.id === selectedPlan)?.totalPrice.toFixed(2)}
+                    Betalen - {(() => {
+                      const tot = pricingPlans.find((p) => p.id === selectedPlan)?.totalPrice;
+                      return tot != null ? formatPrice(tot, { withCents: true }) : "";
+                    })()}
                   </Button>
                 </div>
               </CardContent>

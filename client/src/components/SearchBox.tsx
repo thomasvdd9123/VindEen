@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, MapPin } from "lucide-react";
 import type { Location } from "@shared/schema";
+import { siteConfig, fillCopy } from "@/lib/theme.config";
+import { useSpecializationMap } from "@/lib/useSpecializations";
 
 // Types for grouped categories API response
 interface CategoryOption {
@@ -140,25 +142,8 @@ export function SearchBox({
     }
   }, [cityQuery, locations, isUserTyping]);
 
-  // Specialization key to URL slug mapping
-  const specKeyToSlug: Record<string, string> = {
-    GRAS_MAAIEN: "gras-maaien",
-    SNOEIEN_BOMEN: "bomen-snoeien",
-    SNOEIEN_STRUIKEN: "struiken-snoeien",
-    HAAG_KNIPPEN: "hagen-knippen",
-    ONKRUID_VERWIJDEREN: "onkruid-verwijderen",
-    BLADEREN_RUIMEN: "bladeren-ruimen",
-    BEMESTING: "bemesting",
-    GAZONONDERHOUD: "gazononderhoud",
-    GRASAANLEG: "grasaanleg",
-    PADEN_TERRASSEN: "paden-terrassen",
-    HOUTEN_CONSTRUCTIES: "houten-constructies",
-    AFSLUITINGEN: "afsluitingen",
-    VIJVERS: "vijvers",
-    BESTRATING: "bestrating",
-    BEPLANTING: "beplanting",
-    IRRIGATIE: "irrigatie",
-  };
+  // Specialization key ↔ URL slug — derived from /api/categories/grouped
+  const { keyToSlug: specKeyToSlug } = useSpecializationMap();
 
   const handleSearch = () => {
     // New URL structure:
@@ -342,8 +327,8 @@ export function SearchBox({
             data-testid="button-search-hero"
           >
             {showCount && totalCount > 0 
-              ? `Toon ${totalCount} tuinmannen`
-              : "Zoek tuinmannen"
+              ? `Toon ${totalCount} ${siteConfig.businessTypePlural}`
+              : fillCopy("Zoek {plural}")
             }
           </Button>
         </div>
