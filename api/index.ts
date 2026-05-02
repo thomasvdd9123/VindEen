@@ -197,13 +197,17 @@ async function applyProfileJunctions(profileId: string, body: Record<string, any
     if (rows.length) await supabase.from("profile_service_area").insert(rows);
   }
 
-  if (body.office || body.officeStreet !== undefined || body.officePostcode !== undefined || body.locationId) {
+  if (body.office || body.officeStreet !== undefined || body.officePostcode !== undefined || body.locationId || body.hideAddress !== undefined) {
     const o = body.office || {
       street: body.officeStreet,
       number: body.officeNumber,
       municipality: body.officeTown,
       postcode: body.officePostcode,
     };
+    // top-level hideAddress (from edit form) overrides nested office.showAddress
+    if (body.hideAddress !== undefined && o.showAddress === undefined && o.show_address === undefined) {
+      o.showAddress = !body.hideAddress;
+    }
     const { data: prof } = await supabase.from("profile").select("office_address_id").eq("id", profileId).single();
     const existingAddrId = (prof as { office_address_id: string | null } | null)?.office_address_id || null;
     const { data: cfg } = await supabase.from("site_config").select("default_country_name").limit(1).single();
@@ -401,6 +405,7 @@ async function hydrateProfile(p: any, opts: { withPracticals?: boolean } = {}) {
     location,
     location_id: firstArea?.id || null,
     office,
+    hide_address: office ? office.showAddress === false : false,
     practical,
     specializations: specSlugs,
     main_categories: mainCats,
@@ -1017,8 +1022,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (body.telnr !== undefined) update.telnr = body.telnr;
       if (body.website !== undefined) update.websiteurl = body.website;
       if (body.hasWebsite !== undefined) update.has_website = body.hasWebsite;
-      if (body.introduction !== undefined) update.introduction = body.introduction;
-      if (body.description !== undefined) update.introduction = body.description;
+      // introduction & description collapse into the single `introduction` column.
+      // Prefer non-empty introduction; only fall back to description when introduction
+      // is missing/empty so the longer description never silently wipes the intro.
+      if (body.introduction !== undefined && String(body.introduction).trim() !== "") {
+        update.introduction = body.introduction;
+      } else if (body.description !== undefined && String(body.description).trim() !== "") {
+        update.introduction = body.description;
+      } else if (body.introduction === "" || body.description === "") {
+        update.introduction = body.introduction ?? body.description ?? "";
+      }
       if (body.title !== undefined) update.title = body.title;
       if (body.logoUrl !== undefined) update.logourl = body.logoUrl;
       if (body.imageUrls !== undefined) update.imageurls = body.imageUrls;
