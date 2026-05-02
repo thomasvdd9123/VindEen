@@ -179,16 +179,20 @@ async function applyProfileJunctions(profileId: string, body: Record<string, any
     if (rows.length) await supabase.from("profile_service_category").insert(rows);
   }
 
-  if (Array.isArray(body.serviceAreas)) {
+  // Service-area mapping: nieuwe `serviceAreas` array OF legacy `locationId` (1 area)
+  const serviceAreaInputs: string[] = Array.isArray(body.serviceAreas)
+    ? body.serviceAreas
+    : (body.locationId ? [String(body.locationId)] : []);
+  if (serviceAreaInputs.length || Array.isArray(body.serviceAreas) || body.locationId !== undefined) {
     await supabase.from("profile_service_area").delete().eq("profile_id", profileId);
-    const rows = body.serviceAreas
+    const rows = serviceAreaInputs
       .map((slugOrId: string) => serviceAreas.find((a) => a.id === slugOrId || a.slug === slugOrId))
       .filter(Boolean)
       .map((a: any) => ({ profile_id: profileId, service_area_id: a.id }));
     if (rows.length) await supabase.from("profile_service_area").insert(rows);
   }
 
-  if (body.office || body.officeStreet !== undefined || body.officePostcode !== undefined) {
+  if (body.office || body.officeStreet !== undefined || body.officePostcode !== undefined || body.locationId) {
     const o = body.office || {
       street: body.officeStreet,
       number: body.officeNumber,
@@ -198,14 +202,28 @@ async function applyProfileJunctions(profileId: string, body: Record<string, any
     const { data: prof } = await supabase.from("profile").select("office_address_id").eq("id", profileId).single();
     const existingAddrId = (prof as { office_address_id: string | null } | null)?.office_address_id || null;
     const { data: cfg } = await supabase.from("site_config").select("default_country_name").limit(1).single();
+    // Lat/lng back-fill via service_area wanneer client geen coords stuurt
+    let lat = o.latitude ?? null;
+    let lng = o.longitude ?? null;
+    let municipality = o.municipality ?? o.town ?? null;
+    let postcode = o.postcode ?? null;
+    if ((!lat || !lng) && body.locationId) {
+      const area = serviceAreas.find((a) => a.id === body.locationId || a.slug === body.locationId);
+      if (area) {
+        if (!lat) lat = area.latitude ?? null;
+        if (!lng) lng = area.longitude ?? null;
+        if (!municipality) municipality = area.municipality;
+        if (!postcode) postcode = area.postcode;
+      }
+    }
     const payload: Record<string, any> = {
       street: o.street ?? null,
       number: o.number ?? null,
-      municipality: o.municipality ?? o.town ?? null,
-      postcode: o.postcode ?? null,
+      municipality,
+      postcode,
       country: o.country ?? (cfg as { default_country_name: string } | null)?.default_country_name ?? null,
-      latitude: o.latitude ?? null,
-      longitude: o.longitude ?? null,
+      latitude: lat,
+      longitude: lng,
       show_address: o.showAddress ?? o.show_address ?? true,
     };
     if (existingAddrId) {
