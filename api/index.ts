@@ -40,7 +40,10 @@ const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
 const supabaseAnonKey = process.env.SUPABASE_ANON_KEY!;
 
-const SITEMAP_BASE_URL = "https://www.zoek-een-tuinman.be";
+// Per-vertical branding (override via env so a rebrand only requires env change).
+const SITE_BASE_URL = process.env.SITE_BASE_URL || "https://www.zoek-een-tuinman.be";
+const SITE_EMAIL_FROM = process.env.SITE_EMAIL_FROM || "Zoek-een-tuinman.be <noreply@zoek-een-tuinman.be>";
+const SITEMAP_BASE_URL = SITE_BASE_URL;
 
 // ---------------------------------------------------------------------------
 // AUTH — verify Supabase Bearer token uit Authorization header
@@ -445,6 +448,41 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (method === "GET" && path === "/api/categories") {
       const { specializations, serviceCategories } = await getCatalogs();
       return res.status(200).json(specializations.map((s) => legacyCategoryFromSpec(s, serviceCategories)));
+    }
+
+    // Normalized catalog endpoints (vertical-agnostic naming).
+    if (method === "GET" && path === "/api/service-categories") {
+      const { serviceCategories } = await getCatalogs();
+      return res.status(200).json(serviceCategories.map((c) => ({
+        id: c.id, name: c.name, slug: c.slug, description: c.description, sortOrder: c.sort_order,
+      })));
+    }
+    if (method === "GET" && path === "/api/specializations") {
+      const { specializations, serviceCategories } = await getCatalogs();
+      return res.status(200).json(specializations.map((s) => ({
+        id: s.id, name: s.name, slug: s.slug, description: s.description,
+        serviceCategorySlug: serviceCategories.find((c) => c.id === s.service_category_id)?.slug ?? null,
+        sortOrder: s.sort_order,
+      })));
+    }
+    if (method === "GET" && path === "/api/practical-questions") {
+      const { data: questions } = await supabase
+        .from("practical_question").select("*").order("sort_order");
+      const { data: options } = await supabase
+        .from("practical_option").select("*").order("sort_order");
+      const out = (questions || []).map((q: any) => ({
+        id: q.id,
+        key: q.key,
+        camelKey: q.key.charAt(0).toLowerCase() + q.key.slice(1),
+        name: q.name,
+        fieldType: q.field_type,
+        isMulti: q.is_multi,
+        isRequired: q.is_required,
+        sortOrder: q.sort_order,
+        options: (options || []).filter((o: any) => o.practical_question_id === q.id)
+          .map((o: any) => ({ id: o.id, key: o.key, name: o.name })),
+      }));
+      return res.status(200).json(out);
     }
 
     if (method === "GET" && path === "/api/categories/grouped") {
@@ -897,7 +935,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             method: "POST",
             headers: { Authorization: `Bearer ${resendApiKey}`, "Content-Type": "application/json" },
             body: JSON.stringify({
-              from: "Zoek-een-tuinman.be <noreply@zoek-een-tuinman.be>",
+              from: SITE_EMAIL_FROM,
               to: [targetEmail],
               reply_to: visitorEmail,
               subject: `Nieuw contactverzoek: ${subject}`,
@@ -1287,7 +1325,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         subscription = data;
       }
 
-      const baseUrl = "https://www.zoek-een-tuinman.be";
+      const baseUrl = SITE_BASE_URL;
       const total = (offer as any).total_price;
       const { data: cfgRow } = await supabase.from("site_config").select("default_currency_code").limit(1).single();
       const currency = (cfgRow as any)?.default_currency_code || "EUR";

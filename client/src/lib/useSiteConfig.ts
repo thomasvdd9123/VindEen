@@ -32,14 +32,14 @@ const CURRENCY_SYMBOLS: Record<string, string> = {
 export function useSiteConfig() {
   const query = useQuery<SiteConfigResponse>({
     queryKey: ["/api/site-config"],
-    staleTime: 5 * 60 * 1000,
+    staleTime: Infinity,
   });
 
   const currencyCode = query.data?.defaultCurrencyCode ?? themeConfig.currency;
   const currencySymbol = CURRENCY_SYMBOLS[currencyCode] ?? themeConfig.currencySymbol;
   const country = query.data?.defaultCountryName ?? themeConfig.country;
   const language = query.data?.defaultLanguage ?? themeConfig.defaultLanguage;
-  const vatPercentage = query.data?.defaultVatPercentage ?? 21;
+  const vatPercentage = query.data?.defaultVatPercentage ?? null;
   const postcodePattern = query.data?.postcodePattern ?? null;
   const phonePattern = query.data?.phonePattern ?? null;
   const phoneCountryCode = query.data?.phoneCountryCode ?? null;

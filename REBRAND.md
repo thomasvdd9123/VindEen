@@ -25,17 +25,18 @@ The categories, specializations, plans and practical questions live in the DB.
 Reseed them with your vertical's data:
 
 ```bash
-# Tuinman (default)
+# Tuinman (default — full seed: catalogs + plans + practical questions + 6 test users)
 tsx scripts/seed/seed-catalogs.ts
 
-# Kapper example (illustrative — copy logic into seed-catalogs.ts to actually run)
+# Kapper example (catalog-only reseed: TRUNCATEs service_category +
+# specialization and reinserts the kapper taxonomy. Plans, practical
+# questions, service_areas and site_config are left untouched.)
 tsx scripts/seed/seed-kapper-example.ts
 ```
 
-`scripts/seed/seed-kapper-example.ts` shows which arrays
-(`SERVICE_CATEGORIES`, `SPECIALIZATIONS`) need to change. The rest of the seed
-(`subscription_plan`, `billing_cycle`, `payment_provider`,
-`practical_question`, …) can stay as-is.
+The rest of the seed (`subscription_plan`, `billing_cycle`,
+`payment_provider`, `practical_question`, …) is vertical-agnostic and can stay
+as-is across rebrands.
 
 ## 3. Update App.tsx info routes
 
@@ -49,8 +50,10 @@ line up. If you skip this step, footer / homepage links will 404.
 - Visit `/`, `/zoek/<some-postcode>-<city>`, `/prijzen`, `/faq` and confirm the
   copy reflects the new vertical.
 - Pricing comes from `/api/subscription-plans`; specializations from
-  `/api/categories/grouped`; site config from `/api/site-config`. None of those
-  are hardcoded in the frontend.
+  `/api/categories/grouped` (legacy, grouped) or `/api/specializations` +
+  `/api/service-categories` (normalized); practical questions from
+  `/api/practical-questions`; site config from `/api/site-config`. None of
+  those are hardcoded in the frontend.
 
 ## What is NOT hardcoded anymore
 
@@ -67,8 +70,9 @@ line up. If you skip this step, footer / homepage links will 404.
 
 ## Known deferred items
 
-- Practical question UI (Languages / PriceHour / YearsExperience) is not yet
-  rendered in the onboarding flow. The DB tables (`practical_question`,
-  `practical_option`, `practical_answer`) and the API hydration exist; the
-  form rendering still needs to be added to `Onboarding.tsx` /
-  `dashboard/ProfileEdit.tsx` for full per-vertical practicals.
+- Practical question UI is now rendered dynamically in `Onboarding.tsx` (step 3)
+  via `usePracticalQuestions()` against `/api/practical-questions`. Adding,
+  removing or renaming a question in the DB is reflected in the UI without
+  any code change. The same dynamic block has not yet been added to
+  `dashboard/ProfileEdit.tsx` — values can still be persisted via the API but
+  there is no edit form yet.

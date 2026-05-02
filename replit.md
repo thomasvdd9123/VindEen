@@ -1,253 +1,7 @@
 # Zoek-een-tuinman.be - Belgian B2B Directory Platform
 
 ## Overview
-A SEO-optimized directory platform for Belgian businesses (inspired by vind-een-psycholoog.be), starting with gardening professionals. The platform allows companies to register, create profiles, and be discoverable by potential customers.
-
-## Project Goals
-- Create a comprehensive business directory platform
-- SEO-optimized with dynamic category/location pages
-- Easy to rebrand for different industries
-- Export-ready for Vercel deployment
-
-## Tech Stack
-- **Frontend**: React 18 + TypeScript + Vite
-- **Styling**: Tailwind CSS + Shadcn UI components
-- **Routing**: Wouter
-- **State Management**: TanStack Query
-- **Backend**: Express.js + Node.js
-- **Database**: Supabase (PostgreSQL) exclusively - no Replit in-house database
-- **Auth**: Supabase Auth (implemented)
-- **Payments**: Mollie (planned)
-- **Email**: Resend (planned)
-
-## Key Features (MVP)
-- ✅ Homepage with hero, search, featured profiles
-- ✅ Dynamic search pages with new URL structure (location-first like competitor)
-- ✅ Profile detail pages (/bedrijf/[slug])
-- ✅ Contact form for profiles
-- ✅ Search and filtering with specialization filters
-- ✅ SEO-optimized meta tags
-- ✅ Mobile-first responsive design
-- ✅ Green tuinman theme with centralized configuration
-- ✅ Supabase authentication (login, register, password reset)
-- ✅ Dashboard with Shadcn Sidebar navigation
-- ✅ Account & Billing page (Belgian business settings)
-- ✅ Profile management for businesses
-- ✅ Password reset flow (/wachtwoord-reset)
-- ✅ Multi-step onboarding wizard for new signups (/onboarding)
-- ✅ Map view for search results with Leaflet
-- ✅ 572 Belgian municipalities with postcodes, coordinates for autocomplete search and SEO
-- ✅ Multi-sitemap structure for SEO (like competitor vind-een-psycholoog.be)
-
-## URL Structure (SEO-optimized, competitor-matching)
-```
-/zoek/{postcode}-{city}                    → Location only (e.g., /zoek/9000-gent)
-/zoek/{postcode}-{city}/{specialization}   → Location + Specialization (e.g., /zoek/9000-gent/gras-maaien)
-/zoek/{specialization}                     → Specialization only (e.g., /zoek/gras-maaien)
-/bedrijf/{slug}                            → Profile detail page
-```
-
-## Sitemap Structure
-Multi-sitemap architecture following competitor pattern:
-- `/sitemap.xml` - Main sitemap index (lists all sub-sitemaps)
-- `/sitemaps/site/sitemap.xml` - Homepage and auth pages
-- `/sitemaps/info/sitemap.xml` - Static info pages (FAQ, contact, pricing, etc.)
-- `/sitemaps/profiles/sitemap.xml` - All business profile pages
-- `/sitemaps/locations/sitemap.xml` - All 572 Belgian postcodes/cities
-- `/sitemaps/specializations/sitemap.xml` - All 16 specializations
-- `/sitemaps/location-specs/sitemap-{n}.xml` - Location × Specialization combos (9000+ URLs, paginated)
-
-### Google Search Console Setup
-1. Go to https://search.google.com/search-console
-2. Add property: `https://www.zoek-een-tuinman.be`
-3. Verify ownership (HTML file method is already set up: `/googlec82c9dc9a541d03e.html`)
-4. Go to "Sitemaps" in left menu
-5. Submit sitemap URL: `https://www.zoek-een-tuinman.be/sitemap.xml`
-6. Google will automatically discover all sub-sitemaps from the index
-
-## Configuration
-
-### Theme Configuration
-All branding is centralized in `client/src/lib/theme.config.ts`:
-- Site name, tagline, description
-- URL patterns
-- Contact info
-- Business type (easily changeable for rebranding)
-
-### Colors
-Defined in `client/src/index.css`:
-- Primary: Green (#1B7340 / hsl(142, 72%, 29%))
-- Light mode and dark mode support
-- Based on vind-een-psycholoog.be design
-
-### Fonts
-- Sans: Open Sans, Inter
-- Serif: Merriweather
-- Mono: JetBrains Mono
-
-## Project Structure
-```
-client/
-├── src/
-│   ├── components/
-│   │   ├── layout/          # Header, Footer, Layout
-│   │   ├── ui/              # Shadcn components
-│   │   ├── ContactForm.tsx
-│   │   ├── ProfileCard.tsx
-│   │   └── SearchBox.tsx
-│   ├── pages/
-│   │   ├── Home.tsx
-│   │   ├── CategoryPage.tsx
-│   │   ├── ProfilePage.tsx
-│   │   ├── Login.tsx
-│   │   └── Register.tsx
-│   └── lib/
-│       ├── theme.config.ts  # Centralized branding
-│       ├── supabase.ts      # Supabase client
-│       └── queryClient.ts   # TanStack Query
-server/
-├── routes.ts                # API endpoints
-├── storage.ts               # Data layer with seed data
-└── lib/
-    └── supabase.ts          # Server Supabase client
-shared/
-└── schema.ts                # TypeScript types & Drizzle schema
-```
-
-## API Endpoints
-- `GET /api/categories` - List all categories
-- `GET /api/categories/:slug` - Get category by slug
-- `GET /api/locations` - List all locations
-- `GET /api/locations/:slug` - Get location by slug
-- `GET /api/profiles/featured` - Get featured profiles
-- `GET /api/profiles/search` - Search profiles with filters
-- `GET /api/profiles/:slug` - Get profile by slug
-- `POST /api/contact/:profileId` - Submit contact form
-- `POST /api/accounts` - Get or create account for user (dashboard auth, uses authUserId)
-- `POST /api/businesses` - Legacy endpoint (redirects to /api/accounts)
-- `GET /api/my-profiles/:accountId` - Get profiles owned by account
-
-## Seed Data
-Includes Belgian categories (Tuinonderhoud, Tuinaanleg) with specializations, major cities (Gent, Antwerpen, Brussel, Brugge, Leuven, Hasselt, Kortrijk) with sample verified profiles.
-
-## Rebrandable Theme (May 2026 — Task #2)
-The frontend has been refactored so a new vertical launches by editing
-`client/src/lib/theme.config.ts` + reseeding the DB catalogs. Concretely:
-- `siteConfig` now owns: businessType (singular/plural/article/professional),
-  country/currency, legal block, footer.categoryLinks + popularCities, full
-  homepage copy (quickStartLinks, experienceLinks, featured*, cta*),
-  faq.{forCustomers,forBusinesses,general}, and infoRoutes (must stay in
-  sync with `<Route>` entries in `App.tsx`).
-- Helpers: `fillCopy("...{plural}/{singular}/{article}/{country}/...")`,
-  `formatPrice(amount, { withCents })`, `legalValue()`, `legalAddress()`.
-- Hooks (no more hardcoded maps):
-  - `useSubscriptionOffers()` → `{ plans: PricingPlan[], defaultPlanId }` from
-    `/api/subscription-plans`. Each plan exposes both legacy `id` ("{N}-year")
-    and the DB `offerId` (uuid); Mollie create-payment uses `offerId` directly
-    (legacy planId still accepted for back-compat).
-  - `useSpecializationMap()` → `{ slugToKey, keyToSlug, labelByKey, labelBySlug }`
-    from `/api/categories/grouped`. Used by SearchBox / CategoryPage /
-    ProfileEdit / ProfileCreate (no more TUINONDERHOUD/TUINAANLEG fallbacks).
-  - `useSiteConfig()` → currency, country, language, vatPercentage, postcode/
-    phone patterns from `/api/site-config` (with theme.config fallbacks).
-- Pages updated to consume the above: `Pricing.tsx`, `Onboarding.tsx`,
-  `dashboard/ProfilePayment.tsx`, `dashboard/ProfileEdit.tsx`,
-  `dashboard/ProfileCreate.tsx`, `CategoryPage.tsx`, `Home.tsx`, `FAQ.tsx`,
-  `Footer.tsx`, `SearchBox.tsx`.
-- Race-condition fix: `SearchBox` now syncs local `selectedSpecialization`
-  state when its `initialSpecialization` prop resolves async (CategoryPage
-  resolves the slug→key map after mount).
-- Rebrand example: `client/src/lib/theme.config.kapper.example.ts`,
-  `scripts/seed/seed-kapper-example.ts`, and `REBRAND.md` at repo root document
-  the swap procedure.
-- Practical-question catalog (Languages/PriceHour/YearsExperience) UI is not
-  yet rendered in onboarding/profile-edit. Backend tables + API hydration
-  exist; the form rendering remains deferred.
-
-## Schema Migration (May 2026) — Normalized / Vertical-Agnostic
-The DB has been fully migrated from the gardening-specific schema to a normalized
-schema where ALL catalogs are data, not enums or columns:
-- `migrations/001_normalized_schema.sql` — applied via Supabase Session Pooler
-- `scripts/seed/seed-catalogs.ts` — seeds all reference data + 6 test practitioners
-  (tuinman1@test.be … tuinman6@test.be, password `Test1234!`)
-- 31 tables: `address`, `practitioner` (was accounts), `practitioner_type`,
-  `profile`, `service_category`, `specialization`, `offered_service`,
-  `service_area` (was locations, 572 BE municipalities), `practical_question` +
-  `practical_option`, `subscription_plan` + `subscription_plan_offer` +
-  `profile_subscription`, `payment`, `contact_request`, `site_config`, etc.
-- `shared/schema.ts` rewritten in Drizzle to mirror the new DB. Backwards-compat
-  type aliases (`Category`, `Location`, `Account`, `ProfileWithRelations`,
-  `specializationLabels`, `contactFormSchema`) are appended at the bottom so the
-  existing frontend keeps compiling.
-- `api/index.ts` (~700 lines, single Vercel-compatible handler) hydrates the
-  legacy camelCase shape from the new tables so the React app keeps working
-  without page rewrites.
-- `server/routes.ts` mounts the handler for `/api`, `/sitemap.xml`, `/robots.txt`,
-  `/sitemaps/*` and Google verification HTML files.
-- Old files deleted: `server/storage.ts`, `server/supabase-storage.ts`.
-- Deferred (must be re-added after verticals decision): Resend email hook on
-  payment success, Discord webhook notifications, Billit/Peppol invoice push
-  inside the Mollie webhook.
-
-## Earlier Schema Changes (Jan 2026)
-- **Accounts Naming**: Renamed `businesses` table to `accounts` with clear hierarchy: **Accounts** (login, VAT, billing) → **Profiles** (service listings) → **Offices** (locations)
-- **Belgian B2B Fields**: Added VAT number (BE0123456789 format), company name, and billing address fields to accounts table
-- **Auth User ID**: Changed `accountId` to `authUserId` in accounts table to clearly reference Supabase Auth UUID
-- **Categories**: Two main categories: `TUINONDERHOUD` (maintenance: grass mowing, pruning) and `TUINAANLEG` (creation: grass laying, paths, wooden walls)
-- **Profile Verification**: Added `isVerified` and `verificationStatus` fields with `ProfileStatusHistory` for audit trail
-- **Belgian Localization**: Added province/region enums, language enum (NL, FR, DE, EN)
-- **Simplified Practicals**: Changed `experience` to `experienceYears` (integer), removed `reachability`
-- **Office**: Removed `country` field (hardcoded "België" in UI)
-- **ContactRequest**: Simplified to async-only (no status tracking for external emails)
-- **SubscriptionItem**: Uses `accountId` only (removed duplicate `profileId`)
-
-## Environment Variables
-```
-SUPABASE_URL=
-SUPABASE_ANON_KEY=
-SUPABASE_SERVICE_ROLE_KEY=
-VITE_SUPABASE_URL=
-VITE_SUPABASE_ANON_KEY=
-MOLLIE_API_KEY=           # Payment processing
-RESEND_API_KEY=           # Email notifications
-SESSION_SECRET=           # Session encryption
-BILLIT_API_KEY=           # Peppol invoicing via Billit (from MyBillit Profile)
-BILLIT_PARTY_ID=          # PartyID/RegistrationID from Billit (e.g., 1037520)
-BILLIT_SANDBOX=true       # Set to false for production
-```
-
-## Email (Resend)
-- **Note**: Using Resend directly (not via Replit integration) for Vercel compatibility
-- Sends payment confirmation emails when subscriptions are activated
-- **Domain verification required**: Add `zoek-een-tuinman.be` in Resend dashboard and configure DNS records
-- Sender address: `noreply@zoek-een-tuinman.be`
-
-## Peppol Invoicing (Billit)
-- **Provider**: Billit (https://docs.billit.be/)
-- **Authentication**: `ApiKey` header + `PartyID` header
-- **Endpoints** (different per environment):
-  - **Production**: `POST /v1/peppol/sendOrder` - sends order directly
-  - **Sandbox**: `POST /v1/einvoices/registrations/{partyId}/commands/send` - uses Accesspoint API
-- **Environment URLs**:
-  - Sandbox: https://api.sandbox.billit.be (set BILLIT_SANDBOX=true)
-  - Production: https://api.billit.be (set BILLIT_SANDBOX=false)
-- Automatically sends Peppol invoice when:
-  1. Payment succeeds via Mollie webhook
-  2. Customer account has VAT number and billing address filled in
-- Invoice includes profile subscription details, VAT calculation (21%)
-- Supplier info is configured in the Billit account (PartyID), not via environment variables
-- Invoices arrive in customer's "Snelle Invoer" (Fast Input) if they're Peppol-registered
-
-## Next Steps (Post-MVP)
-1. ~~Supabase database integration~~ (DONE - using production Supabase)
-2. ~~Supabase Auth for login/registration~~ (DONE)
-3. Admin panel for managing profiles
-4. ~~Company dashboard/portal~~ (DONE)
-5. ~~Mollie payment integration~~ (DONE)
-6. ~~Resend email integration~~ (DONE)
-7. ~~Peppol invoicing~~ (DONE - via Billit)
-8. Advanced search with geo-filtering
-9. ~~Multi-step profile creation wizard~~ (DONE - onboarding flow)
+Zoek-een-tuinman.be is an SEO-optimized directory platform designed for Belgian businesses, initially focusing on gardening professionals. Its primary purpose is to allow companies to register, create profiles, and become discoverable by potential customers. The platform aims to be a comprehensive, rebrandable business directory, easily adaptable for various industries, with strong SEO capabilities through dynamic category and location pages. The long-term vision includes expanding to other verticals and providing a robust, export-ready solution for deployment on platforms like Vercel.
 
 ## User Preferences
 - No Replit-specific features (must export to Vercel)
@@ -257,39 +11,37 @@ BILLIT_SANDBOX=true       # Set to false for production
 - Mobile-first responsive design
 - Dutch (Belgian) language
 
-## Vercel Deployment
+## System Architecture
+The platform is built with a modern web stack, emphasizing performance, scalability, and maintainability.
 
-The project is configured for Vercel serverless deployment.
+### Frontend
+- **Framework**: React 18 with TypeScript and Vite for a fast development experience.
+- **Styling**: Tailwind CSS for utility-first styling, complemented by Shadcn UI components for pre-built, accessible UI elements.
+- **Routing**: Wouter for client-side navigation.
+- **State Management**: TanStack Query for data fetching, caching, and synchronization.
+- **UI/UX**: Features a "green tuinman" theme with centralized configuration for easy rebranding. It implements a mobile-first responsive design. Key pages include a homepage with hero section and search, dynamic search results pages, and detailed business profile pages. User authentication includes login, registration, and password reset flows, with a multi-step onboarding wizard for new signups. A map view for search results is integrated using Leaflet.
 
-### Files
-- `vercel.json` - Vercel configuration with rewrites and function settings
-- `api/index.ts` - Serverless function entry point (wraps Express)
+### Backend
+- **Framework**: Express.js with Node.js.
+- **API**: Provides RESTful endpoints for categories, locations, profiles (search, featured, individual), contact forms, and account management. The API is designed to be vertical-agnostic and hydrates legacy camelCase shapes for frontend compatibility.
 
-### Deployment Steps
-1. Push code to GitHub
-2. Connect repository to Vercel
-3. Add environment variables in Vercel:
-   - `SUPABASE_URL`
-   - `SUPABASE_ANON_KEY`
-   - `SUPABASE_SERVICE_ROLE_KEY`
-   - `SESSION_SECRET`
-4. Deploy
+### Database & Schema
+- **Database**: PostgreSQL, exclusively managed via Supabase.
+- **Schema**: Features a normalized, vertical-agnostic schema with 31 tables, replacing hardcoded enums with data-driven catalogs. Key entities include `practitioner`, `profile`, `service_category`, `specialization`, `offered_service`, `service_area`, `practical_question`, `subscription_plan`, and `payment`. This schema supports a clear hierarchy of Accounts (login, billing) -> Profiles (listings) -> Offices (locations).
+- **Localization**: Includes support for 572 Belgian municipalities with postcodes and coordinates for enhanced search and SEO. Belgian B2B fields like VAT number and company details are integrated.
 
-### Cron Jobs
-Add crons to `vercel.json` like this:
-```json
-{
-  "crons": [
-    {
-      "path": "/api/cron/daily-task",
-      "schedule": "0 0 * * *"
-    }
-  ]
-}
-```
-Then create the endpoint in your Express routes.
+### SEO & Sitemap
+- **SEO Optimization**: Features dynamic search pages with a location-first URL structure (e.g., `/zoek/{postcode}-{city}`), SEO-optimized meta tags, and a comprehensive multi-sitemap architecture similar to leading directory platforms. The sitemap structure includes dedicated sitemaps for site pages, info pages, profiles, locations, specializations, and paginated location-specialization combinations.
 
-### Notes
-- The same Express routes work on both Replit and Vercel
-- On Replit: Uses `npm run dev` with Express server
-- On Vercel: Uses serverless adapter wrapping Express
+### Project Structure
+Organized into `client/`, `server/`, and `shared/` directories. `client/` contains React components, pages, and utility libraries. `server/` handles API routes and server-side logic. `shared/` defines common TypeScript types and the Drizzle database schema.
+
+### Rebranding
+Designed for easy rebranding with a centralized `theme.config.ts` file in the frontend, allowing for quick changes to business type, country, currency, copy, and more. This is supported by dynamic data fetching for catalogs (e.g., `useSpecializationMap`, `usePracticalQuestions`).
+
+## External Dependencies
+- **Supabase**: Used for PostgreSQL database management and authentication.
+- **Mollie**: Integrated for payment processing (planned).
+- **Resend**: Used for email notifications, specifically payment confirmations (planned).
+- **Billit**: Integrated for Peppol e-invoicing, triggered by Mollie webhooks for customer accounts with complete billing information (planned).
+- **Leaflet**: Used for displaying maps in search results.

@@ -21,6 +21,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import type { Category, Location, Profile } from "@shared/schema";
+import { siteConfig } from "@/lib/theme.config";
 
 // Types for grouped categories API response
 interface CategoryOption {
@@ -665,7 +666,7 @@ export default function ProfileEdit() {
                       <FormItem>
                         <FormLabel>Functietitel</FormLabel>
                         <FormControl>
-                          <Input placeholder="bv. Tuinarchitect & ontwerper" {...field} data-testid="input-title" />
+                          <Input placeholder={siteConfig.placeholders.profileTitle} {...field} data-testid="input-title" />
                         </FormControl>
                         <FormDescription>Een korte titel die je specialisatie beschrijft</FormDescription>
                         <FormMessage />
@@ -695,7 +696,7 @@ export default function ProfileEdit() {
                         <FormItem>
                           <FormLabel>Telefoonnummer</FormLabel>
                           <FormControl>
-                            <Input placeholder="+32 xxx xx xx xx" {...field} data-testid="input-phone" />
+                            <Input placeholder={siteConfig.placeholders.phone} {...field} data-testid="input-phone" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -991,7 +992,7 @@ export default function ProfileEdit() {
                           </div>
                           <div className="rounded-lg border border-dashed p-6 text-center">
                             <p className="text-muted-foreground">
-                              Selecteer eerst "Tuinonderhoud" en/of "Tuinaanleg" om je specialisaties te kiezen
+                              Selecteer eerst een hoofdcategorie om je specialisaties te kiezen
                             </p>
                           </div>
                         </div>

@@ -55,6 +55,18 @@ export const siteConfig = {
   currency: "EUR",
   currencySymbol: "€",
 
+  // Form placeholders (per-vertical examples shown in input fields)
+  placeholders: {
+    profileTitle: "bv. Tuinarchitect, Tuinonderhoud specialist",
+    phone: "+32 xxx xx xx xx",
+    website: "https://www.jouwsite.be",
+  },
+
+  // Email branding (also referenced server-side via SITE_EMAIL_FROM env override)
+  emailBranding: {
+    from: "Zoek-een-tuinman.be <noreply@zoek-een-tuinman.be>",
+  },
+
   // Footer / Header config — vertical-specific lists.
   // To rebrand: replace these arrays. The actual category slugs must exist as
   // service_category rows in the DB; cities must be valid service_area slugs.

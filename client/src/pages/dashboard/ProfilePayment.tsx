@@ -13,8 +13,8 @@ import { authFetch } from "@/lib/queryClient";
 import { Loader2, CreditCard, Check, Star, ArrowLeft } from "lucide-react";
 import { Link } from "wouter";
 import type { Profile, Account } from "@shared/schema";
-import { formatPrice } from "@/lib/theme.config";
 import { useSubscriptionOffers } from "@/lib/useSubscriptionOffers";
+import { useSiteConfig } from "@/lib/useSiteConfig";
 
 export default function ProfilePayment() {
   const [, params] = useRoute("/dashboard/profielen/:id/betalen");
@@ -26,6 +26,7 @@ export default function ProfilePayment() {
 
   const profileId = params?.id;
   const { plans, defaultPlanId, isLoading: isLoadingPlans } = useSubscriptionOffers();
+  const { formatPrice } = useSiteConfig();
 
   useEffect(() => {
     if (!selectedPlan && defaultPlanId) setSelectedPlan(defaultPlanId);

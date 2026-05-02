@@ -7,11 +7,13 @@ import { SEO } from "@/components/SEO";
 import { Check, Loader2, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Link } from "wouter";
-import { siteConfig, formatPrice } from "@/lib/theme.config";
+import { siteConfig } from "@/lib/theme.config";
 import { useSubscriptionOffers } from "@/lib/useSubscriptionOffers";
+import { useSiteConfig } from "@/lib/useSiteConfig";
 
 export default function Pricing() {
   const { plans, isLoading, isError } = useSubscriptionOffers();
+  const { formatPrice } = useSiteConfig();
 
   return (
     <div className="min-h-screen flex flex-col bg-background">

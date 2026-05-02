@@ -21,6 +21,15 @@ export const siteConfig = {
   email: "info@zoek-lokaal.be",
   social: { facebook: "", instagram: "", linkedin: "" },
 
+  placeholders: {
+    profileTitle: "bv. Dameskapper, Barbier",
+    phone: "+32 xxx xx xx xx",
+    website: "https://www.jouwsite.be",
+  },
+  emailBranding: {
+    from: "Zoek-een-kapper.be <noreply@zoek-een-kapper.be>",
+  },
+
   businessType: "kapper",
   businessTypePlural: "kappers",
   businessTypeArticle: "een kapper",

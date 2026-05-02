@@ -11,7 +11,7 @@ interface SEOProps {
   structuredData?: object | object[];
 }
 
-const BASE_URL = "https://www.zoek-een-tuinman.be";
+const BASE_URL = siteConfig.baseUrl;
 
 export function SEO({
   title,
@@ -77,7 +77,7 @@ export function generateBreadcrumbSchema(items: { name: string; url: string }[])
       "@type": "ListItem",
       "position": index + 1,
       "name": item.name,
-      "item": `https://www.zoek-een-tuinman.be${item.url}`,
+      "item": `${siteConfig.baseUrl}${item.url}`,
     })),
   };
 }
@@ -107,8 +107,8 @@ export function generateLocalBusinessSchema(profile: {
     "@type": "LocalBusiness",
     "name": profile.name,
     "description": profile.description || `${profile.name} - Professionele tuinman in België`,
-    "url": `https://www.zoek-een-tuinman.be/bedrijf/${profile.slug}`,
-    "@id": `https://www.zoek-een-tuinman.be/bedrijf/${profile.slug}#business`,
+    "url": `${siteConfig.baseUrl}/bedrijf/${profile.slug}`,
+    "@id": `${siteConfig.baseUrl}/bedrijf/${profile.slug}#business`,
   };
   
   if (profile.profileImageUrl) {
@@ -161,8 +161,8 @@ export function generateOrganizationSchema() {
     "@context": "https://schema.org",
     "@type": "Organization",
     "name": siteConfig.name,
-    "url": "https://www.zoek-een-tuinman.be",
-    "logo": "https://www.zoek-een-tuinman.be/logo.png",
+    "url": siteConfig.baseUrl,
+    "logo": `${siteConfig.baseUrl}/logo.png`,
     "description": siteConfig.description,
     "areaServed": {
       "@type": "Country",
@@ -177,14 +177,14 @@ export function generateWebSiteSchema() {
     "@context": "https://schema.org",
     "@type": "WebSite",
     "name": siteConfig.name,
-    "url": "https://www.zoek-een-tuinman.be",
+    "url": siteConfig.baseUrl,
     "description": siteConfig.description,
     "inLanguage": "nl-BE",
     "potentialAction": {
       "@type": "SearchAction",
       "target": {
         "@type": "EntryPoint",
-        "urlTemplate": "https://www.zoek-een-tuinman.be/zoek/alle?q={search_term_string}",
+        "urlTemplate": `${siteConfig.baseUrl}/zoek/alle?q={search_term_string}`,
       },
       "query-input": "required name=search_term_string",
     },

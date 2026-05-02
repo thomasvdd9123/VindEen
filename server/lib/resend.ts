@@ -30,7 +30,7 @@ export async function sendPaymentConfirmationEmail({
 
   try {
     const { data, error } = await resend.emails.send({
-      from: "Zoek-een-tuinman.be <noreply@zoek-een-tuinman.be>",
+      from: process.env.SITE_EMAIL_FROM || "Zoek-een-tuinman.be <noreply@zoek-een-tuinman.be>",
       to: [to],
       subject: `Betalingsbevestiging - ${profileName}`,
       html: `
