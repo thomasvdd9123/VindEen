@@ -14,7 +14,7 @@ import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth, RequireAuth } from "@/lib/auth";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { apiRequest, queryClient, authFetch } from "@/lib/queryClient";
 import { isValidBelgianVAT, formatBelgianVAT } from "@/lib/utils";
 import { 
   User, 
@@ -325,7 +325,7 @@ function OnboardingContent() {
         const logoFormData = new FormData();
         logoFormData.append("file", logoFile);
         logoFormData.append("type", "profile");
-        await fetch(`/api/profiles/${createdProfileId}/upload`, {
+        await authFetch(`/api/profiles/${createdProfileId}/upload`, {
           method: "POST",
           body: logoFormData,
         });
@@ -336,7 +336,7 @@ function OnboardingContent() {
         const formData = new FormData();
         formData.append("file", file);
         formData.append("type", "extra");
-        await fetch(`/api/profiles/${createdProfileId}/upload`, {
+        await authFetch(`/api/profiles/${createdProfileId}/upload`, {
           method: "POST",
           body: formData,
         });
@@ -375,7 +375,7 @@ function OnboardingContent() {
       }
 
       // Create Mollie payment
-      const response = await fetch("/api/mollie/create-payment", {
+      const response = await authFetch("/api/mollie/create-payment", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

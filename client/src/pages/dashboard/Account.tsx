@@ -15,7 +15,7 @@ import { Loader2, Save, Mail, Trash2, AlertTriangle, CreditCard, Calendar, Check
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { supabase } from "@/lib/supabase";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { apiRequest, queryClient, authFetch } from "@/lib/queryClient";
 import { isValidBelgianVAT, formatBelgianVAT } from "@/lib/utils";
 import type { Account, SubscriptionItem } from "@shared/schema";
 import { Badge } from "@/components/ui/badge";
@@ -246,7 +246,7 @@ export default function DashboardAccount() {
     setIsDeletingAccount(true);
     try {
       // Call API to delete account and all associated data
-      const response = await fetch("/api/account/delete", {
+      const response = await authFetch("/api/account/delete", {
         method: "DELETE",
         credentials: "include",
       });

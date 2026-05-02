@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { apiRequest, queryClient, authFetch } from "@/lib/queryClient";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { 
@@ -129,7 +129,7 @@ function ProfileCard({ profile, onDelete }: { profile: Profile; onDelete: (id: s
   const { data: subscription } = useQuery<SubscriptionItem | null>({
     queryKey: ["/api/subscriptions/profile", profile.id],
     queryFn: async () => {
-      const response = await fetch(`/api/subscriptions/profile/${profile.id}`);
+      const response = await authFetch(`/api/subscriptions/profile/${profile.id}`);
       if (response.status === 404) return null;
       if (!response.ok) throw new Error("Failed to fetch subscription");
       return response.json();

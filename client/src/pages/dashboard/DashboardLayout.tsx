@@ -28,7 +28,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { siteConfig } from "@/lib/theme.config";
-import { queryClient } from "@/lib/queryClient";
+import { queryClient, authFetch } from "@/lib/queryClient";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -52,7 +52,7 @@ export function DashboardLayout({ children, title, description }: DashboardLayou
   useEffect(() => {
     if (user?.id) {
       // Fetch or create account first, then prefetch all related data
-      fetch("/api/accounts", {
+      authFetch("/api/accounts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ authUserId: user.id, email: user.email }),
@@ -66,14 +66,14 @@ export function DashboardLayout({ children, title, description }: DashboardLayou
             // Prefetch profiles with queryFn
             queryClient.prefetchQuery({
               queryKey: ["/api/my-profiles", account.id],
-              queryFn: () => fetch(`/api/my-profiles/${account.id}`).then(r => r.json()),
+              queryFn: () => authFetch(`/api/my-profiles/${account.id}`).then(r => r.json()),
               staleTime: 1000 * 60 * 5,
             });
             
             // Prefetch contact requests
             queryClient.prefetchQuery({
               queryKey: ["/api/contact-requests", account.id],
-              queryFn: () => fetch(`/api/contact-requests/${account.id}`).then(r => r.json()),
+              queryFn: () => authFetch(`/api/contact-requests/${account.id}`).then(r => r.json()),
               staleTime: 1000 * 60 * 5,
             });
             

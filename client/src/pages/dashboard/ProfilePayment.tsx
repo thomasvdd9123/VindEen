@@ -9,7 +9,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/lib/auth";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { apiRequest, queryClient, authFetch } from "@/lib/queryClient";
 import { Loader2, CreditCard, Check, Star, ArrowLeft } from "lucide-react";
 import { Link } from "wouter";
 import type { Profile, Account } from "@shared/schema";
@@ -77,7 +77,7 @@ export default function ProfilePayment() {
 
     setIsSubmitting(true);
     try {
-      const response = await fetch("/api/mollie/create-payment", {
+      const response = await authFetch("/api/mollie/create-payment", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

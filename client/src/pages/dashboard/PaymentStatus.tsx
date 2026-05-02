@@ -1,3 +1,4 @@
+import { authFetch } from "@/lib/queryClient";
 import { useEffect, useState } from "react";
 import { useParams, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
@@ -24,7 +25,7 @@ export default function PaymentStatus() {
     queryKey: ["/api/mollie/payment-status", paymentId],
     queryFn: async () => {
       if (!paymentId) throw new Error("No payment ID");
-      const res = await fetch(`/api/mollie/payment-status/${paymentId}`);
+      const res = await authFetch(`/api/mollie/payment-status/${paymentId}`);
       if (!res.ok) throw new Error("Failed to check status");
       return res.json();
     },
