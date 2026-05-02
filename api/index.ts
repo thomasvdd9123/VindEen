@@ -641,9 +641,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const id = path.split("/").pop();
       const { data } = await supabase.from("profile").select("*").eq("id", id).single();
       if (!data) return res.status(404).json({ error: "Profile not found" });
-      const row = data as { is_active?: boolean; practitioner_id: string };
-      // Publieke toegang enkel voor actieve profielen; eigenaar mag altijd zijn eigen profiel zien
-      if (!row.is_active) {
+      const row = data as { is_active?: boolean; is_public?: boolean; practitioner_id: string };
+      // Publieke toegang enkel voor actieve én publieke profielen; eigenaar mag altijd zijn eigen profiel zien
+      if (!row.is_active || !row.is_public) {
         const auth = await getAuthContext(req);
         if (!auth || auth.practitionerId !== row.practitioner_id) {
           return res.status(403).json({ error: "Forbidden" });
@@ -656,7 +656,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (method === "GET" && path.match(/^\/api\/profiles\/[^/]+$/) && !path.includes("/by-id/")) {
       const slug = path.split("/").pop();
       if (slug === "featured" || slug === "count" || slug === "search") return res.status(404).json({ error: "Not found" });
-      const { data } = await supabase.from("profile").select("*").eq("slug", slug).eq("is_active", true).single();
+      const { data } = await supabase.from("profile").select("*").eq("slug", slug).eq("is_active", true).eq("is_public", true).single();
       if (!data) return res.status(404).json({ error: "Profile not found" });
       // fire & forget view increment
       supabase.from("profile").update({ view_count: ((data as any).view_count || 0) + 1 }).eq("id", (data as any).id).then(() => {});
@@ -809,8 +809,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (method === "POST" && path.match(/^\/api\/contact\/[^/]+$/)) {
       const profileId = path.split("/").pop();
-      const { data: profile } = await supabase.from("profile").select("id, company_name, contact_email").eq("id", profileId).single();
-      if (!profile) return res.status(404).json({ error: "Profile not found" });
+      const { data: profile } = await supabase.from("profile").select("id, company_name, contact_email, is_active, is_public").eq("id", profileId).single();
+      if (!profile || !(profile as { is_active: boolean }).is_active || !(profile as { is_public: boolean }).is_public) {
+        return res.status(404).json({ error: "Profile not found" });
+      }
 
       const recaptchaSecretKey = process.env.RECAPTCHA_SECRET_KEY;
       const { recaptchaToken, visitorName, visitorEmail, telnr, subject, message } = req.body;
