@@ -97,7 +97,8 @@ export const profile = pgTable("profile", {
 });
 export const insertProfileSchema = createInsertSchema(profile).omit({ id: true, createdAt: true, updatedAt: true });
 export type InsertProfile = z.infer<typeof insertProfileSchema>;
-export type Profile = typeof profile.$inferSelect;
+export type ProfileRow = typeof profile.$inferSelect;
+export type Profile = ProfileRow & { [k: string]: any };
 
 // ---------------------------------------------------------------------------
 // VERIFICATION EVENT TRAIL
@@ -282,7 +283,7 @@ export const subscriptionPlan = pgTable("subscription_plan", {
   validUntil: date("valid_until"),
 });
 export const insertSubscriptionPlanSchema = createInsertSchema(subscriptionPlan).omit({ id: true });
-export type SubscriptionPlan = typeof subscriptionPlan.$inferSelect;
+export type SubscriptionPlanRow = typeof subscriptionPlan.$inferSelect;
 
 export const subscriptionPlanOffer = pgTable("subscription_plan_offer", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -359,7 +360,8 @@ export const contactRequest = pgTable("contact_request", {
 });
 export const insertContactRequestSchema = createInsertSchema(contactRequest).omit({ id: true, createdAt: true });
 export type InsertContactRequest = z.infer<typeof insertContactRequestSchema>;
-export type ContactRequest = typeof contactRequest.$inferSelect;
+export type ContactRequestRow = typeof contactRequest.$inferSelect;
+export type ContactRequest = ContactRequestRow & { [k: string]: any };
 
 // ---------------------------------------------------------------------------
 // SITE_CONFIG
@@ -398,78 +400,53 @@ export const specializationLabels = new Proxy({} as Record<string, string>, {
   },
 });
 
-// Legacy type aliases (loose, since api hydrates camelCase + nested relations)
-export type Category = {
+// Legacy type aliases — loose ([k:string]:any) so old client code keeps compiling
+// while it's being migrated. The API hydrates camelCase + nested relations.
+type LegacyAny = { [k: string]: any };
+
+export type Category = LegacyAny & {
   id: string;
   slug: string;
   name: string;
   description?: string | null;
   mainCategory?: string;
-  isActive?: boolean;
-  sortOrder?: number;
 };
 
-export type Location = {
+export type Location = LegacyAny & {
   id: string;
   slug: string;
   name: string;
+  municipality?: string;
   postcode: string;
-  province?: string | null;
-  region?: string | null;
-  latitude?: number | null;
-  longitude?: number | null;
-  isActive?: boolean;
 };
 
-export type Account = {
+export type Account = LegacyAny & {
   id: string;
   authUserId: string;
   email?: string | null;
-  firstname?: string | null;
-  lastname?: string | null;
-  companyName?: string | null;
-  vat?: string | null;
-  subjectToVat?: boolean | null;
-  billingAddress?: Address | null;
-  createdAt?: string | Date | null;
-  updatedAt?: string | Date | null;
 };
 
-export type SubscriptionItem = {
+export type SubscriptionItem = LegacyAny & {
   id: string;
   accountId: string;
-  profileId?: string | null;
-  planId?: string | null;
-  status?: string | null;
-  startDate?: string | Date | null;
-  endDate?: string | Date | null;
-  createdAt?: string | Date | null;
 };
 
-export type SubscriptionPlanLegacy = {
+export type SubscriptionPlan = LegacyAny & {
   id: string;
   name: string;
-  price: number;
-  currency: string;
-  durationInYears?: number;
-  description?: string | null;
 };
-export type { SubscriptionPlanLegacy as SubscriptionPlan };
 
-export type ProfileWithRelations = Profile & {
+export type ProfileWithRelations = LegacyAny & {
+  id: string;
+  slug: string;
+  name: string;
   category?: Category | null;
-  categoryId?: string | null;
   location?: Location | null;
   locationId?: string | null;
-  office?: any;
-  practical?: any;
-  specializations?: string[];
-  companyName?: string | null;
-  contactEmail?: string | null;
+  isVerified?: boolean | null;
+  title?: string | null;
   telnr?: string | null;
-  hasWebsite?: boolean;
-  websiteurl?: string | null;
-  distanceKm?: number;
+  email?: string | null;
 };
 
 // Contact form schema (visitor → profile)

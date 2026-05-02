@@ -130,7 +130,7 @@ export function SearchBox({
         (loc) =>
           loc.name.toLowerCase().includes(cityQuery.toLowerCase()) ||
           loc.postcode.includes(cityQuery) ||
-          loc.municipality.toLowerCase().includes(cityQuery.toLowerCase())
+          (loc.municipality ?? "").toLowerCase().includes(cityQuery.toLowerCase())
       );
       setFilteredLocations(filtered.slice(0, 6));
       setShowLocationDropdown(filtered.length > 0 && cityQuery.length >= 2);

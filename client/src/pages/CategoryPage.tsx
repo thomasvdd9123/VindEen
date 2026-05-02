@@ -550,7 +550,7 @@ function SearchResultCard({ profile }: { profile: ProfileWithRelations }) {
               <div className="mt-4 pt-3 border-t border-border">
                 <div className="flex flex-wrap items-center gap-1.5">
                   <span className="text-xs font-medium text-muted-foreground">Specialisaties</span>
-                  {profile.specializations.slice(0, 5).map((spec, index) => (
+                  {profile.specializations.slice(0, 5).map((spec: string, index: number) => (
                     <span 
                       key={index}
                       className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-muted text-muted-foreground"

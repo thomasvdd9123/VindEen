@@ -76,7 +76,7 @@ export default function Pricing() {
                       </div>
                       
                       <ul className="space-y-3 text-left mb-6">
-                        {features.map((feature, i) => (
+                        {features.map((feature: string, i: number) => (
                           <li key={i} className="flex items-start gap-2">
                             <Check className="h-5 w-5 text-primary shrink-0 mt-0.5" />
                             <span className="text-sm">{feature.trim()}</span>

@@ -68,10 +68,10 @@ export default function DashboardContacts() {
       const query = searchQuery.toLowerCase();
       result = result.filter(
         (c) =>
-          c.visitorName.toLowerCase().includes(query) ||
-          c.visitorEmail.toLowerCase().includes(query) ||
-          c.subject.toLowerCase().includes(query) ||
-          c.message.toLowerCase().includes(query)
+          (c.visitorName ?? "").toLowerCase().includes(query) ||
+          (c.visitorEmail ?? "").toLowerCase().includes(query) ||
+          (c.subject ?? "").toLowerCase().includes(query) ||
+          (c.message ?? "").toLowerCase().includes(query)
       );
     }
 
@@ -79,17 +79,17 @@ export default function DashboardContacts() {
     result.sort((a, b) => {
       switch (sortBy) {
         case "date-desc":
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+          return new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime();
         case "date-asc":
-          return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+          return new Date(a.createdAt ?? 0).getTime() - new Date(b.createdAt ?? 0).getTime();
         case "name-asc":
-          return a.visitorName.localeCompare(b.visitorName);
+          return (a.visitorName ?? "").localeCompare(b.visitorName ?? "");
         case "name-desc":
-          return b.visitorName.localeCompare(a.visitorName);
+          return (b.visitorName ?? "").localeCompare(a.visitorName ?? "");
         case "subject-asc":
-          return a.subject.localeCompare(b.subject);
+          return (a.subject ?? "").localeCompare(b.subject ?? "");
         case "subject-desc":
-          return b.subject.localeCompare(a.subject);
+          return (b.subject ?? "").localeCompare(a.subject ?? "");
         default:
           return 0;
       }
@@ -203,7 +203,7 @@ function ContactCard({ contact }: { contact: ContactRequest }) {
   };
 
   const status = statusConfig.NEW;
-  const contactDate = new Date(contact.createdAt);
+  const contactDate = new Date(contact.createdAt ?? Date.now());
 
   const handleReply = () => {
     const subject = encodeURIComponent(`Re: ${contact.subject}`);

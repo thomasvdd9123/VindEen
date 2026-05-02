@@ -92,7 +92,7 @@ export function ProfileCard({ profile }: ProfileCardProps) {
 
             {profile.specializations && profile.specializations.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mt-3">
-                {profile.specializations.slice(0, 3).map((spec) => {
+                {profile.specializations.slice(0, 3).map((spec: string) => {
                   const slug = getSpecializationSlug(spec);
                   const badge = (
                     <Badge 
@@ -100,7 +100,7 @@ export function ProfileCard({ profile }: ProfileCardProps) {
                       className={`text-xs font-normal ${slug ? 'cursor-pointer' : ''}`}
                       data-testid={`badge-spec-${spec.toLowerCase()}`}
                     >
-                      {specializationLabels[spec] || spec}
+                      {specializationLabels[spec] || spec}{/* legacy */}
                     </Badge>
                   );
                   return slug ? (

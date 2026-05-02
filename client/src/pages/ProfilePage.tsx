@@ -275,7 +275,7 @@ export default function ProfilePage() {
 
                     {profile.specializations && profile.specializations.length > 0 && (
                       <div className="flex flex-wrap gap-2 mt-4">
-                        {profile.specializations.map((spec) => (
+                        {profile.specializations.map((spec: string) => (
                           <Badge key={spec} variant="outline">
                             {specializationLabels[spec] || spec}
                           </Badge>
@@ -310,7 +310,7 @@ export default function ProfilePage() {
                     className="prose prose-sm max-w-none text-muted-foreground"
                     data-testid="text-profile-description"
                   >
-                    {profile.description.split('\n').map((paragraph, i) => (
+                    {profile.description.split('\n').map((paragraph: string, i: number) => (
                       <p key={i}>{paragraph}</p>
                     ))}
                   </div>

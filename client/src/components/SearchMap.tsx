@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import type { Profile, Location } from "@shared/schema";
+import type { ProfileWithRelations as Profile, Location } from "@shared/schema";
 import { Link } from "wouter";
 import { MapPin, Phone, Mail, Globe, CheckCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";

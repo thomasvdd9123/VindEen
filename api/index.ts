@@ -93,6 +93,7 @@ function legacyLocationFromArea(a: any) {
     id: a.id,
     slug: a.slug,
     name: a.municipality,
+    municipality: a.municipality,
     postcode: a.postcode,
     province: a.province,
     region: a.region,
@@ -339,10 +340,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       const { specializations, serviceCategories, serviceAreas } = await getCatalogs();
 
-      // Resolve filter ids
+      // Resolve filter ids — accept slug ("gras-maaien") or upper key ("GRAS_MAAIEN")
       let specId: string | null = null;
-      const specSlug = category || spec;
-      if (specSlug) {
+      const specRaw = category || spec;
+      if (specRaw) {
+        const specSlug = specRaw.includes("_") || specRaw === specRaw.toUpperCase()
+          ? specRaw.toLowerCase().replace(/_/g, "-")
+          : specRaw;
         specId = specializations.find((s) => s.slug === specSlug)?.id || null;
       }
 
@@ -359,7 +363,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const { data } = await supabase.from("profile_specialization").select("profile_id").eq("specialization_id", specId);
         candidateIds = (data || []).map((r: any) => r.profile_id);
         if (!candidateIds.length) {
-          if (isCount) return res.status(200).json({ count: 0 });
+          if (isCount) return res.status(200).json({ total: 0, count: 0 });
           return res.status(200).json({ profiles: [], total: 0, page, totalPages: 0 });
         }
       }
@@ -371,7 +375,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const ids = (data || []).map((r: any) => r.profile_id);
         candidateIds = candidateIds ? candidateIds.filter((id) => ids.includes(id)) : ids;
         if (!candidateIds.length) {
-          if (isCount) return res.status(200).json({ count: 0 });
+          if (isCount) return res.status(200).json({ total: 0, count: 0 });
           return res.status(200).json({ profiles: [], total: 0, page, totalPages: 0 });
         }
       }
@@ -416,7 +420,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
 
       const total = searchLocationData ? profiles.length : count || profiles.length;
-      if (isCount) return res.status(200).json({ count: total });
+      if (isCount) return res.status(200).json({ total, count: total });
 
       const paginated = profiles.slice(offset, offset + limit);
       const hydrated = await Promise.all(paginated.map((p) => hydrateProfile(p, { withPracticals: true })));
@@ -590,7 +594,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       const recaptchaSecretKey = process.env.RECAPTCHA_SECRET_KEY;
       const { recaptchaToken, visitorName, visitorEmail, telnr, subject, message } = req.body;
-      if (recaptchaSecretKey && recaptchaToken) {
+      if (recaptchaSecretKey) {
+        if (!recaptchaToken) {
+          return res.status(400).json({ error: "reCAPTCHA token ontbreekt" });
+        }
         const r = await fetch("https://www.google.com/recaptcha/api/siteverify", {
           method: "POST",
           headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -942,11 +949,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       const baseUrl = "https://www.zoek-een-tuinman.be";
       const total = (offer as any).total_price;
+      const { data: cfgRow } = await supabase.from("site_config").select("default_currency_code").limit(1).single();
+      const currency = (cfgRow as any)?.default_currency_code || "EUR";
       const mollieResp = await fetch("https://api.mollie.com/v2/payments", {
         method: "POST",
         headers: { Authorization: `Bearer ${mollieApiKey}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          amount: { currency: "EUR", value: total.toFixed(2) },
+          amount: { currency, value: total.toFixed(2) },
           description: `${(offer as any).subscription_plan?.name || "Abonnement"} - ${years} jaar voor ${(profile as any).company_name}`,
           redirectUrl: `${baseUrl}/dashboard/profielen/${profileId}/betaling-status?payment_id=${(subscription as any).id}`,
           webhookUrl: `${baseUrl}/api/mollie/webhook`,
@@ -965,7 +974,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         profile_subscription_id: (subscription as any).id,
         payment_provider_id: (mollieProvider as any).id,
         amount: total,
-        currency: "EUR",
+        currency,
         status: "PENDING",
         external_payment_id: molliePayment.id,
       });

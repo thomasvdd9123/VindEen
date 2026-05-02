@@ -482,10 +482,10 @@ export default function ProfileEdit() {
       const tuinonderhoudSpecs = specializationsByCategory.TUINONDERHOUD || [];
       const tuinaanlegSpecs = specializationsByCategory.TUINAANLEG || [];
       
-      if (profile.specializations?.some(s => tuinonderhoudSpecs.includes(s))) {
+      if (profile.specializations?.some((s: string) => tuinonderhoudSpecs.includes(s))) {
         derivedMainCategories.push("TUINONDERHOUD");
       }
-      if (profile.specializations?.some(s => tuinaanlegSpecs.includes(s))) {
+      if (profile.specializations?.some((s: string) => tuinaanlegSpecs.includes(s))) {
         derivedMainCategories.push("TUINAANLEG");
       }
       
