@@ -497,14 +497,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       const { specializations, serviceCategories, serviceAreas } = await getCatalogs();
 
-      // Resolve filter ids — accept slug ("gras-maaien") or upper key ("GRAS_MAAIEN")
+      // Resolve filter ids — accept slug ("gras-maaien") of legacy upper key ("SNOEIEN_BOMEN")
+      // Legacy frontend keys ↔ DB slugs (woordvolgorde verschilt soms)
+      const legacyKeyToSlug: Record<string, string> = {
+        SNOEIEN_BOMEN: "bomen-snoeien",
+        SNOEIEN_STRUIKEN: "struiken-snoeien",
+        HAAG_KNIPPEN: "hagen-knippen",
+      };
       let specId: string | null = null;
       const specRaw = category || spec;
       if (specRaw) {
-        const specSlug = specRaw.includes("_") || specRaw === specRaw.toUpperCase()
-          ? specRaw.toLowerCase().replace(/_/g, "-")
-          : specRaw;
-        specId = specializations.find((s) => s.slug === specSlug)?.id || null;
+        const upper = specRaw.toUpperCase();
+        const candidates = [
+          specRaw,
+          legacyKeyToSlug[upper],
+          specRaw.toLowerCase().replace(/_/g, "-"),
+        ].filter(Boolean) as string[];
+        for (const c of candidates) {
+          const hit = specializations.find((s) => s.slug === c);
+          if (hit) { specId = hit.id; break; }
+        }
       }
 
       let categoryIdsForMain: string[] | null = null;
@@ -537,10 +549,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
       }
 
-      // Location:
-      //  1) eerst intersect via profile_service_area (genormaliseerde coverage)
-      //  2) dan optionele 20km-radius op office_address voor sortering/back-fill
+      // Location: profile_service_area is autoritatief voor coverage.
+      // Office-address afstand wordt enkel gebruikt voor sortering en als
+      // optionele back-fill wanneer er géén expliciete service_area-match is.
       let searchLocationData: { lat: number; lng: number; name: string; id: string } | null = null;
+      let coverageMatched = false;
       const SEARCH_RADIUS_KM = 20;
       if (location) {
         const loc = serviceAreas.find((a) => a.slug === location);
@@ -551,8 +564,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             .select("profile_id")
             .eq("service_area_id", loc.id);
           const areaIds = (areaProfiles || []).map((r) => (r as { profile_id: string }).profile_id);
-          // Coverage-based filter heeft voorrang als er resultaten zijn; anders fallback radius
           if (areaIds.length) {
+            coverageMatched = true;
             candidateIds = candidateIds ? candidateIds.filter((id) => areaIds.includes(id)) : areaIds;
             if (!candidateIds.length) {
               if (isCount) return res.status(200).json({ total: 0, count: 0 });
@@ -572,23 +585,36 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (error) throw error;
       let profiles = rawProfiles || [];
 
-      // Distance filter + sort
+      // Afstandsberekening:
+      //  - Coverage-match (service_area): bereken afstand voor sortering, geen filter.
+      //  - Geen coverage-match: fallback 20km-radius rond office_address.
       if (searchLocationData) {
-        // Need office addresses for filtering
         const ids = profiles.map((p) => p.office_address_id).filter(Boolean);
         const { data: addrs } = await supabase.from("address").select("id, latitude, longitude").in("id", ids);
-        const addrMap: Record<string, any> = {};
-        for (const a of addrs || []) addrMap[(a as any).id] = a;
-        const filtered: any[] = [];
+        const addrMap: Record<string, { id: string; latitude: number | null; longitude: number | null }> = {};
+        for (const a of addrs || []) {
+          const row = a as { id: string; latitude: number | null; longitude: number | null };
+          addrMap[row.id] = row;
+        }
+        const annotated: any[] = [];
         for (const p of profiles) {
           const a = p.office_address_id ? addrMap[p.office_address_id] : null;
+          let d: number | null = null;
           if (a && a.latitude && a.longitude) {
-            const d = calcDistance(searchLocationData.lat, searchLocationData.lng, a.latitude, a.longitude);
-            if (d <= SEARCH_RADIUS_KM) filtered.push({ ...p, _distanceKm: Math.round(d * 10) / 10 });
+            d = calcDistance(searchLocationData.lat, searchLocationData.lng, a.latitude, a.longitude);
+          }
+          if (coverageMatched) {
+            annotated.push({ ...p, _distanceKm: d == null ? null : Math.round(d * 10) / 10 });
+          } else if (d != null && d <= SEARCH_RADIUS_KM) {
+            annotated.push({ ...p, _distanceKm: Math.round(d * 10) / 10 });
           }
         }
-        filtered.sort((a, b) => a._distanceKm - b._distanceKm || (a.company_name || "").localeCompare(b.company_name || ""));
-        profiles = filtered;
+        annotated.sort((a, b) => {
+          const da = a._distanceKm == null ? Number.POSITIVE_INFINITY : a._distanceKm;
+          const db = b._distanceKm == null ? Number.POSITIVE_INFINITY : b._distanceKm;
+          return da - db || (a.company_name || "").localeCompare(b.company_name || "");
+        });
+        profiles = annotated;
       }
 
       const total = searchLocationData ? profiles.length : count || profiles.length;
