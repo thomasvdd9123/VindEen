@@ -248,9 +248,13 @@ export default function CategoryPage() {
       location: location?.name,
       specialization: specializationLabel || undefined,
       totalResults: total,
+      items: profiles.slice(0, 10).map((p: ProfileWithRelations) => ({
+        name: p.name,
+        slug: p.slug,
+      })),
     }),
     generateBreadcrumbSchema(breadcrumbItems),
-  ], [location?.name, specializationLabel, total, breadcrumbItems]);
+  ], [location?.name, specializationLabel, total, breadcrumbItems, profiles]);
 
   return (
     <Layout>
@@ -258,7 +262,7 @@ export default function CategoryPage() {
         title={seoTitle}
         description={seoDescription}
         canonical={canonicalUrl}
-        noindex={true}
+        noindex={total === 0}
         structuredData={structuredData}
       />
       

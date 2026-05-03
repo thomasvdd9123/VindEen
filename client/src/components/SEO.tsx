@@ -94,7 +94,9 @@ export function generateLocalBusinessSchema(profile: {
   website?: string | null;
   offices?: Array<{
     street?: string | null;
+    number?: string | null;
     houseNumber?: string | null;
+    town?: string | null;
     city?: string | null;
     postcode?: string | null;
     province?: string | null;
@@ -103,58 +105,65 @@ export function generateLocalBusinessSchema(profile: {
   specializations?: string[];
 }) {
   const office = profile.offices?.[0];
-  
+  const country = siteConfig.country;
+  const countryCode = siteConfig.legal?.address?.countryCode || "BE";
+
   const schema: Record<string, unknown> = {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
     "name": profile.name,
-    "description": profile.description || `${profile.name} - Professionele tuinman in België`,
+    "description":
+      profile.description ||
+      `${profile.name} – ${siteConfig.businessTypeProfessional} in ${country}.`,
     "url": `${siteConfig.baseUrl}/bedrijf/${profile.slug}`,
     "@id": `${siteConfig.baseUrl}/bedrijf/${profile.slug}#business`,
   };
-  
+
   if (profile.profileImageUrl) {
     schema.image = profile.profileImageUrl;
   }
-  
+
   if (profile.phone) {
     schema.telephone = profile.phone;
   }
-  
+
   if (profile.email) {
     schema.email = profile.email;
   }
-  
+
   if (profile.website) {
     schema.sameAs = [profile.website];
   }
-  
+
   if (office) {
+    const street = [office.street, office.number ?? office.houseNumber]
+      .filter(Boolean)
+      .join(" ");
     schema.address = {
       "@type": "PostalAddress",
-      "streetAddress": [office.street, office.houseNumber].filter(Boolean).join(" ") || undefined,
-      "addressLocality": office.city || undefined,
+      "streetAddress": street || undefined,
+      "addressLocality": office.town || office.city || undefined,
       "postalCode": office.postcode || undefined,
       "addressRegion": office.province || undefined,
-      "addressCountry": siteConfig.legal?.address?.countryCode || "BE",
+      "addressCountry": countryCode,
     };
   }
-  
+
   if (profile.experienceYears && profile.experienceYears > 0) {
     schema.foundingDate = new Date().getFullYear() - profile.experienceYears;
   }
-  
+
   if (profile.specializations && profile.specializations.length > 0) {
     schema.knowsAbout = profile.specializations;
   }
-  
+
   schema.areaServed = {
     "@type": "Country",
-    "name": "Belgium",
+    "name": country,
   };
-  
+
   schema.priceRange = "$$";
-  
+
   return schema;
 }
 
@@ -168,7 +177,7 @@ export function generateOrganizationSchema() {
     "description": siteConfig.description,
     "areaServed": {
       "@type": "Country",
-      "name": "Belgium",
+      "name": siteConfig.country,
     },
     "sameAs": [],
   };
@@ -197,16 +206,34 @@ export function generateSearchResultsSchema(params: {
   location?: string;
   specialization?: string;
   totalResults: number;
+  items?: Array<{ name: string; slug: string }>;
 }) {
-  return {
+  const plural = siteConfig.businessTypePlural;
+  const country = siteConfig.country;
+  const name = params.location
+    ? `${plural[0].toUpperCase()}${plural.slice(1)} in ${params.location}${
+        params.specialization ? ` – ${params.specialization}` : ""
+      }`
+    : params.specialization
+      ? `${plural[0].toUpperCase()}${plural.slice(1)} gespecialiseerd in ${params.specialization}`
+      : `Alle ${plural} in ${country}`;
+
+  const schema: Record<string, unknown> = {
     "@context": "https://schema.org",
     "@type": "ItemList",
-    "name": params.location 
-      ? `Tuinmannen in ${params.location}${params.specialization ? ` - ${params.specialization}` : ""}`
-      : params.specialization 
-        ? `Tuinmannen gespecialiseerd in ${params.specialization}`
-        : "Alle tuinmannen in België",
+    "name": name,
     "numberOfItems": params.totalResults,
     "itemListOrder": "https://schema.org/ItemListUnordered",
   };
+
+  if (params.items && params.items.length > 0) {
+    schema.itemListElement = params.items.map((item, index) => ({
+      "@type": "ListItem",
+      "position": index + 1,
+      "name": item.name,
+      "url": `${siteConfig.baseUrl}/bedrijf/${item.slug}`,
+    }));
+  }
+
+  return schema;
 }

@@ -1182,7 +1182,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     if (method === "GET" && path === "/sitemaps/info/sitemap.xml") {
-      const pages = ["over-ons", "contact", "faq", "prijzen", "hoe-werkt-het", "voor-tuinmannen"];
+      const pages = [
+        "over-ons",
+        "contact",
+        "faq",
+        "prijzen",
+        "artikelen",
+        "ervaringen",
+        "info/de-tuinman",
+        "info/goede-tuinman-vinden",
+        "info/hoe-werkt-tuinaanleg",
+        "info/tuinman-vs-hovenier",
+        "info/kosten-prijzen",
+        "info/voor-tuinmannen",
+        "privacy",
+        "algemene-voorwaarden",
+        "cookies",
+      ];
       let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
       for (const p of pages) {
         xml += `  <url><loc>${SITEMAP_BASE_URL}/${p}</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>\n`;

@@ -34,8 +34,8 @@ export default function Home() {
   return (
     <Layout>
       <SEO
-        title={fillCopy("Vind de beste {plural} in {country}")}
-        description={fillCopy("Zoek en vergelijk {plural} in jouw regio. Bekijk profielen, specialisaties en vraag gratis offertes aan. De grootste directory van {professionalPlural} in {country}.")}
+        title={fillCopy("Vind een {singular} in {country}")}
+        description={fillCopy("Zoek een {singular} in jouw regio. Bekijk profielen en specialisaties en contacteer de {singular} zelf — gratis en zonder tussenpersoon.")}
         canonical="/"
         structuredData={structuredData}
       />
@@ -200,7 +200,7 @@ export default function Home() {
               <Link href="/registreren">
                 <Button size="lg" variant="secondary" className="gap-2" data-testid="button-cta-register">
                   <Leaf className="h-4 w-4" />
-                  Registreer gratis
+                  Meld je praktijk gratis aan
                 </Button>
               </Link>
               <Link href={siteConfig.homepage.ctaInfoHref}>

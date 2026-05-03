@@ -165,7 +165,15 @@ export default function ProfilePage() {
       phone: profile.telnr,
       email: profile.email,
       website: profile.website,
-      offices: office ? [office] : undefined,
+      offices: office
+        ? [{
+            street: office.street,
+            number: (office as any).number,
+            town: (office as any).town || (office as any).city,
+            postcode: office.postcode,
+            province: (office as any).province,
+          }]
+        : undefined,
       experienceYears: profile.practical?.experienceYears,
       specializations: profile.specializations || undefined,
     }),
@@ -181,7 +189,7 @@ export default function ProfilePage() {
         ogType="profile"
         ogImage={profile.logoUrl || undefined}
         structuredData={structuredData}
-        noindex={true}
+        noindex={!profile.isPublic}
       />
       <div className="bg-muted/30 border-b border-border">
         <div className="container mx-auto px-4 py-4">

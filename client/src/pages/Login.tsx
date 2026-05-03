@@ -99,7 +99,7 @@ export default function Login() {
             </div>
             <CardTitle className="text-2xl">Welkom terug</CardTitle>
             <CardDescription>
-              Log in op je {siteConfig.name} account
+              Meld je aan op je {siteConfig.name}-account
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -161,7 +161,7 @@ export default function Login() {
                     </>
                   ) : (
                     <>
-                      Inloggen
+                      Aanmelden
                       <ArrowRight className="h-4 w-4" />
                     </>
                   )}

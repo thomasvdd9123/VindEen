@@ -210,7 +210,7 @@ export function ContactForm({ profileId, profileName }: ContactFormProps) {
               ) : (
                 <>
                   <Send className="h-4 w-4" />
-                  Verstuur bericht
+                  Stuur mijn vraag
                 </>
               )}
             </Button>

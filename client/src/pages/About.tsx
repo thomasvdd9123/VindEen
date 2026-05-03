@@ -80,7 +80,7 @@ export default function About() {
                   <p className="text-muted-foreground mb-4">{fillCopy(copy.forBusinessesBody)}</p>
                   <div className="flex gap-4">
                     <Button asChild>
-                      <Link href="/registreren">Registreer nu</Link>
+                      <Link href="/registreren">Meld je praktijk aan</Link>
                     </Button>
                     <Button variant="outline" asChild>
                       <Link href="/prijzen">Bekijk prijzen</Link>

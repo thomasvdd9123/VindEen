@@ -12,13 +12,13 @@ export const siteConfig = {
   name: "Zoek-een-tuinman.be",
   shortName: "Zoek-een-tuinman",
   description:
-    "Vind de beste tuinmannen in België. Vergelijk profielen, lees reviews en vraag vrijblijvend offertes aan.",
-  tagline: "Vind jouw perfecte tuinman in België",
+    "Vind een tuinman in jouw buurt. Bekijk profielen, vergelijk specialisaties en neem rechtstreeks contact op — gratis en zonder tussenpersoon.",
+  tagline: "Vind een tuinman in België",
 
   // SEO
-  seoTitle: "Zoek-een-tuinman.be | De beste tuinmannen in België",
+  seoTitle: "Zoek-een-tuinman.be | Vind een tuinman in België",
   seoDescription:
-    "Zoek en vergelijk tuinmannen in jouw regio. Bekijk profielen, specialisaties en contacteer direct voor een offerte.",
+    "Zoek een tuinman in jouw regio. Bekijk profielen en specialisaties en contacteer de tuinman zelf — gratis en zonder tussenpersoon.",
 
   // URLs
   baseUrl: "https://www.zoek-een-tuinman.be",
@@ -95,7 +95,7 @@ export const siteConfig = {
     register: {
       seoTitle: "Registreren als {singular}",
       seoDescription: "Registreer je gratis als {singular} op {siteName} en bereik duizenden potentiële klanten in {country}.",
-      heroTitle: "Word lid van {country}'s grootste {plural} platform",
+      heroTitle: "Sluit je aan bij {plural} in heel {country}",
       heroBody: "Registreer je gratis en maak je bedrijf zichtbaar voor duizenden potentiële klanten in heel {country}.",
       benefits: [
         "Bereik duizenden potentiële klanten",
@@ -176,7 +176,7 @@ export const siteConfig = {
     ],
     featuredHeading: "Vind de juiste tuinman",
     featuredBody:
-      "Bekijk onze uitgelichte professionals en ontdek wie het beste bij jouw project past.",
+      "Bekijk onze uitgelichte tuinprofessionals en ontdek wie bij jouw project past.",
     featuredImageAlt: "Tuinman aan het werk",
     ctaTitle: "Ben je tuinman?",
     ctaInfoHref: "/info/voor-tuinmannen",
@@ -247,7 +247,7 @@ export const siteConfig = {
       {
         question: "Wat is {siteName}?",
         answer:
-          "{siteName} is het grootste online platform om tuinprofessionals te vinden in {country}. We verbinden klanten met betrouwbare tuinmannen, hoveniers en tuinaannemers in heel het land.",
+          "{siteName} is een online platform om tuinprofessionals te vinden in {country}. We verbinden klanten met **betrouwbare tuinmannen**, hoveniers en tuinaannemers in heel het land.",
       },
       {
         question: "In welke regio's zijn jullie actief?",

@@ -166,7 +166,7 @@ export default function Contact() {
                         ) : (
                           <Send className="h-4 w-4" />
                         )}
-                        Verstuur bericht
+                        Stuur mijn bericht
                       </Button>
                     </form>
                   </Form>

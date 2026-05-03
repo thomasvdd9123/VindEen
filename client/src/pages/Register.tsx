@@ -160,7 +160,7 @@ export default function Register() {
               <CardHeader>
                 <CardTitle className="text-2xl">Account aanmaken</CardTitle>
                 <CardDescription>
-                  Maak een account aan om je bedrijf te registreren
+                  Maak een account aan en zet je praktijk online
                 </CardDescription>
               </CardHeader>
               <CardContent>
