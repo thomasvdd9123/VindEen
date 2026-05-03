@@ -24,6 +24,7 @@ The platform is built with a modern web stack, emphasizing performance, scalabil
 ### Backend
 - **Framework**: Express.js with Node.js.
 - **API**: Provides RESTful endpoints for categories, locations, profiles (search, featured, individual), contact forms, and account management. The API is designed to be vertical-agnostic and hydrates legacy camelCase shapes for frontend compatibility.
+- **Profile detail optimization**: `GET /api/profiles/{slug}` uses a single PostgREST nested select (`PROFILE_NESTED_SELECT` + `buildProfileFromNested()` in `api/index.ts`) replacing the previous 11+ sequential/parallel Supabase round trips. The nested select embeds address, specializations (with parent service_category), service areas, and all practical answers (including typed value tables and option junctions) in one HTTP request. The 60s in-memory slug cache and single-flight deduplication are preserved on top. Important schema notes: `service_category` and `specialization` tables have no `key` column (use `slug`); scalar answer tables (`practical_answer_int/double/string/date`) have `practical_answer_id` as PK making them 1:1 (PostgREST returns object not array); `profile_service_category` uses raw `service_category_id` (no embed) to avoid a PostgREST alias conflict when two paths lead to the same table.
 
 ### Database & Schema
 - **Database**: PostgreSQL, exclusively managed via Supabase.

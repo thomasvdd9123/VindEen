@@ -386,6 +386,175 @@ function setProfileCached(slug: string, data: any) {
   _profileCache.set(slug, { data, ts: Date.now() });
 }
 
+// ---------------------------------------------------------------------------
+// Single-query profile fetch using PostgREST nested selects.
+// Replaces the old 11+ round-trip hydration chain for single-profile reads.
+// One HTTP request to Supabase; PostgreSQL resolves all joins server-side.
+// ---------------------------------------------------------------------------
+// profile_service_category uses raw service_category_id (no embed) to avoid the
+// PostgREST "column service_category_N.key does not exist" conflict that arises
+// when the same table is embedded via two different join paths in one query.
+// The IDs are resolved to slugs post-query via the in-memory catalog cache.
+//
+// practical_answer scalar tables (int/double/string/date) use practical_answer_id
+// as their PRIMARY KEY, making them 1:1 with practical_answer. PostgREST therefore
+// returns an object ({value}) or null — NOT an array. Only practical_answer_boolean
+// (own UUID PK) and practical_answer_option (composite PK) return arrays.
+// Columns verified against actual Supabase schema:
+//   service_category:  id, name, slug, description, sort_order, is_system_defined  (no 'key')
+//   specialization:    id, name, slug, description, service_category_id, sort_order (no 'key')
+//   service_area:      id, municipality, postcode, province, region, country, slug, latitude, longitude
+//   practical_question: id, key, name, field_type, is_multi, is_required, sort_order
+//   practical_option:   id, practical_question_id, key, name, sort_order
+const PROFILE_NESTED_SELECT = `
+  *,
+  office_address:address!office_address_id(*),
+  profile_specialization(is_main, specialization(id, name, slug, description, sort_order, service_category(id, name, slug))),
+  profile_service_category(is_main, service_category_id),
+  profile_service_area(service_area(id, slug, municipality, postcode, province, region, latitude, longitude)),
+  practical_answer(
+    id,
+    practical_question(id, key, name, field_type, is_multi),
+    practical_answer_int(value),
+    practical_answer_double(value),
+    practical_answer_string(value),
+    practical_answer_date(value),
+    practical_answer_boolean(value),
+    practical_answer_option(practical_option(id, key, name))
+  )
+`.trim();
+
+async function buildProfileFromNested(p: any): Promise<any> {
+  // Office address (disambiguated via !office_address_id FK hint)
+  const addr = p.office_address;
+  const office = addr ? {
+    id: addr.id,
+    street: addr.street,
+    number: addr.number,
+    town: addr.municipality,
+    postcode: addr.postcode,
+    province: addr.province,
+    region: addr.region,
+    country: addr.country,
+    latitude: addr.latitude,
+    longitude: addr.longitude,
+    showAddress: addr.show_address,
+  } : null;
+
+  // Specializations / service areas — fully embedded
+  const pSpecs = (p.profile_specialization || []) as any[];
+  const pCats  = (p.profile_service_category || []) as any[];
+  const pAreas = (p.profile_service_area || []) as any[];
+
+  const firstSpec   = pSpecs[0]?.specialization ?? null;
+  const firstParent = firstSpec?.service_category ?? null;
+  const category    = firstSpec ? {
+    id: firstSpec.id,
+    slug: firstSpec.slug,
+    name: firstSpec.name,
+    description: firstSpec.description ?? null,
+    main_category: mainCategoryKey(firstParent?.slug),
+    is_active: true,
+    sort_order: firstSpec.sort_order ?? 0,
+  } : null;
+
+  const specSlugs = pSpecs.map((j: any) => j.specialization?.slug).filter(Boolean);
+  const firstArea = pAreas[0]?.service_area ?? null;
+  const location  = firstArea ? legacyLocationFromArea(firstArea) : null;
+
+  // Resolve service category IDs → slugs via catalog cache (free on warm cache).
+  const { serviceCategories } = await getCatalogs();
+  const mainCats = pCats
+    .map((j: any) => {
+      const sc = serviceCategories.find((c: any) => c.id === j.service_category_id);
+      return mainCategoryKey(sc?.slug);
+    })
+    .filter(Boolean);
+
+  // Practical answers — fully embedded, zero extra round trips.
+  // Scalar tables (int/double/string/date) are 1:1 → PostgREST returns object|null.
+  // Boolean and option tables have their own PKs    → PostgREST returns array.
+  const practical: Record<string, any> = {};
+  for (const ans of (p.practical_answer || []) as any[]) {
+    const q = ans.practical_question;
+    if (!q) continue;
+    const key = q.key.charAt(0).toLowerCase() + q.key.slice(1);
+    switch (q.field_type) {
+      case "OPTION": {
+        const names = (ans.practical_answer_option || [])
+          .map((j: any) => j.practical_option?.name)
+          .filter(Boolean);
+        if (names.length) practical[key] = names;
+        break;
+      }
+      case "INT": {
+        const v = ans.practical_answer_int?.value;
+        if (v !== undefined && v !== null) practical[key] = v;
+        break;
+      }
+      case "DOUBLE": {
+        const v = ans.practical_answer_double?.value;
+        if (v !== undefined && v !== null) practical[key] = v;
+        break;
+      }
+      case "STRING": {
+        const v = ans.practical_answer_string?.value;
+        if (v !== undefined && v !== null) practical[key] = v;
+        break;
+      }
+      case "DATE": {
+        const v = ans.practical_answer_date?.value;
+        if (v !== undefined && v !== null) practical[key] = v;
+        break;
+      }
+      case "BOOLEAN": {
+        // practical_answer_boolean has its own UUID PK → array
+        const v = (ans.practical_answer_boolean || [])[0]?.value;
+        if (v !== undefined && v !== null) practical[key] = v;
+        break;
+      }
+    }
+  }
+
+  return toCamelCase({
+    id: p.id,
+    slug: p.slug,
+    name: p.company_name,
+    company_name: p.company_name,
+    email: p.contact_email,
+    contact_email: p.contact_email,
+    telnr: p.telnr,
+    title: p.title,
+    introduction: p.introduction,
+    description: p.introduction,
+    website: p.websiteurl,
+    websiteurl: p.websiteurl,
+    has_website: p.has_website,
+    logo_url: p.logourl,
+    image_urls: p.imageurls || [],
+    is_active: p.is_active,
+    is_public: p.is_public,
+    is_verified: p.is_verified,
+    verification_status: p.verification_status,
+    view_count: p.view_count,
+    website_clicks: p.website_clicks,
+    practitioner_id: p.practitioner_id,
+    account_id: p.practitioner_id,
+    office_address_id: p.office_address_id,
+    created_at: p.created_at,
+    updated_at: p.updated_at,
+    category,
+    category_id: firstSpec?.id || null,
+    location,
+    location_id: firstArea?.id || null,
+    office,
+    hide_address: office ? office.showAddress === false : false,
+    practical: Object.keys(practical).length ? practical : null,
+    specializations: specSlugs,
+    main_categories: mainCats,
+  });
+}
+
 async function hydrateOne(p: any, ctx: any) {
   const { addrById, specsByProfile, catsByProfile, areasByProfile,
     specializations, serviceCategories, serviceAreas, opts } = ctx;
@@ -871,7 +1040,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
       }
       res.setHeader("Cache-Control", "no-store");
-      return res.status(200).json(await hydrateProfile(data, { withPracticals: true }));
+      // Re-fetch with nested select so we get everything in one round trip.
+      const { data: nested } = await supabase
+        .from("profile")
+        .select(PROFILE_NESTED_SELECT)
+        .eq("id", id)
+        .single();
+      if (!nested) return res.status(404).json({ error: "Profile not found" });
+      return res.status(200).json(await buildProfileFromNested(nested));
     }
 
     if (method === "GET" && path.match(/^\/api\/profiles\/[^/]+$/) && !path.includes("/by-id/")) {
@@ -892,9 +1068,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       let inflight = _profileInflight.get(slug);
       if (!inflight) {
         inflight = (async () => {
+          // Single PostgREST nested select — all joins in one round trip.
           const { data } = await supabase
             .from("profile")
-            .select("*")
+            .select(PROFILE_NESTED_SELECT)
             .eq("slug", slug)
             .eq("is_active", true)
             .eq("is_public", true)
@@ -906,7 +1083,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             .update({ view_count: ((data as any).view_count || 0) + 1 })
             .eq("id", (data as any).id)
             .then(() => {});
-          const hydrated = await hydrateProfile(data, { withPracticals: true });
+          const hydrated = await buildProfileFromNested(data);
           setProfileCached(slug, hydrated);
           return hydrated;
         })();
