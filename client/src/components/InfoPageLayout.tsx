@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/breadcrumb";
 import { ArrowRight, Leaf } from "lucide-react";
 import { siteConfig } from "@/lib/theme.config";
+import { useSiteConfig } from "@/lib/useSiteConfig";
 
 interface InfoPageLayoutProps {
   title: string;

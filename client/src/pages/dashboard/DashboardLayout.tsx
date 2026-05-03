@@ -27,7 +27,7 @@ import {
   Home,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
-import { siteConfig } from "@/lib/theme.config";
+import { useSiteConfig } from "@/lib/useSiteConfig";
 import { queryClient, authFetch } from "@/lib/queryClient";
 
 interface DashboardLayoutProps {
@@ -45,6 +45,7 @@ const sidebarLinks = [
 ];
 
 export function DashboardLayout({ children, title, description }: DashboardLayoutProps) {
+  const { siteName } = useSiteConfig();
   const [location] = useLocation();
   const { user, signOut, loading, isConfigured } = useAuth();
 
@@ -134,7 +135,7 @@ export function DashboardLayout({ children, title, description }: DashboardLayou
               <div className="flex items-center justify-center w-8 h-8 rounded-md bg-primary">
                 <Leaf className="h-4 w-4 text-primary-foreground" />
               </div>
-              <span className="font-semibold text-sidebar-foreground">{siteConfig.name}</span>
+              <span className="font-semibold text-sidebar-foreground">{siteName}</span>
             </Link>
           </SidebarHeader>
 

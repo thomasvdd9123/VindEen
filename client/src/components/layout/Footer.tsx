@@ -1,10 +1,12 @@
 import { Link } from "wouter";
 import { Leaf, ExternalLink } from "lucide-react";
 import { siteConfig, fillCopy } from "@/lib/theme.config";
+import { useSiteConfig } from "@/lib/useSiteConfig";
 import { openCookieSettings } from "@/lib/cookieConsent";
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
+  const { siteName } = useSiteConfig();
 
   const categoryLinks = siteConfig.footer.categoryLinks.map((c) => ({
     href: `/zoek/${c.slug}`,
@@ -32,7 +34,7 @@ export function Footer() {
               <div className="flex items-center justify-center w-9 h-9 rounded-md bg-primary">
                 <Leaf className="h-5 w-5 text-primary-foreground" />
               </div>
-              <span className="font-semibold text-lg">{siteConfig.name}</span>
+              <span className="font-semibold text-lg">{siteName}</span>
             </Link>
             <p className="text-sm text-muted-foreground">
               {siteConfig.description}
@@ -104,7 +106,7 @@ export function Footer() {
         <div className="mt-12 pt-8 border-t border-border">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
             <p className="text-sm text-muted-foreground">
-              © {currentYear} {siteConfig.name}. Alle rechten voorbehouden.
+              © {currentYear} {siteName}. Alle rechten voorbehouden.
             </p>
             <a
               href={siteConfig.parentCompany.url}

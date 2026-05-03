@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Construction, Leaf } from "lucide-react";
-import { siteConfig } from "@/lib/theme.config";
+import { useSiteConfig } from "@/lib/useSiteConfig";
 
 const COOKIE_KEY = "zoek_construction_dismissed";
 
 export function UnderConstructionOverlay() {
   const [isDismissed, setIsDismissed] = useState(true);
+  const { siteName } = useSiteConfig();
 
   useEffect(() => {
     const dismissed = localStorage.getItem(COOKIE_KEY);
@@ -40,7 +41,7 @@ export function UnderConstructionOverlay() {
           <div className="flex items-center justify-center w-10 h-10 rounded-md bg-primary">
             <Leaf className="h-6 w-6 text-primary-foreground" />
           </div>
-          <span className="font-bold text-2xl">{siteConfig.name}</span>
+          <span className="font-bold text-2xl">{siteName}</span>
         </div>
 
         <div className="space-y-2">

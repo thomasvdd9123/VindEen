@@ -12,7 +12,7 @@ import {
   ShieldCheck, LayoutDashboard, FileCheck, Users, Database, CreditCard,
   Settings, Repeat, LogOut, Home, Receipt,
 } from "lucide-react";
-import { siteConfig } from "@/lib/theme.config";
+import { useSiteConfig } from "@/lib/useSiteConfig";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -46,6 +46,7 @@ export function useIsAdmin() {
 }
 
 export function AdminLayout({ children, title, description }: AdminLayoutProps) {
+  const { siteName } = useSiteConfig();
   const [location] = useLocation();
   const { user, signOut, loading } = useAuth();
   const adminQ = useIsAdmin();
@@ -70,7 +71,7 @@ export function AdminLayout({ children, title, description }: AdminLayoutProps) 
           <ShieldCheck className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
           <h1 className="text-2xl font-bold mb-2">Geen toegang</h1>
           <p className="text-muted-foreground mb-6">
-            Je hebt geen admin-rechten op {siteConfig.name}. Neem contact op met de eigenaar als dit een vergissing is.
+            Je hebt geen admin-rechten op {siteName}. Neem contact op met de eigenaar als dit een vergissing is.
           </p>
           <Link href="/dashboard"><Button>Terug naar dashboard</Button></Link>
         </div>
@@ -93,7 +94,7 @@ export function AdminLayout({ children, title, description }: AdminLayoutProps) 
               <div className="flex items-center justify-center w-8 h-8 rounded-md bg-primary">
                 <ShieldCheck className="h-4 w-4 text-primary-foreground" />
               </div>
-              <span className="font-semibold">Admin · {siteConfig.shortName}</span>
+              <span className="font-semibold">Admin · {siteName}</span>
             </Link>
           </SidebarHeader>
           <SidebarContent>

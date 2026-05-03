@@ -80,9 +80,20 @@ export function useSiteConfig() {
     return `${currencySymbol}${fixed.replace(".", ",")}`;
   }
 
+  // Branding-velden met file-default fallback zodat consumers niet
+  // hoeven te checken op `query.data`. Wanneer admin de site_name in
+  // /admin/instellingen aanpast, propageert dit binnen ~60s naar alle
+  // publieke pagina's via de cache_version-poll hierboven.
+  const siteName = query.data?.siteName ?? themeConfig.name;
+  const siteTagline = query.data?.siteTagline ?? themeConfig.tagline;
+  const supportEmail = query.data?.supportEmail ?? "";
+
   return {
     ...query,
     siteConfig: query.data ?? null,
+    siteName,
+    siteTagline,
+    supportEmail,
     currencyCode,
     currencySymbol,
     country,

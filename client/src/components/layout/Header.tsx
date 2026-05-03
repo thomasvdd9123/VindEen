@@ -10,7 +10,6 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Leaf, Menu, X, User, LogIn, LayoutDashboard, LogOut, Settings, UserCircle } from "lucide-react";
 import { useState } from "react";
-import { siteConfig } from "@/lib/theme.config";
 import { useSiteConfig } from "@/lib/useSiteConfig";
 import { useAuth } from "@/lib/auth";
 
@@ -18,8 +17,6 @@ export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [location] = useLocation();
   const { user, signOut, loading } = useAuth();
-  // Site-naam uit DB (admin-bewerkbaar in /admin/instellingen). Valt terug
-  // op de hardcoded defaults uit theme.config.ts wanneer de fetch nog laadt.
   const { siteName } = useSiteConfig();
 
   const navLinks: { href: string; label: string }[] = [];
@@ -40,7 +37,7 @@ export function Header() {
             <div className="flex items-center justify-center w-9 h-9 rounded-md bg-primary">
               <Leaf className="h-5 w-5 text-primary-foreground" />
             </div>
-            <span className="font-semibold text-lg hidden sm:inline-block">{siteName || siteConfig.name}</span>
+            <span className="font-semibold text-lg hidden sm:inline-block">{siteName}</span>
           </Link>
 
           <nav className="hidden md:flex items-center gap-1">

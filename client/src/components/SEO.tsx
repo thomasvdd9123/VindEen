@@ -1,5 +1,6 @@
 import { Helmet } from "react-helmet-async";
 import { siteConfig } from "@/lib/theme.config";
+import { useSiteConfig } from "@/lib/useSiteConfig";
 
 interface SEOProps {
   title?: string;
@@ -22,9 +23,10 @@ export function SEO({
   ogImage,
   structuredData,
 }: SEOProps) {
+  const { siteName, siteTagline } = useSiteConfig();
   const fullTitle = title 
-    ? `${title} | ${siteConfig.name}`
-    : `${siteConfig.name} | ${siteConfig.tagline}`;
+    ? `${title} | ${siteName}`
+    : `${siteName} | ${siteTagline ?? siteConfig.tagline}`;
   
   const metaDescription = description || siteConfig.description;
   const canonicalUrl = canonical ? `${BASE_URL}${canonical}` : undefined;
@@ -47,7 +49,7 @@ export function SEO({
       <meta property="og:description" content={metaDescription} />
       <meta property="og:type" content={ogType} />
       <meta property="og:locale" content="nl_BE" />
-      <meta property="og:site_name" content={siteConfig.name} />
+      <meta property="og:site_name" content={siteName} />
       {canonicalUrl && <meta property="og:url" content={canonicalUrl} />}
       <meta property="og:image" content={imageUrl} />
       
