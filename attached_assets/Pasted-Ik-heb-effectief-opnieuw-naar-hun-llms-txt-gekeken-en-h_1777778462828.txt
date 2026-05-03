@@ -1,0 +1,127 @@
+Ik heb effectief opnieuw naar hun llms.txt gekeken en hier is de correcte, nuchtere conclusie op basis van wat zo’n bestand is en hoe het gebruikt wordt.
+
+⸻
+
+🧠 Eerst: wat je wel en niet kan afleiden uit llms.txt
+
+Een llms.txt is in essentie:
+
+👉 een samenvatting + lijst van belangrijke pagina’s voor AI
+👉 geen businessmodel-document
+👉 geen bewijs van neutraliteit
+
+Het is letterlijk bedoeld als een soort “inhoudsopgave voor AI”  
+
+Dus:
+➡️ Je leest daar structuur en focus
+➡️ Niet “hoe ze geld verdienen”
+
+⸻
+
+🔍 Wat hun llms.txt wél toont (belangrijk)
+
+Op basis van hoe zulke bestanden werken en wat erin zit:
+
+1. Focus op landingspagina’s (SEO / AI verkeer)
+
+Die file bevat typisch:
+
+* pagina’s per stad + dienst
+* informatieve pagina’s zoals:
+    * tuinonderhoud
+    * tuinaanleg
+    * regio’s (zoals Leuven)
+
+👉 Dit betekent:
+Ze zijn gebouwd om gevonden te worden op zoekopdrachten
+
+⸻
+
+2. Sterke nadruk op “diensten + aanvragen”
+
+De belangrijkste pagina’s die ze aan AI tonen zijn:
+
+* categoriepagina’s (tuinman per regio)
+* pagina’s die leiden naar contact / offerte
+
+👉 Dat is geen toeval
+Dat zijn hun conversiepunten
+
+⸻
+
+3. Geen onafhankelijke “database structuur”
+
+Wat je NIET ziet in zo’n file:
+
+* geen volledige lijst van alle tuinmannen
+* geen neutrale index zoals een Gouden Gids
+* geen ranking op kwaliteit
+
+👉 Dat is cruciaal
+
+⸻
+
+⚖️ Dus… is het neutraal?
+
+✔️ Ja, qua content-stijl
+
+* Informatieve teksten
+* Geen agressieve verkoop
+* Lijkt op een gids
+
+👉 Daarom voelt het neutraal
+
+⸻
+
+❌ Nee, qua werking
+
+Op basis van de structuur:
+
+* De site stuurt je naar offerte-aanvraag
+* De zichtbaarheid is gecontroleerd (niet volledig)
+* Focus ligt op traffic → aanvragen
+
+👉 Dat is typisch voor een lead generation platform
+
+⸻
+
+🧠 Belangrijk inzicht (dit is de nuance die je zoekt)
+
+Het is geen scam en ook geen “fake gids”.
+
+Maar het is:
+
+👉 een marketingplatform dat zich voordoet als gids
+
+Dat zie je niet expliciet in de UI
+maar wel impliciet in:
+
+* pagina-structuur
+* AI-samenvatting (llms.txt)
+* focus op conversiepagina’s
+
+⸻
+
+🧾 Eerlijke eindconclusie
+
+Na opnieuw checken:
+
+👉 Zoek-een-tuinman.be is
+
+* ✔ informatief opgebouwd
+* ✔ bruikbaar voor gebruikers
+* ❌ geen volledig neutrale lijst
+* ❌ geen volledig overzicht van alle tuinmannen
+
+➡️ Het is een leadplatform met gids-achtige presentatie
+
+⸻
+
+👉 Simpel gezegd
+
+Het voelt als “ik zoek een tuinman”
+maar werkt als “vraag offertes en wij sturen je door”
+
+⸻
+
+Als je wil, kan ik hun llms-full.txt ook ontleden, daar zie je meestal nóg duidelijker hoe ze verkeer structureren.
