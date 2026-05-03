@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useParams, Link } from "wouter";
 import { Layout } from "@/components/layout/Layout";
@@ -40,6 +41,12 @@ import { useSpecializationMap } from "@/lib/useSpecializations";
 export default function ProfilePage() {
   const params = useParams<{ slug: string }>();
   const { labelByKey: specLabels, keyToSlug: specKeyToSlug } = useSpecializationMap();
+
+  // Scroll to top whenever the user opens a profile (or switches between
+  // profiles via internal links). Wouter doesn't reset scroll on navigation.
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, [params.slug]);
 
   const { data: profile, isLoading, error } = useQuery<ProfileWithRelations>({
     queryKey: ["/api/profiles", params.slug],
