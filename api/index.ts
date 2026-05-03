@@ -447,9 +447,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (method === "GET" && path === "/api/site-config") {
       const { data } = await supabase.from("site_config").select("*").limit(1).single();
       if (!data) return res.status(404).json({ error: "Site config not initialized" });
-      // Strip sensitive fields for public consumption
+      // Strip sensitive fields for public consumption (BTW intern, NIET publiek).
       const { company_vat_number, ...publicCfg } = data as any;
+      // theme_copy + cache_version blijven publiek — frontend gebruikt cache_version
+      // om verlopen caches te invalideren wanneer een admin de site herbrandt.
       return res.status(200).json(toCamelCase(publicCfg));
+    }
+
+    // Lichtgewicht endpoint dat alleen de cache-version teruggeeft. De frontend
+    // pollt dit (goedkoop) en triggert een refetch van /api/site-config wanneer
+    // het versienummer wijzigt — zo zien publieke clients admin-aanpassingen
+    // snel zonder dat de site_config-query elke 60s onnodig data ophaalt.
+    if (method === "GET" && path === "/api/site-config/version") {
+      const { data } = await supabase.from("site_config").select("cache_version").limit(1).single();
+      return res.status(200).json({ cacheVersion: (data as any)?.cache_version ?? 0 });
     }
 
     // -----------------------------------------------------------------------
@@ -1620,10 +1631,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         "defaultVatPercentage", "companyVatNumber", "companyLegalName",
         "defaultPractitionerTypeId", "defaultSubscriptionPlanId",
         "postcodePattern", "phonePattern", "phoneCountryCode",
+        // Vertical/branding overrides — JSON-blob, gemerget over theme.config.ts.
+        // Frontend bewerkt dit via de Vertical-copy editor in /admin/instellingen.
+        "themeCopy",
       ];
       const update: Record<string, any> = {};
       for (const k of allowed) {
-        if (body[k] !== undefined) update[camelToSnake(k)] = body[k] === "" ? null : body[k];
+        if (body[k] !== undefined) {
+          // themeCopy is jsonb — null/empty object expliciet doorgeven; voor de
+          // overige tekstvelden mappen we een lege string naar NULL.
+          if (k === "themeCopy") update.theme_copy = body[k];
+          else update[camelToSnake(k)] = body[k] === "" ? null : body[k];
+        }
       }
       update.updated_at = new Date().toISOString();
       const { data: existing } = await supabase.from("site_config").select("id").limit(1).single();
@@ -1714,128 +1733,90 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json({ success: true });
     }
 
-    // Admin: vertical presets
-    const VERTICAL_PRESETS: Record<string, {
-      label: string;
-      siteConfig: Partial<Record<string, any>>;
-      categories: { name: string; slug: string; description: string; sortOrder: number }[];
-      specializations: { name: string; slug: string; categorySlug: string; description: string; sortOrder: number }[];
-    }> = {
-      "tuinmannen-be": {
-        label: "Tuinmannen (België)",
-        siteConfig: {
-          site_name: "Zoek-een-tuinman.be",
-          site_tagline: "Vind een professionele tuinman in jouw buurt",
-          support_email: "info@zoek-een-tuinman.be",
-        },
-        categories: [
-          { name: "Tuinonderhoud", slug: "tuinonderhoud", description: "Onderhoud van bestaande tuinen", sortOrder: 1 },
-          { name: "Tuinaanleg", slug: "tuinaanleg", description: "Aanleg van nieuwe tuinen", sortOrder: 2 },
-          { name: "Architect", slug: "architect", description: "Tuinarchitectuur en ontwerp", sortOrder: 3 },
-        ],
-        specializations: [
-          { name: "Gras maaien", slug: "gras-maaien", categorySlug: "tuinonderhoud", description: "Professioneel gazon maaien", sortOrder: 1 },
-          { name: "Bomen snoeien", slug: "bomen-snoeien", categorySlug: "tuinonderhoud", description: "Vakkundige snoei van bomen", sortOrder: 2 },
-          { name: "Hagen knippen", slug: "hagen-knippen", categorySlug: "tuinonderhoud", description: "Hagen knippen en vormgeven", sortOrder: 3 },
-          { name: "Onkruid verwijderen", slug: "onkruid-verwijderen", categorySlug: "tuinonderhoud", description: "Onkruidbestrijding", sortOrder: 4 },
-          { name: "Paden & terrassen", slug: "paden-terrassen", categorySlug: "tuinaanleg", description: "Aanleg van paden en terrassen", sortOrder: 5 },
-          { name: "Beplanting", slug: "beplanting", categorySlug: "tuinaanleg", description: "Aanplanten van bomen, struiken en planten", sortOrder: 6 },
-          { name: "Vijvers", slug: "vijvers", categorySlug: "tuinaanleg", description: "Aanleg van vijvers en waterpartijen", sortOrder: 7 },
-        ],
-      },
-      "kappers-be": {
-        label: "Kappers (België)",
-        siteConfig: {
-          site_name: "Zoek-een-kapper.be",
-          site_tagline: "Vind een professionele kapper in jouw buurt",
-          support_email: "info@zoek-een-kapper.be",
-        },
-        categories: [
-          { name: "Dames", slug: "dameskapper", description: "Kappersdiensten voor dames", sortOrder: 1 },
-          { name: "Heren", slug: "herenkapper", description: "Kappersdiensten voor heren", sortOrder: 2 },
-          { name: "Kinderen", slug: "kinderkapper", description: "Kappersdiensten voor kinderen", sortOrder: 3 },
-          { name: "Barbier", slug: "barbier", description: "Barbierdiensten en baardverzorging", sortOrder: 4 },
-        ],
-        specializations: [
-          { name: "Knippen dames", slug: "knippen-dames", categorySlug: "dameskapper", description: "Knipbeurt voor dames", sortOrder: 1 },
-          { name: "Kleuren", slug: "kleuren", categorySlug: "dameskapper", description: "Haarkleuring", sortOrder: 2 },
-          { name: "Highlights", slug: "highlights", categorySlug: "dameskapper", description: "Highlights en balayage", sortOrder: 3 },
-          { name: "Bruidskapsel", slug: "bruidskapsel", categorySlug: "dameskapper", description: "Kapsel voor bruiloft", sortOrder: 4 },
-          { name: "Knippen heren", slug: "knippen-heren", categorySlug: "herenkapper", description: "Klassieke herenknipbeurt", sortOrder: 5 },
-          { name: "Tondeuse / fade", slug: "tondeuse", categorySlug: "herenkapper", description: "Tondeuse / fade", sortOrder: 6 },
-          { name: "Kinderknip", slug: "kinderknip", categorySlug: "kinderkapper", description: "Knipbeurt voor kinderen", sortOrder: 7 },
-          { name: "Baard trimmen", slug: "baard-trimmen", categorySlug: "barbier", description: "Baard trimmen en stylen", sortOrder: 8 },
-          { name: "Scheren", slug: "scheren", categorySlug: "barbier", description: "Klassiek nat scheren", sortOrder: 9 },
-        ],
-      },
-    };
-
+    // Admin: vertical presets — DB-backed (vertical_preset table). Apply is
+    // transactioneel via de Postgres-functie apply_vertical_preset().
     if (method === "GET" && path === "/api/admin/vertical-presets") {
       const adm = await requireAdmin(req);
       if (!adm) return res.status(403).json({ error: "Forbidden" });
-      return res.status(200).json(Object.entries(VERTICAL_PRESETS).map(([slug, p]) => ({
-        slug,
-        label: p.label,
-        categories: p.categories.length,
-        specializations: p.specializations.length,
-      })));
+      const { data, error } = await supabase
+        .from("vertical_preset")
+        .select("slug,label,description,is_system_defined,sort_order,config")
+        .order("sort_order");
+      if (error) return res.status(500).json({ error: error.message });
+      return res.status(200).json((data || []).map((p: any) => {
+        const cfg = p.config || {};
+        return {
+          slug: p.slug,
+          label: p.label,
+          description: p.description,
+          isSystemDefined: p.is_system_defined,
+          sortOrder: p.sort_order,
+          counts: {
+            categories: Array.isArray(cfg.categories) ? cfg.categories.length : 0,
+            specializations: Array.isArray(cfg.specializations) ? cfg.specializations.length : 0,
+            offeredServices: Array.isArray(cfg.offered_services) ? cfg.offered_services.length : 0,
+            practicalQuestions: Array.isArray(cfg.practical_questions) ? cfg.practical_questions.length : 0,
+          },
+        };
+      }));
+    }
+
+    // Generieke CRUD voor vertical_preset zelf — admins kunnen een nieuwe
+    // verticaal toevoegen/aanpassen zonder code-deploy.
+    if (method === "POST" && path === "/api/admin/vertical-presets") {
+      const adm = await requireAdmin(req);
+      if (!adm) return res.status(403).json({ error: "Forbidden" });
+      const body = req.body || {};
+      if (!body.slug || !body.label || !body.config) return res.status(400).json({ error: "slug, label, config vereist" });
+      const { error } = await supabase.from("vertical_preset").insert({
+        slug: body.slug, label: body.label, description: body.description || null,
+        config: body.config, is_system_defined: false, sort_order: body.sortOrder ?? 99,
+      });
+      if (error) return res.status(500).json({ error: error.message });
+      return res.status(201).json({ success: true });
+    }
+    if (method === "PUT" && path.match(/^\/api\/admin\/vertical-presets\/[^/]+$/)) {
+      const adm = await requireAdmin(req);
+      if (!adm) return res.status(403).json({ error: "Forbidden" });
+      const slug = path.split("/")[4];
+      const body = req.body || {};
+      const upd: any = { updated_at: new Date().toISOString() };
+      if (body.label !== undefined) upd.label = body.label;
+      if (body.description !== undefined) upd.description = body.description;
+      if (body.config !== undefined) upd.config = body.config;
+      if (body.sortOrder !== undefined) upd.sort_order = body.sortOrder;
+      const { error } = await supabase.from("vertical_preset").update(upd).eq("slug", slug);
+      if (error) return res.status(500).json({ error: error.message });
+      return res.status(200).json({ success: true });
+    }
+    if (method === "DELETE" && path.match(/^\/api\/admin\/vertical-presets\/[^/]+$/)) {
+      const adm = await requireAdmin(req);
+      if (!adm) return res.status(403).json({ error: "Forbidden" });
+      const slug = path.split("/")[4];
+      const { data: existing } = await supabase
+        .from("vertical_preset").select("is_system_defined").eq("slug", slug).maybeSingle();
+      if (!existing) return res.status(404).json({ error: "Preset niet gevonden" });
+      if ((existing as any).is_system_defined) {
+        return res.status(409).json({ error: "Systeem-presets kunnen niet worden verwijderd" });
+      }
+      const { error } = await supabase.from("vertical_preset").delete().eq("slug", slug);
+      if (error) return res.status(500).json({ error: error.message });
+      return res.status(200).json({ success: true });
     }
 
     if (method === "POST" && path.match(/^\/api\/admin\/vertical-presets\/[^/]+\/apply$/)) {
       const adm = await requireAdmin(req);
       if (!adm) return res.status(403).json({ error: "Forbidden" });
       const slug = path.split("/")[4];
-      const preset = VERTICAL_PRESETS[slug];
-      if (!preset) return res.status(404).json({ error: "Unknown preset" });
-      // Quick atomicity-best-effort: clear junctions first, replace catalogs, update site_config.
-      // Volledige transactionele garantie vereist een Postgres-functie; voor MVP gebruiken we volgorde + cache-bust.
-      const check = (label: string, err: any) => {
-        if (err) throw new Error(`${label}: ${err.message}`);
-      };
-      try {
-        check("clear profile_specialization", (await supabase.from("profile_specialization").delete().neq("profile_id", "00000000-0000-0000-0000-000000000000")).error);
-        check("clear profile_service_category", (await supabase.from("profile_service_category").delete().neq("profile_id", "00000000-0000-0000-0000-000000000000")).error);
-        check("clear specialization", (await supabase.from("specialization").delete().neq("id", "00000000-0000-0000-0000-000000000000")).error);
-        check("clear service_category", (await supabase.from("service_category").delete().neq("id", "00000000-0000-0000-0000-000000000000")).error);
-        const catIds: Record<string, string> = {};
-        for (const c of preset.categories) {
-          const r = await supabase.from("service_category").insert({
-            name: c.name, slug: c.slug, description: c.description, sort_order: c.sortOrder, is_system_defined: true,
-          }).select("id").single();
-          check(`insert category ${c.slug}`, r.error);
-          if (!r.data) throw new Error(`insert category ${c.slug}: no row returned`);
-          catIds[c.slug] = (r.data as any).id;
-        }
-        for (const s of preset.specializations) {
-          if (!catIds[s.categorySlug]) throw new Error(`spec ${s.slug}: missing category ${s.categorySlug}`);
-          const r = await supabase.from("specialization").insert({
-            name: s.name, slug: s.slug, description: s.description,
-            service_category_id: catIds[s.categorySlug],
-            sort_order: s.sortOrder, is_system_defined: true,
-          });
-          check(`insert specialization ${s.slug}`, r.error);
-        }
-        const { data: existingCfg, error: cfgFetchErr } = await supabase.from("site_config").select("id").limit(1).single();
-        check("fetch site_config", cfgFetchErr);
-        if (existingCfg && Object.keys(preset.siteConfig).length) {
-          const r = await supabase.from("site_config").update({
-            ...preset.siteConfig,
-            updated_at: new Date().toISOString(),
-          }).eq("id", (existingCfg as any).id);
-          check("update site_config", r.error);
-        }
-        // Post-apply verification: counts moeten matchen.
-        const { count: catCount } = await supabase.from("service_category").select("id", { count: "exact", head: true });
-        const { count: specCount } = await supabase.from("specialization").select("id", { count: "exact", head: true });
-        if (catCount !== preset.categories.length || specCount !== preset.specializations.length) {
-          throw new Error(`post-verify: verwacht ${preset.categories.length} categorieën / ${preset.specializations.length} specialisaties, kreeg ${catCount}/${specCount}`);
-        }
+      // Volledig transactioneel via Postgres-functie. Als ook maar één INSERT/
+      // DELETE faalt, rollt PG de hele apply terug — geen partial state mogelijk.
+      const { data, error } = await supabase.rpc("apply_vertical_preset", { p_slug: slug });
+      if (error) {
         bustCatalogCache();
-        return res.status(200).json({ success: true, slug, label: preset.label, categories: catCount, specializations: specCount });
-      } catch (e: any) {
-        bustCatalogCache();
-        return res.status(500).json({ error: `Preset apply mislukt (mogelijk gedeeltelijk toegepast): ${e.message}` });
+        return res.status(500).json({ error: `Preset apply mislukt (transactie teruggerold): ${error.message}` });
       }
+      bustCatalogCache();
+      return res.status(200).json(data);
     }
 
     // Admin: payments lijst + Peppol resend
@@ -1856,15 +1837,138 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const paymentId = path.split("/").pop()!;
       const { data: pay } = await supabase.from("payment").select("*").eq("id", paymentId).maybeSingle();
       if (!pay) return res.status(404).json({ error: "Payment not found" });
-      const billitKey = process.env.BILLIT_API_KEY;
-      if (!billitKey) return res.status(503).json({ error: "Billit niet geconfigureerd (BILLIT_API_KEY ontbreekt)" });
-      // Stub: markeer als "resend gevraagd" — echte Billit-flow zit in een aparte taak.
-      // We loggen via een refund_reason achterlaten zodat de admin ziet dat een resend gepland is.
-      const { error: updErr } = await supabase.from("payment").update({
-        refund_reason: `[admin-resend ${new Date().toISOString()}] Peppol resend triggered by admin ${adm.adminId}` ,
-      }).eq("id", paymentId);
-      if (updErr) return res.status(500).json({ error: `Resend log failed: ${updErr.message}` });
-      return res.status(200).json({ success: true, message: "Peppol resend gepland (stub — volledige Billit-integratie volgt in aparte taak)" });
+      const billitApiKey = process.env.BILLIT_API_KEY;
+      const billitPartyId = process.env.BILLIT_PARTY_ID;
+      const billitSandbox = process.env.BILLIT_SANDBOX === "true";
+      if (!billitApiKey) return res.status(503).json({ error: "Billit niet geconfigureerd (BILLIT_API_KEY ontbreekt)" });
+
+      // Schema-pad: payment.profile_subscription_id -> profile_subscription.profile_id
+      //             -> profile.practitioner_id -> practitioner (vat, company_name, email, billing_address_id -> address)
+      const subscriptionId = (pay as any).profile_subscription_id;
+      if (!subscriptionId) return res.status(400).json({ error: "Payment heeft geen profile_subscription_id" });
+
+      const { data: sub } = await supabase
+        .from("profile_subscription")
+        .select("profile_id")
+        .eq("id", subscriptionId)
+        .maybeSingle();
+      if (!sub || !(sub as any).profile_id) return res.status(400).json({ error: "Profile-subscription niet gevonden" });
+
+      const { data: prof } = await supabase
+        .from("profile")
+        .select("company_name, practitioner_id")
+        .eq("id", (sub as any).profile_id)
+        .maybeSingle();
+      if (!prof || !(prof as any).practitioner_id) return res.status(400).json({ error: "Profile of practitioner ontbreekt" });
+
+      const { data: prac } = await supabase
+        .from("practitioner")
+        .select("email, vat, company_name, billing_address_id, subject_to_vat")
+        .eq("id", (prof as any).practitioner_id)
+        .maybeSingle();
+      if (!prac) return res.status(400).json({ error: "Practitioner niet gevonden" });
+      const p = prac as any;
+      if (!p.vat || !p.billing_address_id) {
+        return res.status(400).json({ error: "Practitioner mist BTW-nummer of facturatie-adres — Peppol-resend onmogelijk" });
+      }
+
+      const { data: addr } = await supabase
+        .from("address")
+        .select("street, number, postcode, municipality, country")
+        .eq("id", p.billing_address_id)
+        .maybeSingle();
+      if (!addr) return res.status(400).json({ error: "Facturatie-adres niet gevonden" });
+      const ad = addr as any;
+      if (!ad.street || !ad.municipality) {
+        return res.status(400).json({ error: "Facturatie-adres incompleet (straat/gemeente vereist)" });
+      }
+
+      // Amount in payment.amount is double precision (totaal incl. BTW indien practitioner BTW-plichtig is).
+      // Voor de Peppol-factuurregel rekenen we excl. BTW terug op basis van site_config-defaults.
+      const { data: cfg } = await supabase.from("site_config").select("default_vat_percentage,default_currency_code").limit(1).single();
+      const vatPct = (p.subject_to_vat ? Number((cfg as any)?.default_vat_percentage ?? 21) : 0);
+      const amount = Number((pay as any).amount || 0);
+      const priceExclVat = vatPct > 0 ? amount / (1 + vatPct / 100) : amount;
+      const invoiceNumber = `INV-RESEND-${new Date().getFullYear()}-${String(subscriptionId).slice(0, 8).toUpperCase()}`;
+      const today = new Date().toISOString().split("T")[0];
+      const dueDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+
+      const customerName = p.company_name || (prof as any).company_name || "Unknown";
+      const order = {
+        OrderType: "Invoice",
+        OrderDirection: "Income",
+        OrderDate: today,
+        ExpiryDate: dueDate,
+        OrderNumber: invoiceNumber,
+        OrderLines: [{
+          Quantity: 1,
+          UnitPriceExcl: priceExclVat,
+          Description: `Profielvermelding ${(prof as any).company_name || customerName} (admin-resend)`,
+          VATPercentage: vatPct,
+        }],
+        Customer: {
+          Name: customerName,
+          VATNumber: p.vat,
+          PartyType: "Customer",
+          Email: p.email,
+          Street: ad.street,
+          StreetNumber: ad.number || "",
+          Zipcode: ad.postcode || "",
+          City: ad.municipality,
+          CountryCode: ad.country || "BE",
+        },
+        Paid: true,
+        PaidDate: today,
+      };
+
+      const baseUrl = billitSandbox ? "https://api.sandbox.billit.be" : "https://api.billit.be";
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "ApiKey": billitApiKey,
+      };
+      let endpoint: string;
+      let body: any;
+      if (billitSandbox) {
+        endpoint = `${baseUrl}/v1/einvoices/registrations/${billitPartyId}/commands/send`;
+        body = { TransportType: "Peppol", Order: order };
+      } else {
+        endpoint = `${baseUrl}/v1/peppol/sendOrder`;
+        body = order;
+      }
+      if (billitPartyId) headers["PartyID"] = billitPartyId;
+
+      try {
+        const billitRes = await fetch(endpoint, {
+          method: "POST",
+          headers,
+          body: JSON.stringify(body),
+        });
+        const text = await billitRes.text();
+        let result: any;
+        try { result = JSON.parse(text); } catch { result = { raw: text }; }
+
+        if (!billitRes.ok) {
+          const errCode = result?.errors?.[0]?.Code;
+          await supabase.from("payment").update({
+            refund_reason: `[peppol-resend FAILED ${new Date().toISOString()}] admin=${adm.adminId} status=${billitRes.status} ${errCode || ""}`.slice(0, 500),
+          }).eq("id", paymentId);
+          if (errCode === "TheCustomerIsNotActiveOnPeppol") {
+            return res.status(409).json({ error: "Klant is niet geregistreerd op het Peppol-netwerk", billitResponse: result });
+          }
+          return res.status(502).json({ error: `Billit fout (${billitRes.status})`, billitResponse: result });
+        }
+
+        const orderId = result?.OrderID || result?.raw || "(unknown)";
+        const { error: logErr } = await supabase.from("payment").update({
+          refund_reason: `[peppol-resend OK ${new Date().toISOString()}] admin=${adm.adminId} BillitOrderID=${orderId}`.slice(0, 500),
+        }).eq("id", paymentId);
+        if (logErr) return res.status(500).json({ error: `Resend gelukt maar logging faalde: ${logErr.message}`, billitOrderId: orderId });
+
+        return res.status(200).json({ success: true, message: `Peppol-factuur verstuurd (Billit OrderID ${orderId})`, billitOrderId: orderId });
+      } catch (e: any) {
+        return res.status(502).json({ error: `Billit-call faalde: ${e.message}` });
+      }
     }
 
     return res.status(404).json({ error: "Not found" });

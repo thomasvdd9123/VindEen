@@ -4,6 +4,7 @@ import { apiRequest, queryClient, authFetch } from "@/lib/queryClient";
 import { AdminLayout } from "./AdminLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
@@ -49,7 +50,14 @@ export default function AdminSettings() {
   // Practitioner types via supabase REST? We don't have an admin endpoint; reuse default catalog if added.
   const [form, setForm] = useState<any>(null);
 
-  useEffect(() => { if (cfgQ.data && !form) setForm(cfgQ.data); }, [cfgQ.data]);
+  const [themeCopyJson, setThemeCopyJson] = useState<string>("");
+  const [themeCopyError, setThemeCopyError] = useState<string | null>(null);
+  useEffect(() => {
+    if (cfgQ.data && !form) {
+      setForm(cfgQ.data);
+      setThemeCopyJson(JSON.stringify(cfgQ.data.themeCopy ?? {}, null, 2));
+    }
+  }, [cfgQ.data]);
 
   const save = useMutation({
     mutationFn: (payload: any) => apiRequest("PUT", "/api/admin/site-config", payload),
@@ -109,8 +117,39 @@ export default function AdminSettings() {
           </CardContent>
         </Card>
 
+        <Card>
+          <CardHeader>
+            <CardTitle>Vertical-copy (theme override)</CardTitle>
+            <CardDescription>
+              JSON-overrides voor vertical-specifieke labels (businessType, businessTypePlural, ...) en vrije copy. Deze waarden worden via <code>useThemeCopy()</code> over <code>theme.config.ts</code> heen gemerget — zo kun je rebranden zonder code-deploy.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <Textarea
+              value={themeCopyJson}
+              onChange={(e) => {
+                setThemeCopyJson(e.target.value);
+                try {
+                  const parsed = e.target.value.trim() === "" ? null : JSON.parse(e.target.value);
+                  setThemeCopyError(null);
+                  setForm({ ...form, themeCopy: parsed });
+                } catch (err: any) {
+                  setThemeCopyError(`Ongeldig JSON: ${err.message}`);
+                }
+              }}
+              rows={10}
+              className="font-mono text-xs"
+              data-testid="textarea-theme-copy"
+            />
+            {themeCopyError && <p className="text-sm text-destructive">{themeCopyError}</p>}
+            <p className="text-xs text-muted-foreground">
+              Voorbeeld: <code>{`{"businessType":"kapper","businessTypePlural":"kappers"}`}</code>
+            </p>
+          </CardContent>
+        </Card>
+
         <div className="flex justify-end">
-          <Button onClick={() => save.mutate(form)} disabled={save.isPending} data-testid="button-save-settings">
+          <Button onClick={() => save.mutate(form)} disabled={save.isPending || !!themeCopyError} data-testid="button-save-settings">
             <Save className="h-4 w-4 mr-2" />Opslaan
           </Button>
         </div>

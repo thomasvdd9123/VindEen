@@ -1,4 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { siteConfig as themeConfig } from "./theme.config";
 
 export interface SiteConfigResponse {
@@ -19,6 +20,13 @@ export interface SiteConfigResponse {
   postcodePattern: string | null;
   phonePattern: string | null;
   phoneCountryCode: string | null;
+  // Vertical/branding overrides die per verticaal kunnen variëren. Admins
+  // kunnen deze in /admin/instellingen aanpassen — frontend merget dit over
+  // theme.config.ts heen via useThemeCopy().
+  themeCopy: Record<string, any> | null;
+  // Bumpt elke keer dat site_config wordt aangepast (DB-trigger). Publieke
+  // clients pollen /api/site-config/version en herfetchen wanneer dit wijzigt.
+  cacheVersion: number;
   updatedAt: string;
 }
 
@@ -30,10 +38,29 @@ const CURRENCY_SYMBOLS: Record<string, string> = {
 };
 
 export function useSiteConfig() {
+  const qc = useQueryClient();
+  // Hoofdfetch: cached voor 5 min, refetch bij window-focus.
   const query = useQuery<SiteConfigResponse>({
     queryKey: ["/api/site-config"],
-    staleTime: Infinity,
+    staleTime: 5 * 60_000,
+    refetchOnWindowFocus: true,
   });
+  // Lichtgewicht versiepoll elke 60s — wanneer cacheVersion wijzigt, invalideren
+  // we de hoofdcache zodat publieke clients admin-aanpassingen direct zien
+  // zonder altijd de volledige site-config opnieuw op te halen.
+  const versionQuery = useQuery<{ cacheVersion: number }>({
+    queryKey: ["/api/site-config/version"],
+    refetchInterval: 60_000,
+    refetchOnWindowFocus: true,
+    staleTime: 30_000,
+  });
+  useEffect(() => {
+    const remoteV = versionQuery.data?.cacheVersion;
+    const localV = query.data?.cacheVersion;
+    if (remoteV !== undefined && localV !== undefined && remoteV !== localV) {
+      qc.invalidateQueries({ queryKey: ["/api/site-config"] });
+    }
+  }, [versionQuery.data?.cacheVersion, query.data?.cacheVersion, qc]);
 
   const currencyCode = query.data?.defaultCurrencyCode ?? themeConfig.currency;
   const currencySymbol = CURRENCY_SYMBOLS[currencyCode] ?? themeConfig.currencySymbol;
@@ -67,6 +94,18 @@ export function useSiteConfig() {
     phoneCountryCode,
     defaultSubscriptionPlanId,
     defaultPractitionerTypeId,
+    themeCopy: query.data?.themeCopy ?? null,
+    cacheVersion: query.data?.cacheVersion ?? 0,
     formatPrice,
   };
+}
+
+// Helper die DB-overrides (themeCopy) merget over de file-defaults uit
+// theme.config.ts. Gebruik deze in plaats van rechtstreekse imports wanneer
+// je vertical-specifieke copy/labels nodig hebt — zo wordt rebrand zonder
+// deploy mogelijk.
+export function useThemeCopy(): typeof themeConfig & Record<string, any> {
+  const { themeCopy } = useSiteConfig();
+  if (!themeCopy) return themeConfig;
+  return { ...themeConfig, ...themeCopy };
 }

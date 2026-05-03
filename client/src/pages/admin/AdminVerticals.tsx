@@ -44,8 +44,12 @@ export default function AdminVerticals() {
         {(q.data || []).map((p: any) => (
           <Card key={p.slug} data-testid={`preset-${p.slug}`}>
             <CardHeader>
-              <CardTitle>{p.label}</CardTitle>
-              <CardDescription>{p.categories} categorieën · {p.specializations} specialisaties</CardDescription>
+              <CardTitle>{p.label}{p.isSystemDefined && <span className="ml-2 text-xs text-muted-foreground font-normal">(systeem)</span>}</CardTitle>
+              <CardDescription>
+                {p.counts?.categories ?? 0} categorieën · {p.counts?.specializations ?? 0} specialisaties
+                {p.counts?.offeredServices > 0 && ` · ${p.counts.offeredServices} diensten`}
+                {p.counts?.practicalQuestions > 0 && ` · ${p.counts.practicalQuestions} vragen`}
+              </CardDescription>
             </CardHeader>
             <CardContent>
               {confirming === p.slug ? (
