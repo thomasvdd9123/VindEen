@@ -1540,26 +1540,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const { action, reason } = req.body || {};
       if (!["APPROVE", "REJECT", "RESET"].includes(action)) return res.status(400).json({ error: "Invalid action" });
       if ((action === "APPROVE" || action === "REJECT") && !reason) return res.status(400).json({ error: "Reden is verplicht" });
-      const { data: prof } = await supabase.from("profile").select("verification_status").eq("id", id).maybeSingle();
-      if (!prof) return res.status(404).json({ error: "Profile not found" });
-      const fromStatus = (prof as any).verification_status;
       const toStatus = action === "APPROVE" ? "APPROVED" : action === "REJECT" ? "REJECTED" : "PENDING";
-      const { error: updErr } = await supabase.from("profile").update({
-        verification_status: toStatus,
-        is_verified: toStatus === "APPROVED",
-        is_public: toStatus === "APPROVED",
-        updated_at: new Date().toISOString(),
-      }).eq("id", id);
-      if (updErr) return res.status(500).json({ error: `Profile update failed: ${updErr.message}` });
-      const { error: evtErr } = await supabase.from("practitioner_verification_event").insert({
-        profile_id: id,
-        from_status: fromStatus,
-        to_status: toStatus,
-        reason: reason || null,
-        actor_admin_id: adm.adminId,
+      // Atomisch: status-update + audit-event in één Postgres-transactie via
+      // RPC, zodat de audit nooit kan ontbreken bij een statuswijziging.
+      const { data: rpcData, error: rpcErr } = await supabase.rpc("verify_profile_atomic", {
+        p_profile_id: id,
+        p_to_status: toStatus,
+        p_reason: reason || null,
+        p_actor_admin_id: adm.adminId,
       });
-      if (evtErr) return res.status(500).json({ error: `Audit event failed: ${evtErr.message}` });
-      return res.status(200).json({ success: true, status: toStatus });
+      if (rpcErr) {
+        if (rpcErr.code === "P0002") return res.status(404).json({ error: "Profile not found" });
+        return res.status(500).json({ error: `Verification failed: ${rpcErr.message}` });
+      }
+      return res.status(200).json({ success: true, status: toStatus, ...(rpcData as any) });
     }
 
     // Admin: gebruikers (practitioners)
@@ -1683,10 +1677,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       "subscription-plans": { table: "subscription_plan", fields: ["key", "name", "price", "description", "is_active", "sort_order", "valid_from", "valid_until"] },
       "subscription-plan-offers": { table: "subscription_plan_offer", fields: ["subscription_plan_id", "duration_in_years", "discount_percentage", "total_price", "is_popular", "is_active", "valid_from", "valid_until"] },
       // Read-only lookup-tabellen voor FK-dropdowns in /admin/instellingen.
-      // We staan POST/PUT/DELETE toe maar de UI gebruikt enkel GET.
+      // Writes zijn expliciet geblokkeerd via READONLY_CATALOGS hieronder —
+      // wijzigingen aan deze referentielijsten verlopen via migraties.
       "countries": { table: "country", fields: ["code", "name", "currency_code", "currency_symbol", "default_vat_percentage", "phone_country_code", "postcode_pattern", "is_active"] },
       "practitioner-types": { table: "practitioner_type", fields: ["key", "name", "description"] },
     };
+    const READONLY_CATALOGS = new Set(["countries", "practitioner-types"]);
 
     const adminCatalogListMatch = path.match(/^\/api\/admin\/catalog\/([^/]+)$/);
     if (method === "GET" && adminCatalogListMatch) {
@@ -1704,6 +1700,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (!adm) return res.status(403).json({ error: "Forbidden" });
       const cfg = ADMIN_CATALOG_TABLES[adminCatalogListMatch[1]];
       if (!cfg) return res.status(404).json({ error: "Unknown catalog" });
+      if (READONLY_CATALOGS.has(adminCatalogListMatch[1])) {
+        return res.status(405).json({ error: "Read-only catalog — wijzigingen lopen via migraties" });
+      }
       const body = req.body || {};
       const row: Record<string, any> = {};
       for (const f of cfg.fields) {
@@ -1725,6 +1724,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (!adm) return res.status(403).json({ error: "Forbidden" });
       const cfg = ADMIN_CATALOG_TABLES[adminCatalogItemMatch[1]];
       if (!cfg) return res.status(404).json({ error: "Unknown catalog" });
+      if (READONLY_CATALOGS.has(adminCatalogItemMatch[1])) {
+        return res.status(405).json({ error: "Read-only catalog — wijzigingen lopen via migraties" });
+      }
       const id = adminCatalogItemMatch[2];
       const body = req.body || {};
       const row: Record<string, any> = {};
@@ -1744,6 +1746,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (!adm) return res.status(403).json({ error: "Forbidden" });
       const cfg = ADMIN_CATALOG_TABLES[adminCatalogItemMatch[1]];
       if (!cfg) return res.status(404).json({ error: "Unknown catalog" });
+      if (READONLY_CATALOGS.has(adminCatalogItemMatch[1])) {
+        return res.status(405).json({ error: "Read-only catalog — wijzigingen lopen via migraties" });
+      }
       const id = adminCatalogItemMatch[2];
       // Bescherm system-defined items tegen delete
       if (cfg.fields.includes("is_system_defined")) {
