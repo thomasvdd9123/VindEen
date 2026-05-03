@@ -73,9 +73,9 @@ export default function GoedeTuinmanVinden() {
                 <Euro className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <h3 className="font-semibold mb-1">Vraag offertes</h3>
+                <h3 className="font-semibold mb-1">Vraag een persoonlijke prijsopgave</h3>
                 <p className="text-sm text-muted-foreground">
-                  Vergelijk minimaal 2-3 offertes om een goed beeld te krijgen van de markt
+                  Bespreek je project rechtstreeks met de tuinman van je keuze en vraag een duidelijke, schriftelijke prijsopgave
                 </p>
               </div>
             </div>

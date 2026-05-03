@@ -129,8 +129,9 @@ export default function DeTuinman() {
       <p>
         In België zijn duizenden tuinmannen actief, van zelfstandige professionals tot grotere 
         tuinbedrijven. Via <strong>Zoek-een-tuinman.be</strong> vind je eenvoudig een betrouwbare 
-        tuinman in jouw regio. Vergelijk profielen, bekijk specialisaties en neem direct contact op 
-        voor een vrijblijvende offerte.
+        tuinman in jouw regio. Bekijk profielen en specialisaties en neem rechtstreeks contact op 
+        voor een vrijblijvend gesprek of prijsopgave. Wij zijn een onafhankelijke gids — geen offerteplatform — 
+        dus je aanvraag gaat enkel naar de tuinman die je zelf kiest.
       </p>
 
       <p className="mt-4">

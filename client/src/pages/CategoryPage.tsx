@@ -204,18 +204,18 @@ export default function CategoryPage() {
   const seoDescription = useMemo(() => {
     const resultText = total > 0 ? `${total} ${siteConfig.businessTypePlural} gevonden.` : "";
     if (showAll) {
-      return fillCopy(`Bekijk alle {plural} in {country}. ${resultText} Vergelijk profielen, bekijk specialisaties en vraag gratis offertes aan.`);
+      return fillCopy(`Bekijk alle {plural} in {country}. ${resultText} Bekijk profielen, specialisaties en neem rechtstreeks contact op — geen offerte-doorverwijzing.`);
     }
     if (location && specializationLabel) {
-      return fillCopy(`Zoek ${specializationLabel.toLowerCase()} in ${location.name}. ${resultText} Bekijk profielen van lokale {professionalPlural} en vraag direct een offerte aan.`);
+      return fillCopy(`Zoek ${specializationLabel.toLowerCase()} in ${location.name}. ${resultText} Bekijk profielen van lokale {professionalPlural} en neem rechtstreeks contact op — geen tussenpersoon.`);
     }
     if (location) {
-      return fillCopy(`Vind de beste {plural} in ${location.name} (${location.postcode}). ${resultText} Bekijk profielen, specialisaties en contacteer direct.`);
+      return fillCopy(`Vind {article} in ${location.name} (${location.postcode}). ${resultText} Bekijk profielen, specialisaties en neem rechtstreeks contact op — geen tussenpersoon.`);
     }
     if (specializationLabel) {
-      return fillCopy(`Zoek {plural} gespecialiseerd in ${specializationLabel.toLowerCase()}. ${resultText} Vergelijk professionals in heel {country}.`);
+      return fillCopy(`Zoek {plural} gespecialiseerd in ${specializationLabel.toLowerCase()}. ${resultText} Bekijk profielen in heel {country} en neem rechtstreeks contact op.`);
     }
-    return fillCopy(`Zoek en vergelijk {plural} in {country}.`);
+    return fillCopy(`Zoek {plural} in {country} en neem rechtstreeks contact op — onafhankelijke gids, geen offerteplatform.`);
   }, [showAll, location, specializationLabel, total]);
 
   // Build canonical URL (without query params to avoid duplicates)
@@ -362,9 +362,14 @@ export default function CategoryPage() {
               {isLoading ? (
                 <Skeleton className="h-5 w-64" />
               ) : (
-                <p className="text-muted-foreground" data-testid="text-results-count">
-                  {total} {total === 1 ? "resultaat" : "resultaten"} gevonden
-                </p>
+                <>
+                  <p className="text-muted-foreground" data-testid="text-results-count">
+                    {total} {total === 1 ? "resultaat" : "resultaten"} gevonden
+                  </p>
+                  <p className="text-xs text-muted-foreground/80 mt-1" data-testid="text-no-leadgen-notice">
+                    Onafhankelijke gids — contacteer elke {siteConfig.businessType} rechtstreeks via zijn eigen profiel. Geen offerte-doorverwijzing.
+                  </p>
+                </>
               )}
             </div>
             <div className="flex items-center gap-2">

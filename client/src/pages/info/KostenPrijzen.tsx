@@ -179,8 +179,8 @@ export default function KostenPrijzen() {
         <li className="flex items-start gap-2">
           <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary font-semibold text-sm shrink-0">1</span>
           <div>
-            <strong>Vraag meerdere offertes:</strong> Vergelijk minimaal 2-3 offertes om een 
-            goed beeld te krijgen van de markt.
+            <strong>Vraag een persoonlijke prijsopgave:</strong> Bespreek je project ter plaatse 
+            met de tuinman zodat de prijs aansluit op wat je écht nodig hebt.
           </div>
         </li>
         <li className="flex items-start gap-2">

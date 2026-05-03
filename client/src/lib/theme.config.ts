@@ -83,7 +83,7 @@ export const siteConfig = {
       forBusinessesTitle: "Voor {professionalPlural}",
       forBusinessesBody: "Ben je {article} of vakprofessional? Registreer je profiel en bereik klanten in heel {country}. Met een professioneel profiel presenteer je je werk en specialisaties aan potentiële klanten.",
       forCustomersTitle: "Voor particulieren en bedrijven",
-      forCustomersBody: "Op zoek naar {article} voor je project? Blader door onze database van gekwalificeerde {professionalPlural}, bekijk hun portfolio en neem direct contact op. Gratis en vrijblijvend.",
+      forCustomersBody: "Op zoek naar {article} voor je project? Blader door onze database van gekwalificeerde {professionalPlural}, bekijk hun portfolio en neem rechtstreeks contact op met de {singular} van je keuze. Gratis, zonder tussenpersoon en zonder dat je aanvraag naar meerdere tuinmannen wordt doorgestuurd.",
       findCtaLabel: "Vind {article}",
       findCtaHref: "/zoek",
       values: [
@@ -113,8 +113,8 @@ export const siteConfig = {
     },
     profile: {
       seoTitle: "{name} - {singular} in {location}",
-      seoDescriptionWithLocation: "{name} is een professionele {singular} in {location}. Bekijk het profiel, specialisaties en vraag direct een offerte aan.",
-      seoDescriptionNoLocation: "{name} is een professionele {singular}. Bekijk het profiel, specialisaties en vraag direct een offerte aan.",
+      seoDescriptionWithLocation: "{name} is een professionele {singular} in {location}. Bekijk het profiel, specialisaties en neem rechtstreeks contact op — geen tussenpersoon, geen offerte-doorverwijzing.",
+      seoDescriptionNoLocation: "{name} is een professionele {singular}. Bekijk het profiel, specialisaties en neem rechtstreeks contact op — geen tussenpersoon, geen offerte-doorverwijzing.",
       breadcrumbSearchLabel: "Zoek {article}",
     },
   },
@@ -217,7 +217,7 @@ export const siteConfig = {
       {
         question: "Zijn de tuinmannen op dit platform betrouwbaar?",
         answer:
-          "Wij verifiëren alle tuinmannen op ons platform. Je ziet bij elk profiel of deze geverifieerd is. We raden altijd aan om referenties te vragen en een schriftelijke offerte te ontvangen.",
+          "Wij verifiëren alle tuinmannen op ons platform. Je ziet bij elk profiel of deze geverifieerd is. We raden altijd aan om referenties te vragen en duidelijke schriftelijke afspraken te maken met de tuinman die je kiest.",
       },
     ],
     forBusinesses: [
@@ -251,7 +251,7 @@ export const siteConfig = {
       {
         question: "Wat is {siteName}?",
         answer:
-          "{siteName} is een online platform om tuinprofessionals te vinden in {country}. We verbinden klanten met **betrouwbare tuinmannen**, hoveniers en tuinaannemers in heel het land.",
+          "{siteName} is een onafhankelijke online gids van tuinprofessionals in {country}. Je vindt **betrouwbare tuinmannen**, hoveniers en tuinaannemers in heel het land en neemt zelf rechtstreeks contact op met de tuinman van je keuze. **Wij zijn geen offerteplatform**: we sturen je aanvraag niet door naar meerdere tuinmannen en verkopen geen contactgegevens door.",
       },
       {
         question: "In welke regio's zijn jullie actief?",

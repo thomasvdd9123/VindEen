@@ -61,6 +61,12 @@ export default function Home() {
             ) : (
               <SearchBox locations={locations} />
             )}
+            <p
+              className="text-xs sm:text-sm text-muted-foreground text-center mt-4 max-w-2xl mx-auto"
+              data-testid="text-no-leadgen-notice"
+            >
+              Onafhankelijke gids — geen offerteplatform. Je contacteert de {siteConfig.businessType} van je keuze zelf rechtstreeks via zijn profiel.
+            </p>
           </div>
         </div>
       </section>

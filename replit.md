@@ -47,6 +47,17 @@ Designed for easy rebranding with a centralized `theme.config.ts` file in the fr
 - vercel.json moet expliciete rewrites hebben voor elke non-`/api/*` route die `api/index.ts` afhandelt (`/llms.txt`, `/llms-full.txt`, `/robots.txt`, `/sitemap.xml`, `/sitemaps/:path*`, etc.) — anders vangt de SPA-catch-all `/(.*)` ze op.
 - `/robots.txt` adverteert beide llms-bestanden + de MCP-endpoint.
 
+### Anti-leadgen positionering (zichtbaar)
+Het platform is een onafhankelijke gids, géén offerteplatform. De boodschap "geen offerte-doorverwijzing, rechtstreeks contact" staat zichtbaar op:
+- Homepage (kleine regel onder de SearchBox).
+- Elke CategoryPage (kleine regel onder de "X resultaten gevonden" teller).
+- Profiel-SEO `meta description` (`theme.config.ts` `pages.profile.seoDescription{With,No}Location`).
+- Alle CategoryPage SEO `meta description` varianten in `CategoryPage.tsx` `seoDescription` useMemo.
+- FAQ "Wat is {siteName}?" antwoord (`theme.config.ts` `faq.general[0]`) — expliciet "**Wij zijn geen offerteplatform**".
+- Info-pagina's `DeTuinman.tsx`, `GoedeTuinmanVinden.tsx`, `KostenPrijzen.tsx` zijn opgeschoond: geen "vraag/vergelijk 2-3 offertes"-framing meer (dat liet ons lijken op Werkspot/ListMinut). Vervangen door "vraag een persoonlijke prijsopgave" gericht op één gekozen tuinman.
+- `info/HoeWerktTuinaanleg.tsx` houdt "offerte" terminologie omdat het daar over een legitiem per-project quote met een gekozen tuinman gaat (geen lead-doorverwijzing).
+Wijzig deze copy enkel als je het anti-leadgen signaal expliciet wil verzwakken.
+
 ### Brand voice copy-linter
 `scripts/lint-copy.ts` scant `client/src/lib/theme.config.ts` en `client/src/pages/**/*.{ts,tsx}` op verboden termen uit `docs/brand-voice.md` (sectie 5 + 6) en stelt het toegestane alternatief voor. Strings binnen technische JSX-attributen, URL-paden en object-keys zoals `queryKey` worden overgeslagen om false-positives te beperken. CTA-only-regels (zoeken, verzenden, OK) vuren alleen op korte button-achtige strings. Een bestand kan volledig uitgesloten worden via de marker `lint-copy-ignore-file` in een commentaar. Draaien via `npm run lint:copy`; het script draait ook mee als deel van `npm run check`. Bestaande overtredingen staan in `scripts/lint-copy.baseline.json` en breken de build niet — enkel nieuwe overtredingen falen. Regenereer de baseline na een copy-opschoning met `npm run lint:copy -- --update-baseline`.
 

@@ -114,6 +114,9 @@ export function ContactForm({ profileId, profileName }: ContactFormProps) {
         </CardTitle>
         <CardDescription>
           Stuur een bericht naar {profileName}. Zij nemen zo snel mogelijk contact met je op.
+          <span className="block mt-1 text-xs text-muted-foreground/80" data-testid="text-direct-contact-notice">
+            Je bericht wordt enkel naar {profileName} verzonden — niet naar andere tuinmannen.
+          </span>
         </CardDescription>
       </CardHeader>
       <CardContent>
