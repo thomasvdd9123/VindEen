@@ -1029,7 +1029,7 @@ export default function ProfileEdit() {
                   }}
                 />
 
-                {/* Practical questions — same reusable component as Onboarding */}
+                {/* Practical questions */}
                 <div className="rounded-lg border p-4">
                   <PracticalQuestionsForm
                     values={practicalAnswers}

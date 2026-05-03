@@ -24,7 +24,6 @@ import { siteConfig } from "@/lib/theme.config";
 // initial bundle. Each chunk fetches on first navigation and is cached.
 const ForgotPassword = lazy(() => import("@/pages/ForgotPassword"));
 const PasswordReset = lazy(() => import("@/pages/PasswordReset"));
-const Onboarding = lazy(() => import("@/pages/Onboarding"));
 const Dashboard = lazy(() => import("@/pages/dashboard/Dashboard"));
 const DashboardAccount = lazy(() => import("@/pages/dashboard/Account"));
 const DashboardProfiles = lazy(() => import("@/pages/dashboard/Profiles"));
@@ -101,7 +100,6 @@ function Router() {
         <Route path="/registreren" component={Register} />
         <Route path="/wachtwoord-vergeten" component={ForgotPassword} />
         <Route path="/wachtwoord-reset" component={PasswordReset} />
-        <Route path="/onboarding" component={Onboarding} />
         <Route path="/dashboard" component={Dashboard} />
         <Route path="/dashboard/account" component={DashboardAccount} />
         <Route path="/dashboard/profielen" component={DashboardProfiles} />
