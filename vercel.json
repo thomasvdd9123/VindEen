@@ -21,6 +21,14 @@
       "destination": "/api"
     },
     {
+      "source": "/llms.txt",
+      "destination": "/api"
+    },
+    {
+      "source": "/llms-full.txt",
+      "destination": "/api"
+    },
+    {
       "source": "/api/(.*)",
       "destination": "/api"
     },
