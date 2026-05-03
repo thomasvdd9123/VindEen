@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Pencil, Trash2 } from "lucide-react";
@@ -32,6 +33,7 @@ function PlansManager() {
   const { toast } = useToast();
   const [edit, setEdit] = useState<any | null>(null);
   const [open, setOpen] = useState(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
   const q = useQuery<any[]>({ queryKey: ["/api/admin/catalog/subscription-plans"], queryFn: async () => (await authFetch("/api/admin/catalog/subscription-plans")).json() });
   const save = useMutation({
     mutationFn: (row: any) => row.id
@@ -58,7 +60,7 @@ function PlansManager() {
               <TableCell>{p.isActive ? "Ja" : "Nee"}</TableCell><TableCell>{p.validFrom || "—"}</TableCell><TableCell>{p.validUntil || "—"}</TableCell>
               <TableCell className="space-x-1">
                 <Button size="sm" variant="ghost" onClick={() => { setEdit(p); setOpen(true); }}><Pencil className="h-3 w-3" /></Button>
-                <Button size="sm" variant="ghost" onClick={() => { if (confirm("Plan verwijderen?")) del.mutate(p.id); }}><Trash2 className="h-3 w-3" /></Button>
+                <Button size="sm" variant="ghost" onClick={() => setDeleteId(p.id)} data-testid={`button-delete-plan-${p.id}`}><Trash2 className="h-3 w-3" /></Button>
               </TableCell>
             </TableRow>
           ))}
@@ -80,6 +82,26 @@ function PlansManager() {
           <DialogFooter><Button onClick={() => save.mutate(edit)} disabled={save.isPending}>Opslaan</Button></DialogFooter>
         </DialogContent>
       </Dialog>
+      <AlertDialog open={!!deleteId} onOpenChange={(o) => { if (!o) setDeleteId(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Plan verwijderen?</AlertDialogTitle>
+            <AlertDialogDescription>Weet je zeker dat je dit abonnementsplan wil verwijderen? Bestaande betalingen blijven behouden, maar het plan kan niet meer worden gekozen.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuleren</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={del.isPending}
+              onClick={() => {
+                if (del.isPending || !deleteId) return;
+                del.mutate(deleteId);
+                setDeleteId(null);
+              }}
+              data-testid="button-delete-plan-confirm"
+            >Verwijderen</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </CardContent></Card>
   );
 }
@@ -88,6 +110,7 @@ function OffersManager() {
   const { toast } = useToast();
   const [edit, setEdit] = useState<any | null>(null);
   const [open, setOpen] = useState(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
   const plans = useQuery<any[]>({ queryKey: ["/api/admin/catalog/subscription-plans"], queryFn: async () => (await authFetch("/api/admin/catalog/subscription-plans")).json() });
   const q = useQuery<any[]>({ queryKey: ["/api/admin/catalog/subscription-plan-offers"], queryFn: async () => (await authFetch("/api/admin/catalog/subscription-plan-offers")).json() });
   const save = useMutation({
@@ -100,6 +123,7 @@ function OffersManager() {
   const del = useMutation({
     mutationFn: (id: string) => apiRequest("DELETE", `/api/admin/catalog/subscription-plan-offers/${id}`),
     onSuccess: () => { toast({ title: "Verwijderd" }); queryClient.invalidateQueries({ queryKey: ["/api/admin/catalog/subscription-plan-offers"] }); },
+    onError: (e: any) => toast({ title: "Fout", description: e.message, variant: "destructive" }),
   });
 
   return (
@@ -117,7 +141,7 @@ function OffersManager() {
                 <TableCell>{o.totalPrice}</TableCell><TableCell>{o.isPopular ? "Ja" : "Nee"}</TableCell><TableCell>{o.isActive ? "Ja" : "Nee"}</TableCell>
                 <TableCell className="space-x-1">
                   <Button size="sm" variant="ghost" onClick={() => { setEdit(o); setOpen(true); }}><Pencil className="h-3 w-3" /></Button>
-                  <Button size="sm" variant="ghost" onClick={() => { if (confirm("Aanbod verwijderen?")) del.mutate(o.id); }}><Trash2 className="h-3 w-3" /></Button>
+                  <Button size="sm" variant="ghost" onClick={() => setDeleteId(o.id)} data-testid={`button-delete-offer-${o.id}`}><Trash2 className="h-3 w-3" /></Button>
                 </TableCell>
               </TableRow>
             );
@@ -147,6 +171,26 @@ function OffersManager() {
           <DialogFooter><Button onClick={() => save.mutate(edit)} disabled={save.isPending}>Opslaan</Button></DialogFooter>
         </DialogContent>
       </Dialog>
+      <AlertDialog open={!!deleteId} onOpenChange={(o) => { if (!o) setDeleteId(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Aanbod verwijderen?</AlertDialogTitle>
+            <AlertDialogDescription>Weet je zeker dat je dit aanbod wil verwijderen?</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuleren</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={del.isPending}
+              onClick={() => {
+                if (del.isPending || !deleteId) return;
+                del.mutate(deleteId);
+                setDeleteId(null);
+              }}
+              data-testid="button-delete-offer-confirm"
+            >Verwijderen</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </CardContent></Card>
   );
 }

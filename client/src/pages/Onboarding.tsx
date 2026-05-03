@@ -56,18 +56,23 @@ const businessSchema = z.object({
   btwPlichtig: z.string(),
   btwNumber: z.string().optional(),
   kvkNumber: z.string().optional(),
-}).refine(
-  (data) => {
-    if (data.btwPlichtig === "ja" && data.btwNumber) {
-      return isValidBelgianVAT(data.btwNumber);
+}).superRefine((data, ctx) => {
+  if (data.btwPlichtig === "yes") {
+    if (!data.btwNumber || data.btwNumber.trim().length === 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "BTW-nummer is verplicht wanneer je BTW-plichtig bent",
+        path: ["btwNumber"],
+      });
+    } else if (!isValidBelgianVAT(data.btwNumber)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Ongeldig BTW-nummer. Gebruik formaat BE0123456789 (BE + 10 cijfers)",
+        path: ["btwNumber"],
+      });
     }
-    return true;
-  },
-  {
-    message: "Ongeldig BTW-nummer. Gebruik formaat BE0123456789 (BE + 10 cijfers)",
-    path: ["btwNumber"],
   }
-);
+});
 
 const profileSchema = z.object({
   name: z.string().min(2, "Bedrijfsnaam is verplicht"),
@@ -141,7 +146,7 @@ function OnboardingContent() {
       street: metadata.street || "",
       postcode: metadata.postcode || "",
       municipality: metadata.municipality || "",
-      btwPlichtig: metadata.btwPlichtig || "nee",
+      btwPlichtig: (metadata.btwPlichtig === "ja" ? "yes" : metadata.btwPlichtig === "nee" ? "no" : metadata.btwPlichtig) || "no",
       btwNumber: metadata.btwNumber || "",
       kvkNumber: metadata.kvkNumber || "",
     },
@@ -214,7 +219,7 @@ function OnboardingContent() {
       const { error } = await updateUserMetadata({
         ...data,
         country: siteConfig.country,
-        btwNumber: data.btwPlichtig === "ja" && data.btwNumber ? formatBelgianVAT(data.btwNumber) : "",
+        btwNumber: data.btwPlichtig === "yes" && data.btwNumber ? formatBelgianVAT(data.btwNumber) : "",
       });
       if (error) {
         toast({ title: "Fout", description: error.message, variant: "destructive" });
@@ -569,8 +574,8 @@ function OnboardingContent() {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="ja">Ja</SelectItem>
-                              <SelectItem value="nee">Nee</SelectItem>
+                              <SelectItem value="yes">Ja</SelectItem>
+                              <SelectItem value="no">Nee</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -578,7 +583,7 @@ function OnboardingContent() {
                       )}
                     />
 
-                    {businessForm.watch("btwPlichtig") === "ja" && (
+                    {businessForm.watch("btwPlichtig") === "yes" && (
                       <FormField
                         control={businessForm.control}
                         name="btwNumber"

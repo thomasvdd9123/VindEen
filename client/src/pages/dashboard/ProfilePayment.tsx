@@ -42,6 +42,8 @@ export default function ProfilePayment() {
     enabled: !!user?.id,
   });
 
+  const selected = plans.find((p) => p.id === selectedPlan);
+
   const handlePayment = async () => {
     if (!account?.id || !profileId || !selectedPlan) {
       toast({
@@ -66,8 +68,8 @@ export default function ProfilePayment() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Payment failed");
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || "Betaling kon niet worden gestart");
       }
 
       const data = await response.json();
@@ -76,10 +78,10 @@ export default function ProfilePayment() {
       } else {
         throw new Error("Geen betaal-URL ontvangen");
       }
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Betaling mislukt",
-        description: "Er ging iets mis. Probeer het opnieuw.",
+        description: error?.message || "Er ging iets mis. Probeer het opnieuw.",
         variant: "destructive",
       });
     } finally {
@@ -114,8 +116,6 @@ export default function ProfilePayment() {
       </DashboardLayout>
     );
   }
-
-  const selected = plans.find((p) => p.id === selectedPlan);
 
   return (
     <DashboardLayout

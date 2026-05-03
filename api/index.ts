@@ -1142,8 +1142,69 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     if (method === "POST" && path === "/api/contact-owner") {
-      const { name, email, subject, message } = req.body;
-      if (!name || !email || !subject || !message) return res.status(400).json({ error: "All fields are required" });
+      const schema = z.object({
+        name: z.string().trim().min(2).max(120),
+        email: z.string().trim().email().max(200),
+        subject: z.string().trim().min(3).max(200),
+        message: z.string().trim().min(10).max(5000),
+        recaptchaToken: z.string().optional(),
+      });
+      const parsed = schema.safeParse(req.body || {});
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Ongeldige invoer", details: parsed.error.flatten() });
+      }
+      const { name, email, subject, message, recaptchaToken } = parsed.data;
+
+      const recaptchaSecretKey = process.env.RECAPTCHA_SECRET_KEY;
+      if (recaptchaSecretKey) {
+        if (!recaptchaToken) {
+          return res.status(400).json({ error: "reCAPTCHA token ontbreekt" });
+        }
+        try {
+          const r = await fetch("https://www.google.com/recaptcha/api/siteverify", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: `secret=${recaptchaSecretKey}&response=${recaptchaToken}`,
+          });
+          const result = (await r.json()) as { success: boolean; score?: number };
+          if (!result.success || (result.score !== undefined && result.score < 0.5)) {
+            return res.status(400).json({ error: "reCAPTCHA verificatie mislukt" });
+          }
+        } catch {
+          return res.status(400).json({ error: "reCAPTCHA verificatie mislukt" });
+        }
+      }
+
+      const resendApiKey = process.env.RESEND_API_KEY;
+      const ownerEmail = process.env.PLATFORM_CONTACT_EMAIL || SITE_EMAIL_FROM;
+      if (resendApiKey && ownerEmail) {
+        try {
+          await fetch("https://api.resend.com/emails", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${resendApiKey}`, "Content-Type": "application/json" },
+            body: JSON.stringify({
+              from: SITE_EMAIL_FROM,
+              to: [ownerEmail],
+              reply_to: email,
+              subject: `Platform contact: ${subject}`,
+              html: `<p>Nieuw bericht via het contactformulier van <b>${escapeHtml(name)}</b> (${escapeHtml(email)}).</p>
+                <p>Onderwerp: ${escapeHtml(subject)}</p>
+                <pre>${escapeHtml(message)}</pre>`,
+            }),
+          });
+        } catch (e) {
+          console.error("platform contact email failed:", e);
+        }
+      }
+
+      // Persist for audit even if email fails (table 'platform_contact' is optional —
+      // ignore failure so the user always gets a 200 when validation passed).
+      try {
+        await supabase.from("platform_contact").insert({
+          name, email, subject, message,
+        } as any);
+      } catch { /* table may not exist yet */ }
+
       console.log("Platform contact:", { name, email, subject });
       return res.status(200).json({ success: true });
     }
@@ -1743,15 +1804,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json({ isAdmin: true, adminId: adm.adminId });
     }
 
-    // Admin: profielen lijst (met optionele status-filter)
+    // Admin: profielen lijst (met optionele status-filter en pagination)
     if (method === "GET" && path === "/api/admin/profiles") {
       const adm = await requireAdmin(req);
       if (!adm) return res.status(403).json({ error: "Forbidden" });
       const status = url.searchParams.get("status");
-      let q = supabase.from("profile").select("*").order("created_at", { ascending: false });
+      const limit = Math.min(parseInt(url.searchParams.get("limit") || "100", 10) || 100, 500);
+      const offset = Math.max(parseInt(url.searchParams.get("offset") || "0", 10) || 0, 0);
+      let q = supabase
+        .from("profile")
+        .select("*", { count: "exact" })
+        .order("created_at", { ascending: false })
+        .range(offset, offset + limit - 1);
       if (status) q = q.eq("verification_status", status);
-      const { data, error } = await q;
+      const { data, error, count } = await q;
       if (error) throw error;
+      res.setHeader("X-Total-Count", String(count ?? 0));
       return res.status(200).json(toCamelCase(data || []));
     }
 
@@ -1806,10 +1874,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (method === "GET" && path === "/api/admin/users") {
       const adm = await requireAdmin(req);
       if (!adm) return res.status(403).json({ error: "Forbidden" });
-      const { data: pracs } = await supabase
+      const limit = Math.min(parseInt(url.searchParams.get("limit") || "100", 10) || 100, 500);
+      const offset = Math.max(parseInt(url.searchParams.get("offset") || "0", 10) || 0, 0);
+      const { data: pracs, count } = await supabase
         .from("practitioner")
-        .select("*, practitioner_type(name,key)")
-        .order("created_at", { ascending: false });
+        .select("*, practitioner_type(name,key)", { count: "exact" })
+        .order("created_at", { ascending: false })
+        .range(offset, offset + limit - 1);
+      res.setHeader("X-Total-Count", String(count ?? 0));
       const ids = (pracs || []).map((p: any) => p.id);
       const { data: profiles } = ids.length
         ? await supabase.from("profile").select("id,practitioner_id,company_name,slug,is_active,is_public,verification_status").in("practitioner_id", ids)

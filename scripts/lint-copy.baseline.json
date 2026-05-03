@@ -1,7 +1,7 @@
 {
   "description": "Auto-gegenereerde baseline van bestaande copy-overtredingen. Regenereren via `npx tsx scripts/lint-copy.ts --update-baseline` wanneer je copy hebt opgeschoond. Nieuwe overtredingen breken de build wel.",
-  "generatedAt": "2026-05-03T03:30:14.008Z",
-  "count": 167,
+  "generatedAt": "2026-05-03T04:45:25.053Z",
+  "count": 166,
   "violations": [
     {
       "file": "client/src/lib/theme.config.ts",
@@ -95,7 +95,7 @@
     },
     {
       "file": "client/src/pages/admin/AdminCatalogs.tsx",
-      "line": 184,
+      "line": 186,
       "term": "Opslaan"
     },
     {
@@ -130,12 +130,12 @@
     },
     {
       "file": "client/src/pages/admin/AdminSubscriptions.tsx",
-      "line": 80,
+      "line": 82,
       "term": "Opslaan"
     },
     {
       "file": "client/src/pages/admin/AdminSubscriptions.tsx",
-      "line": 147,
+      "line": 171,
       "term": "Opslaan"
     },
     {
@@ -229,11 +229,6 @@
       "term": "Zoek"
     },
     {
-      "file": "client/src/pages/Contact.tsx",
-      "line": 56,
-      "term": "Verzenden"
-    },
-    {
       "file": "client/src/pages/dashboard/Account.tsx",
       "line": 159,
       "term": "opslaan"
@@ -325,12 +320,12 @@
     },
     {
       "file": "client/src/pages/dashboard/DashboardLayout.tsx",
-      "line": 144,
+      "line": 157,
       "term": "Account"
     },
     {
       "file": "client/src/pages/dashboard/DashboardLayout.tsx",
-      "line": 191,
+      "line": 204,
       "term": "gebruiker"
     },
     {
@@ -350,7 +345,7 @@
     },
     {
       "file": "client/src/pages/dashboard/ProfilePayment.tsx",
-      "line": 49,
+      "line": 51,
       "term": "Account"
     },
     {
@@ -675,37 +670,37 @@
     },
     {
       "file": "client/src/pages/Login.tsx",
-      "line": 60,
+      "line": 55,
       "term": "Inloggen"
     },
     {
       "file": "client/src/pages/Login.tsx",
-      "line": 78,
+      "line": 72,
       "term": "inloggen"
     },
     {
       "file": "client/src/pages/Login.tsx",
-      "line": 88,
+      "line": 82,
       "term": "Inloggen"
     },
     {
       "file": "client/src/pages/Login.tsx",
-      "line": 102,
+      "line": 96,
       "term": "account"
     },
     {
       "file": "client/src/pages/Login.tsx",
-      "line": 161,
+      "line": 155,
       "term": "inloggen"
     },
     {
       "file": "client/src/pages/Login.tsx",
-      "line": 175,
+      "line": 169,
       "term": "account"
     },
     {
       "file": "client/src/pages/Login.tsx",
-      "line": 177,
+      "line": 171,
       "term": "Registreer"
     },
     {
@@ -715,17 +710,17 @@
     },
     {
       "file": "client/src/pages/Onboarding.tsx",
-      "line": 386,
+      "line": 391,
       "term": "account"
     },
     {
       "file": "client/src/pages/Onboarding.tsx",
-      "line": 398,
+      "line": 403,
       "term": "het platform"
     },
     {
       "file": "client/src/pages/Onboarding.tsx",
-      "line": 401,
+      "line": 406,
       "term": "account"
     },
     {

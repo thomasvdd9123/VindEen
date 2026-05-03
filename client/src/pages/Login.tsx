@@ -16,7 +16,7 @@ import { siteConfig, fillCopy } from "@/lib/theme.config";
 
 const loginSchema = z.object({
   email: z.string().email("Ongeldig email adres"),
-  password: z.string().min(6, "Wachtwoord moet minimaal 6 karakters bevatten"),
+  password: z.string().min(8, "Wachtwoord moet minimaal 8 karakters bevatten"),
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
@@ -26,21 +26,16 @@ export default function Login() {
   const { toast } = useToast();
   const { signIn, user, loading } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
-  const [loginSuccess, setLoginSuccess] = useState(false);
 
-  // Redirect when user is authenticated after successful login
+  // Single redirect: as soon as we know auth has settled and a user is present,
+  // navigate to /dashboard. This handles both fresh logins and already-logged-in
+  // visitors. Previous version used two competing effects + a loginSuccess flag
+  // which raced with the auth state update.
   useEffect(() => {
-    if (loginSuccess && user && !loading) {
+    if (!loading && user) {
       setLocation("/dashboard");
     }
-  }, [loginSuccess, user, loading, setLocation]);
-
-  // Also redirect if user is already logged in
-  useEffect(() => {
-    if (user && !loading && !isLoading) {
-      setLocation("/dashboard");
-    }
-  }, [user, loading, isLoading, setLocation]);
+  }, [user, loading, setLocation]);
 
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -69,8 +64,7 @@ export default function Login() {
           title: "Welkom terug!",
           description: "Je bent succesvol ingelogd.",
         });
-        // Mark login as successful, redirect will happen via effect when user state updates
-        setLoginSuccess(true);
+        // Redirect happens via the useEffect above when user state updates.
       }
     } catch (error) {
       toast({

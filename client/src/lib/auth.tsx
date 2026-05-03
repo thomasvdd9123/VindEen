@@ -143,8 +143,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
     setSession(null);
     try {
-      // Sign out with global scope to clear all sessions
-      await supabase.auth.signOut({ scope: 'global' });
+      // Use 'local' scope so we only clear the current device session.
+      // 'global' triggers a server round-trip that frequently 403s when the
+      // session is already partially cleared, leaving the user stuck.
+      await supabase.auth.signOut({ scope: 'local' });
     } catch (error) {
       console.error("Sign out error:", error);
     }
@@ -229,45 +231,25 @@ export function useAuth() {
 export function RequireAuth({ children }: { children: React.ReactNode }) {
   const { user, loading, isConfigured } = useAuth();
   const [, setLocation] = useLocation();
-  const redirectedRef = useRef(false);
 
-  // Show loading spinner while auth is being initialized
-  if (loading) {
+  // Redirect to login when auth has settled and there is no user.
+  // Done in an effect to avoid setState-during-render warnings and the
+  // setTimeout/redirectedRef race that the previous implementation suffered.
+  useEffect(() => {
+    if (!loading && isConfigured && !user) {
+      setLocation("/login");
+    }
+  }, [loading, isConfigured, user, setLocation]);
+
+  // Show loading spinner while auth is being initialized OR while we're
+  // waiting for the redirect-to-login effect to fire.
+  if (loading || (isConfigured && !user)) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
   }
-
-  // Allow access if Supabase isn't configured (for development/demo purposes)
-  if (!isConfigured) {
-    return <>{children}</>;
-  }
-
-  // Auth is loaded, no user = redirect to login (only once)
-  if (!user && !redirectedRef.current) {
-    redirectedRef.current = true;
-    // Use setTimeout to avoid React state update during render
-    setTimeout(() => setLocation("/login"), 0);
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-
-  // Still waiting for redirect to complete
-  if (!user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-
-  // Reset redirect flag when user is present
-  redirectedRef.current = false;
 
   return <>{children}</>;
 }

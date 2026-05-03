@@ -108,7 +108,7 @@ export default function PaymentStatus() {
               </p>
             </div>
             <div className="flex flex-col gap-2">
-              <Link href={`/dashboard/profielen/${profileId}`}>
+              <Link href={`/dashboard/profielen/${profileId}/bewerken`}>
                 <Button className="w-full gap-2" data-testid="button-view-profile">
                   Bekijk je profiel
                   <ArrowRight className="h-4 w-4" />

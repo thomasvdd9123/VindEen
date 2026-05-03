@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { apiRequest } from "@/lib/queryClient";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,9 +24,47 @@ const contactSchema = z.object({
 
 type ContactFormData = z.infer<typeof contactSchema>;
 
+const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY as string | undefined;
+
+declare global {
+  interface Window {
+    grecaptcha?: {
+      ready: (cb: () => void) => void;
+      execute: (siteKey: string, opts: { action: string }) => Promise<string>;
+    };
+  }
+}
+
 export default function Contact() {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Lazy-load reCAPTCHA v3 script (mirrors ContactForm.tsx pattern).
+  useEffect(() => {
+    if (!RECAPTCHA_SITE_KEY) return;
+    const existing = document.querySelector<HTMLScriptElement>(`script[data-recaptcha-site="${RECAPTCHA_SITE_KEY}"]`);
+    if (existing) return;
+    const s = document.createElement("script");
+    s.src = `https://www.google.com/recaptcha/api.js?render=${RECAPTCHA_SITE_KEY}`;
+    s.async = true;
+    s.defer = true;
+    s.dataset.recaptchaSite = RECAPTCHA_SITE_KEY;
+    document.head.appendChild(s);
+  }, []);
+
+  const getRecaptchaToken = async (): Promise<string | undefined> => {
+    if (!RECAPTCHA_SITE_KEY || !window.grecaptcha) return undefined;
+    return new Promise((resolve) => {
+      window.grecaptcha!.ready(async () => {
+        try {
+          const token = await window.grecaptcha!.execute(RECAPTCHA_SITE_KEY, { action: "contact_owner" });
+          resolve(token);
+        } catch {
+          resolve(undefined);
+        }
+      });
+    });
+  };
 
   const form = useForm<ContactFormData>({
     resolver: zodResolver(contactSchema),
@@ -40,25 +79,17 @@ export default function Contact() {
   const onSubmit = async (data: ContactFormData) => {
     setIsSubmitting(true);
     try {
-      const response = await fetch("/api/contact-owner", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+      const recaptchaToken = await getRecaptchaToken();
+      await apiRequest("POST", "/api/contact-owner", { ...data, recaptchaToken });
+      toast({
+        title: "Bericht verzonden",
+        description: "Bedankt voor je bericht. We nemen zo snel mogelijk contact met je op.",
       });
-
-      if (response.ok) {
-        toast({
-          title: "Bericht verzonden",
-          description: "Bedankt voor je bericht. We nemen zo snel mogelijk contact met je op.",
-        });
-        form.reset();
-      } else {
-        throw new Error("Verzenden mislukt");
-      }
-    } catch {
+      form.reset();
+    } catch (e: any) {
       toast({
         title: "Er ging iets mis",
-        description: "Het bericht kon niet worden verzonden. Probeer het later opnieuw.",
+        description: e?.message || "Het bericht kon niet worden verzonden. Probeer het later opnieuw.",
         variant: "destructive",
       });
     } finally {

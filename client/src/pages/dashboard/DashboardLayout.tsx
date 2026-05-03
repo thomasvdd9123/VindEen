@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import {
@@ -46,8 +46,9 @@ const sidebarLinks = [
 
 export function DashboardLayout({ children, title, description }: DashboardLayoutProps) {
   const { siteName } = useSiteConfig();
-  const [location] = useLocation();
+  const [location, setLocationNav] = useLocation();
   const { user, signOut, loading, isConfigured } = useAuth();
+  const [isSigningOut, setIsSigningOut] = useState(false);
 
   // Prefetch all dashboard data when user enters dashboard
   useEffect(() => {
@@ -98,19 +99,31 @@ export function DashboardLayout({ children, title, description }: DashboardLayou
   }, [user?.id, user?.email]);
 
   const handleSignOut = async () => {
-    await signOut();
-    // Clear all cached queries
-    queryClient.clear();
-    // Small delay to ensure session is fully cleared before redirect
-    setTimeout(() => {
-      window.location.href = "/";
-    }, 100);
+    if (isSigningOut) return;
+    setIsSigningOut(true);
+    try {
+      await signOut();
+    } finally {
+      // Clear all cached queries regardless of signOut outcome
+      queryClient.clear();
+      setLocationNav("/");
+    }
   };
 
-  // Redirect if not logged in (but allow access if not configured - for demo)
+  // Redirect if not logged in (but allow access if not configured - for demo).
+  // Use an effect so we don't trigger navigation during render.
+  useEffect(() => {
+    if (!loading && !user && isConfigured) {
+      setLocationNav("/login");
+    }
+  }, [loading, user, isConfigured, setLocationNav]);
+
   if (!loading && !user && isConfigured) {
-    window.location.href = "/login";
-    return null;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
   }
 
   if (loading) {

@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
@@ -101,6 +102,7 @@ function CatalogManager({ config }: { config: CatalogConfig }) {
   const { toast } = useToast();
   const [editRow, setEditRow] = useState<any | null>(null);
   const [open, setOpen] = useState(false);
+  const [deleteRow, setDeleteRow] = useState<any | null>(null);
 
   const q = useQuery<any[]>({
     queryKey: [`/api/admin/catalog/${config.slug}`],
@@ -147,7 +149,7 @@ function CatalogManager({ config }: { config: CatalogConfig }) {
                   {config.display.map((f) => <TableCell key={f}>{String(row[f] ?? "—")}</TableCell>)}
                   <TableCell className="space-x-1">
                     <Button size="sm" variant="ghost" onClick={() => { setEditRow(row); setOpen(true); }} data-testid={`button-edit-${row.id}`}><Pencil className="h-3 w-3" /></Button>
-                    <Button size="sm" variant="ghost" onClick={() => { if (confirm(`${row.name || row.key} verwijderen?`)) delM.mutate(row.id); }} data-testid={`button-delete-${row.id}`}><Trash2 className="h-3 w-3" /></Button>
+                    <Button size="sm" variant="ghost" onClick={() => setDeleteRow(row)} data-testid={`button-delete-${row.id}`}><Trash2 className="h-3 w-3" /></Button>
                   </TableCell>
                 </TableRow>
               ))}
@@ -185,6 +187,28 @@ function CatalogManager({ config }: { config: CatalogConfig }) {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        <AlertDialog open={!!deleteRow} onOpenChange={(o) => { if (!o) setDeleteRow(null); }}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Item verwijderen?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Weet je zeker dat je <b>{deleteRow?.name || deleteRow?.key}</b> wil verwijderen? Deze actie kan niet worden ongedaan gemaakt.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel data-testid="button-delete-cancel">Annuleren</AlertDialogCancel>
+              <AlertDialogAction
+                disabled={delM.isPending}
+                onClick={() => {
+                  if (delM.isPending || !deleteRow) return;
+                  delM.mutate(deleteRow.id);
+                  setDeleteRow(null);
+                }}
+                data-testid="button-delete-confirm"
+              >Verwijderen</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </CardContent>
     </Card>
   );
