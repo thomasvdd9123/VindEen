@@ -415,7 +415,7 @@ export default function ProfileEdit() {
   const mainCategoryDescriptions = useMemo(() => {
     const m: Record<string, string> = {};
     serviceCategories.forEach((c) => {
-      m[c.slug.toUpperCase().replace(/-/g, "_")] = c.description || "";
+      m[c.slug] = c.description || "";
     });
     return m;
   }, [serviceCategories]);

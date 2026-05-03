@@ -18,16 +18,14 @@ export interface ServiceCategoryRow {
   sortOrder: number;
 }
 
-// Single source of truth for specialization key ↔ slug ↔ label mapping.
+// Single source of truth for specialization slug ↔ label mapping.
 // Sourced from the normalized /api/specializations endpoint (no dependency on
 // the legacy /api/categories/grouped shape) so any vertical's catalog works.
 //
-// `key` here is the upper-snake form of the slug — this is the wire format
-// stored on profile.specializations[]. `slug` is the kebab-case URL form.
-function slugToKey(slug: string): string {
-  return slug.toUpperCase().replace(/-/g, "_");
-}
-
+// IMPORTANT — canonical identifier is the **slug** (kebab-case). This matches
+// the wire format used by `hydrateProfile()` (profile.specializations[]) and
+// by the create/update profile API. The `key` field is kept as an alias of
+// `slug` for back-compat with consumers using `keyToSlug` / `labelByKey`.
 export function useSpecializationMap() {
   const query = useQuery<SpecializationRow[]>({
     queryKey: ["/api/specializations"],
@@ -38,31 +36,28 @@ export function useSpecializationMap() {
     staleTime: Infinity,
   });
 
-  const all = useMemo(() => (query.data || []).map((s) => ({ ...s, key: slugToKey(s.slug) })), [query.data]);
+  // key === slug. Single canonical identifier across the app.
+  const all = useMemo(() => (query.data || []).map((s) => ({ ...s, key: s.slug })), [query.data]);
 
   const slugToKeyMap = useMemo(() => {
     const m: Record<string, string> = {};
-    all.forEach((s) => { m[s.slug] = s.key; });
+    all.forEach((s) => { m[s.slug] = s.slug; });
     return m;
   }, [all]);
 
   const keyToSlug = useMemo(() => {
     const m: Record<string, string> = {};
-    all.forEach((s) => { m[s.key] = s.slug; });
+    all.forEach((s) => { m[s.slug] = s.slug; });
     return m;
   }, [all]);
 
   const labelByKey = useMemo(() => {
     const m: Record<string, string> = {};
-    all.forEach((s) => { m[s.key] = s.name; });
-    return m;
-  }, [all]);
-
-  const labelBySlug = useMemo(() => {
-    const m: Record<string, string> = {};
     all.forEach((s) => { m[s.slug] = s.name; });
     return m;
   }, [all]);
+
+  const labelBySlug = labelByKey;
 
   // Grouped { categorySlug → [specs] } — used by ProfileCreate/Edit/SearchBox.
   const grouped = useMemo(() => {
@@ -76,19 +71,20 @@ export function useSpecializationMap() {
     return m;
   }, [all, cats.data]);
 
-  // Legacy shape used by SearchBox/ProfileCreate/ProfileEdit forms:
-  // mainCategoryLabels: { CAT_KEY → name } and specializationsByCategory:
-  // { CAT_KEY → [SPEC_KEY,...] } where keys are upper-snake form of slug.
+  // mainCategoryLabels: { categorySlug → name } and
+  // specializationsByCategory: { categorySlug → [specSlug,...] }.
+  // All keyed by slug (no upper-snake transformation) so values match
+  // profile.specializations[] coming from /api/profiles.
   const mainCategoryLabels = useMemo(() => {
     const m: Record<string, string> = {};
-    (cats.data || []).forEach((c) => { m[slugToKey(c.slug)] = c.name; });
+    (cats.data || []).forEach((c) => { m[c.slug] = c.name; });
     return m;
   }, [cats.data]);
 
   const specializationsByCategory = useMemo(() => {
     const m: Record<string, string[]> = {};
     (cats.data || []).forEach((c) => {
-      m[slugToKey(c.slug)] = (grouped[c.slug] || []).map((s) => s.key);
+      m[c.slug] = (grouped[c.slug] || []).map((s) => s.slug);
     });
     return m;
   }, [cats.data, grouped]);

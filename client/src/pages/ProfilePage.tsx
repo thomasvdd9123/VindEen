@@ -33,12 +33,13 @@ import {
   ExternalLink,
 } from "lucide-react";
 import type { ProfileWithRelations } from "@shared/schema";
-import { specializationLabels } from "@shared/schema";
 import { siteConfig, fillCopy } from "@/lib/theme.config";
 import { usePracticalQuestions, type PracticalQuestion } from "@/lib/usePracticalQuestions";
+import { useSpecializationMap } from "@/lib/useSpecializations";
 
 export default function ProfilePage() {
   const params = useParams<{ slug: string }>();
+  const { labelByKey: specLabels, keyToSlug: specKeyToSlug } = useSpecializationMap();
 
   const { data: profile, isLoading, error } = useQuery<ProfileWithRelations>({
     queryKey: ["/api/profiles", params.slug],
@@ -279,11 +280,16 @@ export default function ProfilePage() {
 
                     {profile.specializations && profile.specializations.length > 0 && (
                       <div className="flex flex-wrap gap-2 mt-4">
-                        {profile.specializations.map((spec: string) => (
-                          <Badge key={spec} variant="outline">
-                            {specializationLabels[spec] || spec}
-                          </Badge>
-                        ))}
+                        {profile.specializations.map((spec: string) => {
+                          const slug = specKeyToSlug[spec] || spec;
+                          return (
+                            <Link key={spec} href={`/zoek/${slug}`}>
+                              <Badge variant="outline" className="cursor-pointer">
+                                {specLabels[spec] || spec}
+                              </Badge>
+                            </Link>
+                          );
+                        })}
                       </div>
                     )}
                   </div>
