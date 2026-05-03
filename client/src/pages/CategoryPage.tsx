@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useParams, Link, useSearch } from "wouter";
 import { Layout } from "@/components/layout/Layout";
@@ -120,7 +120,11 @@ export default function CategoryPage() {
   useEffect(() => {
     setCurrentPage(1);
   }, [filterKey]);
-  
+
+  // Scroll refs — effect fires after profilesData (declared below) changes
+  const scrollDirRef = useRef<"top" | "bottom" | null>(null);
+  const paginationRef = useRef<HTMLDivElement>(null);
+
   // Build search params for API
   const searchParams = new URLSearchParams();
   if (locationSlug) searchParams.set("location", locationSlug);
@@ -141,6 +145,18 @@ export default function CategoryPage() {
   }>({
     queryKey: [searchUrl],
   });
+
+  // Execute scroll once the new page's data arrives
+  useEffect(() => {
+    if (!profilesData || scrollDirRef.current === null) return;
+    const dir = scrollDirRef.current;
+    scrollDirRef.current = null;
+    if (dir === "top") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      paginationRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+  }, [profilesData]);
 
   // Fetch ALL profiles for the map (without pagination limit)
   const mapSearchParams = new URLSearchParams();
@@ -473,12 +489,15 @@ export default function CategoryPage() {
 
           {/* Pagination */}
           {profilesData && profilesData.totalPages > 1 && (
-            <div className="flex items-center justify-center gap-2 mt-8">
+            <div ref={paginationRef} className="flex items-center justify-center gap-2 mt-8">
               <Button
                 variant="outline"
                 size="sm"
                 disabled={currentPage <= 1}
-                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                onClick={() => {
+                  scrollDirRef.current = "bottom";
+                  setCurrentPage(p => Math.max(1, p - 1));
+                }}
                 data-testid="button-prev-page"
               >
                 <ChevronLeft className="h-4 w-4" />
@@ -491,7 +510,10 @@ export default function CategoryPage() {
                 variant="outline"
                 size="sm"
                 disabled={currentPage >= profilesData.totalPages}
-                onClick={() => setCurrentPage(p => Math.min(profilesData.totalPages, p + 1))}
+                onClick={() => {
+                  scrollDirRef.current = "top";
+                  setCurrentPage(p => Math.min(profilesData.totalPages, p + 1));
+                }}
                 data-testid="button-next-page"
               >
                 Volgende

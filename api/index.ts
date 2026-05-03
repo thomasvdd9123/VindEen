@@ -880,7 +880,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const mainCategory = url.searchParams.get("mainCategory");
       const spec = url.searchParams.get("spec");
       const page = parseInt(url.searchParams.get("page") || "1");
-      const limit = parseInt(url.searchParams.get("limit") || "12");
+      const limit = parseInt(url.searchParams.get("limit") || "25");
       const offset = (page - 1) * limit;
 
       const { specializations, serviceCategories, serviceAreas } = await getCatalogs();
