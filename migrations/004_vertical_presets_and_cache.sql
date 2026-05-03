@@ -143,7 +143,7 @@ BEGIN
       VALUES (
         v_q->>'key',
         v_q->>'name',
-        COALESCE(v_q->>'fieldType', 'string'),
+        UPPER(COALESCE(v_q->>'fieldType', 'STRING')),
         COALESCE((v_q->>'isMulti')::boolean, false),
         COALESCE((v_q->>'isRequired')::boolean, false),
         COALESCE((v_q->>'sortOrder')::int, 0)
@@ -230,8 +230,8 @@ INSERT INTO vertical_preset (slug, label, description, is_system_defined, sort_o
     {"name":"Advies / offerte","slug":"advies-offerte","description":"Vrijblijvende offerte","sortOrder":3}
   ],
   "practical_questions": [
-    {"key":"has_van","name":"Heeft u een eigen bestelwagen?","fieldType":"boolean","isMulti":false,"isRequired":false,"sortOrder":1},
-    {"key":"insurance","name":"Bent u verzekerd voor schade aan de tuin?","fieldType":"boolean","isMulti":false,"isRequired":true,"sortOrder":2}
+    {"key":"has_van","name":"Heeft u een eigen bestelwagen?","fieldType":"BOOLEAN","isMulti":false,"isRequired":false,"sortOrder":1},
+    {"key":"insurance","name":"Bent u verzekerd voor schade aan de tuin?","fieldType":"BOOLEAN","isMulti":false,"isRequired":true,"sortOrder":2}
   ]
 }'::jsonb),
 ('kappers-be', 'Kappers (België)', 'Kappers en barbiers in België', true, 2, '{
@@ -270,8 +270,8 @@ INSERT INTO vertical_preset (slug, label, description, is_system_defined, sort_o
     {"name":"Aan huis","slug":"aan-huis","description":"Kapper komt aan huis","sortOrder":3}
   ],
   "practical_questions": [
-    {"key":"accepts_walkin","name":"Accepteert u walk-ins?","fieldType":"boolean","isMulti":false,"isRequired":false,"sortOrder":1},
-    {"key":"hair_type","name":"Welke haartypes behandelt u?","fieldType":"option","isMulti":true,"isRequired":false,"sortOrder":2,"options":[
+    {"key":"accepts_walkin","name":"Accepteert u walk-ins?","fieldType":"BOOLEAN","isMulti":false,"isRequired":false,"sortOrder":1},
+    {"key":"hair_type","name":"Welke haartypes behandelt u?","fieldType":"OPTION","isMulti":true,"isRequired":false,"sortOrder":2,"options":[
       {"key":"straight","name":"Steil","sortOrder":1},
       {"key":"curly","name":"Krullend","sortOrder":2},
       {"key":"afro","name":"Afro","sortOrder":3}

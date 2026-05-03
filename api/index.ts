@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { createClient } from "@supabase/supabase-js";
 import Busboy from "busboy";
+import { z } from "zod";
 
 const ALLOWED_IMAGE_MIMES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
 const ALLOWED_IMAGE_EXTS = new Set(["jpg", "jpeg", "png", "webp", "gif"]);
@@ -1625,25 +1626,42 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if ((method === "PUT" || method === "PATCH") && path === "/api/admin/site-config") {
       const adm = await requireAdmin(req);
       if (!adm) return res.status(403).json({ error: "Forbidden" });
-      const body = req.body || {};
-      const allowed = [
-        "siteName", "siteTagline", "supportEmail", "defaultCountryCode", "defaultCountryName",
-        "defaultCountryId", "defaultRegion", "defaultLanguage", "defaultCurrencyCode",
-        "defaultVatPercentage", "companyVatNumber", "companyLegalName",
-        "defaultPractitionerTypeId", "defaultSubscriptionPlanId",
-        "postcodePattern", "phonePattern", "phoneCountryCode",
-        // Vertical/branding overrides — JSON-blob, gemerget over theme.config.ts.
-        // Frontend bewerkt dit via de Vertical-copy editor in /admin/instellingen.
-        "themeCopy",
-      ];
+      // Zod-validatie zodat admin-edits niet stilletjes corrupte typen
+      // (bv. string in plaats van number voor BTW) of onverwachte velden
+      // wegschrijven naar site_config.
+      const SiteConfigUpdate = z.object({
+        siteName: z.string().min(1).max(120).optional(),
+        siteTagline: z.string().max(240).nullable().optional(),
+        supportEmail: z.string().email().or(z.literal("")).optional(),
+        defaultCountryCode: z.string().min(2).max(3).optional(),
+        defaultCountryName: z.string().min(1).optional(),
+        defaultCountryId: z.string().uuid().nullable().or(z.literal("")).optional(),
+        defaultRegion: z.string().nullable().or(z.literal("")).optional(),
+        defaultLanguage: z.string().min(2).max(10).optional(),
+        defaultCurrencyCode: z.string().min(3).max(3).optional(),
+        defaultVatPercentage: z.coerce.number().min(0).max(100).optional(),
+        companyVatNumber: z.string().nullable().or(z.literal("")).optional(),
+        companyLegalName: z.string().nullable().or(z.literal("")).optional(),
+        defaultPractitionerTypeId: z.string().uuid().nullable().or(z.literal("")).optional(),
+        defaultSubscriptionPlanId: z.string().uuid().nullable().or(z.literal("")).optional(),
+        postcodePattern: z.string().nullable().or(z.literal("")).optional(),
+        phonePattern: z.string().nullable().or(z.literal("")).optional(),
+        phoneCountryCode: z.string().nullable().or(z.literal("")).optional(),
+        // themeCopy is een vrije jsonb-blob die over theme.config.ts merget;
+        // we accepteren elk record maar weren scalairen/arrays.
+        themeCopy: z.record(z.string(), z.any()).nullable().optional(),
+      }).strict();
+      const parsed = SiteConfigUpdate.safeParse(req.body || {});
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid site_config payload", details: parsed.error.flatten() });
+      }
+      const body = parsed.data;
       const update: Record<string, any> = {};
-      for (const k of allowed) {
-        if (body[k] !== undefined) {
-          // themeCopy is jsonb — null/empty object expliciet doorgeven; voor de
-          // overige tekstvelden mappen we een lege string naar NULL.
-          if (k === "themeCopy") update.theme_copy = body[k];
-          else update[camelToSnake(k)] = body[k] === "" ? null : body[k];
-        }
+      for (const k of Object.keys(body) as Array<keyof typeof body>) {
+        const v = (body as any)[k];
+        if (v === undefined) continue;
+        if (k === "themeCopy") update.theme_copy = v;
+        else update[camelToSnake(k as string)] = v === "" ? null : v;
       }
       update.updated_at = new Date().toISOString();
       const { data: existing } = await supabase.from("site_config").select("id").limit(1).single();

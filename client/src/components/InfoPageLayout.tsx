@@ -14,6 +14,7 @@ import {
 import { ArrowRight, Leaf } from "lucide-react";
 import { siteConfig } from "@/lib/theme.config";
 import { useSiteConfig } from "@/lib/useSiteConfig";
+import { useThemeCopy } from "@/lib/useSiteConfig";
 
 interface InfoPageLayoutProps {
   title: string;
@@ -48,6 +49,8 @@ export function InfoPageLayout({
   relatedLinks = defaultRelatedLinks,
   wideContent = false,
 }: InfoPageLayoutProps) {
+  const { siteName, country } = useSiteConfig();
+  const copy = useThemeCopy() as any;
   return (
     <Layout>
       <SEO
@@ -108,12 +111,12 @@ export function InfoPageLayout({
                   <CardHeader className="pb-3">
                     <CardTitle className="text-lg flex items-center gap-2">
                       <Leaf className="h-5 w-5 text-primary" />
-                      Zoek een tuinman
+                      Zoek {copy.businessTypeArticle}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <p className="text-sm text-muted-foreground mb-4">
-                      Vind de perfecte tuinprofessional voor jouw project in heel België.
+                      Vind de perfecte {copy.businessTypeProfessional} voor jouw project in heel {country}.
                     </p>
                     <Link href="/zoek">
                       <Button className="w-full gap-2">
@@ -149,13 +152,13 @@ export function InfoPageLayout({
               {showTuinmanCta && (
                 <Card>
                   <CardHeader className="pb-3">
-                    <CardTitle className="text-lg">Ben je tuinman?</CardTitle>
+                    <CardTitle className="text-lg">Ben je {copy.businessType}?</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <p className="text-sm text-muted-foreground mb-4">
-                      Sluit je aan bij {siteConfig.name} en bereik meer klanten.
+                      Sluit je aan bij {siteName} en bereik meer klanten.
                     </p>
-                    <Link href="/info/voor-tuinmannen">
+                    <Link href={copy.infoRoutes?.forProfessionals ?? "/info/voor-tuinmannen"}>
                       <Button variant="outline" className="w-full gap-2">
                         Meer informatie
                         <ArrowRight className="h-4 w-4" />
