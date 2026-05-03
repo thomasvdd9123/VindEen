@@ -42,6 +42,9 @@ Volledige admin-UI onder `/admin` (alleen toegankelijk voor users die voorkomen 
 ### Rebranding
 Designed for easy rebranding with a centralized `theme.config.ts` file in the frontend, allowing for quick changes to business type, country, currency, copy, and more. This is supported by dynamic data fetching for catalogs (e.g., `useSpecializationMap`, `usePracticalQuestions`).
 
+### Brand voice copy-linter
+`scripts/lint-copy.ts` scant `client/src/lib/theme.config.ts` en `client/src/pages/**/*.{ts,tsx}` op verboden termen uit `docs/brand-voice.md` (sectie 5 + 6) en stelt het toegestane alternatief voor. Strings binnen technische JSX-attributen, URL-paden en object-keys zoals `queryKey` worden overgeslagen om false-positives te beperken. CTA-only-regels (zoeken, verzenden, OK) vuren alleen op korte button-achtige strings. Een bestand kan volledig uitgesloten worden via de marker `lint-copy-ignore-file` in een commentaar. Draaien via `npm run lint:copy`; het script draait ook mee als deel van `npm run check`. Bestaande overtredingen staan in `scripts/lint-copy.baseline.json` en breken de build niet — enkel nieuwe overtredingen falen. Regenereer de baseline na een copy-opschoning met `npm run lint:copy -- --update-baseline`.
+
 ## External Dependencies
 - **Supabase**: Used for PostgreSQL database management and authentication.
 - **Mollie**: Integrated for payment processing (planned).
