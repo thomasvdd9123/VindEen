@@ -23,6 +23,10 @@ export const siteConfig = {
   // URLs
   baseUrl: "https://www.zoek-een-tuinman.be",
 
+  // Default OG/social card image (1200x630 recommended). Path is resolved
+  // against baseUrl. Override per-page via the SEO component's `ogImage`.
+  ogImage: "/og-image.png",
+
   // Parent Company
   parentCompany: { name: "Zoek Lokaal", url: "https://zoek-lokaal.be" },
 

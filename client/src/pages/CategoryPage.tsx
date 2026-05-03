@@ -134,6 +134,7 @@ export default function CategoryPage() {
 
   const { data: profilesData, isLoading: profilesLoading } = useQuery<{
     profiles: ProfileWithRelations[];
+    verifiedTotal?: number;
     total: number;
     page: number;
     totalPages: number;
@@ -247,7 +248,10 @@ export default function CategoryPage() {
     () => profiles.filter((p: ProfileWithRelations) => p.isVerified),
     [profiles],
   );
-  const hasVerifiedResults = verifiedProfiles.length > 0;
+  // Indexability uses full-result verifiedTotal from API (so paginated pages
+  // beyond page 1 still index correctly when verified profiles exist).
+  const verifiedTotal = profilesData?.verifiedTotal ?? verifiedProfiles.length;
+  const hasVerifiedResults = verifiedTotal > 0;
 
   const structuredData = useMemo(() => [
     generateSearchResultsSchema({

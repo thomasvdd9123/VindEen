@@ -30,7 +30,8 @@ export function SEO({
   
   const metaDescription = description || siteConfig.description;
   const canonicalUrl = canonical ? `${BASE_URL}${canonical}` : undefined;
-  const imageUrl = ogImage || `${BASE_URL}/og-image.png`;
+  const defaultOgImage = (siteConfig as { ogImage?: string }).ogImage ?? "/og-image.png";
+  const imageUrl = ogImage || `${BASE_URL}${defaultOgImage}`;
 
   return (
     <Helmet>

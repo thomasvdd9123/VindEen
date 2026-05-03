@@ -721,7 +721,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
 
       const total = searchLocationData ? profiles.length : count || profiles.length;
-      if (isCount) return res.status(200).json({ total, count: total });
+      const verifiedTotal = profiles.filter((p: any) => p.is_verified).length;
+      if (isCount) return res.status(200).json({ total, count: total, verifiedTotal });
 
       const paginated = profiles.slice(offset, offset + limit);
       const hydrated = await Promise.all(paginated.map((p) => hydrateProfile(p)));
@@ -734,6 +735,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json({
         profiles: hydrated,
         total,
+        verifiedTotal,
         page,
         totalPages: Math.ceil(total / limit),
         ...(searchLocationData ? { searchLocation: searchLocationData } : {}),
@@ -1210,7 +1212,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (method === "GET" && path === "/sitemaps/profiles/sitemap.xml") {
       const today = new Date().toISOString().split("T")[0];
-      const { data: profiles } = await supabase.from("profile").select("slug").eq("is_public", true);
+      const { data: profiles } = await supabase
+        .from("profile")
+        .select("slug")
+        .eq("is_public", true)
+        .eq("is_active", true)
+        .eq("is_verified", true);
       let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
       for (const p of profiles || []) {
         xml += `  <url><loc>${SITEMAP_BASE_URL}/bedrijf/${(p as any).slug}</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.3</priority></url>\n`;
