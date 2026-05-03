@@ -62,8 +62,8 @@ export function DashboardLayout({ children, title, description }: DashboardLayou
         .then(res => res.json())
         .then((account: { id: string }) => {
           if (account?.id) {
-            // Cache the account
-            queryClient.setQueryData(["/api/accounts/by-user", user.id], account);
+            // Cache the account under the canonical by-auth key
+            queryClient.setQueryData(["/api/accounts/by-auth", user.id], account);
             
             // Prefetch profiles with queryFn
             queryClient.prefetchQuery({

@@ -1,6 +1,6 @@
 {
   "description": "Auto-gegenereerde baseline van bestaande copy-overtredingen. Regenereren via `npx tsx scripts/lint-copy.ts --update-baseline` wanneer je copy hebt opgeschoond. Nieuwe overtredingen breken de build wel.",
-  "generatedAt": "2026-05-03T04:45:25.053Z",
+  "generatedAt": "2026-05-03T04:51:56.731Z",
   "count": 166,
   "violations": [
     {
@@ -105,7 +105,7 @@
     },
     {
       "file": "client/src/pages/admin/AdminLayout.tsx",
-      "line": 26,
+      "line": 27,
       "term": "Gebruikers"
     },
     {
@@ -140,12 +140,12 @@
     },
     {
       "file": "client/src/pages/admin/AdminUsers.tsx",
-      "line": 19,
+      "line": 26,
       "term": "Gebruikers"
     },
     {
       "file": "client/src/pages/admin/AdminUsers.tsx",
-      "line": 49,
+      "line": 56,
       "term": "gebruikers"
     },
     {
@@ -230,87 +230,87 @@
     },
     {
       "file": "client/src/pages/dashboard/Account.tsx",
-      "line": 159,
+      "line": 161,
       "term": "opslaan"
     },
     {
       "file": "client/src/pages/dashboard/Account.tsx",
-      "line": 171,
+      "line": 173,
       "term": "Account"
     },
     {
       "file": "client/src/pages/dashboard/Account.tsx",
-      "line": 179,
+      "line": 181,
       "term": "accounts"
     },
     {
       "file": "client/src/pages/dashboard/Account.tsx",
-      "line": 198,
+      "line": 200,
       "term": "opslaan"
     },
     {
       "file": "client/src/pages/dashboard/Account.tsx",
-      "line": 262,
+      "line": 266,
       "term": "account"
     },
     {
       "file": "client/src/pages/dashboard/Account.tsx",
-      "line": 269,
+      "line": 273,
       "term": "account"
     },
     {
       "file": "client/src/pages/dashboard/Account.tsx",
-      "line": 279,
+      "line": 283,
       "term": "Account"
     },
     {
       "file": "client/src/pages/dashboard/Account.tsx",
-      "line": 289,
+      "line": 293,
       "term": "account"
     },
     {
       "file": "client/src/pages/dashboard/Account.tsx",
-      "line": 391,
+      "line": 395,
       "term": "Opslaan"
     },
     {
       "file": "client/src/pages/dashboard/Account.tsx",
-      "line": 539,
+      "line": 543,
       "term": "opslaan"
     },
     {
       "file": "client/src/pages/dashboard/Account.tsx",
-      "line": 549,
+      "line": 553,
       "term": "Opslaan"
     },
     {
       "file": "client/src/pages/dashboard/Account.tsx",
-      "line": 608,
+      "line": 612,
       "term": "Account"
     },
     {
       "file": "client/src/pages/dashboard/Account.tsx",
-      "line": 611,
+      "line": 615,
       "term": "account"
     },
     {
       "file": "client/src/pages/dashboard/Account.tsx",
-      "line": 627,
+      "line": 631,
       "term": "Account"
     },
     {
       "file": "client/src/pages/dashboard/Account.tsx",
-      "line": 634,
+      "line": 638,
       "term": "account"
     },
     {
       "file": "client/src/pages/dashboard/Account.tsx",
-      "line": 647,
+      "line": 651,
       "term": "account"
     },
     {
       "file": "client/src/pages/dashboard/Dashboard.tsx",
-      "line": 67,
+      "line": 60,
       "term": "Account"
     },
     {

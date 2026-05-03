@@ -1,8 +1,13 @@
+import { useState } from "react";
 import { Link } from "wouter";
 import { DashboardLayout } from "./DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient, authFetch } from "@/lib/queryClient";
 import { useAuth } from "@/lib/auth";
@@ -26,6 +31,7 @@ import type { Profile, SubscriptionItem } from "@shared/schema";
 export default function DashboardProfiles() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
 
   // Use useQuery for account to benefit from caching
   const { data: account, isLoading: isLoadingAccount } = useQuery<{ id: string }>({
@@ -49,11 +55,13 @@ export default function DashboardProfiles() {
       return apiRequest("DELETE", `/api/profiles/${profileId}`);
     },
     onSuccess: () => {
+      // Bust every cache that lists or counts profiles for this account.
       queryClient.invalidateQueries({ queryKey: ["/api/my-profiles"] });
-      toast({
-        title: "Profiel verwijderd",
-        description: "Je profiel is succesvol verwijderd.",
-      });
+      queryClient.invalidateQueries({ queryKey: ["/api/contact-requests"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/contact-requests/counts"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/subscriptions/profile"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/profiles/featured"] });
+      toast({ title: "Profiel verwijderd", description: "Je profiel is succesvol verwijderd." });
     },
     onError: () => {
       toast({
@@ -65,9 +73,7 @@ export default function DashboardProfiles() {
   });
 
   const handleDelete = (profileId: string, profileName: string) => {
-    if (confirm(`Weet je zeker dat je "${profileName}" wilt verwijderen?`)) {
-      deleteMutation.mutate(profileId);
-    }
+    setDeleteTarget({ id: profileId, name: profileName });
   };
 
   return (
@@ -120,6 +126,31 @@ export default function DashboardProfiles() {
           </div>
         )}
       </div>
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Profiel verwijderen?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Weet je zeker dat je &quot;{deleteTarget?.name}&quot; wilt verwijderen? Deze actie kan niet ongedaan gemaakt worden.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="button-delete-profile-cancel">Annuleren</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={deleteMutation.isPending}
+              onClick={() => {
+                if (deleteMutation.isPending || !deleteTarget) return;
+                deleteMutation.mutate(deleteTarget.id);
+                setDeleteTarget(null);
+              }}
+              data-testid="button-delete-profile-confirm"
+            >
+              Verwijderen
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DashboardLayout>
   );
 }

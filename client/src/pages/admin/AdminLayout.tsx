@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { authFetch, queryClient } from "@/lib/queryClient";
@@ -46,13 +47,21 @@ export function useIsAdmin() {
 
 export function AdminLayout({ children, title, description }: AdminLayoutProps) {
   const { siteName } = useSiteConfig();
-  const [location] = useLocation();
+  const [location, setLocationNav] = useLocation();
   const { user, signOut, loading } = useAuth();
   const adminQ = useIsAdmin();
 
+  // Redirect via effect — never mutate location during render.
+  useEffect(() => {
+    if (!loading && !user) setLocationNav("/login");
+  }, [loading, user, setLocationNav]);
+
   if (!loading && !user) {
-    window.location.href = "/login";
-    return null;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
   }
 
   if (loading || adminQ.isLoading) {
@@ -79,9 +88,12 @@ export function AdminLayout({ children, title, description }: AdminLayoutProps) 
   }
 
   const handleSignOut = async () => {
-    await signOut();
-    queryClient.clear();
-    setTimeout(() => { window.location.href = "/"; }, 100);
+    try {
+      await signOut();
+    } finally {
+      queryClient.clear();
+      setLocationNav("/");
+    }
   };
 
   return (

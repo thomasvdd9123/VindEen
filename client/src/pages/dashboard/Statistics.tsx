@@ -39,14 +39,7 @@ export default function DashboardStatistics() {
   const [timeRange, setTimeRange] = useState<TimeRange>("30d");
 
   const { data: account } = useQuery<Account>({
-    queryKey: ["/api/accounts/by-user", user?.id],
-    queryFn: async () => {
-      if (!user?.id) throw new Error("No user");
-      return apiRequest("POST", "/api/accounts", {
-        authUserId: user.id,
-        email: user.email,
-      });
-    },
+    queryKey: ["/api/accounts/by-auth", user?.id],
     enabled: !!user?.id,
   });
 

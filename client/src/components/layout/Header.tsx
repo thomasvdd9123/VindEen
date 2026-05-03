@@ -1,4 +1,5 @@
 import { Link, useLocation } from "wouter";
+import { queryClient } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { 
   DropdownMenu,
@@ -15,18 +16,19 @@ import { useAuth } from "@/lib/auth";
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
   const { user, signOut, loading } = useAuth();
   const { siteName } = useSiteConfig();
 
   const navLinks: { href: string; label: string }[] = [];
 
   const handleSignOut = async () => {
-    await signOut();
-    // Small delay to ensure session is fully cleared before redirect
-    setTimeout(() => {
-      window.location.href = "/";
-    }, 100);
+    try {
+      await signOut();
+    } finally {
+      queryClient.clear();
+      setLocation("/");
+    }
   };
 
   return (

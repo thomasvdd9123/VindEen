@@ -195,6 +195,7 @@ export function SearchBox({
                   {filteredLocations.map((loc) => (
                     <button
                       key={loc.id}
+                      type="button"
                       className="w-full text-left px-4 py-2 hover:bg-muted transition-colors text-sm flex items-center gap-2"
                       onClick={() => selectLocation(loc)}
                       data-testid={`location-option-${loc.slug}`}
@@ -256,8 +257,11 @@ export function SearchBox({
   // Hero variant - matches vind-een-psycholoog.be style
   return (
     <div className="w-full">
-      {/* Main search box */}
-      <div className="bg-card rounded-xl border border-border shadow-lg p-5 sm:p-7">
+      {/* Main search box — wrapped in <form> so Enter in any input triggers search */}
+      <form
+        onSubmit={(e) => { e.preventDefault(); handleSearch(); }}
+        className="bg-card rounded-xl border border-border shadow-lg p-5 sm:p-7"
+      >
         {/* Row 1: City/Postcode input + Search button */}
         <div className="flex flex-col sm:flex-row gap-3 mb-4">
           <div className="relative flex-1">
@@ -276,6 +280,7 @@ export function SearchBox({
                 {filteredLocations.map((loc) => (
                   <button
                     key={loc.id}
+                    type="button"
                     className="w-full text-left px-4 py-3 hover:bg-muted transition-colors border-b border-border last:border-b-0 flex items-center gap-3"
                     onClick={() => selectLocation(loc)}
                     data-testid={`hero-location-option-${loc.slug}`}
@@ -294,7 +299,7 @@ export function SearchBox({
             )}
           </div>
           <Button 
-            onClick={handleSearch} 
+            type="submit"
             size="lg" 
             className="h-11 px-8 text-base font-medium whitespace-nowrap"
             data-testid="button-search-hero"
@@ -352,7 +357,7 @@ export function SearchBox({
             />
           </div>
         </div>
-      </div>
+      </form>
     </div>
   );
 }

@@ -6,6 +6,10 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/lib/auth";
@@ -36,14 +40,7 @@ export default function DashboardContacts() {
 
   // Get account ID
   const { data: account } = useQuery<Account>({
-    queryKey: ["/api/accounts/by-user", user?.id],
-    queryFn: async () => {
-      if (!user?.id) throw new Error("No user");
-      return apiRequest("POST", "/api/accounts", {
-        authUserId: user.id,
-        email: user.email,
-      });
-    },
+    queryKey: ["/api/accounts/by-auth", user?.id],
     enabled: !!user?.id,
   });
 
@@ -193,6 +190,7 @@ export default function DashboardContacts() {
 
 function ContactCard({ contact }: { contact: ContactRequest }) {
   const [showDetails, setShowDetails] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const { toast } = useToast();
   
   const statusConfig: Record<string, { label: string; variant: "default" | "secondary" | "outline" }> = {
@@ -216,7 +214,9 @@ function ContactCard({ contact }: { contact: ContactRequest }) {
   const deleteMutation = useMutation({
     mutationFn: async () => apiRequest("DELETE", `/api/contact-requests/${contact.id}`),
     onSuccess: () => {
+      // Both the list and the per-account counts query (used by Statistics) need busting.
       queryClient.invalidateQueries({ queryKey: ["/api/contact-requests"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/contact-requests/counts"] });
       toast({ title: "Contactverzoek verwijderd" });
     },
     onError: () => {
@@ -224,11 +224,7 @@ function ContactCard({ contact }: { contact: ContactRequest }) {
     },
   });
 
-  const handleArchive = () => {
-    if (confirm("Dit contactverzoek definitief verwijderen?")) {
-      deleteMutation.mutate();
-    }
-  };
+  const handleArchive = () => setShowDeleteConfirm(true);
 
   return (
     <>
@@ -301,6 +297,31 @@ function ContactCard({ contact }: { contact: ContactRequest }) {
           </div>
         </CardContent>
       </Card>
+
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Contactverzoek verwijderen?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Dit contactverzoek wordt definitief verwijderd. Deze actie kan niet ongedaan gemaakt worden.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid={`button-delete-contact-annuleren-${contact.id}`}>Annuleren</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={deleteMutation.isPending}
+              onClick={() => {
+                if (deleteMutation.isPending) return;
+                deleteMutation.mutate();
+                setShowDeleteConfirm(false);
+              }}
+              data-testid={`button-delete-contact-confirm-${contact.id}`}
+            >
+              Verwijderen
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <Dialog open={showDetails} onOpenChange={setShowDetails}>
         <DialogContent className="max-w-lg">

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -57,6 +58,7 @@ type InvoiceFormData = z.infer<typeof invoiceSchema>;
 export default function DashboardAccount() {
   const { user, getUserMetadata, updateUserMetadata } = useAuth();
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   const [isLoadingAccount, setIsLoadingAccount] = useState(false);
   const [isLoadingInvoice, setIsLoadingInvoice] = useState(false);
   const [isChangingEmail, setIsChangingEmail] = useState(false);
@@ -204,7 +206,8 @@ export default function DashboardAccount() {
   };
 
   const handleEmailChange = async () => {
-    if (!newEmail || !newEmail.includes("@")) {
+    const emailCheck = z.string().email().safeParse(newEmail);
+    if (!emailCheck.success) {
       toast({
         title: "Ongeldig email adres",
         description: "Vul een geldig email adres in.",
@@ -254,7 +257,8 @@ export default function DashboardAccount() {
       
       if (response.ok) {
         await supabase.auth.signOut();
-        window.location.href = "/";
+        queryClient.clear();
+        setLocation("/");
       } else {
         const data = await response.json();
         toast({
