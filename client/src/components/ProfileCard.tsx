@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MapPin, Phone, Globe, Star, CheckCircle, ArrowRight } from "lucide-react";
 import type { ProfileWithRelations } from "@shared/schema";
 import { useSpecializationMap } from "@/lib/useSpecializations";
+import { queryClient } from "@/lib/queryClient";
 
 interface ProfileCardProps {
   profile: ProfileWithRelations;
@@ -22,8 +23,22 @@ export function ProfileCard({ profile }: ProfileCardProps) {
     .toUpperCase()
     .slice(0, 2);
 
+  // Prefetch the full profile detail on hover so the click feels instant.
+  // Idempotent: TanStack Query dedupes/caches; safe to call on every enter.
+  const prefetchDetail = () => {
+    queryClient.prefetchQuery({
+      queryKey: ["/api/profiles", profile.slug],
+      staleTime: 60_000,
+    });
+  };
+
   return (
-    <Card className="group hover-elevate transition-all duration-200" data-testid={`card-profile-${profile.id}`}>
+    <Card
+      className="group hover-elevate transition-all duration-200"
+      data-testid={`card-profile-${profile.id}`}
+      onMouseEnter={prefetchDetail}
+      onFocus={prefetchDetail}
+    >
       <CardContent className="p-5">
         <div className="flex gap-4">
           <Avatar className="h-16 w-16 border-2 border-primary/10">

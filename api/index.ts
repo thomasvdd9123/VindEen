@@ -298,49 +298,91 @@ async function applyProfileJunctions(profileId: string, body: Record<string, any
   }
 }
 
-// Hydrate a profile row with related data in legacy-frontend shape
+// Hydrate a profile row with related data in legacy-frontend shape.
+// For lists, prefer hydrateProfiles() — it batches junction/address lookups
+// across all profiles in a single round-trip per table instead of N×3.
 async function hydrateProfile(p: any, opts: { withPracticals?: boolean } = {}) {
+  const arr = await hydrateProfiles([p], opts);
+  return arr[0];
+}
+
+// Batched hydration. One IN-query per junction/table, regardless of array size.
+async function hydrateProfiles(rows: any[], opts: { withPracticals?: boolean } = {}) {
+  if (!rows.length) return [];
   const { specializations, serviceCategories, serviceAreas } = await getCatalogs();
 
-  // office address
-  let office: any = null;
-  if (p.office_address_id) {
-    const { data: addr } = await supabase.from("address").select("*").eq("id", p.office_address_id).single();
-    if (addr) {
-      office = {
-        id: addr.id,
-        street: addr.street,
-        number: addr.number,
-        town: addr.municipality,
-        postcode: addr.postcode,
-        province: addr.province,
-        region: addr.region,
-        country: addr.country,
-        latitude: addr.latitude,
-        longitude: addr.longitude,
-        showAddress: addr.show_address,
-      };
-    }
-  }
+  const profileIds = rows.map((r) => r.id);
+  const addressIds = rows.map((r) => r.office_address_id).filter(Boolean) as string[];
 
-  // junctions
-  const [{ data: pSpecs }, { data: pCats }, { data: pAreas }] = await Promise.all([
-    supabase.from("profile_specialization").select("specialization_id, is_main").eq("profile_id", p.id),
-    supabase.from("profile_service_category").select("service_category_id, is_main").eq("profile_id", p.id),
-    supabase.from("profile_service_area").select("service_area_id").eq("profile_id", p.id),
+  // Batch all junctions + addresses in parallel.
+  const [
+    addrRes,
+    specsRes,
+    catsRes,
+    areasRes,
+  ] = await Promise.all([
+    addressIds.length
+      ? supabase.from("address").select("*").in("id", addressIds)
+      : Promise.resolve({ data: [] as any[] }),
+    supabase.from("profile_specialization").select("profile_id, specialization_id, is_main").in("profile_id", profileIds),
+    supabase.from("profile_service_category").select("profile_id, service_category_id, is_main").in("profile_id", profileIds),
+    supabase.from("profile_service_area").select("profile_id, service_area_id").in("profile_id", profileIds),
   ]);
 
-  const specSlugs = (pSpecs || []).map((j: any) => specializations.find((s) => s.id === j.specialization_id)?.slug).filter(Boolean);
-  const firstSpec = (pSpecs || [])[0]
-    ? specializations.find((s) => s.id === (pSpecs as any[])[0].specialization_id)
-    : null;
+  const addrById: Record<string, any> = {};
+  for (const a of (addrRes.data as any[]) || []) addrById[a.id] = a;
+  const specsByProfile: Record<string, any[]> = {};
+  for (const j of (specsRes.data as any[]) || []) (specsByProfile[j.profile_id] ||= []).push(j);
+  const catsByProfile: Record<string, any[]> = {};
+  for (const j of (catsRes.data as any[]) || []) (catsByProfile[j.profile_id] ||= []).push(j);
+  const areasByProfile: Record<string, any[]> = {};
+  for (const j of (areasRes.data as any[]) || []) (areasByProfile[j.profile_id] ||= []).push(j);
+
+  const out: any[] = [];
+  for (const p of rows) {
+    out.push(await hydrateOne(p, {
+      addrById, specsByProfile, catsByProfile, areasByProfile,
+      specializations, serviceCategories, serviceAreas,
+      opts,
+    }));
+  }
+  return out;
+}
+
+async function hydrateOne(p: any, ctx: any) {
+  const { addrById, specsByProfile, catsByProfile, areasByProfile,
+    specializations, serviceCategories, serviceAreas, opts } = ctx;
+
+  let office: any = null;
+  const addr = p.office_address_id ? addrById[p.office_address_id] : null;
+  if (addr) {
+    office = {
+      id: addr.id,
+      street: addr.street,
+      number: addr.number,
+      town: addr.municipality,
+      postcode: addr.postcode,
+      province: addr.province,
+      region: addr.region,
+      country: addr.country,
+      latitude: addr.latitude,
+      longitude: addr.longitude,
+      showAddress: addr.show_address,
+    };
+  }
+
+  const pSpecs = specsByProfile[p.id] || [];
+  const pCats = catsByProfile[p.id] || [];
+  const pAreas = areasByProfile[p.id] || [];
+
+  const specSlugs = pSpecs.map((j: any) => specializations.find((s: any) => s.id === j.specialization_id)?.slug).filter(Boolean);
+  const firstSpec = pSpecs[0] ? specializations.find((s: any) => s.id === pSpecs[0].specialization_id) : null;
   const category = firstSpec ? legacyCategoryFromSpec(firstSpec, serviceCategories) : null;
-  const firstArea = (pAreas || [])[0] ? serviceAreas.find((a) => a.id === (pAreas as any[])[0].service_area_id) : null;
+  const firstArea = pAreas[0] ? serviceAreas.find((a: any) => a.id === pAreas[0].service_area_id) : null;
   const location = firstArea ? legacyLocationFromArea(firstArea) : null;
 
-  // mainCategories (uppercase keys derived from service_category slugs)
-  const mainCats = (pCats || []).map((j: any) => {
-    const sc = serviceCategories.find((c) => c.id === j.service_category_id);
+  const mainCats = pCats.map((j: any) => {
+    const sc = serviceCategories.find((c: any) => c.id === j.service_category_id);
     return mainCategoryKey(sc?.slug);
   }).filter(Boolean);
 
@@ -583,7 +625,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         .eq("is_verified", true)
         .order("view_count", { ascending: false })
         .limit(6);
-      const hydrated = await Promise.all((data || []).map((p) => hydrateProfile(p, { withPracticals: true })));
+      const hydrated = await hydrateProfiles(data || [], { withPracticals: true });
       return res.status(200).json(hydrated);
     }
 
@@ -725,7 +767,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (isCount) return res.status(200).json({ total, count: total, verifiedTotal });
 
       const paginated = profiles.slice(offset, offset + limit);
-      const hydrated = await Promise.all(paginated.map((p) => hydrateProfile(p)));
+      const hydrated = await hydrateProfiles(paginated);
       // Reattach distance
       if (searchLocationData) {
         for (let i = 0; i < hydrated.length; i++) {
@@ -777,7 +819,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (!auth0 || auth0.practitionerId !== reqPractitionerId) return res.status(403).json({ error: "Forbidden" });
       const practitionerId = path.split("/").pop();
       const { data } = await supabase.from("profile").select("*").eq("practitioner_id", practitionerId);
-      const hydrated = await Promise.all((data || []).map((p) => hydrateProfile(p)));
+      const hydrated = await hydrateProfiles(data || []);
       return res.status(200).json(hydrated);
     }
 
