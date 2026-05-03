@@ -1304,11 +1304,31 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // -----------------------------------------------------------------------
     if (method === "GET" && path === "/robots.txt") {
       res.setHeader("Content-Type", "text/plain");
+      // Explicit allow-rules for the major AI crawlers + agents. Neither
+      // OpenAI nor Anthropic operate a public allowlist submission form;
+      // declaring intent in robots.txt with named User-agents is the
+      // accepted way to signal "you are welcome here". Bots respect their
+      // own UA rule before falling back to `*`.
+      const aiBots = [
+        "GPTBot",          // OpenAI training crawler
+        "ChatGPT-User",    // ChatGPT browse-tool fetches
+        "OAI-SearchBot",   // ChatGPT search index
+        "ClaudeBot",       // Anthropic training crawler
+        "Claude-Web",      // Anthropic web reads
+        "anthropic-ai",    // legacy Anthropic UA
+        "PerplexityBot",   // Perplexity index
+        "Perplexity-User", // Perplexity user-triggered fetch
+        "Google-Extended", // Bard/Gemini training (separate from Googlebot)
+        "CCBot",           // Common Crawl (feeds many open models)
+        "Applebot-Extended", // Apple Intelligence training
+      ];
+      const aiBlock = aiBots
+        .map((ua) => `User-agent: ${ua}\nAllow: /\n`)
+        .join("\n");
       return res.send(
-        `User-agent: *\nAllow: /\n\n` +
-        `Sitemap: ${SITEMAP_BASE_URL}/sitemap.xml\n` +
-        `# AI / LLM agents — see ${SITEMAP_BASE_URL}/llms.txt and ${SITEMAP_BASE_URL}/llms-full.txt\n` +
-        `# Programmatic access via MCP: ${SITEMAP_BASE_URL}/api/mcp\n`
+        `# Default rule for all crawlers.\nUser-agent: *\nAllow: /\n\n` +
+        `# Explicit welcome for AI / LLM crawlers and agents.\n# See ${SITEMAP_BASE_URL}/llms.txt for a machine-readable site descriptor\n# and ${SITEMAP_BASE_URL}/api/mcp for programmatic (MCP) access.\n${aiBlock}\n` +
+        `Sitemap: ${SITEMAP_BASE_URL}/sitemap.xml\n`
       );
     }
 

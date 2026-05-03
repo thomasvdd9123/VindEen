@@ -185,6 +185,14 @@ export default function ProfilePage() {
         : undefined,
       experienceYears: profile.practical?.experienceYears,
       specializations: profile.specializations || undefined,
+      specializationLabels: profile.specializations
+        ?.map((slug: string) => specLabels[slug])
+        .filter(Boolean),
+      languages: Array.isArray(profile.practical?.languages)
+        ? profile.practical.languages
+        : undefined,
+      hourlyRateEur:
+        typeof profile.practical?.tariff === "number" ? profile.practical.tariff : null,
     }),
     generateBreadcrumbSchema(breadcrumbItems),
   ];

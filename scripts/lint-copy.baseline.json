@@ -1,6 +1,6 @@
 {
   "description": "Auto-gegenereerde baseline van bestaande copy-overtredingen. Regenereren via `npx tsx scripts/lint-copy.ts --update-baseline` wanneer je copy hebt opgeschoond. Nieuwe overtredingen breken de build wel.",
-  "generatedAt": "2026-05-03T02:35:13.379Z",
+  "generatedAt": "2026-05-03T02:42:51.893Z",
   "count": 168,
   "violations": [
     {
@@ -770,17 +770,17 @@
     },
     {
       "file": "client/src/pages/ProfilePage.tsx",
-      "line": 224,
+      "line": 232,
       "term": "zoek"
     },
     {
       "file": "client/src/pages/ProfilePage.tsx",
-      "line": 239,
+      "line": 247,
       "term": "zoek"
     },
     {
       "file": "client/src/pages/ProfilePage.tsx",
-      "line": 303,
+      "line": 311,
       "term": "zoek"
     },
     {

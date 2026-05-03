@@ -103,7 +103,15 @@ export function generateLocalBusinessSchema(profile: {
     longitude?: number | null;
   }>;
   experienceYears?: number | null;
+  /** Slugs — kept for backwards compatibility. Prefer `specializationLabels`. */
   specializations?: string[];
+  /** Human-readable specialization labels (Dutch). Used for `knowsAbout` and
+   *  to build a `hasOfferCatalog` so AI/SEO consumers see real services, not slugs. */
+  specializationLabels?: string[];
+  /** Spoken languages from the practical block. */
+  languages?: string[];
+  /** Hourly rate in EUR if available. Drives `priceRange`. */
+  hourlyRateEur?: number | null;
   openingHours?: string[];
 }) {
   const office = profile.offices?.[0];
@@ -167,16 +175,50 @@ export function generateLocalBusinessSchema(profile: {
     schema.foundingDate = new Date().getFullYear() - profile.experienceYears;
   }
 
-  if (profile.specializations && profile.specializations.length > 0) {
-    schema.knowsAbout = profile.specializations;
+  // Prefer human-readable labels over slugs for knowsAbout, and additionally
+  // expose them as a structured OfferCatalog — that is what Google + AI
+  // consumers actually parse to understand "what services does this business
+  // offer". Falls back to slugs if labels weren't provided (legacy callers).
+  const skillLabels = profile.specializationLabels?.length
+    ? profile.specializationLabels
+    : profile.specializations;
+  if (skillLabels && skillLabels.length > 0) {
+    schema.knowsAbout = skillLabels;
+    schema.hasOfferCatalog = {
+      "@type": "OfferCatalog",
+      "name": `Diensten van ${profile.name}`,
+      "itemListElement": skillLabels.map((label) => ({
+        "@type": "Offer",
+        "itemOffered": { "@type": "Service", "name": label },
+      })),
+    };
   }
 
-  schema.areaServed = {
-    "@type": "Country",
-    "name": country,
-  };
+  if (profile.languages && profile.languages.length > 0) {
+    schema.knowsLanguage = profile.languages;
+  }
 
-  schema.priceRange = "$$";
+  // areaServed: prefer the actual city + region the business operates from
+  // over a vague "Belgium". Falls back to country when no office is known.
+  if (office?.town) {
+    schema.areaServed = {
+      "@type": "City",
+      "name": office.town,
+      ...(office.postcode ? { "postalCode": office.postcode } : {}),
+      "addressCountry": countryCode,
+    };
+  } else {
+    schema.areaServed = { "@type": "Country", "name": country };
+  }
+
+  // priceRange: convert real hourly rate to Schema.org's $..$$$ symbol scale
+  // when known. Belgian gardener market: <40 €/h = $, 40–70 = $$, >70 = $$$.
+  if (typeof profile.hourlyRateEur === "number" && profile.hourlyRateEur > 0) {
+    schema.priceRange =
+      profile.hourlyRateEur < 40 ? "$" : profile.hourlyRateEur > 70 ? "$$$" : "$$";
+  } else {
+    schema.priceRange = "$$";
+  }
 
   return schema;
 }
