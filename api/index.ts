@@ -489,15 +489,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Catalog of services offered (vertical-agnostic). UI uses this to let
     // practitioners tag their profile with concrete deliverables.
     if (method === "GET" && path === "/api/offered-services") {
+      // offered_service is een vlakke catalogus — er bestaat geen
+      // service_category_id of key kolom in het schema (zie shared/schema.ts).
       const { data, error } = await supabase
         .from("offered_service")
-        .select("id,key,name,slug,description,sort_order,service_category_id")
+        .select("id,name,slug,description,sort_order")
         .order("sort_order");
       if (error) return res.status(500).json({ error: error.message });
       return res.status(200).json((data || []).map((o: any) => ({
-        id: o.id, key: o.key, name: o.name, slug: o.slug,
+        id: o.id, name: o.name, slug: o.slug,
         description: o.description, sortOrder: o.sort_order,
-        serviceCategoryId: o.service_category_id,
       })));
     }
     if (method === "GET" && path === "/api/practical-questions") {
@@ -1663,6 +1664,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       "practical-options": { table: "practical_option", fields: ["practical_question_id", "key", "name", "sort_order"] },
       "subscription-plans": { table: "subscription_plan", fields: ["key", "name", "price", "description", "is_active", "sort_order", "valid_from", "valid_until"] },
       "subscription-plan-offers": { table: "subscription_plan_offer", fields: ["subscription_plan_id", "duration_in_years", "discount_percentage", "total_price", "is_popular", "is_active", "valid_from", "valid_until"] },
+      // Read-only lookup-tabellen voor FK-dropdowns in /admin/instellingen.
+      // We staan POST/PUT/DELETE toe maar de UI gebruikt enkel GET.
+      "countries": { table: "country", fields: ["code", "name", "currency_code", "currency_symbol", "default_vat_percentage", "phone_country_code", "postcode_pattern", "is_active"] },
+      "practitioner-types": { table: "practitioner_type", fields: ["key", "name", "description"] },
     };
 
     const adminCatalogListMatch = path.match(/^\/api\/admin\/catalog\/([^/]+)$/);

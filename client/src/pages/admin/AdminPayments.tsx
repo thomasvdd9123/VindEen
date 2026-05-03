@@ -44,10 +44,13 @@ export default function AdminPayments() {
                     <TableCell className="text-xs">{p.profileSubscription?.profile?.companyName || "—"}</TableCell>
                     <TableCell className="text-xs font-mono">{p.externalPaymentId || "—"}</TableCell>
                     <TableCell>
-                      <Button size="sm" variant="outline" onClick={() => resend.mutate(p.id)} disabled={resend.isPending || p.status !== "PAID"} data-testid={`button-resend-${p.id}`}>
+                      {/* Resend mag voor PAID (her-versturen) én voor FAILED/PENDING
+                          (debug-pad: handmatig opnieuw proberen na een mislukte
+                          webhook of skipped Peppol-flow). Alleen REFUNDED uitsluiten. */}
+                      <Button size="sm" variant="outline" onClick={() => resend.mutate(p.id)} disabled={resend.isPending || p.status === "REFUNDED"} data-testid={`button-resend-${p.id}`}>
                         <Send className="h-3 w-3 mr-1" />Resend
                       </Button>
-                      {p.refundReason?.startsWith("[admin-resend") && <div className="text-xs text-muted-foreground mt-1">{p.refundReason}</div>}
+                      {(p.refundReason?.startsWith("[admin-resend") || p.refundReason?.startsWith("[peppol-resend")) && <div className="text-xs text-muted-foreground mt-1 max-w-xs truncate" title={p.refundReason}>{p.refundReason}</div>}
                     </TableCell>
                   </TableRow>
                 ))}

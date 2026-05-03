@@ -45,9 +45,9 @@ const SECTIONS = [
 export default function AdminSettings() {
   const { toast } = useToast();
   const cfgQ = useQuery<any>({ queryKey: ["/api/admin/site-config"], queryFn: async () => (await authFetch("/api/admin/site-config")).json() });
-  const ptQ = useQuery<any[]>({ queryKey: ["/api/admin/catalog/practical-questions"], queryFn: async () => (await authFetch("/api/admin/catalog/practical-questions")).json() });
   const plansQ = useQuery<any[]>({ queryKey: ["/api/admin/catalog/subscription-plans"], queryFn: async () => (await authFetch("/api/admin/catalog/subscription-plans")).json() });
-  // Practitioner types via supabase REST? We don't have an admin endpoint; reuse default catalog if added.
+  const countriesQ = useQuery<any[]>({ queryKey: ["/api/admin/catalog/countries"], queryFn: async () => (await authFetch("/api/admin/catalog/countries")).json() });
+  const practitionerTypesQ = useQuery<any[]>({ queryKey: ["/api/admin/catalog/practitioner-types"], queryFn: async () => (await authFetch("/api/admin/catalog/practitioner-types")).json() });
   const [form, setForm] = useState<any>(null);
 
   const [themeCopyJson, setThemeCopyJson] = useState<string>("");
@@ -107,12 +107,18 @@ export default function AdminSettings() {
               </Select>
             </div>
             <div>
-              <label className="text-sm font-medium">Standaard practitioner-type ID (UUID)</label>
-              <Input value={form.defaultPractitionerTypeId || ""} onChange={(e) => setForm({ ...form, defaultPractitionerTypeId: e.target.value })} placeholder="UUID van practitioner_type" />
+              <label className="text-sm font-medium">Standaard practitioner-type</label>
+              <Select value={form.defaultPractitionerTypeId || ""} onValueChange={(v) => setForm({ ...form, defaultPractitionerTypeId: v })}>
+                <SelectTrigger data-testid="select-default-practitioner-type"><SelectValue placeholder="Kies type…" /></SelectTrigger>
+                <SelectContent>{(practitionerTypesQ.data || []).map((t) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}</SelectContent>
+              </Select>
             </div>
             <div>
-              <label className="text-sm font-medium">Standaard land ID (UUID)</label>
-              <Input value={form.defaultCountryId || ""} onChange={(e) => setForm({ ...form, defaultCountryId: e.target.value })} placeholder="UUID van country" />
+              <label className="text-sm font-medium">Standaard land</label>
+              <Select value={form.defaultCountryId || ""} onValueChange={(v) => setForm({ ...form, defaultCountryId: v })}>
+                <SelectTrigger data-testid="select-default-country"><SelectValue placeholder="Kies land…" /></SelectTrigger>
+                <SelectContent>{(countriesQ.data || []).map((c) => <SelectItem key={c.id} value={c.id}>{c.name} ({c.code})</SelectItem>)}</SelectContent>
+              </Select>
             </div>
           </CardContent>
         </Card>

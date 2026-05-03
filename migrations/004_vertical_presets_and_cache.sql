@@ -109,18 +109,17 @@ BEGIN
     END IF;
   END IF;
 
-  -- 3b. Offered services (also vertical-specific)
+  -- 3b. Offered services (also vertical-specific). Schema heeft geen
+  -- service_category_id kolom — offered_service is een vlakke catalogus.
   IF v_cfg ? 'offered_services' THEN
     DELETE FROM profile_offered_service;
     DELETE FROM offered_service;
     FOR v_svc IN SELECT * FROM jsonb_array_elements(v_cfg->'offered_services') LOOP
-      SELECT id INTO v_cat_id FROM service_category WHERE slug = v_svc->>'categorySlug';
-      INSERT INTO offered_service (name, slug, description, service_category_id, sort_order, is_system_defined)
+      INSERT INTO offered_service (name, slug, description, sort_order, is_system_defined)
       VALUES (
         v_svc->>'name',
         v_svc->>'slug',
         v_svc->>'description',
-        v_cat_id,   -- nullable
         COALESCE((v_svc->>'sortOrder')::int, 0),
         true
       );
@@ -224,6 +223,15 @@ INSERT INTO vertical_preset (slug, label, description, is_system_defined, sort_o
     {"name":"Paden & terrassen","slug":"paden-terrassen","categorySlug":"tuinaanleg","description":"Aanleg van paden en terrassen","sortOrder":5},
     {"name":"Beplanting","slug":"beplanting","categorySlug":"tuinaanleg","description":"Aanplanten van bomen, struiken en planten","sortOrder":6},
     {"name":"Vijvers","slug":"vijvers","categorySlug":"tuinaanleg","description":"Aanleg van vijvers en waterpartijen","sortOrder":7}
+  ],
+  "offered_services": [
+    {"name":"Eenmalige opdracht","slug":"eenmalige-opdracht","description":"Losse tuinklus","sortOrder":1},
+    {"name":"Periodiek onderhoud","slug":"periodiek-onderhoud","description":"Vast onderhoudscontract","sortOrder":2},
+    {"name":"Advies / offerte","slug":"advies-offerte","description":"Vrijblijvende offerte","sortOrder":3}
+  ],
+  "practical_questions": [
+    {"key":"has_van","name":"Heeft u een eigen bestelwagen?","fieldType":"boolean","isMulti":false,"isRequired":false,"sortOrder":1},
+    {"key":"insurance","name":"Bent u verzekerd voor schade aan de tuin?","fieldType":"boolean","isMulti":false,"isRequired":true,"sortOrder":2}
   ]
 }'::jsonb),
 ('kappers-be', 'Kappers (België)', 'Kappers en barbiers in België', true, 2, '{
@@ -255,6 +263,19 @@ INSERT INTO vertical_preset (slug, label, description, is_system_defined, sort_o
     {"name":"Kinderknip","slug":"kinderknip","categorySlug":"kinderkapper","description":"Knipbeurt voor kinderen","sortOrder":7},
     {"name":"Baard trimmen","slug":"baard-trimmen","categorySlug":"barbier","description":"Baard trimmen en stylen","sortOrder":8},
     {"name":"Scheren","slug":"scheren","categorySlug":"barbier","description":"Klassiek nat scheren","sortOrder":9}
+  ],
+  "offered_services": [
+    {"name":"Knipbeurt op afspraak","slug":"knipbeurt-op-afspraak","description":"Behandeling op afspraak","sortOrder":1},
+    {"name":"Walk-in","slug":"walk-in","description":"Zonder afspraak langskomen","sortOrder":2},
+    {"name":"Aan huis","slug":"aan-huis","description":"Kapper komt aan huis","sortOrder":3}
+  ],
+  "practical_questions": [
+    {"key":"accepts_walkin","name":"Accepteert u walk-ins?","fieldType":"boolean","isMulti":false,"isRequired":false,"sortOrder":1},
+    {"key":"hair_type","name":"Welke haartypes behandelt u?","fieldType":"option","isMulti":true,"isRequired":false,"sortOrder":2,"options":[
+      {"key":"straight","name":"Steil","sortOrder":1},
+      {"key":"curly","name":"Krullend","sortOrder":2},
+      {"key":"afro","name":"Afro","sortOrder":3}
+    ]}
   ]
 }'::jsonb)
 ON CONFLICT (slug) DO UPDATE SET

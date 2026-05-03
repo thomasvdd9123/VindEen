@@ -26,17 +26,9 @@ async function main() {
     process.exit(1);
   }
 
-  const r = await c.query("SELECT slug,label,is_system_defined FROM vertical_preset ORDER BY sort_order");
-  console.log("Presets:", r.rows);
-  const r2 = await c.query("SELECT cache_version, theme_copy IS NOT NULL AS has_theme_copy FROM site_config LIMIT 1");
-  console.log("site_config:", r2.rows);
-  const r3 = await c.query("SELECT apply_vertical_preset('tuinmannen-be') AS result");
-  console.log("Apply tuinmannen-be:", r3.rows[0].result);
-  const r4 = await c.query("SELECT cache_version FROM site_config LIMIT 1");
-  console.log("After apply, site_config cache_version:", r4.rows);
-  const r5 = await c.query("SELECT COUNT(*) FROM service_category");
-  const r6 = await c.query("SELECT COUNT(*) FROM specialization");
-  console.log("Counts after apply: cats=", r5.rows[0].count, " specs=", r6.rows[0].count);
+  // BELANGRIJK: alleen schema-wijzigingen toepassen. NOOIT business-data muteren
+  // (bv. apply_vertical_preset aanroepen) — dat is destructief en moet expliciet
+  // door een admin via /admin/verticalen worden geïnitieerd.
   await c.end();
 }
 
