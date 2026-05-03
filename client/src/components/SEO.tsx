@@ -134,7 +134,7 @@ export function generateLocalBusinessSchema(profile: {
       "addressLocality": office.city || undefined,
       "postalCode": office.postcode || undefined,
       "addressRegion": office.province || undefined,
-      "addressCountry": "BE",
+      "addressCountry": siteConfig.legal?.address?.countryCode || "BE",
     };
   }
   

@@ -35,6 +35,7 @@ import {
 import type { ProfileWithRelations } from "@shared/schema";
 import { specializationLabels } from "@shared/schema";
 import { siteConfig, fillCopy } from "@/lib/theme.config";
+import { usePracticalQuestions, type PracticalQuestion } from "@/lib/usePracticalQuestions";
 
 export default function ProfilePage() {
   const params = useParams<{ slug: string }>();
@@ -322,53 +323,7 @@ export default function ProfilePage() {
             )}
 
 
-            {profile.practical && (
-              <Card data-testid="card-profile-practical">
-                <CardHeader>
-                  <CardTitle className="text-lg">Praktische informatie</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {profile.practical.experienceYears && profile.practical.experienceYears > 0 && (
-                      <div className="flex items-start gap-3">
-                        <Clock className="h-5 w-5 text-primary mt-0.5" />
-                        <div>
-                          <p className="font-medium text-sm">Ervaring</p>
-                          <p className="text-muted-foreground text-sm">{profile.practical.experienceYears} jaar</p>
-                        </div>
-                      </div>
-                    )}
-                    {profile.practical.languages && profile.practical.languages.length > 0 && (
-                      <div className="flex items-start gap-3">
-                        <Languages className="h-5 w-5 text-primary mt-0.5" />
-                        <div>
-                          <p className="font-medium text-sm">Talen</p>
-                          <p className="text-muted-foreground text-sm">{profile.practical.languages.join(", ")}</p>
-                        </div>
-                      </div>
-                    )}
-                    {profile.practical.tariff && (
-                      <div className="flex items-start gap-3">
-                        <Euro className="h-5 w-5 text-primary mt-0.5" />
-                        <div>
-                          <p className="font-medium text-sm">Tarief</p>
-                          <p className="text-muted-foreground text-sm">{profile.practical.tariff}</p>
-                        </div>
-                      </div>
-                    )}
-                    {profile.practical.acceptedPaymentMethods && (
-                      <div className="flex items-start gap-3 sm:col-span-2">
-                        <CreditCard className="h-5 w-5 text-primary mt-0.5" />
-                        <div>
-                          <p className="font-medium text-sm">Betaalmethoden</p>
-                          <p className="text-muted-foreground text-sm">{profile.practical.acceptedPaymentMethods}</p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+            <PracticalInfoCard practical={profile.practical} />
           </div>
 
           <div className="space-y-6">
@@ -454,5 +409,70 @@ export default function ProfilePage() {
         </div>
       </div>
     </Layout>
+  );
+}
+
+// Vertical-agnostic "Praktische informatie" card. Renders one row per
+// practical_question that has an answer on the profile, so adding a new
+// question in the DB shows up automatically without any frontend change.
+function PracticalInfoCard({ practical }: { practical: any }) {
+  const { questions } = usePracticalQuestions();
+  if (!practical || !questions.length) return null;
+
+  const ICONS: Record<string, any> = {
+    experienceYears: Clock,
+    languages: Languages,
+    tariff: Euro,
+    acceptedPaymentMethods: CreditCard,
+  };
+
+  const rows = questions
+    .map((q: PracticalQuestion) => {
+      const v = practical[q.camelKey];
+      if (v === undefined || v === null || v === "" || (Array.isArray(v) && v.length === 0)) return null;
+
+      let display: string;
+      if (q.fieldType === "OPTION" && Array.isArray(v)) {
+        display = v
+          .map((id: string) => q.options.find((o) => o.id === id || o.key === id)?.name || id)
+          .join(", ");
+      } else if (q.fieldType === "OPTION") {
+        display = q.options.find((o) => o.id === v || o.key === v)?.name || String(v);
+      } else if (q.fieldType === "BOOLEAN") {
+        display = v ? "Ja" : "Nee";
+      } else if (Array.isArray(v)) {
+        display = v.join(", ");
+      } else {
+        display = String(v);
+      }
+
+      return { q, display };
+    })
+    .filter(Boolean) as { q: PracticalQuestion; display: string }[];
+
+  if (!rows.length) return null;
+
+  return (
+    <Card data-testid="card-profile-practical">
+      <CardHeader>
+        <CardTitle className="text-lg">Praktische informatie</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {rows.map(({ q, display }) => {
+            const Icon = ICONS[q.camelKey] || Briefcase;
+            return (
+              <div key={q.id} className="flex items-start gap-3" data-testid={`practical-${q.camelKey}`}>
+                <Icon className="h-5 w-5 text-primary mt-0.5" />
+                <div>
+                  <p className="font-medium text-sm">{q.name}</p>
+                  <p className="text-muted-foreground text-sm">{display}</p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </CardContent>
+    </Card>
   );
 }

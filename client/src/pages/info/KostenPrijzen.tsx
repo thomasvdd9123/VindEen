@@ -2,8 +2,10 @@ import { InfoPageLayout } from "@/components/InfoPageLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Euro, Clock, Wrench, Leaf, TreeDeciduous, Home } from "lucide-react";
 import heroImage from "@/assets/images/info-kosten.jpg";
+import { useSiteConfig } from "@/lib/useSiteConfig";
 
 export default function KostenPrijzen() {
+  const { country, vatPercentage } = useSiteConfig();
   const priceTable = [
     { service: "Gras maaien", price: "€30 - €60", unit: "per beurt", note: "Afhankelijk van oppervlakte" },
     { service: "Hagen knippen", price: "€5 - €15", unit: "per meter", note: "Hoogte en dichtheid bepalen prijs" },
@@ -207,9 +209,10 @@ export default function KostenPrijzen() {
       <h2 className="text-xl font-semibold mt-10 mb-4 text-foreground">BTW-tarief</h2>
       
       <p>
-        Voor tuinonderhoud en -aanleg geldt in België het standaard BTW-tarief van <strong>21%</strong>. 
-        Voor woningen ouder dan 10 jaar kan onder bepaalde voorwaarden het verlaagde tarief 
-        van 6% gelden, maar dit is afhankelijk van de aard van de werkzaamheden.
+        Voor diensten in {country} geldt het standaard BTW-tarief van{" "}
+        <strong>{vatPercentage ?? 21}%</strong>. Voor sommige sectoren of woningen
+        kunnen verlaagde tarieven gelden — dit is afhankelijk van de aard van de
+        werkzaamheden.
       </p>
     </InfoPageLayout>
   );

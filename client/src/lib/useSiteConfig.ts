@@ -38,6 +38,7 @@ export function useSiteConfig() {
   const currencyCode = query.data?.defaultCurrencyCode ?? themeConfig.currency;
   const currencySymbol = CURRENCY_SYMBOLS[currencyCode] ?? themeConfig.currencySymbol;
   const country = query.data?.defaultCountryName ?? themeConfig.country;
+  const countryCode = query.data?.defaultCountryCode ?? "BE";
   const language = query.data?.defaultLanguage ?? themeConfig.defaultLanguage;
   const vatPercentage = query.data?.defaultVatPercentage ?? null;
   const postcodePattern = query.data?.postcodePattern ?? null;
@@ -58,6 +59,7 @@ export function useSiteConfig() {
     currencyCode,
     currencySymbol,
     country,
+    countryCode,
     language,
     vatPercentage,
     postcodePattern,

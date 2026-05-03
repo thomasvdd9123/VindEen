@@ -274,6 +274,7 @@ export const siteConfig = {
       postcode: "[in te vullen]",
       city: "[in te vullen]",
       country: "België",
+      countryCode: "BE",
     },
     vat: "[in te vullen — BTW-nummer]",
     companyNumber: "[in te vullen — ondernemingsnummer]",

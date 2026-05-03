@@ -23,19 +23,7 @@ import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import type { Category, Location, Profile } from "@shared/schema";
 import { siteConfig } from "@/lib/theme.config";
 import { PracticalQuestionsForm } from "@/components/PracticalQuestionsForm";
-
-// Types for grouped categories API response
-interface CategoryOption {
-  key: string;
-  name: string;
-  slug: string;
-  description: string | null;
-}
-
-interface GroupedCategoriesResponse {
-  mainCategories: { key: string; name: string; description: string }[];
-  specializations: Record<string, CategoryOption[]>;
-}
+import { useSpecializationMap } from "@/lib/useSpecializations";
 
 // Calculate profile completeness from form values
 function calculateProfileCompleteness(formValues: ProfileFormData): { percentage: number; missing: string[] } {
@@ -417,33 +405,20 @@ export default function ProfileEdit() {
     queryKey: ["/api/locations"],
   });
 
-  // Fetch grouped categories from API
-  const { data: groupedCategories } = useQuery<GroupedCategoriesResponse>({
-    queryKey: ["/api/categories/grouped"],
-  });
-  
-  // Build lookup objects from API data (memoized to prevent unnecessary re-renders)
-  const mainCategoryLabels = useMemo(() => {
-    return (groupedCategories?.mainCategories || []).reduce((acc, cat) => {
-      acc[cat.key] = cat.name;
-      return acc;
-    }, {} as Record<string, string>);
-  }, [groupedCategories]);
-
-  const specializationLabels = useMemo(() => {
-    return Object.values(groupedCategories?.specializations || {}).flat().reduce((acc, spec) => {
-      acc[spec.key] = spec.name;
-      return acc;
-    }, {} as Record<string, string>);
-  }, [groupedCategories]);
-
-  const specializationsByCategory = useMemo<Record<string, string[]>>(() => {
-    return groupedCategories?.specializations
-      ? Object.fromEntries(
-          Object.entries(groupedCategories.specializations).map(([key, specs]) => [key, specs.map((s) => s.key)]),
-        )
-      : {};
-  }, [groupedCategories]);
+  // Vertical-agnostic catalog from normalized endpoints (no legacy grouped).
+  const {
+    mainCategoryLabels,
+    labelByKey: specializationLabels,
+    specializationsByCategory,
+    serviceCategories,
+  } = useSpecializationMap();
+  const mainCategoryDescriptions = useMemo(() => {
+    const m: Record<string, string> = {};
+    serviceCategories.forEach((c) => {
+      m[c.slug.toUpperCase().replace(/-/g, "_")] = c.description || "";
+    });
+    return m;
+  }, [serviceCategories]);
 
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
@@ -926,8 +901,7 @@ export default function ProfileEdit() {
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           {Object.entries(mainCategoryLabels).map(([key, label]) => {
                             const isSelected = field.value?.includes(key) || false;
-                            const catMeta = groupedCategories?.mainCategories?.find((c) => c.key === key);
-                            const description = catMeta?.description || "";
+                            const description = mainCategoryDescriptions[key] || "";
                             
                             const handleToggle = (checked: boolean) => {
                               const current = field.value || [];

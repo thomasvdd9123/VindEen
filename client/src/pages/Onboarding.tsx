@@ -213,7 +213,7 @@ function OnboardingContent() {
     try {
       const { error } = await updateUserMetadata({
         ...data,
-        country: "België",
+        country: siteConfig.country,
         btwNumber: data.btwPlichtig === "ja" && data.btwNumber ? formatBelgianVAT(data.btwNumber) : "",
       });
       if (error) {

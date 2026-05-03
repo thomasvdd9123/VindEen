@@ -9,19 +9,6 @@ import type { Location } from "@shared/schema";
 import { siteConfig, fillCopy } from "@/lib/theme.config";
 import { useSpecializationMap } from "@/lib/useSpecializations";
 
-// Types for grouped categories API response
-interface CategoryOption {
-  key: string;
-  name: string;
-  slug: string;
-  description: string | null;
-}
-
-interface GroupedCategoriesResponse {
-  mainCategories: { key: string; name: string; description: string }[];
-  specializations: Record<string, CategoryOption[]>;
-}
-
 interface SearchBoxProps {
   locations: Location[];
   initialCategory?: string;
@@ -58,33 +45,14 @@ export function SearchBox({
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
   const [isUserTyping, setIsUserTyping] = useState(false); // Track if user is actively typing
 
-  // Fetch grouped categories from API
-  const { data: groupedCategories } = useQuery<GroupedCategoriesResponse>({
-    queryKey: ["/api/categories/grouped"],
-  });
-  
-  // Build lookup objects from API data (memoized for performance)
-  const mainCategoryLabels = useMemo(() => {
-    return (groupedCategories?.mainCategories || []).reduce((acc, cat) => {
-      acc[cat.key] = cat.name;
-      return acc;
-    }, {} as Record<string, string>);
-  }, [groupedCategories]);
-
-  const specializationLabels = useMemo(() => {
-    return Object.values(groupedCategories?.specializations || {}).flat().reduce((acc, spec) => {
-      acc[spec.key] = spec.name;
-      return acc;
-    }, {} as Record<string, string>);
-  }, [groupedCategories]);
-
-  const specializationsByCategory = useMemo<Record<string, string[]>>(() => {
-    return groupedCategories?.specializations
-      ? Object.fromEntries(
-          Object.entries(groupedCategories.specializations).map(([key, specs]) => [key, specs.map((s) => s.key)]),
-        )
-      : {};
-  }, [groupedCategories]);
+  // Vertical-agnostic catalog from normalized /api/specializations +
+  // /api/service-categories (no dependency on legacy grouped endpoint).
+  const {
+    mainCategoryLabels,
+    labelByKey: specializationLabels,
+    specializationsByCategory,
+    keyToSlug: specKeyToSlug,
+  } = useSpecializationMap();
 
   // Get available specializations based on selected main category
   const availableSpecializations = selectedMainCategory !== "all" 
@@ -149,9 +117,6 @@ export function SearchBox({
       setShowLocationDropdown(false);
     }
   }, [cityQuery, locations, isUserTyping]);
-
-  // Specialization key ↔ URL slug — derived from /api/categories/grouped
-  const { keyToSlug: specKeyToSlug } = useSpecializationMap();
 
   const handleSearch = () => {
     // New URL structure:

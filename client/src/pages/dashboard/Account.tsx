@@ -18,6 +18,7 @@ import { supabase } from "@/lib/supabase";
 import { apiRequest, queryClient, authFetch } from "@/lib/queryClient";
 import { isValidBelgianVAT, formatBelgianVAT } from "@/lib/utils";
 import type { Account, SubscriptionItem } from "@shared/schema";
+import { siteConfig } from "@/lib/theme.config";
 import { Badge } from "@/components/ui/badge";
 
 const accountSchema = z.object({
@@ -89,7 +90,7 @@ export default function DashboardAccount() {
       houseNumber: "",
       municipality: "",
       postcode: "",
-      country: "België",
+      country: siteConfig.country,
       btwPlichtig: "no",
       btwNumber: "",
     },
@@ -121,7 +122,7 @@ export default function DashboardAccount() {
         houseNumber: accountData.billingNumber || "",
         municipality: accountData.billingCity || "",
         postcode: accountData.billingPostcode || "",
-        country: "België",
+        country: siteConfig.country,
         btwPlichtig: accountData.vatNumber ? "yes" : "no",
         btwNumber: accountData.vatNumber || "",
       });

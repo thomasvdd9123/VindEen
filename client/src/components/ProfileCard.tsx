@@ -5,38 +5,16 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MapPin, Phone, Globe, Star, CheckCircle, ArrowRight } from "lucide-react";
 import type { ProfileWithRelations } from "@shared/schema";
-import { specializationLabels } from "@shared/schema";
-
-// Canonical specialization key -> URL slug mapping (must match CategoryPage)
-const specializationSlugMap: Record<string, string> = {
-  GRAS_MAAIEN: "gras-maaien",
-  SNOEIEN_BOMEN: "bomen-snoeien",
-  SNOEIEN_STRUIKEN: "struiken-snoeien",
-  HAAG_KNIPPEN: "hagen-knippen",
-  ONKRUID_VERWIJDEREN: "onkruid-verwijderen",
-  BLADEREN_RUIMEN: "bladeren-ruimen",
-  BEMESTING: "bemesting",
-  GAZONONDERHOUD: "gazononderhoud",
-  GRASAANLEG: "grasaanleg",
-  PADEN_TERRASSEN: "paden-terrassen",
-  HOUTEN_CONSTRUCTIES: "houten-constructies",
-  AFSLUITINGEN: "afsluitingen",
-  VIJVERS: "vijvers",
-  BESTRATING: "bestrating",
-  BEPLANTING: "beplanting",
-  IRRIGATIE: "irrigatie",
-};
-
-// Get URL slug for a specialization key
-function getSpecializationSlug(spec: string): string | null {
-  return specializationSlugMap[spec] || null;
-}
+import { useSpecializationMap } from "@/lib/useSpecializations";
 
 interface ProfileCardProps {
   profile: ProfileWithRelations;
 }
 
 export function ProfileCard({ profile }: ProfileCardProps) {
+  // Vertical-agnostic spec key → slug/label mapping, hydrated once from
+  // /api/specializations and cached forever via TanStack Query.
+  const { keyToSlug, labelByKey } = useSpecializationMap();
   const initials = profile.name
     .split(" ")
     .map((n) => n[0])
@@ -93,14 +71,14 @@ export function ProfileCard({ profile }: ProfileCardProps) {
             {profile.specializations && profile.specializations.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mt-3">
                 {profile.specializations.slice(0, 3).map((spec: string) => {
-                  const slug = getSpecializationSlug(spec);
+                  const slug = keyToSlug[spec] || null;
                   const badge = (
                     <Badge 
                       variant="outline" 
                       className={`text-xs font-normal ${slug ? 'cursor-pointer' : ''}`}
                       data-testid={`badge-spec-${spec.toLowerCase()}`}
                     >
-                      {specializationLabels[spec] || spec}
+                      {labelByKey[spec] || spec}
                     </Badge>
                   );
                   return slug ? (

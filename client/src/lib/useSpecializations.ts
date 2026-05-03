@@ -1,31 +1,46 @@
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 
-interface CategoryOption {
-  key: string; // upper-snake e.g. GRAS_MAAIEN
+// Normalized rows returned by /api/specializations and /api/service-categories.
+export interface SpecializationRow {
+  id: string;
   name: string;
-  slug: string; // kebab-case e.g. gras-maaien
+  slug: string;
   description: string | null;
+  serviceCategorySlug: string | null;
+  sortOrder: number;
+}
+export interface ServiceCategoryRow {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  sortOrder: number;
 }
 
-interface GroupedCategoriesResponse {
-  mainCategories: { key: string; name: string; description: string }[];
-  specializations: Record<string, CategoryOption[]>;
+// Single source of truth for specialization key ↔ slug ↔ label mapping.
+// Sourced from the normalized /api/specializations endpoint (no dependency on
+// the legacy /api/categories/grouped shape) so any vertical's catalog works.
+//
+// `key` here is the upper-snake form of the slug — this is the wire format
+// stored on profile.specializations[]. `slug` is the kebab-case URL form.
+function slugToKey(slug: string): string {
+  return slug.toUpperCase().replace(/-/g, "_");
 }
 
-// Single source of truth for specialization key/slug/label mapping.
-// Used by SearchBox, CategoryPage and anywhere else that needs to convert
-// between the URL slug and the upper-snake API key.
 export function useSpecializationMap() {
-  const query = useQuery<GroupedCategoriesResponse>({
-    queryKey: ["/api/categories/grouped"],
+  const query = useQuery<SpecializationRow[]>({
+    queryKey: ["/api/specializations"],
+    staleTime: Infinity,
+  });
+  const cats = useQuery<ServiceCategoryRow[]>({
+    queryKey: ["/api/service-categories"],
+    staleTime: Infinity,
   });
 
-  const all = useMemo(() => {
-    return Object.values(query.data?.specializations || {}).flat();
-  }, [query.data]);
+  const all = useMemo(() => (query.data || []).map((s) => ({ ...s, key: slugToKey(s.slug) })), [query.data]);
 
-  const slugToKey = useMemo(() => {
+  const slugToKeyMap = useMemo(() => {
     const m: Record<string, string> = {};
     all.forEach((s) => { m[s.slug] = s.key; });
     return m;
@@ -49,5 +64,45 @@ export function useSpecializationMap() {
     return m;
   }, [all]);
 
-  return { ...query, slugToKey, keyToSlug, labelByKey, labelBySlug };
+  // Grouped { categorySlug → [specs] } — used by ProfileCreate/Edit/SearchBox.
+  const grouped = useMemo(() => {
+    const m: Record<string, typeof all> = {};
+    (cats.data || []).forEach((c) => { m[c.slug] = []; });
+    all.forEach((s) => {
+      const k = s.serviceCategorySlug || "_uncategorized";
+      if (!m[k]) m[k] = [];
+      m[k].push(s);
+    });
+    return m;
+  }, [all, cats.data]);
+
+  // Legacy shape used by SearchBox/ProfileCreate/ProfileEdit forms:
+  // mainCategoryLabels: { CAT_KEY → name } and specializationsByCategory:
+  // { CAT_KEY → [SPEC_KEY,...] } where keys are upper-snake form of slug.
+  const mainCategoryLabels = useMemo(() => {
+    const m: Record<string, string> = {};
+    (cats.data || []).forEach((c) => { m[slugToKey(c.slug)] = c.name; });
+    return m;
+  }, [cats.data]);
+
+  const specializationsByCategory = useMemo(() => {
+    const m: Record<string, string[]> = {};
+    (cats.data || []).forEach((c) => {
+      m[slugToKey(c.slug)] = (grouped[c.slug] || []).map((s) => s.key);
+    });
+    return m;
+  }, [cats.data, grouped]);
+
+  return {
+    ...query,
+    serviceCategories: cats.data || [],
+    specializations: all,
+    grouped,
+    slugToKey: slugToKeyMap,
+    keyToSlug,
+    labelByKey,
+    labelBySlug,
+    mainCategoryLabels,
+    specializationsByCategory,
+  };
 }
