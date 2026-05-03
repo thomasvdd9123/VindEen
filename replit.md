@@ -36,6 +36,9 @@ The platform is built with a modern web stack, emphasizing performance, scalabil
 ### Project Structure
 Organized into `client/`, `server/`, and `shared/` directories. `client/` contains React components, pages, and utility libraries. `server/` handles API routes and server-side logic. `shared/` defines common TypeScript types and the Drizzle database schema.
 
+### Admin panel
+Volledige admin-UI onder `/admin` (alleen toegankelijk voor users die voorkomen in de `admin` tabel). Bevat profiel-moderatie met audit trail (`practitioner_verification_event`), generieke catalog-CRUD voor service-categorieën, specialisaties, diensten, praktische vragen/opties en abonnementsplannen+offers, gebruikersoverzicht, betalingen met Peppol-resend stub (vereist `BILLIT_API_KEY`), Project defaults / Site Settings (volledige `site_config` incl. interne BTW), en een Vertical-preset switcher (hardcoded presets `tuinmannen-be` en `kappers-be`) die catalogi atomair-best-effort vervangt + site-config bijwerkt + post-verify telcheck doet. Eerste admin moet via script worden aangemaakt: `tsx scripts/admin/grant-admin.ts <email>`.
+
 ### Rebranding
 Designed for easy rebranding with a centralized `theme.config.ts` file in the frontend, allowing for quick changes to business type, country, currency, copy, and more. This is supported by dynamic data fetching for catalogs (e.g., `useSpecializationMap`, `usePracticalQuestions`).
 

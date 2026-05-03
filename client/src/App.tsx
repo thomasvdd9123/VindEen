@@ -39,6 +39,15 @@ import HoeWerktTuinaanleg from "@/pages/info/HoeWerktTuinaanleg";
 import TuinmanVsHovenier from "@/pages/info/TuinmanVsHovenier";
 import KostenPrijzen from "@/pages/info/KostenPrijzen";
 import VoorTuinmannen from "@/pages/info/VoorTuinmannen";
+import AdminDashboard from "@/pages/admin/AdminDashboard";
+import AdminProfiles from "@/pages/admin/AdminProfiles";
+import AdminProfileDetail from "@/pages/admin/AdminProfileDetail";
+import AdminUsers from "@/pages/admin/AdminUsers";
+import AdminCatalogs from "@/pages/admin/AdminCatalogs";
+import AdminSubscriptions from "@/pages/admin/AdminSubscriptions";
+import AdminPayments from "@/pages/admin/AdminPayments";
+import AdminSettings from "@/pages/admin/AdminSettings";
+import AdminVerticals from "@/pages/admin/AdminVerticals";
 import NotFound from "@/pages/not-found";
 import { siteConfig } from "@/lib/theme.config";
 
@@ -83,6 +92,15 @@ function Router() {
       <Route path="/dashboard/profielen/:id/betaling-status" component={PaymentStatus} />
       <Route path="/dashboard/contacten" component={DashboardContacts} />
       <Route path="/dashboard/statistieken" component={DashboardStatistics} />
+      <Route path="/admin" component={AdminDashboard} />
+      <Route path="/admin/profielen" component={AdminProfiles} />
+      <Route path="/admin/profielen/:id" component={AdminProfileDetail} />
+      <Route path="/admin/gebruikers" component={AdminUsers} />
+      <Route path="/admin/catalogi" component={AdminCatalogs} />
+      <Route path="/admin/abonnementen" component={AdminSubscriptions} />
+      <Route path="/admin/betalingen" component={AdminPayments} />
+      <Route path="/admin/instellingen" component={AdminSettings} />
+      <Route path="/admin/verticalen" component={AdminVerticals} />
       <Route path="/faq" component={FAQ} />
       <Route path="/contact" component={Contact} />
       <Route path="/over-ons" component={About} />

@@ -69,6 +69,16 @@ async function getAuthContext(req: VercelRequest): Promise<AuthCtx | null> {
   return { authUserId, practitionerId: (prac as { id: string } | null)?.id ?? null };
 }
 
+async function requireAdmin(req: VercelRequest): Promise<{ authUserId: string; adminId: string } | null> {
+  const auth = await getAuthContext(req);
+  if (!auth) return null;
+  const { data } = await supabase.from("admin").select("id").eq("auth_user_id", auth.authUserId).maybeSingle();
+  if (!data) return null;
+  return { authUserId: auth.authUserId, adminId: (data as { id: string }).id };
+}
+
+function bustCatalogCache() { _catalogCache = null; }
+
 function generateSlug(name: string): string {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 }
@@ -1463,6 +1473,398 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         await supabase.from("payment").update({ status: "FAILED" }).eq("id", (pay as any).id);
       }
       return res.status(200).send("OK");
+    }
+
+    // -----------------------------------------------------------------------
+    // ADMIN
+    // -----------------------------------------------------------------------
+    if (method === "GET" && path === "/api/admin/me") {
+      const adm = await requireAdmin(req);
+      if (!adm) return res.status(403).json({ isAdmin: false });
+      return res.status(200).json({ isAdmin: true, adminId: adm.adminId });
+    }
+
+    // Admin: profielen lijst (met optionele status-filter)
+    if (method === "GET" && path === "/api/admin/profiles") {
+      const adm = await requireAdmin(req);
+      if (!adm) return res.status(403).json({ error: "Forbidden" });
+      const status = url.searchParams.get("status");
+      let q = supabase.from("profile").select("*").order("created_at", { ascending: false });
+      if (status) q = q.eq("verification_status", status);
+      const { data, error } = await q;
+      if (error) throw error;
+      return res.status(200).json(toCamelCase(data || []));
+    }
+
+    if (method === "GET" && path.match(/^\/api\/admin\/profiles\/[^/]+$/)) {
+      const adm = await requireAdmin(req);
+      if (!adm) return res.status(403).json({ error: "Forbidden" });
+      const id = path.split("/").pop()!;
+      const { data: prof } = await supabase.from("profile").select("*").eq("id", id).maybeSingle();
+      if (!prof) return res.status(404).json({ error: "Profile not found" });
+      const hydrated = await hydrateProfile(prof, { withPracticals: true });
+      const { data: events } = await supabase
+        .from("practitioner_verification_event")
+        .select("*")
+        .eq("profile_id", id)
+        .order("created_at", { ascending: false });
+      const { data: practitioner } = await supabase
+        .from("practitioner")
+        .select("id,email,firstname,lastname,company_name")
+        .eq("id", (prof as any).practitioner_id)
+        .maybeSingle();
+      return res.status(200).json({
+        profile: hydrated,
+        events: toCamelCase(events || []),
+        practitioner: toCamelCase(practitioner || null),
+      });
+    }
+
+    if (method === "POST" && path.match(/^\/api\/admin\/profiles\/[^/]+\/verify$/)) {
+      const adm = await requireAdmin(req);
+      if (!adm) return res.status(403).json({ error: "Forbidden" });
+      const id = path.split("/")[4];
+      const { action, reason } = req.body || {};
+      if (!["APPROVE", "REJECT", "RESET"].includes(action)) return res.status(400).json({ error: "Invalid action" });
+      if ((action === "APPROVE" || action === "REJECT") && !reason) return res.status(400).json({ error: "Reden is verplicht" });
+      const { data: prof } = await supabase.from("profile").select("verification_status").eq("id", id).maybeSingle();
+      if (!prof) return res.status(404).json({ error: "Profile not found" });
+      const fromStatus = (prof as any).verification_status;
+      const toStatus = action === "APPROVE" ? "APPROVED" : action === "REJECT" ? "REJECTED" : "PENDING";
+      const { error: updErr } = await supabase.from("profile").update({
+        verification_status: toStatus,
+        is_verified: toStatus === "APPROVED",
+        is_public: toStatus === "APPROVED",
+        updated_at: new Date().toISOString(),
+      }).eq("id", id);
+      if (updErr) return res.status(500).json({ error: `Profile update failed: ${updErr.message}` });
+      const { error: evtErr } = await supabase.from("practitioner_verification_event").insert({
+        profile_id: id,
+        from_status: fromStatus,
+        to_status: toStatus,
+        reason: reason || null,
+        actor_admin_id: adm.adminId,
+      });
+      if (evtErr) return res.status(500).json({ error: `Audit event failed: ${evtErr.message}` });
+      return res.status(200).json({ success: true, status: toStatus });
+    }
+
+    // Admin: gebruikers (practitioners)
+    if (method === "GET" && path === "/api/admin/users") {
+      const adm = await requireAdmin(req);
+      if (!adm) return res.status(403).json({ error: "Forbidden" });
+      const { data: pracs } = await supabase
+        .from("practitioner")
+        .select("*, practitioner_type(name,key)")
+        .order("created_at", { ascending: false });
+      const ids = (pracs || []).map((p: any) => p.id);
+      const { data: profiles } = ids.length
+        ? await supabase.from("profile").select("id,practitioner_id,company_name,slug,is_active,is_public,verification_status").in("practitioner_id", ids)
+        : { data: [] as any[] };
+      const profileIds = (profiles || []).map((p: any) => p.id);
+      const { data: subs } = profileIds.length
+        ? await supabase.from("profile_subscription").select("profile_id,status,end_date").in("profile_id", profileIds)
+        : { data: [] as any[] };
+      const out = (pracs || []).map((p: any) => {
+        const myProfiles = (profiles || []).filter((pr: any) => pr.practitioner_id === p.id);
+        const mySubs = (subs || []).filter((s: any) => myProfiles.some((pr: any) => pr.id === s.profile_id));
+        const activeSub = mySubs.find((s: any) => s.status === "ACTIVE");
+        return {
+          ...p,
+          profileCount: myProfiles.length,
+          activeSubscription: activeSub ? { status: activeSub.status, endDate: activeSub.end_date } : null,
+        };
+      });
+      return res.status(200).json(toCamelCase(out));
+    }
+
+    if (method === "GET" && path.match(/^\/api\/admin\/users\/[^/]+$/)) {
+      const adm = await requireAdmin(req);
+      if (!adm) return res.status(403).json({ error: "Forbidden" });
+      const id = path.split("/").pop()!;
+      const { data: prac } = await supabase.from("practitioner").select("*, practitioner_type(name,key)").eq("id", id).maybeSingle();
+      if (!prac) return res.status(404).json({ error: "User not found" });
+      const { data: profiles } = await supabase.from("profile").select("*").eq("practitioner_id", id);
+      const profileIds = (profiles || []).map((p: any) => p.id);
+      const { data: subs } = profileIds.length
+        ? await supabase.from("profile_subscription").select("*, subscription_plan_offer(*, subscription_plan(name,key))").in("profile_id", profileIds).order("created_at", { ascending: false })
+        : { data: [] as any[] };
+      const subIds = (subs || []).map((s: any) => s.id);
+      const { data: payments } = subIds.length
+        ? await supabase.from("payment").select("*").in("profile_subscription_id", subIds).order("created_at", { ascending: false })
+        : { data: [] as any[] };
+      return res.status(200).json(toCamelCase({
+        practitioner: prac,
+        profiles: profiles || [],
+        subscriptions: subs || [],
+        payments: payments || [],
+      }));
+    }
+
+    // Admin: site-config (full, incl. company_vat_number)
+    if (method === "GET" && path === "/api/admin/site-config") {
+      const adm = await requireAdmin(req);
+      if (!adm) return res.status(403).json({ error: "Forbidden" });
+      const { data } = await supabase.from("site_config").select("*").limit(1).single();
+      if (!data) return res.status(404).json({ error: "Site config not initialized" });
+      return res.status(200).json(toCamelCase(data));
+    }
+
+    if ((method === "PUT" || method === "PATCH") && path === "/api/admin/site-config") {
+      const adm = await requireAdmin(req);
+      if (!adm) return res.status(403).json({ error: "Forbidden" });
+      const body = req.body || {};
+      const allowed = [
+        "siteName", "siteTagline", "supportEmail", "defaultCountryCode", "defaultCountryName",
+        "defaultCountryId", "defaultRegion", "defaultLanguage", "defaultCurrencyCode",
+        "defaultVatPercentage", "companyVatNumber", "companyLegalName",
+        "defaultPractitionerTypeId", "defaultSubscriptionPlanId",
+        "postcodePattern", "phonePattern", "phoneCountryCode",
+      ];
+      const update: Record<string, any> = {};
+      for (const k of allowed) {
+        if (body[k] !== undefined) update[camelToSnake(k)] = body[k] === "" ? null : body[k];
+      }
+      update.updated_at = new Date().toISOString();
+      const { data: existing } = await supabase.from("site_config").select("id").limit(1).single();
+      if (!existing) return res.status(404).json({ error: "Site config not initialized" });
+      const { data, error } = await supabase.from("site_config").update(update).eq("id", (existing as any).id).select().single();
+      if (error) throw error;
+      bustCatalogCache();
+      return res.status(200).json(toCamelCase(data));
+    }
+
+    // Admin: catalog CRUD (generic)
+    // Tables supported: service_category, specialization, offered_service, practical_question, practical_option
+    const ADMIN_CATALOG_TABLES: Record<string, { table: string; fields: string[] }> = {
+      "service-categories": { table: "service_category", fields: ["name", "slug", "description", "sort_order", "is_system_defined"] },
+      "specializations": { table: "specialization", fields: ["name", "slug", "description", "service_category_id", "sort_order", "is_system_defined"] },
+      "offered-services": { table: "offered_service", fields: ["name", "slug", "description", "sort_order", "is_system_defined"] },
+      "practical-questions": { table: "practical_question", fields: ["key", "name", "field_type", "is_multi", "is_required", "sort_order"] },
+      "practical-options": { table: "practical_option", fields: ["practical_question_id", "key", "name", "sort_order"] },
+      "subscription-plans": { table: "subscription_plan", fields: ["key", "name", "price", "description", "is_active", "sort_order", "valid_from", "valid_until"] },
+      "subscription-plan-offers": { table: "subscription_plan_offer", fields: ["subscription_plan_id", "duration_in_years", "discount_percentage", "total_price", "is_popular", "is_active", "valid_from", "valid_until"] },
+    };
+
+    const adminCatalogListMatch = path.match(/^\/api\/admin\/catalog\/([^/]+)$/);
+    if (method === "GET" && adminCatalogListMatch) {
+      const adm = await requireAdmin(req);
+      if (!adm) return res.status(403).json({ error: "Forbidden" });
+      const cfg = ADMIN_CATALOG_TABLES[adminCatalogListMatch[1]];
+      if (!cfg) return res.status(404).json({ error: "Unknown catalog" });
+      const { data, error } = await supabase.from(cfg.table).select("*");
+      if (error) throw error;
+      return res.status(200).json(toCamelCase(data || []));
+    }
+
+    if (method === "POST" && adminCatalogListMatch) {
+      const adm = await requireAdmin(req);
+      if (!adm) return res.status(403).json({ error: "Forbidden" });
+      const cfg = ADMIN_CATALOG_TABLES[adminCatalogListMatch[1]];
+      if (!cfg) return res.status(404).json({ error: "Unknown catalog" });
+      const body = req.body || {};
+      const row: Record<string, any> = {};
+      for (const f of cfg.fields) {
+        const camel = snakeToCamel(f);
+        if (body[camel] !== undefined) row[f] = body[camel] === "" ? null : body[camel];
+        else if (body[f] !== undefined) row[f] = body[f] === "" ? null : body[f];
+      }
+      // Auto-slug uit name
+      if (cfg.fields.includes("slug") && !row.slug && row.name) row.slug = generateSlug(row.name);
+      const { data, error } = await supabase.from(cfg.table).insert(row).select().single();
+      if (error) return res.status(400).json({ error: error.message });
+      bustCatalogCache();
+      return res.status(201).json(toCamelCase(data));
+    }
+
+    const adminCatalogItemMatch = path.match(/^\/api\/admin\/catalog\/([^/]+)\/([^/]+)$/);
+    if ((method === "PUT" || method === "PATCH") && adminCatalogItemMatch) {
+      const adm = await requireAdmin(req);
+      if (!adm) return res.status(403).json({ error: "Forbidden" });
+      const cfg = ADMIN_CATALOG_TABLES[adminCatalogItemMatch[1]];
+      if (!cfg) return res.status(404).json({ error: "Unknown catalog" });
+      const id = adminCatalogItemMatch[2];
+      const body = req.body || {};
+      const row: Record<string, any> = {};
+      for (const f of cfg.fields) {
+        const camel = snakeToCamel(f);
+        if (body[camel] !== undefined) row[f] = body[camel] === "" ? null : body[camel];
+        else if (body[f] !== undefined) row[f] = body[f] === "" ? null : body[f];
+      }
+      const { data, error } = await supabase.from(cfg.table).update(row).eq("id", id).select().single();
+      if (error) return res.status(400).json({ error: error.message });
+      bustCatalogCache();
+      return res.status(200).json(toCamelCase(data));
+    }
+
+    if (method === "DELETE" && adminCatalogItemMatch) {
+      const adm = await requireAdmin(req);
+      if (!adm) return res.status(403).json({ error: "Forbidden" });
+      const cfg = ADMIN_CATALOG_TABLES[adminCatalogItemMatch[1]];
+      if (!cfg) return res.status(404).json({ error: "Unknown catalog" });
+      const id = adminCatalogItemMatch[2];
+      // Bescherm system-defined items tegen delete
+      if (cfg.fields.includes("is_system_defined")) {
+        const { data: row } = await supabase.from(cfg.table).select("is_system_defined").eq("id", id).maybeSingle();
+        if (row && (row as any).is_system_defined) return res.status(400).json({ error: "Systeem-items kunnen niet verwijderd worden. Schakel eerst is_system_defined uit." });
+      }
+      const { error } = await supabase.from(cfg.table).delete().eq("id", id);
+      if (error) return res.status(400).json({ error: error.message });
+      bustCatalogCache();
+      return res.status(200).json({ success: true });
+    }
+
+    // Admin: vertical presets
+    const VERTICAL_PRESETS: Record<string, {
+      label: string;
+      siteConfig: Partial<Record<string, any>>;
+      categories: { name: string; slug: string; description: string; sortOrder: number }[];
+      specializations: { name: string; slug: string; categorySlug: string; description: string; sortOrder: number }[];
+    }> = {
+      "tuinmannen-be": {
+        label: "Tuinmannen (België)",
+        siteConfig: {
+          site_name: "Zoek-een-tuinman.be",
+          site_tagline: "Vind een professionele tuinman in jouw buurt",
+          support_email: "info@zoek-een-tuinman.be",
+        },
+        categories: [
+          { name: "Tuinonderhoud", slug: "tuinonderhoud", description: "Onderhoud van bestaande tuinen", sortOrder: 1 },
+          { name: "Tuinaanleg", slug: "tuinaanleg", description: "Aanleg van nieuwe tuinen", sortOrder: 2 },
+          { name: "Architect", slug: "architect", description: "Tuinarchitectuur en ontwerp", sortOrder: 3 },
+        ],
+        specializations: [
+          { name: "Gras maaien", slug: "gras-maaien", categorySlug: "tuinonderhoud", description: "Professioneel gazon maaien", sortOrder: 1 },
+          { name: "Bomen snoeien", slug: "bomen-snoeien", categorySlug: "tuinonderhoud", description: "Vakkundige snoei van bomen", sortOrder: 2 },
+          { name: "Hagen knippen", slug: "hagen-knippen", categorySlug: "tuinonderhoud", description: "Hagen knippen en vormgeven", sortOrder: 3 },
+          { name: "Onkruid verwijderen", slug: "onkruid-verwijderen", categorySlug: "tuinonderhoud", description: "Onkruidbestrijding", sortOrder: 4 },
+          { name: "Paden & terrassen", slug: "paden-terrassen", categorySlug: "tuinaanleg", description: "Aanleg van paden en terrassen", sortOrder: 5 },
+          { name: "Beplanting", slug: "beplanting", categorySlug: "tuinaanleg", description: "Aanplanten van bomen, struiken en planten", sortOrder: 6 },
+          { name: "Vijvers", slug: "vijvers", categorySlug: "tuinaanleg", description: "Aanleg van vijvers en waterpartijen", sortOrder: 7 },
+        ],
+      },
+      "kappers-be": {
+        label: "Kappers (België)",
+        siteConfig: {
+          site_name: "Zoek-een-kapper.be",
+          site_tagline: "Vind een professionele kapper in jouw buurt",
+          support_email: "info@zoek-een-kapper.be",
+        },
+        categories: [
+          { name: "Dames", slug: "dameskapper", description: "Kappersdiensten voor dames", sortOrder: 1 },
+          { name: "Heren", slug: "herenkapper", description: "Kappersdiensten voor heren", sortOrder: 2 },
+          { name: "Kinderen", slug: "kinderkapper", description: "Kappersdiensten voor kinderen", sortOrder: 3 },
+          { name: "Barbier", slug: "barbier", description: "Barbierdiensten en baardverzorging", sortOrder: 4 },
+        ],
+        specializations: [
+          { name: "Knippen dames", slug: "knippen-dames", categorySlug: "dameskapper", description: "Knipbeurt voor dames", sortOrder: 1 },
+          { name: "Kleuren", slug: "kleuren", categorySlug: "dameskapper", description: "Haarkleuring", sortOrder: 2 },
+          { name: "Highlights", slug: "highlights", categorySlug: "dameskapper", description: "Highlights en balayage", sortOrder: 3 },
+          { name: "Bruidskapsel", slug: "bruidskapsel", categorySlug: "dameskapper", description: "Kapsel voor bruiloft", sortOrder: 4 },
+          { name: "Knippen heren", slug: "knippen-heren", categorySlug: "herenkapper", description: "Klassieke herenknipbeurt", sortOrder: 5 },
+          { name: "Tondeuse / fade", slug: "tondeuse", categorySlug: "herenkapper", description: "Tondeuse / fade", sortOrder: 6 },
+          { name: "Kinderknip", slug: "kinderknip", categorySlug: "kinderkapper", description: "Knipbeurt voor kinderen", sortOrder: 7 },
+          { name: "Baard trimmen", slug: "baard-trimmen", categorySlug: "barbier", description: "Baard trimmen en stylen", sortOrder: 8 },
+          { name: "Scheren", slug: "scheren", categorySlug: "barbier", description: "Klassiek nat scheren", sortOrder: 9 },
+        ],
+      },
+    };
+
+    if (method === "GET" && path === "/api/admin/vertical-presets") {
+      const adm = await requireAdmin(req);
+      if (!adm) return res.status(403).json({ error: "Forbidden" });
+      return res.status(200).json(Object.entries(VERTICAL_PRESETS).map(([slug, p]) => ({
+        slug,
+        label: p.label,
+        categories: p.categories.length,
+        specializations: p.specializations.length,
+      })));
+    }
+
+    if (method === "POST" && path.match(/^\/api\/admin\/vertical-presets\/[^/]+\/apply$/)) {
+      const adm = await requireAdmin(req);
+      if (!adm) return res.status(403).json({ error: "Forbidden" });
+      const slug = path.split("/")[4];
+      const preset = VERTICAL_PRESETS[slug];
+      if (!preset) return res.status(404).json({ error: "Unknown preset" });
+      // Quick atomicity-best-effort: clear junctions first, replace catalogs, update site_config.
+      // Volledige transactionele garantie vereist een Postgres-functie; voor MVP gebruiken we volgorde + cache-bust.
+      const check = (label: string, err: any) => {
+        if (err) throw new Error(`${label}: ${err.message}`);
+      };
+      try {
+        check("clear profile_specialization", (await supabase.from("profile_specialization").delete().neq("profile_id", "00000000-0000-0000-0000-000000000000")).error);
+        check("clear profile_service_category", (await supabase.from("profile_service_category").delete().neq("profile_id", "00000000-0000-0000-0000-000000000000")).error);
+        check("clear specialization", (await supabase.from("specialization").delete().neq("id", "00000000-0000-0000-0000-000000000000")).error);
+        check("clear service_category", (await supabase.from("service_category").delete().neq("id", "00000000-0000-0000-0000-000000000000")).error);
+        const catIds: Record<string, string> = {};
+        for (const c of preset.categories) {
+          const r = await supabase.from("service_category").insert({
+            name: c.name, slug: c.slug, description: c.description, sort_order: c.sortOrder, is_system_defined: true,
+          }).select("id").single();
+          check(`insert category ${c.slug}`, r.error);
+          if (!r.data) throw new Error(`insert category ${c.slug}: no row returned`);
+          catIds[c.slug] = (r.data as any).id;
+        }
+        for (const s of preset.specializations) {
+          if (!catIds[s.categorySlug]) throw new Error(`spec ${s.slug}: missing category ${s.categorySlug}`);
+          const r = await supabase.from("specialization").insert({
+            name: s.name, slug: s.slug, description: s.description,
+            service_category_id: catIds[s.categorySlug],
+            sort_order: s.sortOrder, is_system_defined: true,
+          });
+          check(`insert specialization ${s.slug}`, r.error);
+        }
+        const { data: existingCfg, error: cfgFetchErr } = await supabase.from("site_config").select("id").limit(1).single();
+        check("fetch site_config", cfgFetchErr);
+        if (existingCfg && Object.keys(preset.siteConfig).length) {
+          const r = await supabase.from("site_config").update({
+            ...preset.siteConfig,
+            updated_at: new Date().toISOString(),
+          }).eq("id", (existingCfg as any).id);
+          check("update site_config", r.error);
+        }
+        // Post-apply verification: counts moeten matchen.
+        const { count: catCount } = await supabase.from("service_category").select("id", { count: "exact", head: true });
+        const { count: specCount } = await supabase.from("specialization").select("id", { count: "exact", head: true });
+        if (catCount !== preset.categories.length || specCount !== preset.specializations.length) {
+          throw new Error(`post-verify: verwacht ${preset.categories.length} categorieën / ${preset.specializations.length} specialisaties, kreeg ${catCount}/${specCount}`);
+        }
+        bustCatalogCache();
+        return res.status(200).json({ success: true, slug, label: preset.label, categories: catCount, specializations: specCount });
+      } catch (e: any) {
+        bustCatalogCache();
+        return res.status(500).json({ error: `Preset apply mislukt (mogelijk gedeeltelijk toegepast): ${e.message}` });
+      }
+    }
+
+    // Admin: payments lijst + Peppol resend
+    if (method === "GET" && path === "/api/admin/payments") {
+      const adm = await requireAdmin(req);
+      if (!adm) return res.status(403).json({ error: "Forbidden" });
+      const { data } = await supabase
+        .from("payment")
+        .select("*, profile_subscription(profile_id, profile(company_name, slug, practitioner_id))")
+        .order("created_at", { ascending: false })
+        .limit(200);
+      return res.status(200).json(toCamelCase(data || []));
+    }
+
+    if (method === "POST" && path.match(/^\/api\/admin\/peppol\/resend\/[^/]+$/)) {
+      const adm = await requireAdmin(req);
+      if (!adm) return res.status(403).json({ error: "Forbidden" });
+      const paymentId = path.split("/").pop()!;
+      const { data: pay } = await supabase.from("payment").select("*").eq("id", paymentId).maybeSingle();
+      if (!pay) return res.status(404).json({ error: "Payment not found" });
+      const billitKey = process.env.BILLIT_API_KEY;
+      if (!billitKey) return res.status(503).json({ error: "Billit niet geconfigureerd (BILLIT_API_KEY ontbreekt)" });
+      // Stub: markeer als "resend gevraagd" — echte Billit-flow zit in een aparte taak.
+      // We loggen via een refund_reason achterlaten zodat de admin ziet dat een resend gepland is.
+      const { error: updErr } = await supabase.from("payment").update({
+        refund_reason: `[admin-resend ${new Date().toISOString()}] Peppol resend triggered by admin ${adm.adminId}` ,
+      }).eq("id", paymentId);
+      if (updErr) return res.status(500).json({ error: `Resend log failed: ${updErr.message}` });
+      return res.status(200).json({ success: true, message: "Peppol resend gepland (stub — volledige Billit-integratie volgt in aparte taak)" });
     }
 
     return res.status(404).json({ error: "Not found" });
