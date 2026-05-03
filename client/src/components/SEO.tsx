@@ -95,14 +95,15 @@ export function generateLocalBusinessSchema(profile: {
   offices?: Array<{
     street?: string | null;
     number?: string | null;
-    houseNumber?: string | null;
     town?: string | null;
-    city?: string | null;
     postcode?: string | null;
     province?: string | null;
+    latitude?: number | null;
+    longitude?: number | null;
   }>;
   experienceYears?: number | null;
   specializations?: string[];
+  openingHours?: string[];
 }) {
   const office = profile.offices?.[0];
   const country = siteConfig.country;
@@ -136,17 +137,29 @@ export function generateLocalBusinessSchema(profile: {
   }
 
   if (office) {
-    const street = [office.street, office.number ?? office.houseNumber]
-      .filter(Boolean)
-      .join(" ");
+    const street = [office.street, office.number].filter(Boolean).join(" ");
     schema.address = {
       "@type": "PostalAddress",
       "streetAddress": street || undefined,
-      "addressLocality": office.town || office.city || undefined,
+      "addressLocality": office.town || undefined,
       "postalCode": office.postcode || undefined,
       "addressRegion": office.province || undefined,
       "addressCountry": countryCode,
     };
+    if (
+      typeof office.latitude === "number" &&
+      typeof office.longitude === "number"
+    ) {
+      schema.geo = {
+        "@type": "GeoCoordinates",
+        "latitude": office.latitude,
+        "longitude": office.longitude,
+      };
+    }
+  }
+
+  if (profile.openingHours && profile.openingHours.length > 0) {
+    schema.openingHours = profile.openingHours;
   }
 
   if (profile.experienceYears && profile.experienceYears > 0) {

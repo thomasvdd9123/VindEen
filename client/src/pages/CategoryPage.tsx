@@ -243,18 +243,24 @@ export default function CategoryPage() {
     return items;
   }, [location, fullLocationSlug, specializationLabel, specializationSlug]);
 
+  const verifiedProfiles = useMemo(
+    () => profiles.filter((p: ProfileWithRelations) => p.isVerified),
+    [profiles],
+  );
+  const hasVerifiedResults = verifiedProfiles.length > 0;
+
   const structuredData = useMemo(() => [
     generateSearchResultsSchema({
       location: location?.name,
       specialization: specializationLabel || undefined,
       totalResults: total,
-      items: profiles.slice(0, 10).map((p: ProfileWithRelations) => ({
+      items: verifiedProfiles.slice(0, 10).map((p: ProfileWithRelations) => ({
         name: p.name,
         slug: p.slug,
       })),
     }),
     generateBreadcrumbSchema(breadcrumbItems),
-  ], [location?.name, specializationLabel, total, breadcrumbItems, profiles]);
+  ], [location?.name, specializationLabel, total, breadcrumbItems, verifiedProfiles]);
 
   return (
     <Layout>
@@ -262,7 +268,7 @@ export default function CategoryPage() {
         title={seoTitle}
         description={seoDescription}
         canonical={canonicalUrl}
-        noindex={total === 0}
+        noindex={total === 0 || !hasVerifiedResults}
         structuredData={structuredData}
       />
       

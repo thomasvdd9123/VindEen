@@ -167,11 +167,13 @@ export default function ProfilePage() {
       website: profile.website,
       offices: office
         ? [{
-            street: office.street,
-            number: (office as any).number,
-            town: (office as any).town || (office as any).city,
-            postcode: office.postcode,
-            province: (office as any).province,
+            street: office.street ?? null,
+            number: office.number ?? null,
+            town: office.town ?? office.municipality ?? null,
+            postcode: office.postcode ?? null,
+            province: office.province ?? null,
+            latitude: typeof office.latitude === "number" ? office.latitude : null,
+            longitude: typeof office.longitude === "number" ? office.longitude : null,
           }]
         : undefined,
       experienceYears: profile.practical?.experienceYears,
@@ -189,7 +191,7 @@ export default function ProfilePage() {
         ogType="profile"
         ogImage={profile.logoUrl || undefined}
         structuredData={structuredData}
-        noindex={!profile.isPublic}
+        noindex={!(profile.isPublic && profile.isVerified)}
       />
       <div className="bg-muted/30 border-b border-border">
         <div className="container mx-auto px-4 py-4">
