@@ -2,6 +2,8 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { createClient } from "@supabase/supabase-js";
 import Busboy from "busboy";
 import { z } from "zod";
+import { LLMS_TXT, LLMS_FULL_TXT } from "./_llms";
+import { handleMcpRequest } from "./_mcp";
 
 const ALLOWED_IMAGE_MIMES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
 const ALLOWED_IMAGE_EXTS = new Set(["jpg", "jpeg", "png", "webp", "gif"]);
@@ -1340,7 +1342,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (method === "GET" && (path === "/llms.txt" || path === "/llms-full.txt")) {
       res.setHeader("Content-Type", "text/markdown; charset=utf-8");
       res.setHeader("Cache-Control", "public, max-age=3600");
-      const { LLMS_TXT, LLMS_FULL_TXT } = await import("./_llms");
       return res.send(path === "/llms.txt" ? LLMS_TXT : LLMS_FULL_TXT);
     }
 
@@ -1368,7 +1369,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         });
       }
       if (method !== "POST") return res.status(405).json({ error: "Method not allowed" });
-      const { handleMcpRequest } = await import("./_mcp");
       // Detect protocol so internal fetches work in dev (http://localhost) and
       // prod (https://...) alike. Vercel sets x-forwarded-proto.
       const proto = (req.headers["x-forwarded-proto"] as string)?.split(",")[0]?.trim()
