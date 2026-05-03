@@ -2,8 +2,8 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { createClient } from "@supabase/supabase-js";
 import Busboy from "busboy";
 import { z } from "zod";
-import { LLMS_TXT, LLMS_FULL_TXT } from "./_llms";
-import { handleMcpRequest } from "./_mcp";
+import { LLMS_TXT, LLMS_FULL_TXT } from "../shared/llms-content";
+import { handleMcpRequest } from "../shared/mcp-handler";
 
 const ALLOWED_IMAGE_MIMES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
 const ALLOWED_IMAGE_EXTS = new Set(["jpg", "jpeg", "png", "webp", "gif"]);
@@ -1337,7 +1337,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // ---------------------------------------------------------------------
     // LLMs.txt — machine-readable site descriptor for AI agents/crawlers.
     // Follows the llmstxt.org convention. Short version at /llms.txt,
-    // exhaustive reference at /llms-full.txt. Content lives in api/_llms.ts.
+    // exhaustive reference at /llms-full.txt. Content lives in shared/llms-content.ts.
     // ---------------------------------------------------------------------
     if (method === "GET" && (path === "/llms.txt" || path === "/llms-full.txt")) {
       res.setHeader("Content-Type", "text/markdown; charset=utf-8");

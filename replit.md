@@ -43,8 +43,10 @@ Volledige admin-UI onder `/admin` (alleen toegankelijk voor users die voorkomen 
 Designed for easy rebranding with a centralized `theme.config.ts` file in the frontend, allowing for quick changes to business type, country, currency, copy, and more. This is supported by dynamic data fetching for catalogs (e.g., `useSpecializationMap`, `usePracticalQuestions`).
 
 ### AI / LLM access
-- `/llms.txt` and `/llms-full.txt` (served by `api/index.ts`, content in `api/_llms.ts`) volgen de llmstxt.org-conventie: korte sitebeschrijving + uitgebreide referentie van publieke API's, paginering, URL-conventies en cite-policy.
-- `/api/mcp` (handler in `api/_mcp.ts`) is een Model Context Protocol server over HTTP/JSON-RPC 2.0. Geen auth, CORS open. Methods: `initialize`, `tools/list`, `tools/call`. Tools: `search_profiles`, `get_profile`, `get_featured_profiles`, `list_specializations`, `list_categories`, `list_locations`. Tools delegeren via interne fetch naar de bestaande publieke read-endpoints (zo blijft caching + search-logica de single source of truth). `GET /api/mcp` geeft een descriptor terug voor agents die de URL zonder body bezoeken.
+- `/llms.txt` and `/llms-full.txt` (served by `api/index.ts`, content in `shared/llms-content.ts`) volgen de llmstxt.org-conventie: korte sitebeschrijving + uitgebreide referentie van publieke API's, paginering, URL-conventies en cite-policy.
+- `/api/mcp` (handler in `shared/mcp-handler.ts`) is een Model Context Protocol server over HTTP/JSON-RPC 2.0. Geen auth, CORS open. Methods: `initialize`, `tools/list`, `tools/call`. Tools: `search_profiles`, `get_profile`, `get_featured_profiles`, `list_specializations`, `list_categories`, `list_locations`. Tools delegeren via interne fetch naar de bestaande publieke read-endpoints (zo blijft caching + search-logica de single source of truth). `GET /api/mcp` geeft een descriptor terug voor agents die de URL zonder body bezoeken.
+- Helpers staan bewust **buiten** `api/` — Vercel's serverless bundler bundelt onderstreep-prefixed siblings binnen `api/` niet betrouwbaar (resulteert in `ERR_MODULE_NOT_FOUND` op runtime). Importeer altijd via `../shared/...` met statische `import`-statements (geen dynamische `await import()`).
+- vercel.json moet expliciete rewrites hebben voor elke non-`/api/*` route die `api/index.ts` afhandelt (`/llms.txt`, `/llms-full.txt`, `/robots.txt`, `/sitemap.xml`, `/sitemaps/:path*`, etc.) — anders vangt de SPA-catch-all `/(.*)` ze op.
 - `/robots.txt` adverteert beide llms-bestanden + de MCP-endpoint.
 
 ### Brand voice copy-linter
