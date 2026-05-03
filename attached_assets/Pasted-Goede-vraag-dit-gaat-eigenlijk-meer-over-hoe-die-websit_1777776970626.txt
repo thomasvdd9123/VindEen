@@ -1,0 +1,89 @@
+Goede vraag, dit gaat eigenlijk meer over hoe die website met zoekmachines en AI omgaat dan over tuinmannen zelf. Ik leg het simpel uit per bestand:
+
+⸻
+
+📄 1. robots.txt (klassiek en belangrijk)
+
+Dit bestand is de “verkeersregelaar” voor zoekmachines zoals Google.
+
+👉 Wat het doet:
+
+* Zegt welke pagina’s wel of niet mogen gecrawld worden
+* Kan delen van de site blokkeren (bv. admin, filters, duplicaten)
+* Helpt SEO en voorkomt onnodige belasting
+
+➡️ Simpel gezegd:
+“Google, hier mag je kijken, en hier niet”
+
+Dat is een standaard webmechanisme dat bijna elke site heeft  
+
+⸻
+
+🤖 2. llms.txt (nieuw en experimenteel)
+
+Dit is eigenlijk de AI-versie van robots.txt.
+
+👉 Wat het doet:
+
+* Geeft richtlijnen aan AI-systemen (zoals ChatGPT-achtige tools)
+* Kan aangeven:
+    * welke content belangrijk is
+    * wat AI mag gebruiken of niet
+* Werkt meer als een inhoudsoverzicht + voorkeuren voor AI
+
+➡️ Simpel gezegd:
+“AI, dit zijn mijn belangrijkste pagina’s en zo mag je ze gebruiken”
+
+⚠️ Belangrijk:
+Het is nog geen officiële standaard en wordt (nog) niet overal gebruikt  
+
+⸻
+
+📚 3. llms-full.txt (logische uitbreiding)
+
+Dit is meestal:
+
+* een uitgebreidere versie van llms.txt
+* met meer pagina’s, data of context
+
+👉 Vaak gebruikt voor:
+
+* AI-indexering
+* interne tools
+* of experimenten met AI zichtbaarheid
+
+Er bestaat geen vaste standaard, dus elke site vult dit anders in.
+
+⸻
+
+🧠 Wat betekent dit voor die site?
+
+Voor zoek-een-tuinman.be betekent dit waarschijnlijk:
+
+* Ze zijn bezig met SEO (robots.txt)
+* én met AI zichtbaarheid (llms.txt)
+* Dus ze willen:
+    * goed gevonden worden in Google
+    * én zichtbaar zijn in AI-antwoorden
+
+⸻
+
+💡 Eerlijk inzicht
+
+Dit zegt niets over de kwaliteit van hun tuinmannen zelf.
+
+Maar het zegt wel:
+👉 ze zijn vrij modern bezig met online marketing
+👉 ze proberen ook via AI gevonden te worden
+
+⸻
+
+👉 Kort samengevat
+
+* robots.txt = regels voor Google
+* llms.txt = regels / hints voor AI
+* llms-full.txt = uitgebreidere AI-versie
+
+⸻
+
+Als je wil, kan ik die specifieke bestanden van die site even analyseren en zeggen wat ze concreet doen (soms zitten daar interessante SEO trucjes in).

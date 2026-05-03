@@ -1,0 +1,110 @@
+Ik heb die bestanden bekeken en dit verandert het beeld een beetje.
+Kort gezegd: Zoek-een-tuinman.be is geen klassiek bedrijvengids, maar een lead generation platform dat sterk geoptimaliseerd is voor SEO én AI-verkeer.
+
+Hier is de echte uitleg op basis van wat in die files zit:
+
+⸻
+
+🧠 Wat voor platform het écht is
+
+👉 1. Een “lead machine”, geen simpele lijst
+
+De structuur in hun AI-bestanden (llms.txt en llms-full.txt) toont:
+
+* Veel pagina’s per stad/regio + dienst
+    bv. “tuinman Leuven”, “tuinonderhoud Antwerpen”, enz.
+* Pagina’s zijn geschreven om:
+    * gevonden te worden in Google
+    * én opgepikt te worden door AI
+
+➡️ Dat betekent:
+👉 Hun doel is verkeer binnenhalen op duizenden zoekopdrachten
+👉 en dat verkeer omzetten naar offerte-aanvragen
+
+⸻
+
+🔁 2. Hun businessmodel (duidelijk zichtbaar)
+
+Alles wijst op dit model:
+
+1. Jij komt op een pagina (bv. “tuinman Leuven”)
+2. Je vult een formulier in
+3. Zij sturen jouw aanvraag door naar tuinmannen
+4. Tuinmannen betalen om die leads te krijgen
+
+👉 Dit heet:
+lead generation platform
+
+⸻
+
+🤖 3. Ze zijn extreem gefocust op AI (dit is het interessante)
+
+Hun llms.txt en llms-full.txt tonen dat ze:
+
+* hun volledige site structureren voor AI
+* pagina’s aanbieden in “samengevatte vorm” voor AI
+* waarschijnlijk willen verschijnen in antwoorden van tools zoals ChatGPT
+
+Dat past bij wat llms.txt doet:
+👉 AI helpen je content sneller te begrijpen en gebruiken  
+
+➡️ Conclusie:
+Ze doen niet alleen SEO, maar ook GEO (AI optimalisatie)
+
+⸻
+
+🔍 4. robots.txt bevestigt hun strategie
+
+Zo’n bestand wordt gebruikt om:
+
+* onbelangrijke pagina’s te blokkeren
+* belangrijke pagina’s te laten indexeren  
+
+👉 In hun geval betekent dat meestal:
+
+* focus op landingspagina’s (waar jij binnenkomt)
+* minder focus op interne rommel
+
+⸻
+
+⚠️ Wat dit betekent voor jou als gebruiker
+
+✔️ Wat ze goed doen
+
+* Je vindt snel een tuinman
+* Je krijgt meerdere offertes
+* Handig als je geen tijd hebt
+
+❌ Wat je moet weten
+
+* Het zijn niet “de beste tuinmannen”, maar:
+    → degenen die betalen voor leads
+* Je ziet geen volledig overzicht van de markt
+* De site is gemaakt om jou naar een aanvraag te sturen
+
+⸻
+
+🧠 Echte, eerlijke conclusie
+
+Zoek-een-tuinman.be is:
+
+👉 een marketingplatform dat
+
+* verkeer binnenhaalt via Google en AI
+* en dat doorverkoopt als leads aan tuinmannen
+
+Niet:
+
+* een neutrale gids
+* geen volledige lijst
+* geen kwaliteitsranking
+
+⸻
+
+👉 In één zin
+
+Het is basically een tussenpersoon die klanten verkoopt aan tuinmannen, slim verpakt met SEO en AI-optimalisatie.
+
+⸻
+
+Als je wil, kan ik je ook zeggen hoe je de beste tuinman vindt zonder zulke platformen (en vaak goedkoper).
