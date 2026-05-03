@@ -4,6 +4,7 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { SEO } from "@/components/SEO";
 import { siteConfig, fillCopy } from "@/lib/theme.config";
+import { renderRichText } from "@/components/RichText";
 import { Link } from "wouter";
 import { Users, Target, Shield, Leaf, type LucideIcon } from "lucide-react";
 
@@ -26,7 +27,7 @@ export default function About() {
               Over {siteConfig.name}
             </h1>
             <p className="text-muted-foreground mt-2 max-w-2xl">
-              {fillCopy(copy.heroSubtitle)}
+              {renderRichText(fillCopy(copy.heroSubtitle))}
             </p>
           </div>
         </div>
@@ -39,8 +40,8 @@ export default function About() {
                   <CardTitle>Onze missie</CardTitle>
                 </CardHeader>
                 <CardContent className="prose prose-slate dark:prose-invert max-w-none">
-                  <p className="text-muted-foreground leading-relaxed">{fillCopy(copy.missionPara1)}</p>
-                  <p className="text-muted-foreground leading-relaxed mt-4">{fillCopy(copy.missionPara2)}</p>
+                  <p className="text-muted-foreground leading-relaxed">{renderRichText(fillCopy(copy.missionPara1))}</p>
+                  <p className="text-muted-foreground leading-relaxed mt-4">{renderRichText(fillCopy(copy.missionPara2))}</p>
                 </CardContent>
               </Card>
             </section>
@@ -60,7 +61,7 @@ export default function About() {
                           <div>
                             <h3 className="font-semibold">{value.title}</h3>
                             <p className="text-muted-foreground text-sm mt-1">
-                              {fillCopy(value.description)}
+                              {renderRichText(fillCopy(value.description))}
                             </p>
                           </div>
                         </div>
@@ -77,7 +78,7 @@ export default function About() {
                   <CardTitle>{fillCopy(copy.forBusinessesTitle)}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-muted-foreground mb-4">{fillCopy(copy.forBusinessesBody)}</p>
+                  <p className="text-muted-foreground mb-4">{renderRichText(fillCopy(copy.forBusinessesBody))}</p>
                   <div className="flex gap-4">
                     <Button asChild>
                       <Link href="/registreren">Meld je praktijk aan</Link>
@@ -96,7 +97,7 @@ export default function About() {
                   <CardTitle>{copy.forCustomersTitle}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-muted-foreground mb-4">{fillCopy(copy.forCustomersBody)}</p>
+                  <p className="text-muted-foreground mb-4">{renderRichText(fillCopy(copy.forCustomersBody))}</p>
                   <Button variant="outline" asChild>
                     <Link href={copy.findCtaHref}>{fillCopy(copy.findCtaLabel)}</Link>
                   </Button>

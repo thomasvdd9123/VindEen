@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/accordion";
 import { Leaf, ArrowRight, MessageSquare } from "lucide-react";
 import { siteConfig, fillCopy } from "@/lib/theme.config";
+import { renderRichText } from "@/components/RichText";
 import heroImage from "@/assets/images/info-faq.jpg";
 
 export default function FAQ() {
@@ -44,10 +45,10 @@ export default function FAQ() {
                 {category.questions.map((item, index) => (
                   <AccordionItem key={index} value={`${categoryIndex}-${index}`} data-testid={`accordion-faq-${categoryIndex}-${index}`}>
                     <AccordionTrigger className="text-left">
-                      {fillCopy(item.question)}
+                      {renderRichText(fillCopy(item.question))}
                     </AccordionTrigger>
                     <AccordionContent className="text-muted-foreground">
-                      {fillCopy(item.answer)}
+                      {renderRichText(fillCopy(item.answer))}
                     </AccordionContent>
                   </AccordionItem>
                 ))}
