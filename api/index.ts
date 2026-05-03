@@ -963,8 +963,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
       }
 
-      // Build profile query
-      let q = supabase.from("profile").select("*", { count: "exact" }).eq("is_active", true).eq("is_public", true);
+      // Build profile query — only APPROVED profiles appear in search/count
+      let q = supabase.from("profile").select("*", { count: "exact" }).eq("is_active", true).eq("is_public", true).eq("verification_status", "APPROVED");
       if (candidateIds) q = q.in("id", candidateIds);
       if (query) q = q.or(`company_name.ilike.%${query}%,introduction.ilike.%${query}%,title.ilike.%${query}%`);
 
