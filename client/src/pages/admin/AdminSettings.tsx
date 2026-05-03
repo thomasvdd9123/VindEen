@@ -8,7 +8,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Save } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Save, AlertTriangle, Repeat } from "lucide-react";
 
 const SECTIONS = [
   {
@@ -48,7 +49,22 @@ export default function AdminSettings() {
   const plansQ = useQuery<any[]>({ queryKey: ["/api/admin/catalog/subscription-plans"], queryFn: async () => (await authFetch("/api/admin/catalog/subscription-plans")).json() });
   const countriesQ = useQuery<any[]>({ queryKey: ["/api/admin/catalog/countries"], queryFn: async () => (await authFetch("/api/admin/catalog/countries")).json() });
   const practitionerTypesQ = useQuery<any[]>({ queryKey: ["/api/admin/catalog/practitioner-types"], queryFn: async () => (await authFetch("/api/admin/catalog/practitioner-types")).json() });
+  const presetsQ = useQuery<any[]>({ queryKey: ["/api/admin/vertical-presets"], queryFn: async () => (await authFetch("/api/admin/vertical-presets")).json() });
   const [form, setForm] = useState<any>(null);
+  const [confirming, setConfirming] = useState<string | null>(null);
+  const [secondConfirm, setSecondConfirm] = useState(false);
+
+  const applyPreset = useMutation({
+    mutationFn: (slug: string) => apiRequest("POST", `/api/admin/vertical-presets/${slug}/apply`),
+    onSuccess: (data: any) => {
+      toast({ title: "Verticaal geactiveerd", description: `${data.label}. Catalogus en site-config zijn vervangen.` });
+      queryClient.invalidateQueries();
+      setConfirming(null);
+      setSecondConfirm(false);
+      setTimeout(() => window.location.reload(), 1200);
+    },
+    onError: (e: any) => toast({ title: "Fout", description: e.message, variant: "destructive" }),
+  });
 
   const [themeCopyJson, setThemeCopyJson] = useState<string>("");
   const [themeCopyError, setThemeCopyError] = useState<string | null>(null);
@@ -159,6 +175,60 @@ export default function AdminSettings() {
             <Save className="h-4 w-4 mr-2" />Opslaan
           </Button>
         </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Verticaal switchen</CardTitle>
+            <CardDescription>
+              Activeer een vooraf opgeslagen verticaal-preset (bv. tuinmannen ↔ kappers). Vervangt de volledige catalogus en werkt site-config bij.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle>Destructieve actie</AlertTitle>
+              <AlertDescription>
+                Een preset toepassen <b>verwijdert alle bestaande service-categorieën en specialisaties</b> (incl. profiel-koppelingen) en herlaadt de site-config. Bestaande profielen blijven bestaan, maar verliezen hun categorie/specialisatie-koppelingen. Dubbele bevestiging vereist.
+              </AlertDescription>
+            </Alert>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {(presetsQ.data || []).map((p: any) => (
+                <Card key={p.slug} data-testid={`preset-${p.slug}`}>
+                  <CardHeader>
+                    <CardTitle className="text-base">
+                      {p.label}
+                      {p.isSystemDefined && <span className="ml-2 text-xs text-muted-foreground font-normal">(systeem)</span>}
+                    </CardTitle>
+                    <CardDescription>
+                      {p.counts?.categories ?? 0} categorieën · {p.counts?.specializations ?? 0} specialisaties
+                      {p.counts?.offeredServices > 0 && ` · ${p.counts.offeredServices} diensten`}
+                      {p.counts?.practicalQuestions > 0 && ` · ${p.counts.practicalQuestions} vragen`}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {confirming === p.slug ? (
+                      <div className="space-y-2">
+                        <p className="text-sm">Weet je het zeker? <b>Alle huidige catalogi worden vervangen.</b></p>
+                        {!secondConfirm ? (
+                          <Button variant="destructive" size="sm" onClick={() => setSecondConfirm(true)}>Ja, ik begrijp dit</Button>
+                        ) : (
+                          <Button variant="destructive" size="sm" onClick={() => applyPreset.mutate(p.slug)} disabled={applyPreset.isPending} data-testid={`button-apply-${p.slug}`}>
+                            <Repeat className="h-4 w-4 mr-2" />Definitief toepassen
+                          </Button>
+                        )}
+                        <Button variant="ghost" size="sm" onClick={() => { setConfirming(null); setSecondConfirm(false); }}>Annuleren</Button>
+                      </div>
+                    ) : (
+                      <Button size="sm" onClick={() => setConfirming(p.slug)} data-testid={`button-confirm-${p.slug}`}>Activeren…</Button>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+              {!presetsQ.data?.length && <p className="text-sm text-muted-foreground">Geen presets beschikbaar.</p>}
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </AdminLayout>
   );

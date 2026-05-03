@@ -1,6 +1,6 @@
 {
   "description": "Auto-gegenereerde baseline van bestaande copy-overtredingen. Regenereren via `npx tsx scripts/lint-copy.ts --update-baseline` wanneer je copy hebt opgeschoond. Nieuwe overtredingen breken de build wel.",
-  "generatedAt": "2026-05-03T01:42:35.266Z",
+  "generatedAt": "2026-05-03T01:51:04.161Z",
   "count": 168,
   "violations": [
     {
@@ -110,13 +110,23 @@
     },
     {
       "file": "client/src/pages/admin/AdminSettings.tsx",
-      "line": 98,
+      "line": 114,
       "term": "gebruikers"
     },
     {
       "file": "client/src/pages/admin/AdminSettings.tsx",
-      "line": 159,
+      "line": 175,
       "term": "Opslaan"
+    },
+    {
+      "file": "client/src/pages/admin/AdminSettings.tsx",
+      "line": 184,
+      "term": "Activeer"
+    },
+    {
+      "file": "client/src/pages/admin/AdminSettings.tsx",
+      "line": 223,
+      "term": "Activeren"
     },
     {
       "file": "client/src/pages/admin/AdminSubscriptions.tsx",
@@ -137,16 +147,6 @@
       "file": "client/src/pages/admin/AdminUsers.tsx",
       "line": 49,
       "term": "gebruikers"
-    },
-    {
-      "file": "client/src/pages/admin/AdminVerticals.tsx",
-      "line": 34,
-      "term": "Activeer"
-    },
-    {
-      "file": "client/src/pages/admin/AdminVerticals.tsx",
-      "line": 68,
-      "term": "Activeren"
     },
     {
       "file": "client/src/pages/Artikelen.tsx",

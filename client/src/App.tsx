@@ -47,7 +47,6 @@ import AdminCatalogs from "@/pages/admin/AdminCatalogs";
 import AdminSubscriptions from "@/pages/admin/AdminSubscriptions";
 import AdminPayments from "@/pages/admin/AdminPayments";
 import AdminSettings from "@/pages/admin/AdminSettings";
-import AdminVerticals from "@/pages/admin/AdminVerticals";
 import NotFound from "@/pages/not-found";
 import { siteConfig } from "@/lib/theme.config";
 
@@ -100,7 +99,6 @@ function Router() {
       <Route path="/admin/abonnementen" component={AdminSubscriptions} />
       <Route path="/admin/betalingen" component={AdminPayments} />
       <Route path="/admin/instellingen" component={AdminSettings} />
-      <Route path="/admin/verticalen" component={AdminVerticals} />
       <Route path="/faq" component={FAQ} />
       <Route path="/contact" component={Contact} />
       <Route path="/over-ons" component={About} />

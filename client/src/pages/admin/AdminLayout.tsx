@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/sidebar";
 import {
   ShieldCheck, LayoutDashboard, FileCheck, Users, Database, CreditCard,
-  Settings, Repeat, LogOut, Home, Receipt,
+  Settings, LogOut, Home, Receipt,
 } from "lucide-react";
 import { useSiteConfig } from "@/lib/useSiteConfig";
 
@@ -28,7 +28,6 @@ const links = [
   { href: "/admin/abonnementen", label: "Abonnementen", icon: CreditCard },
   { href: "/admin/betalingen", label: "Betalingen", icon: Receipt },
   { href: "/admin/instellingen", label: "Project defaults", icon: Settings },
-  { href: "/admin/verticalen", label: "Verticaal switchen", icon: Repeat },
 ];
 
 export function useIsAdmin() {
