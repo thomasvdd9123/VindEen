@@ -701,7 +701,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (isCount) return res.status(200).json({ total, count: total });
 
       const paginated = profiles.slice(offset, offset + limit);
-      const hydrated = await Promise.all(paginated.map((p) => hydrateProfile(p, { withPracticals: true })));
+      const hydrated = await Promise.all(paginated.map((p) => hydrateProfile(p)));
       // Reattach distance
       if (searchLocationData) {
         for (let i = 0; i < hydrated.length; i++) {
