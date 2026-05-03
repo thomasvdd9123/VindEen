@@ -25,6 +25,8 @@ export async function registerRoutes(
   // SEO / static endpoints handled inside api/index.ts
   app.get("/sitemap.xml", callHandler);
   app.get("/robots.txt", callHandler);
+  app.get("/llms.txt", callHandler);
+  app.get("/llms-full.txt", callHandler);
   app.use("/sitemaps", callHandler);
   app.get(/^\/google[a-z0-9]+\.html$/, callHandler);
 

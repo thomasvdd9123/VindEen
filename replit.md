@@ -42,6 +42,11 @@ Volledige admin-UI onder `/admin` (alleen toegankelijk voor users die voorkomen 
 ### Rebranding
 Designed for easy rebranding with a centralized `theme.config.ts` file in the frontend, allowing for quick changes to business type, country, currency, copy, and more. This is supported by dynamic data fetching for catalogs (e.g., `useSpecializationMap`, `usePracticalQuestions`).
 
+### AI / LLM access
+- `/llms.txt` and `/llms-full.txt` (served by `api/index.ts`, content in `api/_llms.ts`) volgen de llmstxt.org-conventie: korte sitebeschrijving + uitgebreide referentie van publieke API's, paginering, URL-conventies en cite-policy.
+- `/api/mcp` (handler in `api/_mcp.ts`) is een Model Context Protocol server over HTTP/JSON-RPC 2.0. Geen auth, CORS open. Methods: `initialize`, `tools/list`, `tools/call`. Tools: `search_profiles`, `get_profile`, `get_featured_profiles`, `list_specializations`, `list_categories`, `list_locations`. Tools delegeren via interne fetch naar de bestaande publieke read-endpoints (zo blijft caching + search-logica de single source of truth). `GET /api/mcp` geeft een descriptor terug voor agents die de URL zonder body bezoeken.
+- `/robots.txt` adverteert beide llms-bestanden + de MCP-endpoint.
+
 ### Brand voice copy-linter
 `scripts/lint-copy.ts` scant `client/src/lib/theme.config.ts` en `client/src/pages/**/*.{ts,tsx}` op verboden termen uit `docs/brand-voice.md` (sectie 5 + 6) en stelt het toegestane alternatief voor. Strings binnen technische JSX-attributen, URL-paden en object-keys zoals `queryKey` worden overgeslagen om false-positives te beperken. CTA-only-regels (zoeken, verzenden, OK) vuren alleen op korte button-achtige strings. Een bestand kan volledig uitgesloten worden via de marker `lint-copy-ignore-file` in een commentaar. Draaien via `npm run lint:copy`; het script draait ook mee als deel van `npm run check`. Bestaande overtredingen staan in `scripts/lint-copy.baseline.json` en breken de build niet — enkel nieuwe overtredingen falen. Regenereer de baseline na een copy-opschoning met `npm run lint:copy -- --update-baseline`.
 

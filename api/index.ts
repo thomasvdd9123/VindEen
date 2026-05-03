@@ -1304,7 +1304,57 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // -----------------------------------------------------------------------
     if (method === "GET" && path === "/robots.txt") {
       res.setHeader("Content-Type", "text/plain");
-      return res.send(`User-agent: *\nAllow: /\n\nSitemap: ${SITEMAP_BASE_URL}/sitemap.xml\n`);
+      return res.send(
+        `User-agent: *\nAllow: /\n\n` +
+        `Sitemap: ${SITEMAP_BASE_URL}/sitemap.xml\n` +
+        `# AI / LLM agents — see ${SITEMAP_BASE_URL}/llms.txt and ${SITEMAP_BASE_URL}/llms-full.txt\n` +
+        `# Programmatic access via MCP: ${SITEMAP_BASE_URL}/api/mcp\n`
+      );
+    }
+
+    // ---------------------------------------------------------------------
+    // LLMs.txt — machine-readable site descriptor for AI agents/crawlers.
+    // Follows the llmstxt.org convention. Short version at /llms.txt,
+    // exhaustive reference at /llms-full.txt. Content lives in api/_llms.ts.
+    // ---------------------------------------------------------------------
+    if (method === "GET" && (path === "/llms.txt" || path === "/llms-full.txt")) {
+      res.setHeader("Content-Type", "text/markdown; charset=utf-8");
+      res.setHeader("Cache-Control", "public, max-age=3600");
+      const { LLMS_TXT, LLMS_FULL_TXT } = await import("./_llms");
+      return res.send(path === "/llms.txt" ? LLMS_TXT : LLMS_FULL_TXT);
+    }
+
+    // ---------------------------------------------------------------------
+    // MCP server — Model Context Protocol over HTTP / JSON-RPC 2.0.
+    // A thin wrapper over the public read APIs so AI clients (Claude, Cursor,
+    // custom agents) can discover and call typed tools. No auth required.
+    // CORS-open so any origin can call it.
+    // ---------------------------------------------------------------------
+    if (path === "/api/mcp") {
+      res.setHeader("Access-Control-Allow-Origin", "*");
+      res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+      res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+      if (method === "OPTIONS") return res.status(204).end();
+      if (method === "GET") {
+        // Friendly descriptor for humans + agents that hit the URL directly.
+        return res.status(200).json({
+          name: "zoek-een-tuinman.be",
+          description: "MCP server for the Belgian gardener directory.",
+          transport: "http",
+          protocol: "json-rpc-2.0",
+          endpoint: `${SITE_BASE_URL}/api/mcp`,
+          docs: `${SITE_BASE_URL}/llms-full.txt`,
+          methods: ["initialize", "tools/list", "tools/call"],
+        });
+      }
+      if (method !== "POST") return res.status(405).json({ error: "Method not allowed" });
+      const { handleMcpRequest } = await import("./_mcp");
+      // Detect protocol so internal fetches work in dev (http://localhost) and
+      // prod (https://...) alike. Vercel sets x-forwarded-proto.
+      const proto = (req.headers["x-forwarded-proto"] as string)?.split(",")[0]?.trim()
+        || (req.headers.host?.startsWith("localhost") ? "http" : "https");
+      const result = await handleMcpRequest(req.body, `${proto}://${req.headers.host}`);
+      return res.status(200).json(result);
     }
 
     if (method === "GET" && path === "/sitemap.xml") {
