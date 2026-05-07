@@ -15,6 +15,7 @@ import { useAuth } from "@/lib/auth";
 import { Loader2, Save, Mail, Trash2, AlertTriangle, CreditCard, Calendar, CheckCircle, XCircle, Clock } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/lib/supabase";
 import { apiRequest, queryClient, authFetch } from "@/lib/queryClient";
 import { isValidBelgianVAT, formatBelgianVAT } from "@/lib/utils";
@@ -63,6 +64,8 @@ export default function DashboardAccount() {
   const [isLoadingInvoice, setIsLoadingInvoice] = useState(false);
   const [isChangingEmail, setIsChangingEmail] = useState(false);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [newEmail, setNewEmail] = useState("");
 
   const metadata = getUserMetadata();
@@ -603,59 +606,61 @@ export default function DashboardAccount() {
           </CardContent>
         </Card>
 
-        {/* Account Deletion */}
-        <Card className="border-destructive/50">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-destructive">
-              <Trash2 className="h-5 w-5" />
-              Account verwijderen
-            </CardTitle>
-            <CardDescription>
-              Verwijder je account en alle bijbehorende gegevens permanent.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Alert variant="destructive" className="mb-4">
-              <AlertTriangle className="h-4 w-4" />
-              <AlertTitle>Let op!</AlertTitle>
-              <AlertDescription>
-                Deze actie kan niet ongedaan worden gemaakt. Al je profielen, contactaanvragen en gegevens worden permanent verwijderd.
-              </AlertDescription>
-            </Alert>
-            
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="destructive" data-testid="button-delete-account">
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Account permanent verwijderen
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Weet je het zeker?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Deze actie verwijdert je account en alle bijbehorende gegevens permanent. 
-                    Dit kan niet ongedaan worden gemaakt.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Annuleren</AlertDialogCancel>
-                  <AlertDialogAction 
-                    onClick={handleDeleteAccount}
-                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                    disabled={isDeletingAccount}
-                  >
-                    {isDeletingAccount ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      "Ja, verwijder mijn account"
-                    )}
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          </CardContent>
-        </Card>
+        {/* Account Deletion — subtle link */}
+        <div className="pt-2 pb-4 text-center">
+          <button
+            onClick={() => { setDeleteConfirmText(""); setShowDeleteDialog(true); }}
+            className="text-xs text-muted-foreground/60 hover:text-destructive transition-colors underline-offset-2 hover:underline"
+            data-testid="button-delete-account"
+          >
+            Account verwijderen
+          </button>
+        </div>
+
+        {/* 2-step delete confirmation dialog */}
+        <Dialog open={showDeleteDialog} onOpenChange={(open) => { setShowDeleteDialog(open); setDeleteConfirmText(""); }}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-destructive">
+                <AlertTriangle className="h-5 w-5" />
+                Account permanent verwijderen
+              </DialogTitle>
+              <DialogDescription className="pt-1">
+                Dit verwijdert je account en alle bijbehorende profielen en gegevens. <strong>Dit kan niet ongedaan worden gemaakt.</strong>
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-3 py-2">
+              <p className="text-sm text-muted-foreground">
+                Typ <span className="font-mono font-semibold text-foreground">VERWIJDER</span> om te bevestigen:
+              </p>
+              <Input
+                value={deleteConfirmText}
+                onChange={(e) => setDeleteConfirmText(e.target.value)}
+                placeholder="VERWIJDER"
+                data-testid="input-delete-confirm"
+                autoComplete="off"
+              />
+            </div>
+
+            <DialogFooter className="gap-2">
+              <Button
+                variant="outline"
+                onClick={() => { setShowDeleteDialog(false); setDeleteConfirmText(""); }}
+              >
+                Annuleren
+              </Button>
+              <Button
+                variant="destructive"
+                disabled={deleteConfirmText !== "VERWIJDER" || isDeletingAccount}
+                onClick={async () => { await handleDeleteAccount(); setShowDeleteDialog(false); }}
+                data-testid="button-delete-account-confirm"
+              >
+                {isDeletingAccount ? <Loader2 className="h-4 w-4 animate-spin" /> : "Ja, verwijder mijn account"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );
