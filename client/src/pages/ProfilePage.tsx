@@ -59,7 +59,7 @@ export default function ProfilePage() {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }, [params.slug]);
 
-  const { data: profile, isLoading, error } = useQuery<ProfileWithRelations>({
+  const { data: profile, isPending, error } = useQuery<ProfileWithRelations>({
     queryKey: previewId
       ? ["/api/profiles/by-id", previewId]
       : ["/api/profiles", params.slug],
@@ -83,7 +83,7 @@ export default function ProfilePage() {
     enabled: !!profile?.id,
   });
 
-  if (isLoading) {
+  if (isPending) {
     return (
       <Layout>
         <div className="bg-white border-b">
