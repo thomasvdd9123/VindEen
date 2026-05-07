@@ -2588,6 +2588,158 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     }
 
+    // -----------------------------------------------------------------------
+    // CRON: betaalherinneringen voor profielen zonder actief lidmaatschap
+    // Vercel roept dit elk uur aan via de cron-config in vercel.json.
+    // Beveiligd met CRON_SECRET env var (Authorization: Bearer <secret>).
+    // -----------------------------------------------------------------------
+    if (method === "GET" && path === "/api/cron-reminders") {
+      const cronSecret = process.env.CRON_SECRET;
+      if (cronSecret) {
+        const authHeader = req.headers["authorization"] || "";
+        if (authHeader !== `Bearer ${cronSecret}`) {
+          return res.status(401).json({ error: "Unauthorized" });
+        }
+      }
+
+      const resendApiKey = process.env.RESEND_API_KEY;
+      if (!resendApiKey) {
+        return res.status(200).json({ skipped: true, reason: "RESEND_API_KEY not configured" });
+      }
+
+      // Reminder schema: type → milliseconds after profile creation
+      const REMINDERS: { type: string; offsetMs: number; label: string }[] = [
+        { type: "1h",  offsetMs: 1 * 60 * 60 * 1000,         label: "1 uur" },
+        { type: "1d",  offsetMs: 24 * 60 * 60 * 1000,        label: "1 dag" },
+        { type: "2d",  offsetMs: 2 * 24 * 60 * 60 * 1000,    label: "2 dagen" },
+        { type: "1w",  offsetMs: 7 * 24 * 60 * 60 * 1000,    label: "1 week" },
+        { type: "1m",  offsetMs: 30 * 24 * 60 * 60 * 1000,   label: "1 maand" },
+      ];
+      const MAX_AGE_MS = 32 * 24 * 60 * 60 * 1000; // stop reminders after ~32 days
+
+      // 1. Find all profiles without an ACTIVE subscription, created within the window
+      const cutoff = new Date(Date.now() - MAX_AGE_MS).toISOString();
+      const { data: candidates, error: candErr } = await supabase
+        .from("profile")
+        .select("id, company_name, slug, contact_email, practitioner_id, created_at")
+        .gte("created_at", cutoff)
+        .order("created_at", { ascending: false });
+
+      if (candErr) {
+        console.error("cron-reminders: candidate query failed", candErr);
+        return res.status(500).json({ error: candErr.message });
+      }
+
+      if (!candidates || candidates.length === 0) {
+        return res.status(200).json({ sent: 0, skipped: 0 });
+      }
+
+      const profileIds = (candidates as any[]).map((p: any) => p.id);
+
+      // 2. Check which of these profiles have an ACTIVE subscription
+      const { data: activeSubs } = await supabase
+        .from("profile_subscription")
+        .select("profile_id")
+        .in("profile_id", profileIds)
+        .eq("status", "ACTIVE");
+
+      const paidProfileIds = new Set((activeSubs || []).map((s: any) => s.profile_id));
+      const unpaidProfiles = (candidates as any[]).filter((p: any) => !paidProfileIds.has(p.id));
+
+      if (unpaidProfiles.length === 0) {
+        return res.status(200).json({ sent: 0, skipped: candidates.length });
+      }
+
+      // 3. Fetch already-sent reminders for unpaid profiles
+      const unpaidIds = unpaidProfiles.map((p: any) => p.id);
+      const { data: sentRows } = await supabase
+        .from("profile_payment_reminder")
+        .select("profile_id, reminder_type")
+        .in("profile_id", unpaidIds);
+
+      const sentSet = new Set(
+        (sentRows || []).map((r: any) => `${r.profile_id}:${r.reminder_type}`)
+      );
+
+      // 4. For each unpaid profile, determine which reminders are due
+      const now = Date.now();
+      let sent = 0;
+      let skipped = 0;
+
+      for (const profile of unpaidProfiles) {
+        const createdAt = new Date((profile as any).created_at).getTime();
+        const ageMs = now - createdAt;
+
+        // Resolve recipient email
+        let recipientEmail: string | null = (profile as any).contact_email || null;
+        if (!recipientEmail && (profile as any).practitioner_id) {
+          const { data: prac } = await supabase
+            .from("practitioner")
+            .select("email")
+            .eq("id", (profile as any).practitioner_id)
+            .maybeSingle();
+          recipientEmail = (prac as any)?.email || null;
+        }
+        if (!recipientEmail) { skipped++; continue; }
+
+        const companyName = (profile as any).company_name || "uw bedrijf";
+        const profileSlug = (profile as any).slug;
+        const activateUrl = profileSlug
+          ? `${SITE_BASE_URL}/dashboard/profielen/${(profile as any).id}/betalen`
+          : `${SITE_BASE_URL}/dashboard/profielen`;
+
+        for (const reminder of REMINDERS) {
+          const key = `${(profile as any).id}:${reminder.type}`;
+          if (sentSet.has(key)) continue; // already sent
+          if (ageMs < reminder.offsetMs) continue; // not due yet
+
+          // Send the email
+          try {
+            const isFirst = reminder.type === "1h";
+            const subject = isFirst
+              ? `Uw profiel staat klaar — activeer uw lidmaatschap`
+              : `Herinnering: ${companyName} is nog niet zichtbaar voor klanten`;
+
+            const urgencyLine = reminder.type === "1m"
+              ? `<p><strong>Dit is onze laatste herinnering.</strong> Als u geen lidmaatschap activeert, blijft uw profiel verborgen.</p>`
+              : "";
+
+            await fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: { Authorization: `Bearer ${resendApiKey}`, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                from: SITE_EMAIL_FROM,
+                to: [recipientEmail],
+                subject,
+                html: `
+                  <p>Beste,</p>
+                  <p>Uw profiel <strong>${escapeHtml(companyName)}</strong> staat klaar op ons platform, maar is nog niet zichtbaar voor potentiële klanten.</p>
+                  <p>Om uw bedrijf vindbaar te maken, dient u nog een lidmaatschap te activeren. Dit duurt slechts een paar minuten.</p>
+                  ${urgencyLine}
+                  <p><a href="${activateUrl}" style="display:inline-block;padding:10px 20px;background:#16a34a;color:#fff;border-radius:6px;text-decoration:none;font-weight:bold;">Lidmaatschap activeren</a></p>
+                  <p style="color:#888;font-size:12px;">U ontvangt dit bericht omdat u ${reminder.label} geleden een profiel aanmaakte op Zoek-een-tuinman.be maar nog geen lidmaatschap koos.</p>
+                  <p>Met vriendelijke groeten,<br>Het team van Zoek-een-tuinman.be</p>
+                `,
+              }),
+            });
+
+            // Record the sent reminder
+            await supabase.from("profile_payment_reminder").upsert(
+              { profile_id: (profile as any).id, reminder_type: reminder.type, sent_at: new Date().toISOString() },
+              { onConflict: "profile_id,reminder_type" }
+            );
+            sentSet.add(key); // prevent double-send within same run
+            sent++;
+          } catch (emailErr) {
+            console.error(`cron-reminders: failed for ${(profile as any).id} ${reminder.type}:`, emailErr);
+            skipped++;
+          }
+        }
+      }
+
+      return res.status(200).json({ sent, skipped, total: unpaidProfiles.length });
+    }
+
     return res.status(404).json({ error: "Not found" });
   } catch (error: any) {
     console.error("API Error:", error);

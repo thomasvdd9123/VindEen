@@ -3,6 +3,12 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist/public",
   "framework": null,
+  "crons": [
+    {
+      "path": "/api/cron-reminders",
+      "schedule": "0 * * * *"
+    }
+  ],
   "rewrites": [
     {
       "source": "/googlec82c9dc9a541d03e.html",
