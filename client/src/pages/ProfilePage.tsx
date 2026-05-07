@@ -59,19 +59,22 @@ export default function ProfilePage() {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }, [params.slug]);
 
-  const { data: profile, isPending, error } = useQuery<ProfileWithRelations>({
-    queryKey: previewId
-      ? ["/api/profiles/by-id", previewId]
-      : ["/api/profiles", params.slug],
-    enabled: !!params.slug,
-    queryFn: previewId
-      ? async () => {
-          const res = await authFetch(`/api/profiles/by-id/${previewId}`);
-          if (!res.ok) throw new Error("Profile not found");
-          return res.json();
+  const { data: profile, isPending, error } = useQuery<ProfileWithRelations>(
+    previewId
+      ? {
+          queryKey: ["/api/profiles/by-id", previewId],
+          queryFn: async () => {
+            const res = await authFetch(`/api/profiles/by-id/${previewId}`);
+            if (!res.ok) throw new Error("Profile not found");
+            return res.json();
+          },
         }
-      : undefined,
-  });
+      : {
+          queryKey: ["/api/profiles", params.slug],
+          enabled: !!params.slug,
+          retry: 1,
+        },
+  );
 
   const { data: portfolio = [] } = useQuery<PortfolioProject[]>({
     queryKey: ["/api/profiles", profile?.id, "portfolio"],
