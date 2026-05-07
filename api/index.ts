@@ -1921,6 +1921,28 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }));
     }
 
+    // Cancel an active subscription (profile stays online until end_date)
+    if (method === "POST" && path.match(/^\/api\/profiles\/[^/]+\/cancel-subscription$/)) {
+      const auth = await getAuthContext(req);
+      if (!auth || !auth.practitionerId) return res.status(401).json({ error: "Unauthorized" });
+      const profileId = path.split("/")[3];
+      const { data: ownerCheck } = await supabase.from("profile").select("practitioner_id").eq("id", profileId).maybeSingle();
+      if (!ownerCheck) return res.status(404).json({ error: "Profile not found" });
+      if ((ownerCheck as any).practitioner_id !== auth.practitionerId) return res.status(403).json({ error: "Forbidden" });
+      const { data: sub } = await supabase
+        .from("profile_subscription")
+        .select("id, status, end_date")
+        .eq("profile_id", profileId)
+        .eq("status", "ACTIVE")
+        .maybeSingle();
+      if (!sub) return res.status(404).json({ error: "Geen actief lidmaatschap gevonden" });
+      await supabase
+        .from("profile_subscription")
+        .update({ status: "CANCELLED", updated_at: new Date().toISOString() })
+        .eq("id", (sub as any).id);
+      return res.status(200).json({ ok: true, endDate: (sub as any).end_date });
+    }
+
     if (method === "POST" && path === "/api/mollie/create-payment") {
       const auth = await getAuthContext(req);
       if (!auth || !auth.practitionerId) return res.status(401).json({ error: "Unauthorized" });
@@ -2106,20 +2128,38 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (!pay) return res.status(200).send("OK");
 
       if (payment.status === "paid") {
-        const startDate = new Date();
-        const endDate = new Date();
+        // Fetch current sub to determine if this is a renewal (has future end_date or is EXPIRED)
+        const { data: existingSub } = await supabase
+          .from("profile_subscription")
+          .select("end_date, status, profile_id")
+          .eq("id", meta.subscriptionId)
+          .maybeSingle();
+        const now = new Date();
+        const existingEnd = existingSub ? new Date((existingSub as any).end_date) : null;
+        // Extend from existing end_date if it's still in the future (early renewal), else start from today
+        const baseDate = existingEnd && existingEnd > now ? existingEnd : now;
+        const endDate = new Date(baseDate);
         endDate.setFullYear(endDate.getFullYear() + (meta.years || 1));
         await supabase
           .from("profile_subscription")
           .update({
             status: "ACTIVE",
-            start_date: startDate.toISOString().split("T")[0],
+            start_date: now.toISOString().split("T")[0],
             end_date: endDate.toISOString().split("T")[0],
-            updated_at: new Date().toISOString(),
+            updated_at: now.toISOString(),
           })
           .eq("id", meta.subscriptionId);
-        await supabase.from("payment").update({ status: "PAID", paid_at: new Date().toISOString() }).eq("id", (pay as any).id);
-        // (Email/Discord/Billit hooks weggehaald in deze refactor — kunnen terugkomen via aparte taak)
+        await supabase.from("payment").update({ status: "PAID", paid_at: now.toISOString() }).eq("id", (pay as any).id);
+        // If profile was taken offline due to expiry, bring it back online
+        if ((existingSub as any)?.profile_id) {
+          const wasOffline = (existingSub as any).status === "EXPIRED" || (existingSub as any).status === "CANCELLED";
+          if (wasOffline) {
+            await supabase
+              .from("profile")
+              .update({ is_public: true })
+              .eq("id", (existingSub as any).profile_id);
+          }
+        }
       } else if (["failed", "canceled", "expired"].includes(payment.status)) {
         await supabase.from("profile_subscription").update({ status: "CANCELLED" }).eq("id", meta.subscriptionId);
         await supabase.from("payment").update({ status: "FAILED" }).eq("id", (pay as any).id);
@@ -2952,6 +2992,243 @@ Schrijf een aantrekkelijke beschrijving van 200-350 woorden die:
       }
 
       return res.status(200).json({ sent, skipped, total: unpaidProfiles.length });
+    }
+
+    // -----------------------------------------------------------------------
+    // CRON: verlenging- en verloopherinneringen voor actieve lidmaatschappen
+    // Vercel roept dit dagelijks aan (06:00 UTC) via de cron-config in vercel.json.
+    // Beveiligd met CRON_SECRET env var (Authorization: Bearer <secret>).
+    //
+    // Stap 1 — 30 dagen voor verloopdatum: stuur verlengings-e-mail (+ Billit-factuur indien geconfigureerd)
+    // Stap 2 — verloopdatum voorbij, status nog ACTIVE: zet EXPIRED + profiel offline + stuur e-mail
+    // Stap 3 — 7 dagen na verloopdatum, status EXPIRED: stuur finale herinnering
+    // -----------------------------------------------------------------------
+    if (method === "GET" && path === "/api/cron-subscription-renewal") {
+      const cronSecret = process.env.CRON_SECRET;
+      if (cronSecret) {
+        const authHeader = req.headers["authorization"] || "";
+        if (authHeader !== `Bearer ${cronSecret}`) {
+          return res.status(401).json({ error: "Unauthorized" });
+        }
+      }
+
+      const resendApiKey = process.env.RESEND_API_KEY;
+      const billitApiKey = process.env.BILLIT_API_KEY;
+      const billitPartyId = process.env.BILLIT_PARTY_ID;
+      const billitSandbox = process.env.BILLIT_SANDBOX === "true";
+
+      const now = new Date();
+      const todayStr = now.toISOString().split("T")[0];
+      const in30DaysStr = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+      const sevenDaysAgoStr = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+
+      const results = { renewed30d: 0, expiredTakenOffline: 0, finalReminders: 0, errors: 0 };
+
+      // Helper: fetch recipient email for a profile row
+      async function getProfileEmail(prof: any): Promise<string | null> {
+        if (prof.contact_email) return prof.contact_email;
+        if (prof.practitioner_id) {
+          const { data: prac } = await supabase.from("practitioner").select("email").eq("id", prof.practitioner_id).maybeSingle();
+          return (prac as any)?.email || null;
+        }
+        return null;
+      }
+
+      // Helper: send renewal email via Resend
+      async function sendRenewalEmail(
+        to: string,
+        subject: string,
+        html: string,
+      ): Promise<void> {
+        if (!resendApiKey) return;
+        await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${resendApiKey}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ from: SITE_EMAIL_FROM, to: [to], subject, html }),
+        });
+      }
+
+      // Helper: send Billit invoice for renewal
+      async function sendBillitRenewalInvoice(profileId: string, amount: number, companyLabel: string): Promise<void> {
+        if (!billitApiKey) return;
+        const { data: prof } = await supabase.from("profile").select("company_name, practitioner_id").eq("id", profileId).maybeSingle();
+        if (!prof || !(prof as any).practitioner_id) return;
+        const { data: prac } = await supabase.from("practitioner").select("email, vat, company_name, billing_address_id, subject_to_vat").eq("id", (prof as any).practitioner_id).maybeSingle();
+        if (!prac || !(prac as any).vat || !(prac as any).billing_address_id) return;
+        const p = prac as any;
+        const { data: addr } = await supabase.from("address").select("street, number, postcode, municipality, country").eq("id", p.billing_address_id).maybeSingle();
+        if (!addr || !(addr as any).street) return;
+        const ad = addr as any;
+        const { data: cfg } = await supabase.from("site_config").select("default_vat_percentage,default_currency_code").limit(1).single();
+        const vatPct = p.subject_to_vat ? Number((cfg as any)?.default_vat_percentage ?? 21) : 0;
+        const priceExclVat = vatPct > 0 ? amount / (1 + vatPct / 100) : amount;
+        const invoiceNumber = `INV-RENEW-${now.getFullYear()}-${String(profileId).slice(0, 8).toUpperCase()}`;
+        const dueDate = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+        const order = {
+          OrderType: "Invoice",
+          OrderDirection: "Income",
+          OrderDate: todayStr,
+          ExpiryDate: dueDate,
+          OrderNumber: invoiceNumber,
+          OrderLines: [{ Quantity: 1, UnitPriceExcl: priceExclVat, Description: `Verlenging lidmaatschap ${companyLabel}`, VATPercentage: vatPct }],
+          Customer: { Name: p.company_name || companyLabel, VATNumber: p.vat, PartyType: "Customer", Email: p.email, Street: ad.street, StreetNumber: ad.number || "", Zipcode: ad.postcode || "", City: ad.municipality, CountryCode: ad.country || "BE" },
+          Paid: false,
+        };
+        const baseUrl = billitSandbox ? "https://api.sandbox.billit.be" : "https://api.billit.be";
+        const headers: Record<string, string> = { "Content-Type": "application/json", Accept: "application/json", ApiKey: billitApiKey };
+        if (billitPartyId) headers["PartyID"] = billitPartyId;
+        const endpoint = billitSandbox
+          ? `${baseUrl}/v1/einvoices/registrations/${billitPartyId}/commands/send`
+          : `${baseUrl}/v1/peppol/sendOrder`;
+        const body = billitSandbox ? { TransportType: "Peppol", Order: order } : order;
+        await fetch(endpoint, { method: "POST", headers, body: JSON.stringify(body) });
+      }
+
+      // ── Stap 1: ACTIVE subs die binnen 30 dagen verlopen → verlengings-e-mail ─
+      const { data: expiringSoon } = await supabase
+        .from("profile_subscription")
+        .select("id, profile_id, end_date, subscription_plan_offer_id")
+        .eq("status", "ACTIVE")
+        .gte("end_date", todayStr)
+        .lte("end_date", in30DaysStr);
+
+      const expiringSoonProfileIds = (expiringSoon || []).map((s: any) => s.profile_id);
+      const { data: alreadySent30d } = expiringSoonProfileIds.length
+        ? await supabase.from("profile_payment_reminder").select("profile_id").in("profile_id", expiringSoonProfileIds).eq("reminder_type", "renewal_30d")
+        : { data: [] as any[] };
+      const sent30dSet = new Set((alreadySent30d || []).map((r: any) => r.profile_id));
+
+      for (const sub of (expiringSoon || [])) {
+        if (sent30dSet.has((sub as any).profile_id)) continue;
+        try {
+          const { data: prof } = await supabase.from("profile").select("company_name, slug, contact_email, practitioner_id").eq("id", (sub as any).profile_id).maybeSingle();
+          if (!prof) { results.errors++; continue; }
+          const email = await getProfileEmail(prof as any);
+          if (!email) { results.errors++; continue; }
+          const companyName = escapeHtml((prof as any).company_name || "uw bedrijf");
+          const endDate = new Date((sub as any).end_date).toLocaleDateString("nl-BE", { day: "numeric", month: "long", year: "numeric" });
+          const payUrl = `${SITE_BASE_URL}/dashboard/profielen/${(sub as any).profile_id}/betalen`;
+
+          // Fetch offer amount for Billit
+          const { data: offer } = await supabase.from("subscription_plan_offer").select("total_price").eq("id", (sub as any).subscription_plan_offer_id).maybeSingle();
+          const amount = (offer as any)?.total_price || 0;
+
+          await sendRenewalEmail(email, `Uw lidmaatschap verloopt op ${endDate} — verleng nu`, `
+            <p>Beste,</p>
+            <p>Uw lidmaatschap voor <strong>${companyName}</strong> op Zoek-een-tuinman.be verloopt op <strong>${endDate}</strong>.</p>
+            <p>Om zichtbaar te blijven voor klanten, verlengt u uw lidmaatschap eenvoudig via onderstaande knop.</p>
+            <p><a href="${payUrl}" style="display:inline-block;padding:10px 20px;background:#16a34a;color:#fff;border-radius:6px;text-decoration:none;font-weight:bold;">Lidmaatschap verlengen</a></p>
+            <p style="color:#888;font-size:12px;">Als u uw lidmaatschap niet verlengt, wordt uw profiel na de verloopdatum offline gehaald.</p>
+            <p>Met vriendelijke groeten,<br>Het team van Zoek-een-tuinman.be</p>
+          `);
+
+          if (amount > 0) {
+            await sendBillitRenewalInvoice((sub as any).profile_id, amount, (prof as any).company_name || "").catch(() => {});
+          }
+
+          await supabase.from("profile_payment_reminder").upsert(
+            { profile_id: (sub as any).profile_id, reminder_type: "renewal_30d", sent_at: now.toISOString() },
+            { onConflict: "profile_id,reminder_type" }
+          );
+          results.renewed30d++;
+        } catch (e) {
+          console.error("cron-subscription-renewal stap1:", e);
+          results.errors++;
+        }
+      }
+
+      // ── Stap 2: ACTIVE subs die reeds verlopen zijn → EXPIRED + offline ────────
+      const { data: nowExpired } = await supabase
+        .from("profile_subscription")
+        .select("id, profile_id, end_date")
+        .eq("status", "ACTIVE")
+        .lt("end_date", todayStr);
+
+      for (const sub of (nowExpired || [])) {
+        try {
+          // Zet subscription op EXPIRED
+          await supabase.from("profile_subscription").update({ status: "EXPIRED", updated_at: now.toISOString() }).eq("id", (sub as any).id);
+          // Haal profiel offline
+          await supabase.from("profile").update({ is_public: false }).eq("id", (sub as any).profile_id);
+
+          // Stuur e-mail (eenmalig)
+          const { data: alreadySentExpired } = await supabase
+            .from("profile_payment_reminder")
+            .select("id")
+            .eq("profile_id", (sub as any).profile_id)
+            .eq("reminder_type", "renewal_expired")
+            .maybeSingle();
+          if (alreadySentExpired) { results.expiredTakenOffline++; continue; }
+
+          const { data: prof } = await supabase.from("profile").select("company_name, slug, contact_email, practitioner_id").eq("id", (sub as any).profile_id).maybeSingle();
+          if (!prof) { results.expiredTakenOffline++; continue; }
+          const email = await getProfileEmail(prof as any);
+          if (!email) { results.expiredTakenOffline++; continue; }
+          const companyName = escapeHtml((prof as any).company_name || "uw bedrijf");
+          const payUrl = `${SITE_BASE_URL}/dashboard/profielen/${(sub as any).profile_id}/betalen`;
+
+          await sendRenewalEmail(email, `Uw profiel is offline — verleng uw lidmaatschap`, `
+            <p>Beste,</p>
+            <p>Het lidmaatschap voor <strong>${companyName}</strong> is verlopen. Uw profiel is tijdelijk offline gehaald en is niet meer zichtbaar voor klanten.</p>
+            <p>U kunt uw profiel opnieuw activeren door uw lidmaatschap te verlengen.</p>
+            <p><a href="${payUrl}" style="display:inline-block;padding:10px 20px;background:#16a34a;color:#fff;border-radius:6px;text-decoration:none;font-weight:bold;">Profiel opnieuw activeren</a></p>
+            <p>Met vriendelijke groeten,<br>Het team van Zoek-een-tuinman.be</p>
+          `);
+
+          await supabase.from("profile_payment_reminder").upsert(
+            { profile_id: (sub as any).profile_id, reminder_type: "renewal_expired", sent_at: now.toISOString() },
+            { onConflict: "profile_id,reminder_type" }
+          );
+          results.expiredTakenOffline++;
+        } catch (e) {
+          console.error("cron-subscription-renewal stap2:", e);
+          results.errors++;
+        }
+      }
+
+      // ── Stap 3: EXPIRED subs 7+ dagen geleden → finale herinnering ────────────
+      const { data: longExpired } = await supabase
+        .from("profile_subscription")
+        .select("id, profile_id, end_date")
+        .eq("status", "EXPIRED")
+        .lte("end_date", sevenDaysAgoStr);
+
+      const longExpiredProfileIds = (longExpired || []).map((s: any) => s.profile_id);
+      const { data: alreadySentFinal } = longExpiredProfileIds.length
+        ? await supabase.from("profile_payment_reminder").select("profile_id").in("profile_id", longExpiredProfileIds).eq("reminder_type", "renewal_7d")
+        : { data: [] as any[] };
+      const sentFinalSet = new Set((alreadySentFinal || []).map((r: any) => r.profile_id));
+
+      for (const sub of (longExpired || [])) {
+        if (sentFinalSet.has((sub as any).profile_id)) continue;
+        try {
+          const { data: prof } = await supabase.from("profile").select("company_name, slug, contact_email, practitioner_id").eq("id", (sub as any).profile_id).maybeSingle();
+          if (!prof) { results.errors++; continue; }
+          const email = await getProfileEmail(prof as any);
+          if (!email) { results.errors++; continue; }
+          const companyName = escapeHtml((prof as any).company_name || "uw bedrijf");
+          const payUrl = `${SITE_BASE_URL}/dashboard/profielen/${(sub as any).profile_id}/betalen`;
+
+          await sendRenewalEmail(email, `Laatste herinnering — activeer ${companyName} opnieuw`, `
+            <p>Beste,</p>
+            <p>Uw profiel <strong>${companyName}</strong> staat al meer dan een week offline wegens een verlopen lidmaatschap.</p>
+            <p>Dit is onze laatste herinnering. Verleng nu om opnieuw zichtbaar te worden voor klanten.</p>
+            <p><a href="${payUrl}" style="display:inline-block;padding:10px 20px;background:#16a34a;color:#fff;border-radius:6px;text-decoration:none;font-weight:bold;">Profiel opnieuw activeren</a></p>
+            <p>Met vriendelijke groeten,<br>Het team van Zoek-een-tuinman.be</p>
+          `);
+
+          await supabase.from("profile_payment_reminder").upsert(
+            { profile_id: (sub as any).profile_id, reminder_type: "renewal_7d", sent_at: now.toISOString() },
+            { onConflict: "profile_id,reminder_type" }
+          );
+          results.finalReminders++;
+        } catch (e) {
+          console.error("cron-subscription-renewal stap3:", e);
+          results.errors++;
+        }
+      }
+
+      return res.status(200).json(results);
     }
 
     return res.status(404).json({ error: "Not found" });
