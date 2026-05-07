@@ -67,6 +67,8 @@ export default function DashboardAccount() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [newEmail, setNewEmail] = useState("");
+  const [showEmailDialog, setShowEmailDialog] = useState(false);
+  const [isSendingPasswordReset, setIsSendingPasswordReset] = useState(false);
 
   const metadata = getUserMetadata();
 
@@ -237,6 +239,7 @@ export default function DashboardAccount() {
           description: "Controleer je inbox om je nieuwe email adres te bevestigen.",
         });
         setNewEmail("");
+        setShowEmailDialog(false);
       }
     } catch {
       toast({
@@ -246,6 +249,25 @@ export default function DashboardAccount() {
       });
     } finally {
       setIsChangingEmail(false);
+    }
+  };
+
+  const handlePasswordReset = async () => {
+    if (!user?.email) return;
+    setIsSendingPasswordReset(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
+        redirectTo: `${window.location.origin}/wachtwoord-reset`,
+      });
+      if (error) {
+        toast({ title: "Er ging iets mis", description: error.message, variant: "destructive" });
+      } else {
+        toast({ title: "Email verstuurd", description: "Controleer je inbox voor de resetlink." });
+      }
+    } catch {
+      toast({ title: "Er ging iets mis", description: "Probeer het later opnieuw.", variant: "destructive" });
+    } finally {
+      setIsSendingPasswordReset(false);
     }
   };
 
@@ -560,62 +582,82 @@ export default function DashboardAccount() {
           </CardContent>
         </Card>
 
-        {/* Email Change */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Mail className="h-5 w-5" />
-              Email wijzigen
-            </CardTitle>
-            <CardDescription>
-              Wijzig het email adres waarmee je inlogt.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div>
-                <p className="text-sm text-muted-foreground mb-2">
-                  Huidig email: <span className="font-medium text-foreground">{user?.email}</span>
-                </p>
-              </div>
-              <div className="flex gap-4">
-                <Input
-                  type="email"
-                  placeholder="Nieuw email adres"
-                  value={newEmail}
-                  onChange={(e) => setNewEmail(e.target.value)}
-                  className="max-w-sm"
-                  data-testid="input-new-email"
-                />
-                <Button 
-                  onClick={handleEmailChange} 
-                  disabled={isChangingEmail || !newEmail}
-                  data-testid="button-change-email"
-                >
-                  {isChangingEmail ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    "Wijzigen"
-                  )}
-                </Button>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Je ontvangt een bevestigingsmail op je nieuwe adres.
-              </p>
+        {/* Bottom actions — 3 subtle sections */}
+        <div className="border border-border rounded-lg divide-y divide-border text-sm">
+          {/* Change email */}
+          <div className="flex items-center justify-between px-4 py-3">
+            <div>
+              <p className="font-medium text-sm">Email wijzigen</p>
+              <p className="text-xs text-muted-foreground">{user?.email}</p>
             </div>
-          </CardContent>
-        </Card>
+            <button
+              onClick={() => { setNewEmail(""); setShowEmailDialog(true); }}
+              className="text-xs text-muted-foreground border border-border hover:border-foreground/30 hover:text-foreground transition-colors rounded-md px-3 py-1.5"
+              data-testid="button-open-email-dialog"
+            >
+              Wijzigen
+            </button>
+          </div>
 
-        {/* Account Deletion — subtle link */}
-        <div className="pt-2 pb-4 flex justify-center">
-          <button
-            onClick={() => { setDeleteConfirmText(""); setShowDeleteDialog(true); }}
-            className="text-xs text-destructive/70 border border-destructive/30 hover:border-destructive hover:text-destructive hover:bg-destructive/5 transition-colors rounded-md px-3 py-1.5"
-            data-testid="button-delete-account"
-          >
-            Account verwijderen
-          </button>
+          {/* Change password */}
+          <div className="flex items-center justify-between px-4 py-3">
+            <div>
+              <p className="font-medium text-sm">Wachtwoord wijzigen</p>
+              <p className="text-xs text-muted-foreground">Stuur een resetlink naar je inbox</p>
+            </div>
+            <button
+              onClick={handlePasswordReset}
+              disabled={isSendingPasswordReset}
+              className="text-xs text-muted-foreground border border-border hover:border-foreground/30 hover:text-foreground transition-colors rounded-md px-3 py-1.5 disabled:opacity-50"
+              data-testid="button-password-reset"
+            >
+              {isSendingPasswordReset ? <Loader2 className="h-3 w-3 animate-spin" /> : "Resetlink sturen"}
+            </button>
+          </div>
+
+          {/* Delete account */}
+          <div className="flex items-center justify-between px-4 py-3">
+            <div>
+              <p className="font-medium text-sm text-destructive/80">Account verwijderen</p>
+              <p className="text-xs text-muted-foreground">Verwijdert alle profielen en gegevens permanent</p>
+            </div>
+            <button
+              onClick={() => { setDeleteConfirmText(""); setShowDeleteDialog(true); }}
+              className="text-xs text-destructive/70 border border-destructive/30 hover:border-destructive hover:text-destructive hover:bg-destructive/5 transition-colors rounded-md px-3 py-1.5"
+              data-testid="button-delete-account"
+            >
+              Verwijderen
+            </button>
+          </div>
         </div>
+
+        {/* Email change dialog */}
+        <Dialog open={showEmailDialog} onOpenChange={setShowEmailDialog}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Email wijzigen</DialogTitle>
+              <DialogDescription>
+                Huidig email: <span className="font-medium text-foreground">{user?.email}</span>
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-3 py-2">
+              <Input
+                type="email"
+                placeholder="Nieuw email adres"
+                value={newEmail}
+                onChange={(e) => setNewEmail(e.target.value)}
+                data-testid="input-new-email"
+              />
+              <p className="text-xs text-muted-foreground">Je ontvangt een bevestigingsmail op je nieuwe adres.</p>
+            </div>
+            <DialogFooter className="gap-2">
+              <Button variant="outline" onClick={() => setShowEmailDialog(false)}>Annuleren</Button>
+              <Button onClick={handleEmailChange} disabled={isChangingEmail || !newEmail} data-testid="button-change-email">
+                {isChangingEmail ? <Loader2 className="h-4 w-4 animate-spin" /> : "Bevestigingsmail sturen"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         {/* 2-step delete confirmation dialog */}
         <Dialog open={showDeleteDialog} onOpenChange={(open) => { setShowDeleteDialog(open); setDeleteConfirmText(""); }}>
