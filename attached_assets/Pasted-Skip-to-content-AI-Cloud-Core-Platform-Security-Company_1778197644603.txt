@@ -1,0 +1,188 @@
+Skip to content
+AI Cloud
+
+
+
+
+
+Core Platform
+
+
+
+
+
+Security
+
+
+
+
+Company
+
+
+
+
+
+Learn
+
+
+
+
+Open Source
+
+
+
+
+Use Cases
+
+
+
+
+
+Tools
+
+
+
+Users
+
+
+
+Search Documentation
+⌘ K
+Cron Jobs
+Usage & Pricing
+Usage & Pricing for Cron Jobs
+Last updated March 4, 2026
+Cron Jobs are available on all plans
+
+Cron jobs invoke Vercel Functions. This means the same usage and pricing limits will apply.
+
+Number of cron jobs per project	Minimum interval	Scheduling precision
+Hobby	100 cron jobs	Once per day	Hourly (±59 min)
+Pro	100 cron jobs	Once per minute	Per-minute
+Enterprise	100 cron jobs	Once per minute	Per-minute
+Hobby scheduling limits
+Hobby accounts are limited to cron jobs that run once per day. Cron expressions that would run more frequently will fail during deployment.
+
+Hobby plans have two restrictions on cron jobs:
+
+Daily execution limit: Cron jobs can only run once per day. Expressions like 0 * * * * (hourly) or */30 * * * * (every 30 minutes) will fail deployment with the error: Hobby accounts are limited to daily cron jobs. This cron expression would run more than once per day.
+
+Timing precision: Vercel cannot assure a timely cron job invocation. For example, a cron job configured as 0 1 * * * (every day at 1 am) will trigger anywhere between 1:00 am and 1:59 am.
+
+For cron jobs that run more frequently or with precise timing, upgrade to our Pro plan.
+
+Experience Vercel Pro for free
+Unlock the full potential of Vercel Pro during your 14-day trial with $20 in credits. Benefit from 1 TB Fast Data Transfer, 10,000,000 Edge Requests, up to 200 hours of Build Execution, and access to Pro features like team collaboration and enhanced analytics.
+
+Pricing
+Cron jobs are included in all plans.
+
+You use a function to invoke a cron job, and therefore usage and pricing limits for these functions apply to all cron job executions:
+
+Functions limits and pricing
+Previous
+Managing Cron Jobs
+Next
+OG Image Generation
+Was this helpful?
+
+
+
+
+
+Your feedback...
+supported.
+Hobby scheduling limits
+Pricing
+
+Copy as Markdown
+
+Install Vercel Plugin
+
+Give feedback
+
+Ask AI about this page
+Get Started
+Templates
+Supported frameworks
+Marketplace
+Domains
+Build
+Next.js on Vercel
+Turborepo
+v0
+Scale
+Content delivery network
+Fluid compute
+CI/CD
+Observability
+AI Gateway
+New
+Vercel Agent
+New
+Secure
+Platform security
+Web Application Firewall
+Bot management
+BotID
+Sandbox
+New
+Resources
+Pricing
+Customers
+Enterprise
+Articles
+Startups
+Solution partners
+Learn
+Docs
+Blog
+Changelog
+Knowledge Base
+Academy
+Community
+Frameworks
+Next.js
+Nuxt
+Svelte
+Nitro
+Turbo
+SDKs
+AI SDK
+Workflow SDK
+New
+Flags SDK
+Chat SDK
+Streamdown AI
+New
+Use Cases
+Composable commerce
+Multi-tenant platforms
+Web apps
+Marketing sites
+Platform engineers
+Design engineers
+Company
+About
+Careers
+Help
+Press
+Legal
+Privacy Policy
+Community
+Open source program
+Events
+Shipped on Vercel
+GitHub
+LinkedIn
+X
+YouTube
+Loading status…
+
+Select a display theme:
+
+system
+
+light
+
+dark
