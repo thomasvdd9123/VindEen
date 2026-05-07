@@ -23,7 +23,7 @@ export default function AdminUsers() {
   const [openId, setOpenId] = useState<string | null>(null);
 
   return (
-    <AdminLayout title="Gebruikers" description="Practitioners + abonnementsstatus">
+    <AdminLayout title="Gebruikers" description="Practitioners + lidmaatschapsstatus">
       <Card>
         <CardContent className="p-0">
           {q.isLoading ? <div className="p-8 text-center">Laden…</div> : (
@@ -34,7 +34,7 @@ export default function AdminUsers() {
                   <TableHead>Email</TableHead>
                   <TableHead>Type</TableHead>
                   <TableHead>Profielen</TableHead>
-                  <TableHead>Abonnement</TableHead>
+                  <TableHead>Lidmaatschap</TableHead>
                   <TableHead>Aangemaakt</TableHead>
                   <TableHead></TableHead>
                 </TableRow>
@@ -100,7 +100,7 @@ function UserDetailDialog({ id, onClose }: { id: string | null; onClose: () => v
               </ul>
             </div>
             <div>
-              <h3 className="font-bold">Abonnementen ({q.data.subscriptions.length})</h3>
+              <h3 className="font-bold">Lidmaatschappen ({q.data.subscriptions.length})</h3>
               <ul className="text-xs space-y-1 mt-1">
                 {q.data.subscriptions.map((s: any) => (
                   <li key={s.id}>{s.status} — {formatDate(s.start_date)} → {formatDate(s.end_date)}</li>

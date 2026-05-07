@@ -116,7 +116,7 @@ export default function AdminSettings() {
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="text-sm font-medium">Standaard abonnementsplan</label>
+              <label className="text-sm font-medium">Standaard lidmaatschapsplan</label>
               <Select value={form.defaultSubscriptionPlanId || ""} onValueChange={(v) => setForm({ ...form, defaultSubscriptionPlanId: v })}>
                 <SelectTrigger data-testid="select-default-plan"><SelectValue placeholder="Kies plan…" /></SelectTrigger>
                 <SelectContent>{(plansQ.data || []).map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent>

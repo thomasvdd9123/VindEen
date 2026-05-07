@@ -111,7 +111,7 @@ export const siteConfig = {
       {
         question: "Hoe meld ik mijn kapsalon aan?",
         answer:
-          "Registreer gratis, vul je profiel in en kies een abonnement. Na verificatie ben je zichtbaar.",
+          "Registreer gratis, vul je profiel in en kies een lidmaatschap. Na verificatie ben je zichtbaar.",
       },
     ],
     general: [

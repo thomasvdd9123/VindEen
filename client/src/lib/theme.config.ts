@@ -65,7 +65,7 @@ export const siteConfig = {
   pages: {
     pricing: {
       tagline: "Eén vermelding, meerdere looptijden. Hoe langer je kiest, hoe meer je bespaart.",
-      seoDescription: "Bekijk de prijzen voor een vermelding op {siteName}. Kies het abonnement dat bij jou past.",
+      seoDescription: "Bekijk de prijzen voor een vermelding op {siteName}. Kies het lidmaatschap dat bij jou past.",
       features: [
         "Volledig profiel met logo en foto's",
         "Onbeperkt contactaanvragen",
@@ -229,7 +229,7 @@ export const siteConfig = {
       {
         question: "Wat kost een vermelding op dit platform?",
         answer:
-          "Bekijk onze prijzenpagina voor de actuele abonnementen. Je maakt eerst gratis een account aan en kiest daarna een abonnement dat bij je past.",
+          "Bekijk onze prijzenpagina voor de actuele lidmaatschappen. Je maakt eerst gratis een account aan en kiest daarna een lidmaatschap dat bij je past.",
       },
       {
         question: "Hoe word ik geverifieerd?",

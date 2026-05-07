@@ -48,7 +48,7 @@ export default function ProfilePayment() {
     if (!account?.id || !profileId || !selectedPlan) {
       toast({
         title: "Fout",
-        description: "Account, profiel of abonnement niet gevonden.",
+        description: "Account, profiel of lidmaatschap niet gevonden.",
         variant: "destructive",
       });
       return;
@@ -120,7 +120,7 @@ export default function ProfilePayment() {
   return (
     <DashboardLayout
       title={`Betalen voor ${profile.name}`}
-      description="Kies een abonnement om je profiel zichtbaar te maken"
+      description="Kies een lidmaatschap om je profiel zichtbaar te maken"
     >
       <div className="max-w-3xl space-y-6">
         <Link href="/dashboard/profielen">
@@ -134,16 +134,16 @@ export default function ProfilePayment() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <CreditCard className="h-5 w-5" />
-              Kies je abonnement
+              Kies je lidmaatschap
             </CardTitle>
             <CardDescription>
-              Met een actief abonnement wordt je profiel zichtbaar voor potentiële klanten
+              Met een actief lidmaatschap wordt je profiel zichtbaar voor potentiële klanten
             </CardDescription>
           </CardHeader>
           <CardContent>
             {plans.length === 0 ? (
               <p className="text-sm text-muted-foreground">
-                Er zijn op dit moment geen actieve abonnementen beschikbaar.
+                Er zijn op dit moment geen actieve lidmaatschappen beschikbaar.
               </p>
             ) : (
               <RadioGroup value={selectedPlan ?? ""} onValueChange={setSelectedPlan} className="space-y-4">

@@ -1875,7 +1875,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         headers: { Authorization: `Bearer ${mollieApiKey}`, "Content-Type": "application/json" },
         body: JSON.stringify({
           amount: { currency, value: total.toFixed(2) },
-          description: `${(offer as any).subscription_plan?.name || "Abonnement"} - ${years} jaar voor ${(profile as any).company_name}`,
+          description: `${(offer as any).subscription_plan?.name || "Lidmaatschap"} - ${years} jaar voor ${(profile as any).company_name}`,
           redirectUrl: `${baseUrl}/dashboard/profielen/${profileId}/betaling-status?payment_id=${(subscription as any).id}`,
           webhookUrl: `${baseUrl}/api/mollie/webhook`,
           metadata: { profileId, accountId, planId, years, subscriptionId: (subscription as any).id },

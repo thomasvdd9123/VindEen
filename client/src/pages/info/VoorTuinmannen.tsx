@@ -157,9 +157,9 @@ export default function VoorTuinmannen() {
                 3
               </div>
               <div>
-                <h3 className="font-semibold mb-1">Activeer je abonnement</h3>
+                <h3 className="font-semibold mb-1">Activeer je lidmaatschap</h3>
                 <p className="text-sm text-muted-foreground">
-                  Kies een abonnement en maak je profiel zichtbaar voor klanten.
+                  Kies een lidmaatschap en maak je profiel zichtbaar voor klanten.
                 </p>
               </div>
             </div>

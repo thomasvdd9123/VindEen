@@ -114,7 +114,7 @@ function Router() {
         <Route path="/admin/profielen/:id" component={AdminProfileDetail} />
         <Route path="/admin/gebruikers" component={AdminUsers} />
         <Route path="/admin/catalogi" component={AdminCatalogs} />
-        <Route path="/admin/abonnementen" component={AdminSubscriptions} />
+        <Route path="/admin/lidmaatschappen" component={AdminSubscriptions} />
         <Route path="/admin/betalingen" component={AdminPayments} />
         <Route path="/admin/instellingen" component={AdminSettings} />
         <Route path="/faq" component={FAQ} />

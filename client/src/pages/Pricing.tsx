@@ -18,7 +18,7 @@ export default function Pricing() {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <SEO
-        title="Prijzen en abonnementen"
+        title="Prijzen en lidmaatschappen"
         description={fillCopy(siteConfig.pages.pricing.seoDescription)}
         canonical="/prijzen"
       />
@@ -117,9 +117,9 @@ export default function Pricing() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <h4 className="font-medium">Kan ik mijn abonnement upgraden of downgraden?</h4>
+                  <h4 className="font-medium">Kan ik mijn lidmaatschap upgraden of downgraden?</h4>
                   <p className="text-muted-foreground text-sm mt-1">
-                    Ja, je kunt op elk moment je abonnement wijzigen. De wijziging gaat in bij je volgende factuurdatum.
+                    Ja, je kunt op elk moment je lidmaatschap wijzigen. De wijziging gaat in bij je volgende factuurdatum.
                   </p>
                 </div>
                 <div>
@@ -129,7 +129,7 @@ export default function Pricing() {
                   </p>
                 </div>
                 <div>
-                  <h4 className="font-medium">Kan ik mijn abonnement opzeggen?</h4>
+                  <h4 className="font-medium">Kan ik mijn lidmaatschap opzeggen?</h4>
                   <p className="text-muted-foreground text-sm mt-1">
                     Je profiel blijft actief tot het einde van je looptijd. Daarna stopt de zichtbaarheid automatisch.
                   </p>

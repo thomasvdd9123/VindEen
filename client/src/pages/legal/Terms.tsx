@@ -41,7 +41,7 @@ export default function Terms() {
         Deze Voorwaarden gelden voor elke professionele gebruiker (hierna
         "Gebruiker") die zich registreert om als tuinprofessional zichtbaar
         te zijn op het platform. Door aanmaak van een account of betaling
-        van een abonnement aanvaardt de Gebruiker uitdrukkelijk deze
+        van een lidmaatschap aanvaardt de Gebruiker uitdrukkelijk deze
         Voorwaarden. Eigen algemene voorwaarden van de Gebruiker zijn niet
         van toepassing.
       </p>
@@ -56,10 +56,10 @@ export default function Terms() {
         klanten.
       </p>
 
-      <h2>3. Abonnement, looptijd en opzegging</h2>
+      <h2>3. Lidmaatschap, looptijd en opzegging</h2>
       <ul>
         <li>
-          Abonnementen worden aangegaan voor de op de bestelpagina vermelde
+          Lidmaatschappen worden aangegaan voor de op de bestelpagina vermelde
           periode (maandelijks of jaarlijks) en worden stilzwijgend verlengd
           voor eenzelfde periode tenzij ten minste 30 dagen vóór de
           vervaldatum schriftelijk wordt opgezegd via{" "}
@@ -78,7 +78,7 @@ export default function Terms() {
         <li>
           Betaling gebeurt via onze betaalprovider Mollie. De Gebruiker geeft
           uitdrukkelijk toestemming voor recurrente afschrijving voor de
-          gekozen abonnementsperiode.
+          gekozen lidmaatschapsperiode.
         </li>
         <li>
           Bij niet-betaling op de vervaldag is van rechtswege en zonder

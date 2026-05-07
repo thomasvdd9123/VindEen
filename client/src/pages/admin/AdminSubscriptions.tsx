@@ -16,7 +16,7 @@ import { Plus, Pencil, Trash2 } from "lucide-react";
 
 export default function AdminSubscriptions() {
   return (
-    <AdminLayout title="Abonnementen" description="Beheer plannen en aanbiedingen">
+    <AdminLayout title="Lidmaatschappen" description="Beheer plannen en aanbiedingen">
       <Tabs defaultValue="plans">
         <TabsList>
           <TabsTrigger value="plans">Plannen</TabsTrigger>
@@ -86,7 +86,7 @@ function PlansManager() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Plan verwijderen?</AlertDialogTitle>
-            <AlertDialogDescription>Weet je zeker dat je dit abonnementsplan wil verwijderen? Bestaande betalingen blijven behouden, maar het plan kan niet meer worden gekozen.</AlertDialogDescription>
+            <AlertDialogDescription>Weet je zeker dat je dit lidmaatschapsplan wil verwijderen? Bestaande betalingen blijven behouden, maar het plan kan niet meer worden gekozen.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Annuleren</AlertDialogCancel>

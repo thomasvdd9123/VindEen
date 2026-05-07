@@ -98,7 +98,7 @@ export default function PaymentStatus() {
             <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
             <CardTitle className="text-2xl">Betaling geslaagd!</CardTitle>
             <CardDescription className="text-base">
-              Je abonnement is nu actief. Je profiel is zichtbaar in de zoekresultaten.
+              Je lidmaatschap is nu actief. Je profiel is zichtbaar in de zoekresultaten.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">

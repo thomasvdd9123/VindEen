@@ -269,7 +269,7 @@ function ProfileCard({ profile, onDelete }: {
                       data-testid={`badge-subscription-${profile.id}`}
                     >
                       <CreditCard className="h-3 w-3" />
-                      Geen abonnement
+                      Geen lidmaatschap
                     </span>
                   )}
                 </div>
@@ -332,7 +332,7 @@ function ProfileCard({ profile, onDelete }: {
           {!hasActiveSub && (
             <div className="mt-4 -mx-5 -mb-5 px-5 py-3 bg-amber-50 border-t border-amber-100 flex items-center gap-2 text-amber-700 text-xs">
               <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
-              <span>Dit profiel is nog niet actief — activeer een abonnement om zichtbaar te worden voor klanten.</span>
+              <span>Dit profiel is nog niet actief — activeer een lidmaatschap om zichtbaar te worden voor klanten.</span>
             </div>
           )}
         </CardContent>

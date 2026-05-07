@@ -26,7 +26,7 @@ const links = [
   { href: "/admin/profielen", label: "Profielen", icon: FileCheck },
   { href: "/admin/gebruikers", label: "Gebruikers", icon: Users },
   { href: "/admin/catalogi", label: "Catalogi", icon: Database },
-  { href: "/admin/abonnementen", label: "Abonnementen", icon: CreditCard },
+  { href: "/admin/lidmaatschappen", label: "Lidmaatschappen", icon: CreditCard },
   { href: "/admin/betalingen", label: "Betalingen", icon: Receipt },
   { href: "/admin/instellingen", label: "Project defaults", icon: Settings },
 ];
