@@ -304,7 +304,11 @@ function ProfileCard({ profile, onDelete }: {
                     Bewerken
                   </Button>
                 </Link>
-                <Link href={`/bedrijf/${profile.slug}`}>
+                <Link href={
+                  profile.isActive && profile.isPublic && profile.verificationStatus === "APPROVED"
+                    ? `/bedrijf/${profile.slug}`
+                    : `/bedrijf/${profile.slug}?preview=${profile.id}`
+                }>
                   <Button variant="outline" size="sm" className="gap-1.5 h-8" data-testid={`button-view-${profile.id}`}>
                     <Eye className="h-3.5 w-3.5" />
                     Bekijken

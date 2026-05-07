@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useParams, Link } from "wouter";
+import { useParams, Link, useSearch } from "wouter";
+import { authFetch } from "@/lib/queryClient";
 import { Layout } from "@/components/layout/Layout";
 import { SEO, generateLocalBusinessSchema, generateBreadcrumbSchema } from "@/components/SEO";
 import { ContactForm } from "@/components/ContactForm";
@@ -32,6 +33,7 @@ import {
   TreeDeciduous,
   ArrowLeft,
   ExternalLink,
+  EyeOff,
 } from "lucide-react";
 import type { ProfileWithRelations } from "@shared/schema";
 import { siteConfig, fillCopy } from "@/lib/theme.config";
@@ -40,17 +42,26 @@ import { useSpecializationMap } from "@/lib/useSpecializations";
 
 export default function ProfilePage() {
   const params = useParams<{ slug: string }>();
+  const searchString = useSearch();
+  const previewId = new URLSearchParams(searchString).get("preview");
   const { labelByKey: specLabels, keyToSlug: specKeyToSlug } = useSpecializationMap();
 
-  // Scroll to top whenever the user opens a profile (or switches between
-  // profiles via internal links). Wouter doesn't reset scroll on navigation.
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }, [params.slug]);
 
   const { data: profile, isLoading, error } = useQuery<ProfileWithRelations>({
-    queryKey: ["/api/profiles", params.slug],
+    queryKey: previewId
+      ? ["/api/profiles/by-id", previewId]
+      : ["/api/profiles", params.slug],
     enabled: !!params.slug,
+    queryFn: previewId
+      ? async () => {
+          const res = await authFetch(`/api/profiles/by-id/${previewId}`);
+          if (!res.ok) throw new Error("Profile not found");
+          return res.json();
+        }
+      : undefined,
   });
 
   if (isLoading) {
@@ -208,6 +219,22 @@ export default function ProfilePage() {
         structuredData={structuredData}
         noindex={!(profile.isPublic && profile.isVerified)}
       />
+
+      {/* Preview banner — only visible to the owner when profile isn't public yet */}
+      {previewId && (
+        <div className="bg-amber-50 border-b border-amber-200">
+          <div className="container mx-auto px-4 py-3 flex flex-wrap items-center gap-3 text-amber-800 text-sm">
+            <EyeOff className="h-4 w-4 shrink-0" />
+            <span>
+              <strong>Voorbeeldweergave</strong> — Dit profiel is nog niet zichtbaar voor bezoekers. Alleen jij kan het bekijken als eigenaar.
+            </span>
+            <Link href="/dashboard/profielen" className="ml-auto text-amber-700 underline text-xs whitespace-nowrap">
+              ← Terug naar dashboard
+            </Link>
+          </div>
+        </div>
+      )}
+
       <div className="bg-muted/30 border-b border-border">
         <div className="container mx-auto px-4 py-4">
           <Breadcrumb>
