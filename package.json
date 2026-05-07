@@ -50,6 +50,7 @@
     "@types/multer": "^2.0.0",
     "@types/pg": "^8.16.0",
     "@vercel/node": "^5.5.26",
+    "@vercel/speed-insights": "^2.0.0",
     "busboy": "^1.6.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

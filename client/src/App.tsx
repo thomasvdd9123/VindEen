@@ -7,6 +7,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/lib/auth";
 import { CookieConsent } from "@/components/CookieConsent";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 // Eagerly bundled: top-of-funnel + auth pages so the first paint after a
 // Google landing is instant. Everything else is lazy-loaded so the initial
 // JS bundle stays small and the homepage can render before secondary
@@ -148,6 +149,7 @@ function App() {
             <Toaster />
             <Router />
             <CookieConsent />
+            <SpeedInsights />
           </TooltipProvider>
         </AuthProvider>
       </QueryClientProvider>
