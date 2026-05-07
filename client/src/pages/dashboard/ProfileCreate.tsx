@@ -7,7 +7,7 @@ import { DashboardLayout } from "./DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { RichTextEditor } from "@/components/RichTextEditor";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
@@ -480,15 +480,16 @@ export default function ProfileCreate() {
                       <FormItem>
                         <FormLabel>Korte introductie <span className="text-destructive">*</span></FormLabel>
                         <FormControl>
-                          <Textarea 
-                            placeholder="Schrijf een korte introductie over je bedrijf..." 
-                            className="min-h-[100px]"
-                            {...field} 
+                          <RichTextEditor
+                            value={field.value || ""}
+                            onChange={field.onChange}
+                            placeholder="Schrijf een korte introductie over je bedrijf..."
+                            minHeight="100px"
                             data-testid="input-introduction"
                           />
                         </FormControl>
                         <FormDescription>
-                          Dit is het eerste wat bezoekers zien op je profielpagina (max 300 tekens)
+                          Dit is het eerste wat bezoekers zien op je profielpagina. Je kan tekst opmaken met vet, cursief, koppen en lijsten.
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -502,15 +503,16 @@ export default function ProfileCreate() {
                       <FormItem>
                         <FormLabel>Uitgebreide beschrijving</FormLabel>
                         <FormControl>
-                          <Textarea 
-                            placeholder="Uitgebreide beschrijving van je diensten, ervaring, aanpak, etc..." 
-                            className="min-h-[150px]"
-                            {...field} 
+                          <RichTextEditor
+                            value={field.value || ""}
+                            onChange={field.onChange}
+                            placeholder="Uitgebreide beschrijving van je diensten, ervaring, aanpak, etc..."
+                            minHeight="150px"
                             data-testid="input-description"
                           />
                         </FormControl>
                         <FormDescription>
-                          Vertel meer over je ervaring, werkwijze en wat je onderscheidt
+                          Vertel meer over je ervaring, werkwijze en wat je onderscheidt. Plakken vanuit Word of e-mail werkt ook.
                         </FormDescription>
                         <FormMessage />
                       </FormItem>

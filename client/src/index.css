@@ -337,3 +337,88 @@
     inset: -1px;
   }
 }
+
+/* ============================================================ */
+/* Rich Text Editor (Tiptap) — editor area + placeholder        */
+/* ============================================================ */
+.rich-text-editor .tiptap {
+  outline: none;
+  min-height: inherit;
+}
+
+.rich-text-editor .tiptap p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: hsl(var(--muted-foreground));
+  pointer-events: none;
+  float: left;
+  height: 0;
+}
+
+/* Rendered rich text content — used both in editor and on profile page */
+.rich-text-content h2,
+.rich-text-editor .tiptap h2 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin-top: 1em;
+  margin-bottom: 0.35em;
+  line-height: 1.3;
+}
+
+.rich-text-content h3,
+.rich-text-editor .tiptap h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-top: 0.9em;
+  margin-bottom: 0.3em;
+  line-height: 1.3;
+}
+
+.rich-text-content h4,
+.rich-text-editor .tiptap h4 {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-top: 0.8em;
+  margin-bottom: 0.25em;
+  line-height: 1.3;
+}
+
+.rich-text-content p,
+.rich-text-editor .tiptap p {
+  margin-bottom: 0.6em;
+  line-height: 1.65;
+}
+
+.rich-text-content p:last-child,
+.rich-text-editor .tiptap p:last-child {
+  margin-bottom: 0;
+}
+
+.rich-text-content ul,
+.rich-text-editor .tiptap ul {
+  list-style-type: disc;
+  padding-left: 1.4em;
+  margin-bottom: 0.6em;
+}
+
+.rich-text-content ol,
+.rich-text-editor .tiptap ol {
+  list-style-type: decimal;
+  padding-left: 1.4em;
+  margin-bottom: 0.6em;
+}
+
+.rich-text-content li,
+.rich-text-editor .tiptap li {
+  margin-bottom: 0.2em;
+  line-height: 1.6;
+}
+
+.rich-text-content strong,
+.rich-text-editor .tiptap strong {
+  font-weight: 700;
+}
+
+.rich-text-content em,
+.rich-text-editor .tiptap em {
+  font-style: italic;
+}

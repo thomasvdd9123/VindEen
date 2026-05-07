@@ -355,9 +355,17 @@ export default function ProfilePage() {
                   <CardTitle className="text-lg">Over {profile.name}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-muted-foreground leading-relaxed" data-testid="text-profile-introduction">
-                    {profile.introduction}
-                  </p>
+                  {profile.introduction.startsWith("<") ? (
+                    <div
+                      className="rich-text-content text-muted-foreground"
+                      data-testid="text-profile-introduction"
+                      dangerouslySetInnerHTML={{ __html: profile.introduction }}
+                    />
+                  ) : (
+                    <p className="text-muted-foreground leading-relaxed" data-testid="text-profile-introduction">
+                      {profile.introduction}
+                    </p>
+                  )}
                 </CardContent>
               </Card>
             )}
@@ -368,14 +376,22 @@ export default function ProfilePage() {
                   <CardTitle className="text-lg">Beschrijving</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div 
-                    className="prose prose-sm max-w-none text-muted-foreground"
-                    data-testid="text-profile-description"
-                  >
-                    {profile.description.split('\n').map((paragraph: string, i: number) => (
-                      <p key={i}>{paragraph}</p>
-                    ))}
-                  </div>
+                  {profile.description.startsWith("<") ? (
+                    <div
+                      className="rich-text-content text-muted-foreground"
+                      data-testid="text-profile-description"
+                      dangerouslySetInnerHTML={{ __html: profile.description }}
+                    />
+                  ) : (
+                    <div
+                      className="text-muted-foreground"
+                      data-testid="text-profile-description"
+                    >
+                      {profile.description.split('\n').map((paragraph: string, i: number) => (
+                        <p key={i} className="mb-2 last:mb-0 leading-relaxed">{paragraph}</p>
+                      ))}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             )}
