@@ -2064,6 +2064,80 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         if (rpcErr.code === "P0002") return res.status(404).json({ error: "Profile not found" });
         return res.status(500).json({ error: `Verification failed: ${rpcErr.message}` });
       }
+
+      // Send email notification to profile owner on APPROVE or REJECT
+      if (action === "APPROVE" || action === "REJECT") {
+        try {
+          const resendApiKey = process.env.RESEND_API_KEY;
+          if (resendApiKey) {
+            // Fetch profile + practitioner email in one go
+            const { data: prof } = await supabase
+              .from("profile")
+              .select("company_name, slug, contact_email, practitioner_id")
+              .eq("id", id)
+              .maybeSingle();
+
+            // Prefer profile contact_email, fall back to practitioner (account) email
+            let recipientEmail: string | null = (prof as any)?.contact_email || null;
+            if (!recipientEmail && (prof as any)?.practitioner_id) {
+              const { data: prac } = await supabase
+                .from("practitioner")
+                .select("email")
+                .eq("id", (prof as any).practitioner_id)
+                .maybeSingle();
+              recipientEmail = (prac as any)?.email || null;
+            }
+
+            if (recipientEmail) {
+              const companyName = (prof as any)?.company_name || "uw bedrijf";
+              const profileSlug = (prof as any)?.slug;
+              const profileUrl = profileSlug ? `${SITE_BASE_URL}/bedrijf/${profileSlug}` : SITE_BASE_URL;
+
+              if (action === "APPROVE") {
+                await fetch("https://api.resend.com/emails", {
+                  method: "POST",
+                  headers: { Authorization: `Bearer ${resendApiKey}`, "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    from: SITE_EMAIL_FROM,
+                    to: [recipientEmail],
+                    subject: `✅ Uw profiel is goedgekeurd — ${companyName}`,
+                    html: `
+                      <p>Beste,</p>
+                      <p>Goed nieuws! Uw profiel <strong>${escapeHtml(companyName)}</strong> is zojuist goedgekeurd en is nu zichtbaar voor potentiële klanten.</p>
+                      ${reason ? `<p><em>Opmerking van de beheerder:</em> ${escapeHtml(reason)}</p>` : ""}
+                      <p><a href="${profileUrl}" style="display:inline-block;padding:10px 20px;background:#16a34a;color:#fff;border-radius:6px;text-decoration:none;font-weight:bold;">Bekijk uw profiel</a></p>
+                      <p>Bedankt dat u uw bedrijf aanmeldde op ons platform.</p>
+                      <p>Met vriendelijke groeten,<br>Het team van Zoek-een-tuinman.be</p>
+                    `,
+                  }),
+                });
+              } else {
+                await fetch("https://api.resend.com/emails", {
+                  method: "POST",
+                  headers: { Authorization: `Bearer ${resendApiKey}`, "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    from: SITE_EMAIL_FROM,
+                    to: [recipientEmail],
+                    subject: `❌ Uw profiel werd niet goedgekeurd — ${companyName}`,
+                    html: `
+                      <p>Beste,</p>
+                      <p>Na beoordeling heeft ons team besloten om uw profiel <strong>${escapeHtml(companyName)}</strong> op dit moment niet goed te keuren.</p>
+                      ${reason ? `<p><strong>Reden:</strong> ${escapeHtml(reason)}</p>` : ""}
+                      <p>Heeft u vragen of wenst u uw profiel aan te passen? U kunt uw profiel bewerken via het dashboard en opnieuw indienen.</p>
+                      <p><a href="${SITE_BASE_URL}/dashboard/profielen" style="display:inline-block;padding:10px 20px;background:#2563eb;color:#fff;border-radius:6px;text-decoration:none;font-weight:bold;">Ga naar dashboard</a></p>
+                      <p>Met vriendelijke groeten,<br>Het team van Zoek-een-tuinman.be</p>
+                    `,
+                  }),
+                });
+              }
+            }
+          }
+        } catch (emailErr) {
+          console.error("Verification email failed:", emailErr);
+          // Non-blocking — don't fail the verification if email fails
+        }
+      }
+
       return res.status(200).json({ success: true, status: toStatus, ...(rpcData as any) });
     }
 
