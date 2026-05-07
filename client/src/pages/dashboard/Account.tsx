@@ -523,10 +523,6 @@ export default function DashboardAccount() {
                   />
                 </div>
 
-                <p className="text-sm text-muted-foreground">
-                  Gegevens tussentijds opslaan
-                </p>
-
                 <div className="pt-4">
                   <Button type="submit" disabled={isLoadingInvoice} className="gap-2" data-testid="button-save-invoice">
                     {isLoadingInvoice ? (
