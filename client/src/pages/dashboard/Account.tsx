@@ -607,10 +607,10 @@ export default function DashboardAccount() {
         </Card>
 
         {/* Account Deletion — subtle link */}
-        <div className="pt-2 pb-4 text-center">
+        <div className="pt-2 pb-4 flex justify-center">
           <button
             onClick={() => { setDeleteConfirmText(""); setShowDeleteDialog(true); }}
-            className="text-xs text-muted-foreground/60 hover:text-destructive transition-colors underline-offset-2 hover:underline"
+            className="text-xs text-destructive/70 border border-destructive/30 hover:border-destructive hover:text-destructive hover:bg-destructive/5 transition-colors rounded-md px-3 py-1.5"
             data-testid="button-delete-account"
           >
             Account verwijderen
