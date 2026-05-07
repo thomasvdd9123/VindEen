@@ -52,6 +52,12 @@ export function PracticalQuestionsForm({ values, onChange, heading, excludeKeys 
     if (q.fieldType === "OPTION") {
       return (
         <RadioGroup value={v ?? ""} onValueChange={(val) => set(q.camelKey, val)}>
+          {!q.isRequired && (
+            <div className="flex items-center gap-2">
+              <RadioGroupItem value="" id={`${tid}-none`} data-testid={`${tid}-none`} />
+              <Label htmlFor={`${tid}-none`} className="text-muted-foreground italic">Laat leeg</Label>
+            </div>
+          )}
           {q.options.map((o) => (
             <div key={o.id} className="flex items-center gap-2">
               <RadioGroupItem value={o.name} id={`${tid}-${o.key}`} data-testid={`${tid}-${o.key}`} />
@@ -108,7 +114,12 @@ export function PracticalQuestionsForm({ values, onChange, heading, excludeKeys 
       {heading && <h3 className="text-sm font-medium">{heading}</h3>}
       {questions.map((q) => (
         <div key={q.id} className="space-y-2">
-          <Label>{q.name}{q.isRequired && <span className="text-destructive"> *</span>}</Label>
+          <div className="flex items-center gap-2">
+            <Label>{q.name}{q.isRequired && <span className="text-destructive"> *</span>}</Label>
+            {!q.isRequired && (
+              <span className="text-xs text-muted-foreground">(optioneel)</span>
+            )}
+          </div>
           {renderField(q)}
         </div>
       ))}

@@ -34,6 +34,12 @@ import {
   ArrowLeft,
   ExternalLink,
   EyeOff,
+  CalendarCheck,
+  MessageCircle,
+  Timer,
+  ShieldCheck,
+  Wrench,
+  CalendarDays,
 } from "lucide-react";
 import type { ProfileWithRelations } from "@shared/schema";
 import { siteConfig, fillCopy } from "@/lib/theme.config";
@@ -498,6 +504,13 @@ function PracticalInfoCard({ practical }: { practical: any }) {
     languages: Languages,
     tariff: Euro,
     acceptedPaymentMethods: CreditCard,
+    priceRange: Euro,
+    waitingList: Timer,
+    responseTime: MessageCircle,
+    availability: CalendarCheck,
+    worksWeekends: CalendarDays,
+    insured: ShieldCheck,
+    providesEquipment: Wrench,
   };
 
   const rows = questions
