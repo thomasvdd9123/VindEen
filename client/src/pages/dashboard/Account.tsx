@@ -28,8 +28,6 @@ const accountSchema = z.object({
   firstName: z.string().min(2, "Voornaam is verplicht"),
   lastName: z.string().min(2, "Achternaam is verplicht"),
   gender: z.string().optional(),
-  birthYear: z.string().optional(),
-  showBirthDate: z.string().optional(),
 });
 
 const invoiceSchema = z.object({
@@ -90,8 +88,6 @@ export default function DashboardAccount() {
       firstName: metadata.firstName || "",
       lastName: metadata.lastName || "",
       gender: metadata.gender || "",
-      birthYear: metadata.birthYear || "",
-      showBirthDate: metadata.showBirthDate || "no",
     },
   });
 
@@ -119,8 +115,6 @@ export default function DashboardAccount() {
         firstName: metadata.firstName || "",
         lastName: metadata.lastName || "",
         gender: metadata.gender || "",
-        birthYear: metadata.birthYear || "",
-        showBirthDate: metadata.showBirthDate || "no",
       });
       setHasLoadedAccount(true);
     }
@@ -150,8 +144,6 @@ export default function DashboardAccount() {
         firstName: data.firstName,
         lastName: data.lastName,
         gender: data.gender,
-        birthYear: data.birthYear,
-        showBirthDate: data.showBirthDate,
       });
       
       if (error) {
@@ -375,42 +367,7 @@ export default function DashboardAccount() {
                       </FormItem>
                     )}
                   />
-                  <FormField
-                    control={accountForm.control}
-                    name="birthYear"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Geboortejaar</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Jaar" {...field} data-testid="input-birthyear" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
                 </div>
-
-                <FormField
-                  control={accountForm.control}
-                  name="showBirthDate"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Toon geboortedatum op profiel(en)</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger data-testid="select-showbirthdate">
-                            <SelectValue placeholder="Selecteer" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="yes">Toon mijn leeftijd op mijn profiel</SelectItem>
-                          <SelectItem value="no">Toon mijn leeftijd NIET op mijn profiel</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
 
                 <div className="pt-4">
                   <Button type="submit" disabled={isLoadingAccount} className="gap-2" data-testid="button-save-account">

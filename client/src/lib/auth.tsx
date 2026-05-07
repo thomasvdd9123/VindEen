@@ -7,8 +7,6 @@ interface UserMetadata {
   firstName?: string;
   lastName?: string;
   gender?: string;
-  birthYear?: string;
-  showBirthDate?: string;
   invoiceName?: string;
   street?: string;
   municipality?: string;
