@@ -23,7 +23,7 @@ import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import type { Category, Location, Profile } from "@shared/schema";
 import { siteConfig } from "@/lib/theme.config";
 import { PracticalQuestionsForm } from "@/components/PracticalQuestionsForm";
-import { LogoUpload, WorkPhotosUpload } from "@/components/ProfilePhotoUploads";
+import { LogoUpload } from "@/components/ProfilePhotoUploads";
 import { PortfolioManager } from "@/components/PortfolioManager";
 import { useSpecializationMap } from "@/lib/useSpecializations";
 
@@ -854,25 +854,6 @@ export default function ProfileEdit() {
             <LogoUpload 
               profileId={id!} 
               currentLogoUrl={profile?.logoUrl}
-              onUploadSuccess={() => {
-                queryClient.refetchQueries({ queryKey: ["/api/profiles/id", id] });
-              }}
-            />
-          </CardContent>
-        </Card>
-
-        {/* Work Photos Upload */}
-        <Card className="mt-6">
-          <CardHeader>
-            <CardTitle>Algemene foto's</CardTitle>
-            <CardDescription>
-              Losse werkfoto's zonder projectcontext — max 10 stuks
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <WorkPhotosUpload 
-              profileId={id!} 
-              currentPhotos={profile?.imageUrls || []}
               onUploadSuccess={() => {
                 queryClient.refetchQueries({ queryKey: ["/api/profiles/id", id] });
               }}

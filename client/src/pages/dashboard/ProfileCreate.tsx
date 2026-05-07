@@ -24,7 +24,7 @@ import type { Category, Location } from "@shared/schema";
 import { siteConfig } from "@/lib/theme.config";
 import { useSpecializationMap } from "@/lib/useSpecializations";
 import { PracticalQuestionsForm } from "@/components/PracticalQuestionsForm";
-import { LogoUpload, WorkPhotosUpload } from "@/components/ProfilePhotoUploads";
+import { LogoUpload } from "@/components/ProfilePhotoUploads";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Camera } from "lucide-react";
 
@@ -794,14 +794,6 @@ export default function ProfileCreate() {
                   <LogoUpload
                     profileId={createdProfileId}
                     currentLogoUrl={null}
-                    onUploadSuccess={() => queryClient.invalidateQueries({ queryKey: ["/api/my-profiles"] })}
-                  />
-                </div>
-                <div>
-                  <p className="text-sm font-medium mb-3">Werkfoto's</p>
-                  <WorkPhotosUpload
-                    profileId={createdProfileId}
-                    currentPhotos={[]}
                     onUploadSuccess={() => queryClient.invalidateQueries({ queryKey: ["/api/my-profiles"] })}
                   />
                 </div>
