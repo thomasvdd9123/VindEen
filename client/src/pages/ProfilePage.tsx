@@ -560,7 +560,6 @@ function PracticalInfoSection({ practical }: { practical: any }) {
     tariff: Euro,
     acceptedPaymentMethods: CreditCard,
     priceRange: Euro,
-    waitingList: Timer,
     responseTime: MessageCircle,
     availability: CalendarCheck,
     worksWeekends: CalendarDays,
