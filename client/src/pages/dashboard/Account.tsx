@@ -235,8 +235,9 @@ export default function DashboardAccount() {
         });
       } else {
         toast({
-          title: "Bevestigingsmail verzonden",
-          description: "Controleer je inbox om je nieuwe email adres te bevestigen.",
+          title: "Bevestigingsmails verzonden",
+          description: `Je ontvangt een bevestigingslink op ${user?.email} én op ${newEmail}. Beide moeten worden bevestigd voordat je email wijzigt.`,
+          duration: 8000,
         });
         setNewEmail("");
         setShowEmailDialog(false);
@@ -648,7 +649,9 @@ export default function DashboardAccount() {
                 onChange={(e) => setNewEmail(e.target.value)}
                 data-testid="input-new-email"
               />
-              <p className="text-xs text-muted-foreground">Je ontvangt een bevestigingsmail op je nieuwe adres.</p>
+              <div className="rounded-md bg-amber-50 border border-amber-200 px-3 py-2.5 text-xs text-amber-800 leading-relaxed">
+                <strong>Let op:</strong> je ontvangt een bevestigingslink op <em>beide</em> adressen — het huidige én het nieuwe. Beide moeten worden bevestigd voordat de wijziging ingaat.
+              </div>
             </div>
             <DialogFooter className="gap-2">
               <Button variant="outline" onClick={() => setShowEmailDialog(false)}>Annuleren</Button>
