@@ -1277,7 +1277,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (method === "POST" && path.match(/^\/api\/contact\/[^/]+$/)) {
       const profileId = path.split("/").pop();
-      const { data: profile } = await supabase.from("profile").select("id, company_name, contact_email, is_active, is_public").eq("id", profileId).single();
+      const { data: profile } = await supabase.from("profile").select("id, company_name, contact_email, is_active, is_public, practitioner_id").eq("id", profileId).single();
       if (!profile || !(profile as { is_active: boolean }).is_active || !(profile as { is_public: boolean }).is_public) {
         return res.status(404).json({ error: "Profile not found" });
       }
@@ -1313,10 +1313,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         .single();
       if (error) throw error;
 
-      // Email notification
+      // Email notification — stuur naar contact_email van het profiel, met fallback naar eigenaar-email
       const resendApiKey = process.env.RESEND_API_KEY;
-      const targetEmail = (profile as any).contact_email;
+      let targetEmail: string | null = (profile as any).contact_email || null;
+      if (!targetEmail && (profile as any).practitioner_id) {
+        const { data: prac } = await supabase
+          .from("practitioner")
+          .select("email")
+          .eq("id", (profile as any).practitioner_id)
+          .maybeSingle();
+        targetEmail = (prac as any)?.email || null;
+      }
       if (resendApiKey && targetEmail) {
+        const companyName = escapeHtml((profile as any).company_name || "uw bedrijf");
         try {
           await fetch("https://api.resend.com/emails", {
             method: "POST",
@@ -1325,10 +1334,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               from: SITE_EMAIL_FROM,
               to: [targetEmail],
               reply_to: visitorEmail,
-              subject: `Nieuw contactverzoek: ${subject}`,
-              html: `<p>Je hebt een nieuw contactverzoek ontvangen van <b>${escapeHtml(visitorName)}</b> (${escapeHtml(visitorEmail)}).</p>
-                <p>${telnr ? `Telefoon: ${escapeHtml(telnr)}<br>` : ""}Onderwerp: ${escapeHtml(subject)}</p>
-                <pre>${escapeHtml(message)}</pre>`,
+              subject: `Nieuw contactverzoek via ${companyName}: ${escapeHtml(subject)}`,
+              html: `
+                <p>Beste,</p>
+                <p>Je hebt een nieuw contactverzoek ontvangen via je profiel <strong>${companyName}</strong> op Zoek-een-tuinman.be.</p>
+                <table style="border-collapse:collapse;margin:16px 0;">
+                  <tr><td style="padding:4px 12px 4px 0;color:#666;font-size:14px;">Van</td><td style="font-size:14px;"><strong>${escapeHtml(visitorName)}</strong> &lt;${escapeHtml(visitorEmail)}&gt;</td></tr>
+                  ${telnr ? `<tr><td style="padding:4px 12px 4px 0;color:#666;font-size:14px;">Telefoon</td><td style="font-size:14px;">${escapeHtml(telnr)}</td></tr>` : ""}
+                  <tr><td style="padding:4px 12px 4px 0;color:#666;font-size:14px;">Onderwerp</td><td style="font-size:14px;">${escapeHtml(subject)}</td></tr>
+                </table>
+                <div style="background:#f9f9f9;border-left:3px solid #16a34a;padding:12px 16px;margin:16px 0;font-size:14px;white-space:pre-wrap;">${escapeHtml(message)}</div>
+                <p style="font-size:13px;color:#888;">Beantwoord deze e-mail rechtstreeks om te reageren op ${escapeHtml(visitorName)}.</p>
+              `,
             }),
           });
         } catch (e) {
