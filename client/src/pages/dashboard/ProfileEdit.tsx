@@ -36,7 +36,7 @@ function calculateProfileCompleteness(formValues: ProfileFormData): { percentage
     { key: "telnr", label: "Telefoonnummer", value: formValues.telnr },
     { key: "website", label: "Website", value: formValues.website },
     { key: "description", label: "Beschrijving", value: formValues.description },
-    { key: "title", label: "Functietitel", value: formValues.title },
+    { key: "title", label: "Slagzin / tagline", value: formValues.title },
     { key: "specializations", label: "Specialisaties", value: formValues.specializations?.length ? formValues.specializations : null },
   ];
   
@@ -647,11 +647,11 @@ export default function ProfileEdit() {
                     name="title"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Functietitel</FormLabel>
+                        <FormLabel>Slagzin / tagline</FormLabel>
                         <FormControl>
                           <Input placeholder={siteConfig.placeholders.profileTitle} {...field} data-testid="input-title" />
                         </FormControl>
-                        <FormDescription>Een korte titel die je specialisatie beschrijft</FormDescription>
+                        <FormDescription>Verschijnt als korte slagzin onder je naam op je profiel</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
