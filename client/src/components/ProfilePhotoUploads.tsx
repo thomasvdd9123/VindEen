@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Loader2, Upload, X, Image as ImageIcon } from "lucide-react";
+import { Loader2, Upload, X, Image as ImageIcon, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
 import { apiRequest } from "@/lib/queryClient";
@@ -19,6 +19,7 @@ export function LogoUpload({
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(currentLogoUrl || null);
 
   useEffect(() => {
@@ -53,29 +54,59 @@ export function LogoUpload({
 
       await apiRequest("PATCH", `/api/profiles/${profileId}`, { logoUrl: publicUrl });
       setPreviewUrl(publicUrl);
-      toast({ title: "Gelukt", description: "Logo is geupload" });
+      toast({ title: "Gelukt", description: "Profielfoto geüpload" });
       onUploadSuccess();
     } catch (error) {
-      toast({ title: "Fout", description: error instanceof Error ? error.message : "Kon logo niet uploaden", variant: "destructive" });
+      toast({ title: "Fout", description: error instanceof Error ? error.message : "Kon foto niet uploaden", variant: "destructive" });
     } finally {
       setIsUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
+  const handleDelete = async () => {
+    if (!previewUrl) return;
+    setIsDeleting(true);
+    try {
+      await apiRequest("DELETE", `/api/profiles/${profileId}/logo`, undefined);
+      setPreviewUrl(null);
+      toast({ title: "Profielfoto verwijderd" });
+      onUploadSuccess();
+    } catch (error) {
+      toast({ title: "Fout", description: "Kon foto niet verwijderen", variant: "destructive" });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-start gap-4">
-        <div
-          className="w-24 h-24 rounded-md border-2 border-dashed border-muted-foreground/25 flex items-center justify-center overflow-hidden bg-muted"
-          data-testid="logo-preview"
-        >
-          {previewUrl ? (
-            <img src={previewUrl} alt="Logo" className="w-full h-full object-cover" referrerPolicy="no-referrer" crossOrigin="anonymous" />
-          ) : (
-            <ImageIcon className="h-8 w-8 text-muted-foreground/50" />
+        <div className="relative group">
+          <div
+            className="w-24 h-24 rounded-xl border-2 border-dashed border-muted-foreground/25 flex items-center justify-center overflow-hidden bg-muted"
+            data-testid="logo-preview"
+          >
+            {previewUrl ? (
+              <img src={previewUrl} alt="Profielfoto" className="w-full h-full object-cover" referrerPolicy="no-referrer" crossOrigin="anonymous" />
+            ) : (
+              <ImageIcon className="h-8 w-8 text-muted-foreground/50" />
+            )}
+          </div>
+          {previewUrl && (
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
+              data-testid="button-delete-logo"
+              title="Foto verwijderen"
+            >
+              {isDeleting ? <Loader2 className="h-3 w-3 animate-spin" /> : <X className="h-3 w-3" />}
+            </button>
           )}
         </div>
+
         <div className="flex-1 space-y-2">
           <p className="text-sm text-muted-foreground">
             Upload een profielfoto of bedrijfslogo. Max 5MB, alleen afbeeldingen.
@@ -88,18 +119,34 @@ export function LogoUpload({
             className="hidden"
             data-testid="input-logo-file"
           />
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={isUploading}
-            className="gap-2"
-            data-testid="button-upload-logo"
-          >
-            {isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-            {isUploading ? "Uploaden..." : "Logo uploaden"}
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploading || isDeleting}
+              className="gap-2"
+              data-testid="button-upload-logo"
+            >
+              {isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+              {isUploading ? "Uploaden..." : previewUrl ? "Foto wijzigen" : "Foto uploaden"}
+            </Button>
+            {previewUrl && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleDelete}
+                disabled={isDeleting || isUploading}
+                className="gap-2 text-destructive hover:text-destructive"
+                data-testid="button-delete-logo-btn"
+              >
+                {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                Verwijderen
+              </Button>
+            )}
+          </div>
         </div>
       </div>
     </div>
@@ -163,7 +210,7 @@ export function WorkPhotosUpload({
       const allUrls = [...photos, ...uploadedUrls];
       await apiRequest("PATCH", `/api/profiles/${profileId}`, { imageUrls: allUrls });
       setPhotos(allUrls);
-      toast({ title: "Gelukt", description: `${uploadedUrls.length} foto('s) geupload` });
+      toast({ title: "Gelukt", description: `${uploadedUrls.length} foto('s) geüpload` });
       onUploadSuccess();
     } catch (error) {
       toast({ title: "Fout", description: error instanceof Error ? error.message : "Kon foto's niet uploaden", variant: "destructive" });
@@ -182,7 +229,7 @@ export function WorkPhotosUpload({
       const remainingUrls = photos.filter((p) => p !== url);
       await apiRequest("PATCH", `/api/profiles/${profileId}`, { imageUrls: remainingUrls });
       setPhotos(remainingUrls);
-      toast({ title: "Gelukt", description: "Foto verwijderd" });
+      toast({ title: "Foto verwijderd" });
       onUploadSuccess();
     } catch (error) {
       toast({ title: "Fout", description: error instanceof Error ? error.message : "Kon foto niet verwijderen", variant: "destructive" });
@@ -195,7 +242,7 @@ export function WorkPhotosUpload({
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
-          Upload foto's van je werk. Max 10 foto's, elk max 5MB.
+          Algemene werkfoto's. Max 10 foto's, elk max 5MB.
         </p>
         <input
           ref={fileInputRef}
@@ -249,7 +296,7 @@ export function WorkPhotosUpload({
           data-testid="photos-empty-state"
         >
           <ImageIcon className="h-10 w-10 mx-auto text-muted-foreground/50 mb-2" />
-          <p className="text-sm text-muted-foreground">Nog geen foto's geupload</p>
+          <p className="text-sm text-muted-foreground">Nog geen foto's geüpload</p>
         </div>
       )}
     </div>

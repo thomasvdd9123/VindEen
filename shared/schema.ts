@@ -477,6 +477,26 @@ export type ProfileWithRelations = LegacyAny & {
 };
 
 // Contact form schema (visitor → profile)
+// ---------------------------------------------------------------------------
+// PORTFOLIO PROJECT
+// ---------------------------------------------------------------------------
+export const portfolioProject = pgTable("portfolio_project", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  profileId: uuid("profile_id").notNull().references(() => profile.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  description: text("description"),
+  durationDays: integer("duration_days"),
+  priceEur: integer("price_eur"),
+  workDetails: text("work_details"),
+  completedAt: date("completed_at"),
+  imageUrls: text("image_urls").array().default([]),
+  sortOrder: integer("sort_order").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+export const insertPortfolioProjectSchema = createInsertSchema(portfolioProject).omit({ id: true, createdAt: true });
+export type InsertPortfolioProject = z.infer<typeof insertPortfolioProjectSchema>;
+export type PortfolioProject = typeof portfolioProject.$inferSelect;
+
 export const contactFormSchema = z.object({
   visitorName: z.string().min(2, "Naam is verplicht"),
   visitorEmail: z.string().email("Geldig e-mailadres vereist"),

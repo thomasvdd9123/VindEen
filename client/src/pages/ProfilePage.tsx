@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useParams, Link, useSearch } from "wouter";
 import { authFetch } from "@/lib/queryClient";
@@ -40,8 +40,11 @@ import {
   ShieldCheck,
   Wrench,
   CalendarDays,
+  Calendar,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
-import type { ProfileWithRelations } from "@shared/schema";
+import type { ProfileWithRelations, PortfolioProject } from "@shared/schema";
 import { siteConfig, fillCopy } from "@/lib/theme.config";
 import { usePracticalQuestions, type PracticalQuestion } from "@/lib/usePracticalQuestions";
 import { useSpecializationMap } from "@/lib/useSpecializations";
@@ -68,6 +71,16 @@ export default function ProfilePage() {
           return res.json();
         }
       : undefined,
+  });
+
+  const { data: portfolio = [] } = useQuery<PortfolioProject[]>({
+    queryKey: ["/api/profiles", profile?.id, "portfolio"],
+    queryFn: async () => {
+      const res = await fetch(`/api/profiles/${profile!.id}/portfolio`);
+      if (!res.ok) return [];
+      return res.json();
+    },
+    enabled: !!profile?.id,
   });
 
   if (isLoading) {
@@ -429,6 +442,11 @@ export default function ProfilePage() {
               </section>
             )}
 
+            {/* Portfolio showcase */}
+            {portfolio.length > 0 && (
+              <PortfolioShowcase projects={portfolio} />
+            )}
+
             {/* Practical info */}
             <PracticalInfoSection practical={profile.practical} />
           </div>
@@ -598,3 +616,149 @@ function PracticalInfoSection({ practical }: { practical: any }) {
     </section>
   );
 }
+
+// ── Portfolio Showcase ────────────────────────────────────────────────────────
+function PortfolioShowcase({ projects }: { projects: PortfolioProject[] }) {
+  const [activePhoto, setActivePhoto] = useState<{ projectId: string; index: number } | null>(null);
+
+  if (!projects.length) return null;
+
+  return (
+    <section className="pb-8 mb-8 border-b border-border" data-testid="section-portfolio">
+      <h2 className="text-lg font-semibold mb-4">Projecten</h2>
+      <div className="space-y-6">
+        {projects.map((project) => (
+          <ProjectCard
+            key={project.id}
+            project={project}
+            activePhotoIndex={activePhoto?.projectId === project.id ? activePhoto.index : null}
+            onPhotoClick={(index) => setActivePhoto({ projectId: project.id, index })}
+            onClosePhoto={() => setActivePhoto(null)}
+          />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function ProjectCard({
+  project,
+  activePhotoIndex,
+  onPhotoClick,
+  onClosePhoto,
+}: {
+  project: PortfolioProject;
+  activePhotoIndex: number | null;
+  onPhotoClick: (i: number) => void;
+  onClosePhoto: () => void;
+}) {
+  const photos = project.imageUrls || [];
+  const hasPhotos = photos.length > 0;
+
+  const prev = () => {
+    if (activePhotoIndex === null) return;
+    onPhotoClick((activePhotoIndex - 1 + photos.length) % photos.length);
+  };
+  const next = () => {
+    if (activePhotoIndex === null) return;
+    onPhotoClick((activePhotoIndex + 1) % photos.length);
+  };
+
+  return (
+    <div className="rounded-xl border border-border overflow-hidden bg-white" data-testid={`showcase-project-${project.id}`}>
+      {/* Photo strip */}
+      {hasPhotos && (
+        <div className="relative">
+          {photos.length === 1 ? (
+            <div className="aspect-video cursor-zoom-in" onClick={() => onPhotoClick(0)}>
+              <img src={photos[0]} alt={project.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" crossOrigin="anonymous" />
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-1 max-h-64 overflow-hidden">
+              {photos.slice(0, 5).map((url, i) => (
+                <div
+                  key={url}
+                  className={`relative overflow-hidden cursor-zoom-in ${i === 0 && photos.length >= 2 ? "row-span-2 sm:row-span-1" : ""}`}
+                  onClick={() => onPhotoClick(i)}
+                >
+                  <img src={url} alt="" className="w-full h-full object-cover min-h-[8rem]" referrerPolicy="no-referrer" crossOrigin="anonymous" />
+                  {i === 4 && photos.length > 5 && (
+                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center text-white font-semibold text-lg">
+                      +{photos.length - 5}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Lightbox */}
+          {activePhotoIndex !== null && (
+            <div
+              className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center"
+              onClick={onClosePhoto}
+            >
+              <button onClick={(e) => { e.stopPropagation(); prev(); }} className="absolute left-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors">
+                <ChevronLeft className="h-6 w-6" />
+              </button>
+              <img
+                src={photos[activePhotoIndex]}
+                alt=""
+                className="max-h-[85vh] max-w-[90vw] object-contain rounded-md"
+                onClick={(e) => e.stopPropagation()}
+                referrerPolicy="no-referrer"
+                crossOrigin="anonymous"
+              />
+              <button onClick={(e) => { e.stopPropagation(); next(); }} className="absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors">
+                <ChevronRight className="h-6 w-6" />
+              </button>
+              <button onClick={onClosePhoto} className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors text-sm">
+                ✕
+              </button>
+              {photos.length > 1 && (
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/70 text-sm">
+                  {activePhotoIndex + 1} / {photos.length}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Project info */}
+      <div className="p-4">
+        <h3 className="font-semibold text-base mb-2">{project.title}</h3>
+
+        {/* Stats */}
+        <div className="flex flex-wrap gap-3 text-xs text-muted-foreground mb-3">
+          {project.priceEur != null && (
+            <span className="flex items-center gap-1">
+              <Euro className="h-3 w-3" />
+              € {project.priceEur.toLocaleString("nl-BE")}
+            </span>
+          )}
+          {project.durationDays != null && (
+            <span className="flex items-center gap-1">
+              <Clock className="h-3 w-3" />
+              {project.durationDays} {project.durationDays === 1 ? "werkdag" : "werkdagen"}
+            </span>
+          )}
+          {project.completedAt && (
+            <span className="flex items-center gap-1">
+              <Calendar className="h-3 w-3" />
+              {new Date(project.completedAt).toLocaleDateString("nl-BE", { month: "long", year: "numeric" })}
+            </span>
+          )}
+        </div>
+
+        {project.description && (
+          <p className="text-sm text-muted-foreground leading-relaxed">{project.description}</p>
+        )}
+        {project.workDetails && (
+          <p className="text-sm text-muted-foreground mt-2 leading-relaxed">{project.workDetails}</p>
+        )}
+      </div>
+    </div>
+  );
+}
+

@@ -24,6 +24,7 @@ import type { Category, Location, Profile } from "@shared/schema";
 import { siteConfig } from "@/lib/theme.config";
 import { PracticalQuestionsForm } from "@/components/PracticalQuestionsForm";
 import { LogoUpload, WorkPhotosUpload } from "@/components/ProfilePhotoUploads";
+import { PortfolioManager } from "@/components/PortfolioManager";
 import { useSpecializationMap } from "@/lib/useSpecializations";
 
 // Calculate profile completeness from form values
@@ -863,9 +864,9 @@ export default function ProfileEdit() {
         {/* Work Photos Upload */}
         <Card className="mt-6">
           <CardHeader>
-            <CardTitle>Werk foto's</CardTitle>
+            <CardTitle>Algemene foto's</CardTitle>
             <CardDescription>
-              Toon je beste werk aan potentiele klanten
+              Losse werkfoto's zonder projectcontext — max 10 stuks
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -876,6 +877,19 @@ export default function ProfileEdit() {
                 queryClient.refetchQueries({ queryKey: ["/api/profiles/id", id] });
               }}
             />
+          </CardContent>
+        </Card>
+
+        {/* Portfolio Projects */}
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle>Portfolio — projecten</CardTitle>
+            <CardDescription>
+              Voeg projecten toe met foto's, prijs, duur en beschrijving. Klanten zien dit op je profielpagina.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <PortfolioManager profileId={id!} />
           </CardContent>
         </Card>
       </div>

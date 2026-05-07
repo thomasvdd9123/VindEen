@@ -1492,6 +1492,141 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json({ url, type: file.type });
     }
 
+    // ── DELETE profile logo ─────────────────────────────────────────────────
+    if (method === "DELETE" && path.match(/^\/api\/profiles\/[^/]+\/logo$/)) {
+      const auth = await getAuthContext(req);
+      if (!auth || !auth.practitionerId) return res.status(401).json({ error: "Unauthorized" });
+      const profileId = path.split("/")[3];
+      const { data: prof } = await supabase.from("profile").select("practitioner_id, logourl").eq("id", profileId).maybeSingle();
+      if (!prof) return res.status(404).json({ error: "Not found" });
+      if ((prof as any).practitioner_id !== auth.practitionerId) return res.status(403).json({ error: "Forbidden" });
+      const logourl = (prof as any).logourl as string | null;
+      if (logourl) {
+        const urlPath = logourl.split("/uploads/")[1];
+        if (urlPath) await supabase.storage.from("uploads").remove([urlPath]);
+      }
+      await supabase.from("profile").update({ logourl: null }).eq("id", profileId);
+      bustProfileCache();
+      return res.status(200).json({ success: true });
+    }
+
+    // ── GET portfolio projects (public) ────────────────────────────────────
+    if (method === "GET" && path.match(/^\/api\/profiles\/[^/]+\/portfolio$/)) {
+      const profileId = path.split("/")[3];
+      const { data, error } = await supabase
+        .from("portfolio_project")
+        .select("*")
+        .eq("profile_id", profileId)
+        .order("sort_order", { ascending: true })
+        .order("created_at", { ascending: false });
+      if (error) return res.status(500).json({ error: error.message });
+      return res.status(200).json(
+        (data || []).map((p: any) => ({
+          id: p.id,
+          profileId: p.profile_id,
+          title: p.title,
+          description: p.description,
+          durationDays: p.duration_days,
+          priceEur: p.price_eur,
+          workDetails: p.work_details,
+          completedAt: p.completed_at,
+          imageUrls: p.image_urls || [],
+          sortOrder: p.sort_order,
+          createdAt: p.created_at,
+        }))
+      );
+    }
+
+    // ── POST create portfolio project ──────────────────────────────────────
+    if (method === "POST" && path.match(/^\/api\/profiles\/[^/]+\/portfolio$/)) {
+      const auth = await getAuthContext(req);
+      if (!auth || !auth.practitionerId) return res.status(401).json({ error: "Unauthorized" });
+      const profileId = path.split("/")[3];
+      const { data: prof } = await supabase.from("profile").select("practitioner_id").eq("id", profileId).maybeSingle();
+      if (!prof || (prof as any).practitioner_id !== auth.practitionerId) return res.status(403).json({ error: "Forbidden" });
+      const body = req.body || {};
+      const { data, error } = await supabase.from("portfolio_project").insert({
+        profile_id: profileId,
+        title: body.title || "Nieuw project",
+        description: body.description || null,
+        duration_days: body.durationDays ?? null,
+        price_eur: body.priceEur ?? null,
+        work_details: body.workDetails || null,
+        completed_at: body.completedAt || null,
+        image_urls: body.imageUrls || [],
+        sort_order: body.sortOrder ?? 0,
+      }).select().single();
+      if (error) return res.status(500).json({ error: error.message });
+      return res.status(201).json({ id: (data as any).id, ...data });
+    }
+
+    // ── PATCH update portfolio project ─────────────────────────────────────
+    if (method === "PATCH" && path.match(/^\/api\/portfolio\/[^/]+$/)) {
+      const auth = await getAuthContext(req);
+      if (!auth || !auth.practitionerId) return res.status(401).json({ error: "Unauthorized" });
+      const projectId = path.split("/")[3];
+      const { data: proj } = await supabase.from("portfolio_project").select("profile_id").eq("id", projectId).maybeSingle();
+      if (!proj) return res.status(404).json({ error: "Not found" });
+      const { data: prof } = await supabase.from("profile").select("practitioner_id").eq("id", (proj as any).profile_id).maybeSingle();
+      if (!prof || (prof as any).practitioner_id !== auth.practitionerId) return res.status(403).json({ error: "Forbidden" });
+      const body = req.body || {};
+      const update: Record<string, any> = {};
+      if (body.title !== undefined) update.title = body.title;
+      if (body.description !== undefined) update.description = body.description;
+      if (body.durationDays !== undefined) update.duration_days = body.durationDays;
+      if (body.priceEur !== undefined) update.price_eur = body.priceEur;
+      if (body.workDetails !== undefined) update.work_details = body.workDetails;
+      if (body.completedAt !== undefined) update.completed_at = body.completedAt;
+      if (body.imageUrls !== undefined) update.image_urls = body.imageUrls;
+      if (body.sortOrder !== undefined) update.sort_order = body.sortOrder;
+      const { data, error } = await supabase.from("portfolio_project").update(update).eq("id", projectId).select().single();
+      if (error) return res.status(500).json({ error: error.message });
+      return res.status(200).json(data);
+    }
+
+    // ── DELETE portfolio project ───────────────────────────────────────────
+    if (method === "DELETE" && path.match(/^\/api\/portfolio\/[^/]+$/) && !path.endsWith("/photos")) {
+      const auth = await getAuthContext(req);
+      if (!auth || !auth.practitionerId) return res.status(401).json({ error: "Unauthorized" });
+      const projectId = path.split("/")[3];
+      const { data: proj } = await supabase.from("portfolio_project").select("profile_id, image_urls").eq("id", projectId).maybeSingle();
+      if (!proj) return res.status(404).json({ error: "Not found" });
+      const { data: prof } = await supabase.from("profile").select("practitioner_id").eq("id", (proj as any).profile_id).maybeSingle();
+      if (!prof || (prof as any).practitioner_id !== auth.practitionerId) return res.status(403).json({ error: "Forbidden" });
+      const imageUrls: string[] = (proj as any).image_urls || [];
+      for (const url of imageUrls) {
+        const urlPath = url.split("/uploads/")[1];
+        if (urlPath) await supabase.storage.from("uploads").remove([urlPath]);
+      }
+      await supabase.from("portfolio_project").delete().eq("id", projectId);
+      return res.status(200).json({ success: true });
+    }
+
+    // ── POST upload photo to portfolio project ─────────────────────────────
+    if (method === "POST" && path.match(/^\/api\/portfolio\/[^/]+\/upload$/)) {
+      const auth = await getAuthContext(req);
+      if (!auth || !auth.practitionerId) return res.status(401).json({ error: "Unauthorized" });
+      const projectId = path.split("/")[3];
+      const { data: proj } = await supabase.from("portfolio_project").select("profile_id, image_urls").eq("id", projectId).maybeSingle();
+      if (!proj) return res.status(404).json({ error: "Not found" });
+      const { data: prof } = await supabase.from("profile").select("practitioner_id").eq("id", (proj as any).profile_id).maybeSingle();
+      if (!prof || (prof as any).practitioner_id !== auth.practitionerId) return res.status(403).json({ error: "Forbidden" });
+      const file = await parseMultipartFile(req);
+      if (!file) return res.status(400).json({ error: "No file uploaded" });
+      const ext = (file.filename.split(".").pop() || "bin").toLowerCase().replace(/[^a-z0-9]/g, "");
+      if (!ALLOWED_IMAGE_MIMES.has(file.mime.toLowerCase()) || !ALLOWED_IMAGE_EXTS.has(ext)) {
+        return res.status(400).json({ error: "Only JPEG, PNG, WebP or GIF images are allowed" });
+      }
+      const key = `portfolio/${projectId}/${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("uploads").upload(key, file.buffer, { contentType: file.mime, upsert: false });
+      if (upErr) return res.status(500).json({ error: upErr.message });
+      const { data: pub } = supabase.storage.from("uploads").getPublicUrl(key);
+      const url = pub.publicUrl;
+      const existing: string[] = (proj as any).image_urls || [];
+      await supabase.from("portfolio_project").update({ image_urls: [...existing, url] }).eq("id", projectId);
+      return res.status(200).json({ url });
+    }
+
     if ((method === "PUT" || method === "PATCH") && path.match(/^\/api\/profiles\/[^/]+$/) && !path.includes("/by-id/") && !path.endsWith("/track-click")) {
       const id = path.split("/").pop()!;
       if (id === "featured" || id === "count" || id === "search") return res.status(404).json({ error: "Not found" });
