@@ -1132,18 +1132,38 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const authUserId = path.split("/").pop();
       const auth = await getAuthContext(req);
       if (!auth || auth.authUserId !== authUserId) return res.status(403).json({ error: "Forbidden" });
-      const { data } = await supabase.from("practitioner").select("*").eq("auth_user_id", authUserId).maybeSingle();
+      const { data } = await supabase.from("practitioner")
+        .select("*, billing_address:address!billing_address_id(street, number, postcode, municipality, country)")
+        .eq("auth_user_id", authUserId).maybeSingle();
       if (!data) return res.status(404).json({ error: "Account not found" });
-      return res.status(200).json(toCamelCase({ ...data, account_id: (data as any).id, role: "GARDENER", email_verified: true }));
+      const billingAddr = (data as any)?.billing_address;
+      const flat = { ...(data as any), billing_address: undefined,
+        billing_street: billingAddr?.street ?? null,
+        billing_number: billingAddr?.number ?? null,
+        billing_postcode: billingAddr?.postcode ?? null,
+        billing_city: billingAddr?.municipality ?? null,
+        vat_number: (data as any).vat ?? null,
+      };
+      return res.status(200).json(toCamelCase({ ...flat, account_id: (data as any).id, role: "GARDENER", email_verified: true }));
     }
 
     if (method === "GET" && path.match(/^\/api\/accounts\/[^/]+$/) && !path.includes("/by-auth/")) {
       const id = path.split("/").pop();
       const auth = await getAuthContext(req);
       if (!auth || auth.practitionerId !== id) return res.status(403).json({ error: "Forbidden" });
-      const { data } = await supabase.from("practitioner").select("*").eq("id", id).maybeSingle();
+      const { data } = await supabase.from("practitioner")
+        .select("*, billing_address:address!billing_address_id(street, number, postcode, municipality, country)")
+        .eq("id", id).maybeSingle();
       if (!data) return res.status(404).json({ error: "Account not found" });
-      return res.status(200).json(toCamelCase({ ...data, account_id: (data as any).id, role: "GARDENER", email_verified: true }));
+      const billingAddr = (data as any)?.billing_address;
+      const flat = { ...(data as any), billing_address: undefined,
+        billing_street: billingAddr?.street ?? null,
+        billing_number: billingAddr?.number ?? null,
+        billing_postcode: billingAddr?.postcode ?? null,
+        billing_city: billingAddr?.municipality ?? null,
+        vat_number: (data as any).vat ?? null,
+      };
+      return res.status(200).json(toCamelCase({ ...flat, account_id: (data as any).id, role: "GARDENER", email_verified: true }));
     }
 
     if (method === "PATCH" && path.match(/^\/api\/accounts\/[^/]+$/) && !path.includes("/by-auth/")) {
