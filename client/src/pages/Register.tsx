@@ -102,7 +102,13 @@ export default function Register() {
               <p className="text-muted-foreground">
                 Klik op de link in de email om je account te bevestigen en door te gaan met het aanmaken van je profiel.
               </p>
-              <div className="pt-4">
+              <div className="flex items-start gap-2 rounded-md bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
+                <span className="mt-0.5 shrink-0">⚠️</span>
+                <span>
+                  Geen email ontvangen? Controleer ook je <strong>spam- of ongewenste e-mailmap</strong>. Markeer de email als "Geen spam" zodat je toekomstige emails van ons ontvangt.
+                </span>
+              </div>
+              <div className="pt-2">
                 <Link href="/login">
                   <Button variant="outline" className="gap-2" data-testid="button-back-login">
                     Terug naar inloggen
