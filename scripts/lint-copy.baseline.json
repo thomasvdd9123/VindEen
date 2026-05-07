@@ -1,7 +1,7 @@
 {
   "description": "Auto-gegenereerde baseline van bestaande copy-overtredingen. Regenereren via `npx tsx scripts/lint-copy.ts --update-baseline` wanneer je copy hebt opgeschoond. Nieuwe overtredingen breken de build wel.",
-  "generatedAt": "2026-05-03T04:51:56.731Z",
-  "count": 166,
+  "generatedAt": "2026-05-07T23:29:22.411Z",
+  "count": 176,
   "violations": [
     {
       "file": "client/src/lib/theme.config.ts",
@@ -60,37 +60,37 @@
     },
     {
       "file": "client/src/lib/theme.config.ts",
-      "line": 171,
+      "line": 170,
       "term": "Kosten"
     },
     {
       "file": "client/src/lib/theme.config.ts",
-      "line": 215,
+      "line": 214,
       "term": "kosten"
     },
     {
       "file": "client/src/lib/theme.config.ts",
-      "line": 227,
+      "line": 226,
       "term": "account"
     },
     {
       "file": "client/src/lib/theme.config.ts",
-      "line": 227,
+      "line": 226,
       "term": "Registreer"
     },
     {
       "file": "client/src/lib/theme.config.ts",
-      "line": 227,
+      "line": 226,
       "term": "Registreren"
     },
     {
       "file": "client/src/lib/theme.config.ts",
-      "line": 232,
+      "line": 231,
       "term": "account"
     },
     {
       "file": "client/src/lib/theme.config.ts",
-      "line": 274,
+      "line": 273,
       "term": "Zoek"
     },
     {
@@ -170,33 +170,8 @@
     },
     {
       "file": "client/src/pages/CategoryPage.tsx",
-      "line": 210,
+      "line": 226,
       "term": "Zoek"
-    },
-    {
-      "file": "client/src/pages/CategoryPage.tsx",
-      "line": 225,
-      "term": "zoek"
-    },
-    {
-      "file": "client/src/pages/CategoryPage.tsx",
-      "line": 227,
-      "term": "zoek"
-    },
-    {
-      "file": "client/src/pages/CategoryPage.tsx",
-      "line": 228,
-      "term": "zoek"
-    },
-    {
-      "file": "client/src/pages/CategoryPage.tsx",
-      "line": 236,
-      "term": "zoek"
-    },
-    {
-      "file": "client/src/pages/CategoryPage.tsx",
-      "line": 240,
-      "term": "zoek"
     },
     {
       "file": "client/src/pages/CategoryPage.tsx",
@@ -205,63 +180,78 @@
     },
     {
       "file": "client/src/pages/CategoryPage.tsx",
-      "line": 314,
+      "line": 243,
+      "term": "zoek"
+    },
+    {
+      "file": "client/src/pages/CategoryPage.tsx",
+      "line": 244,
+      "term": "zoek"
+    },
+    {
+      "file": "client/src/pages/CategoryPage.tsx",
+      "line": 252,
+      "term": "zoek"
+    },
+    {
+      "file": "client/src/pages/CategoryPage.tsx",
+      "line": 256,
+      "term": "zoek"
+    },
+    {
+      "file": "client/src/pages/CategoryPage.tsx",
+      "line": 257,
+      "term": "zoek"
+    },
+    {
+      "file": "client/src/pages/CategoryPage.tsx",
+      "line": 330,
       "term": "Zoek"
     },
     {
       "file": "client/src/pages/CategoryPage.tsx",
-      "line": 324,
+      "line": 340,
       "term": "zoek"
     },
     {
       "file": "client/src/pages/CategoryPage.tsx",
-      "line": 450,
+      "line": 466,
       "term": "zoek"
     },
     {
       "file": "client/src/pages/CategoryPage.tsx",
-      "line": 457,
+      "line": 473,
       "term": "zoek"
     },
     {
       "file": "client/src/pages/CategoryPage.tsx",
-      "line": 467,
+      "line": 483,
       "term": "Zoek"
     },
     {
       "file": "client/src/pages/dashboard/Account.tsx",
-      "line": 161,
+      "line": 164,
       "term": "opslaan"
     },
     {
       "file": "client/src/pages/dashboard/Account.tsx",
-      "line": 173,
+      "line": 176,
       "term": "Account"
     },
     {
       "file": "client/src/pages/dashboard/Account.tsx",
-      "line": 181,
+      "line": 184,
       "term": "accounts"
     },
     {
       "file": "client/src/pages/dashboard/Account.tsx",
-      "line": 200,
+      "line": 203,
       "term": "opslaan"
     },
     {
       "file": "client/src/pages/dashboard/Account.tsx",
-      "line": 266,
+      "line": 286,
       "term": "account"
-    },
-    {
-      "file": "client/src/pages/dashboard/Account.tsx",
-      "line": 273,
-      "term": "account"
-    },
-    {
-      "file": "client/src/pages/dashboard/Account.tsx",
-      "line": 283,
-      "term": "Account"
     },
     {
       "file": "client/src/pages/dashboard/Account.tsx",
@@ -270,42 +260,42 @@
     },
     {
       "file": "client/src/pages/dashboard/Account.tsx",
-      "line": 395,
-      "term": "Opslaan"
-    },
-    {
-      "file": "client/src/pages/dashboard/Account.tsx",
-      "line": 543,
-      "term": "opslaan"
-    },
-    {
-      "file": "client/src/pages/dashboard/Account.tsx",
-      "line": 553,
-      "term": "Opslaan"
-    },
-    {
-      "file": "client/src/pages/dashboard/Account.tsx",
-      "line": 612,
+      "line": 303,
       "term": "Account"
     },
     {
       "file": "client/src/pages/dashboard/Account.tsx",
-      "line": 615,
+      "line": 313,
       "term": "account"
     },
     {
       "file": "client/src/pages/dashboard/Account.tsx",
-      "line": 631,
+      "line": 380,
+      "term": "Opslaan"
+    },
+    {
+      "file": "client/src/pages/dashboard/Account.tsx",
+      "line": 534,
+      "term": "Opslaan"
+    },
+    {
+      "file": "client/src/pages/dashboard/Account.tsx",
+      "line": 601,
       "term": "Account"
     },
     {
       "file": "client/src/pages/dashboard/Account.tsx",
-      "line": 638,
+      "line": 688,
+      "term": "Account"
+    },
+    {
+      "file": "client/src/pages/dashboard/Account.tsx",
+      "line": 691,
       "term": "account"
     },
     {
       "file": "client/src/pages/dashboard/Account.tsx",
-      "line": 651,
+      "line": 720,
       "term": "account"
     },
     {
@@ -330,23 +320,98 @@
     },
     {
       "file": "client/src/pages/dashboard/ProfileEdit.tsx",
-      "line": 599,
+      "line": 312,
       "term": "activeer"
     },
     {
       "file": "client/src/pages/dashboard/ProfileEdit.tsx",
-      "line": 1086,
+      "line": 831,
       "term": "opslaan"
-    },
-    {
-      "file": "client/src/pages/dashboard/ProfileEdit.tsx",
-      "line": 1125,
-      "term": "beste"
     },
     {
       "file": "client/src/pages/dashboard/ProfilePayment.tsx",
       "line": 51,
       "term": "Account"
+    },
+    {
+      "file": "client/src/pages/dashboard/Profiles.tsx",
+      "line": 218,
+      "term": "cancel"
+    },
+    {
+      "file": "client/src/pages/dashboard/Profiles.tsx",
+      "line": 230,
+      "term": "Uw"
+    },
+    {
+      "file": "client/src/pages/dashboard/Profiles.tsx",
+      "line": 231,
+      "term": "Uw"
+    },
+    {
+      "file": "client/src/pages/dashboard/Profiles.tsx",
+      "line": 330,
+      "term": "activeren"
+    },
+    {
+      "file": "client/src/pages/dashboard/Profiles.tsx",
+      "line": 330,
+      "term": "Activeren"
+    },
+    {
+      "file": "client/src/pages/dashboard/Profiles.tsx",
+      "line": 353,
+      "term": "cancel"
+    },
+    {
+      "file": "client/src/pages/dashboard/Profiles.tsx",
+      "line": 396,
+      "term": "activeer"
+    },
+    {
+      "file": "client/src/pages/dashboard/Profiles.tsx",
+      "line": 396,
+      "term": "Uw"
+    },
+    {
+      "file": "client/src/pages/dashboard/Profiles.tsx",
+      "line": 397,
+      "term": "activeer"
+    },
+    {
+      "file": "client/src/pages/dashboard/Profiles.tsx",
+      "line": 406,
+      "term": "Uw"
+    },
+    {
+      "file": "client/src/pages/dashboard/Profiles.tsx",
+      "line": 421,
+      "term": "Uw"
+    },
+    {
+      "file": "client/src/pages/dashboard/Profiles.tsx",
+      "line": 422,
+      "term": "Uw"
+    },
+    {
+      "file": "client/src/pages/dashboard/Profiles.tsx",
+      "line": 422,
+      "term": "Uw"
+    },
+    {
+      "file": "client/src/pages/dashboard/Profiles.tsx",
+      "line": 425,
+      "term": "activeren"
+    },
+    {
+      "file": "client/src/pages/dashboard/Profiles.tsx",
+      "line": 425,
+      "term": "U kunt"
+    },
+    {
+      "file": "client/src/pages/dashboard/Profiles.tsx",
+      "line": 425,
+      "term": "uw"
     },
     {
       "file": "client/src/pages/Ervaringen.tsx",
@@ -709,21 +774,6 @@
       "term": "Zoek"
     },
     {
-      "file": "client/src/pages/Onboarding.tsx",
-      "line": 391,
-      "term": "account"
-    },
-    {
-      "file": "client/src/pages/Onboarding.tsx",
-      "line": 403,
-      "term": "het platform"
-    },
-    {
-      "file": "client/src/pages/Onboarding.tsx",
-      "line": 406,
-      "term": "account"
-    },
-    {
       "file": "client/src/pages/PasswordReset.tsx",
       "line": 148,
       "term": "inloggen"
@@ -750,87 +800,87 @@
     },
     {
       "file": "client/src/pages/ProfilePage.tsx",
-      "line": 155,
+      "line": 187,
       "term": "zoek"
     },
     {
       "file": "client/src/pages/ProfilePage.tsx",
-      "line": 161,
+      "line": 193,
       "term": "zoek"
     },
     {
       "file": "client/src/pages/ProfilePage.tsx",
-      "line": 232,
+      "line": 288,
       "term": "zoek"
     },
     {
       "file": "client/src/pages/ProfilePage.tsx",
-      "line": 247,
+      "line": 300,
       "term": "zoek"
     },
     {
       "file": "client/src/pages/ProfilePage.tsx",
-      "line": 311,
+      "line": 354,
       "term": "zoek"
     },
     {
       "file": "client/src/pages/Register.tsx",
-      "line": 57,
+      "line": 83,
       "term": "Registratie"
     },
     {
       "file": "client/src/pages/Register.tsx",
-      "line": 66,
+      "line": 92,
       "term": "Account"
     },
     {
       "file": "client/src/pages/Register.tsx",
-      "line": 67,
+      "line": 93,
       "term": "account"
     },
     {
       "file": "client/src/pages/Register.tsx",
-      "line": 74,
+      "line": 100,
       "term": "registreren"
     },
     {
       "file": "client/src/pages/Register.tsx",
-      "line": 104,
+      "line": 130,
       "term": "account"
     },
     {
       "file": "client/src/pages/Register.tsx",
-      "line": 109,
+      "line": 157,
       "term": "inloggen"
     },
     {
       "file": "client/src/pages/Register.tsx",
-      "line": 161,
+      "line": 209,
       "term": "Account"
     },
     {
       "file": "client/src/pages/Register.tsx",
-      "line": 164,
+      "line": 212,
       "term": "account"
     },
     {
       "file": "client/src/pages/Register.tsx",
-      "line": 271,
+      "line": 319,
       "term": "registreren"
     },
     {
       "file": "client/src/pages/Register.tsx",
-      "line": 275,
+      "line": 323,
       "term": "Account"
     },
     {
       "file": "client/src/pages/Register.tsx",
-      "line": 285,
+      "line": 333,
       "term": "account"
     },
     {
       "file": "client/src/pages/Register.tsx",
-      "line": 287,
+      "line": 335,
       "term": "Log in"
     }
   ]

@@ -219,7 +219,7 @@ export default function ProfilePayment() {
 
               <p className="text-xs text-muted-foreground text-center mt-4">
                 Betaling wordt verwerkt via een beveiligde verbinding.
-                Na betaling is je profiel direct zichtbaar.
+                Na betaling en goedkeuring door ons team wordt je profiel zichtbaar.
               </p>
             </div>
           </CardContent>

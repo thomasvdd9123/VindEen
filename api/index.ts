@@ -2215,14 +2215,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           })
           .eq("id", meta.subscriptionId);
         await supabase.from("payment").update({ status: "PAID", paid_at: now.toISOString() }).eq("id", (pay as any).id);
-        // If profile was taken offline due to expiry, bring it back online
+        // If profile was taken offline due to expiry, bring it back online —
+        // BUT only if an admin already approved it. Profiles that were never
+        // approved (e.g. first payment failed → CANCELLED → retried) must
+        // stay offline until an admin reviews them.
         if ((existingSub as any)?.profile_id) {
           const wasOffline = (existingSub as any).status === "EXPIRED" || (existingSub as any).status === "CANCELLED";
           if (wasOffline) {
-            await supabase
+            const { data: prof } = await supabase
               .from("profile")
-              .update({ is_public: true })
-              .eq("id", (existingSub as any).profile_id);
+              .select("verification_status")
+              .eq("id", (existingSub as any).profile_id)
+              .maybeSingle();
+            if ((prof as any)?.verification_status === "APPROVED") {
+              await supabase
+                .from("profile")
+                .update({ is_public: true })
+                .eq("id", (existingSub as any).profile_id);
+            }
           }
         }
       } else if (["failed", "canceled", "expired"].includes(payment.status)) {
