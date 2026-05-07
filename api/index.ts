@@ -2589,6 +2589,85 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // -----------------------------------------------------------------------
+    // AI: genereer een bedrijfsbeschrijving op basis van de website (Claude)
+    // -----------------------------------------------------------------------
+    if (method === "POST" && path === "/api/ai/generate-description") {
+      const anthropicKey = process.env.ANTHROPIC_API_KEY;
+      if (!anthropicKey) {
+        return res.status(503).json({ error: "AI niet geconfigureerd (ANTHROPIC_API_KEY ontbreekt)" });
+      }
+
+      const { websiteUrl, companyName } = req.body || {};
+      if (!websiteUrl) return res.status(400).json({ error: "websiteUrl is verplicht" });
+
+      const normalizedUrl = websiteUrl.startsWith("http") ? websiteUrl : `https://${websiteUrl}`;
+
+      let websiteText = "";
+      try {
+        const resp = await fetch(normalizedUrl, {
+          signal: AbortSignal.timeout(8000),
+          headers: { "User-Agent": "Mozilla/5.0 (compatible; ZoekEenTuinman/1.0)" },
+        });
+        const html = await resp.text();
+        websiteText = html
+          .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, " ")
+          .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, " ")
+          .replace(/<[^>]+>/g, " ")
+          .replace(/&[^;]{1,6};/g, " ")
+          .replace(/\s+/g, " ")
+          .trim()
+          .slice(0, 6000);
+      } catch (e: any) {
+        return res.status(422).json({ error: `Website kon niet worden opgehaald: ${e.message}` });
+      }
+
+      const prompt = `Je bent een professionele copywriter voor een Belgische tuinmannen-gids. Schrijf een bedrijfsbeschrijving in vloeiend Nederlands voor het bedrijf "${companyName || "dit tuinbedrijf"}".
+
+Hieronder vind je de inhoud van hun website:
+---
+${websiteText}
+---
+
+Schrijf een aantrekkelijke beschrijving van 200-350 woorden die:
+- Begint met een pakkende openingszin over wat dit bedrijf uniek maakt
+- Beschrijft welke tuindiensten ze aanbieden (op basis van de website)
+- Het werkgebied of de regio vermeldt als dat duidelijk is
+- De aanpak, werkwijze of filosofie beschrijft
+- In de "wij"-vorm schrijft als het een team is, in "ik" als het een soloondernemer is
+- Eindigt met een uitnodigende zin om contact op te nemen
+- Menselijk, warm en professioneel klinkt — géén AI-taal
+- GEEN vergelijkingsplatforms, offerteplatforms of lead-generatie noemt`;
+
+      try {
+        const claudeRes = await fetch("https://api.anthropic.com/v1/messages", {
+          method: "POST",
+          headers: {
+            "x-api-key": anthropicKey,
+            "anthropic-version": "2023-06-01",
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "claude-3-5-sonnet-20241022",
+            max_tokens: 1024,
+            messages: [{ role: "user", content: prompt }],
+          }),
+        });
+
+        if (!claudeRes.ok) {
+          const errText = await claudeRes.text();
+          console.error("Claude API error:", claudeRes.status, errText);
+          return res.status(502).json({ error: `Claude API fout (${claudeRes.status})` });
+        }
+
+        const claudeData: any = await claudeRes.json();
+        const description = claudeData.content?.[0]?.text || "";
+        return res.status(200).json({ description });
+      } catch (e: any) {
+        return res.status(502).json({ error: `AI-aanroep mislukt: ${e.message}` });
+      }
+    }
+
+    // -----------------------------------------------------------------------
     // CRON: betaalherinneringen voor profielen zonder actief lidmaatschap
     // Vercel roept dit elk uur aan via de cron-config in vercel.json.
     // Beveiligd met CRON_SECRET env var (Authorization: Bearer <secret>).

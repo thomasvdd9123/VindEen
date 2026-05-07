@@ -321,9 +321,11 @@ export default function ProfilePage() {
                       )}
                     </div>
 
-                    {profile.title && (
-                      <p className="text-lg text-muted-foreground mb-2" data-testid="text-profile-title">
-                        {profile.title}
+                    {profile.introduction && (
+                      <p className="text-lg text-muted-foreground mb-2 italic" data-testid="text-profile-tagline">
+                        {profile.introduction.startsWith("<")
+                          ? profile.introduction.replace(/<[^>]*>/g, "").replace(/&[^;]+;/g, " ").trim()
+                          : profile.introduction}
                       </p>
                     )}
 
@@ -355,31 +357,10 @@ export default function ProfilePage() {
               </CardContent>
             </Card>
 
-            {profile.introduction && (
-              <Card data-testid="card-profile-intro">
-                <CardHeader>
-                  <CardTitle className="text-lg">Over {profile.name}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {profile.introduction.startsWith("<") ? (
-                    <div
-                      className="rich-text-content text-muted-foreground"
-                      data-testid="text-profile-introduction"
-                      dangerouslySetInnerHTML={{ __html: profile.introduction }}
-                    />
-                  ) : (
-                    <p className="text-muted-foreground leading-relaxed" data-testid="text-profile-introduction">
-                      {profile.introduction}
-                    </p>
-                  )}
-                </CardContent>
-              </Card>
-            )}
-
             {profile.description && (
               <Card data-testid="card-profile-description">
                 <CardHeader>
-                  <CardTitle className="text-lg">Beschrijving</CardTitle>
+                  <CardTitle className="text-lg">Over {profile.name}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   {profile.description.startsWith("<") ? (

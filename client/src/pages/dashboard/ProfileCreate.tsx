@@ -14,7 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/lib/auth";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Loader2, Save, ArrowLeft, Info, Eye, EyeOff } from "lucide-react";
+import { Loader2, Save, ArrowLeft, Info, Eye, EyeOff, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -33,13 +33,12 @@ function calculateProfileCompleteness(formValues: ProfileFormData): { percentage
   const fields = [
     { key: "name", label: "Bedrijfsnaam", value: formValues.name },
     { key: "email", label: "Email", value: formValues.email },
-    { key: "introduction", label: "Introductie", value: formValues.introduction },
+    { key: "introduction", label: "Slagzin", value: formValues.introduction },
     { key: "categoryId", label: "Categorie", value: formValues.categoryId },
     { key: "locationId", label: "Locatie", value: formValues.locationId },
     { key: "telnr", label: "Telefoonnummer", value: formValues.telnr },
     { key: "website", label: "Website", value: formValues.website },
     { key: "description", label: "Beschrijving", value: formValues.description },
-    { key: "title", label: "Slagzin / tagline", value: formValues.title },
     { key: "specializations", label: "Specialisaties", value: formValues.specializations?.length ? formValues.specializations : null },
   ];
   
@@ -58,7 +57,7 @@ const profileSchema = z.object({
   telnr: z.string().optional(),
   website: z.string().optional(),
   title: z.string().optional(),
-  introduction: z.string().min(10, "Introductie moet minimaal 10 karakters bevatten"),
+  introduction: z.string().max(200, "Slagzin mag maximaal 200 tekens zijn").optional(),
   description: z.string().optional(),
   categoryId: z.string().min(1, "Selecteer een categorie"),
   locationId: z.string().min(1, "Selecteer een locatie"),
@@ -102,6 +101,7 @@ export default function ProfileCreate() {
   const [, setLocation] = useLocation();
   const { user } = useAuth();
   const { toast } = useToast();
+  const [aiLoading, setAiLoading] = useState(false);
 
   const { data: categories = [] } = useQuery<Category[]>({
     queryKey: ["/api/categories"],
@@ -282,20 +282,6 @@ export default function ProfileCreate() {
                     )}
                   />
 
-                  <FormField
-                    control={form.control}
-                    name="title"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Slagzin / tagline</FormLabel>
-                        <FormControl>
-                          <Input placeholder={siteConfig.placeholders.profileTitle} {...field} data-testid="input-title" />
-                        </FormControl>
-                        <FormDescription>Verschijnt als korte slagzin onder je naam op je profiel</FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <FormField
@@ -463,13 +449,13 @@ export default function ProfileCreate() {
                 </div>
 
                 {/* ============================================ */}
-                {/* SECTION 3: INTRODUCTIE & BESCHRIJVING */}
+                {/* SECTION 3: SLAGZIN & BESCHRIJVING */}
                 {/* ============================================ */}
                 <div className="space-y-6">
                   <div className="border-b pb-2">
-                    <h3 className="text-lg font-semibold">Introductie & Beschrijving</h3>
+                    <h3 className="text-lg font-semibold">Slagzin & Beschrijving</h3>
                     <p className="text-sm text-muted-foreground">
-                      Vertel bezoekers over je bedrijf en diensten
+                      Vertel bezoekers wie je bent en wat je doet
                     </p>
                   </div>
 
@@ -478,18 +464,16 @@ export default function ProfileCreate() {
                     name="introduction"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Korte introductie <span className="text-destructive">*</span></FormLabel>
+                        <FormLabel>Slagzin <span className="text-muted-foreground font-normal text-xs">(optioneel)</span></FormLabel>
                         <FormControl>
-                          <RichTextEditor
-                            value={field.value || ""}
-                            onChange={field.onChange}
-                            placeholder="Schrijf een korte introductie over je bedrijf..."
-                            minHeight="100px"
+                          <Input
+                            placeholder="bv. Familiebedrijf gespecialiseerd in regulier tuinonderhoud rond Leuven."
+                            {...field}
                             data-testid="input-introduction"
                           />
                         </FormControl>
                         <FormDescription>
-                          Dit is het eerste wat bezoekers zien op je profielpagina. Je kan tekst opmaken met vet, cursief, koppen en lijsten.
+                          Één zin die verschijnt direct onder je bedrijfsnaam. Kort en krachtig — wie je bent en wat je doet.
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -501,18 +485,63 @@ export default function ProfileCreate() {
                     name="description"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Uitgebreide beschrijving</FormLabel>
+                        <div className="flex items-center justify-between mb-1">
+                          <FormLabel>Beschrijving <span className="text-muted-foreground font-normal text-xs">(optioneel, maar sterk aanbevolen)</span></FormLabel>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            disabled={aiLoading}
+                            onClick={async () => {
+                              const website = form.getValues("website");
+                              const name = form.getValues("name");
+                              if (!website) {
+                                toast({ title: "Website vereist", description: "Vul eerst je website-adres in bovenaan.", variant: "destructive" });
+                                return;
+                              }
+                              setAiLoading(true);
+                              try {
+                                const res = await fetch("/api/ai/generate-description", {
+                                  method: "POST",
+                                  headers: { "Content-Type": "application/json" },
+                                  body: JSON.stringify({ websiteUrl: website, companyName: name }),
+                                });
+                                if (!res.ok) { const e = await res.json(); throw new Error(e.error || "Onbekende fout"); }
+                                const data = await res.json();
+                                form.setValue("description", data.description, { shouldDirty: true });
+                                toast({ title: "✨ Beschrijving gegenereerd!", description: "Lees de tekst na en pas aan waar nodig." });
+                              } catch (e: any) {
+                                toast({ title: "AI generatie mislukt", description: e.message, variant: "destructive" });
+                              } finally {
+                                setAiLoading(false);
+                              }
+                            }}
+                            data-testid="button-ai-generate"
+                          >
+                            {aiLoading ? <Loader2 className="h-3 w-3 mr-1.5 animate-spin" /> : <Sparkles className="h-3 w-3 mr-1.5" />}
+                            Genereer met AI
+                          </Button>
+                        </div>
                         <FormControl>
                           <RichTextEditor
                             value={field.value || ""}
                             onChange={field.onChange}
-                            placeholder="Uitgebreide beschrijving van je diensten, ervaring, aanpak, etc..."
-                            minHeight="150px"
+                            placeholder="Schrijf hier je beschrijving..."
+                            minHeight="250px"
                             data-testid="input-description"
                           />
                         </FormControl>
                         <FormDescription>
-                          Vertel meer over je ervaring, werkwijze en wat je onderscheidt. Plakken vanuit Word of e-mail werkt ook.
+                          <span className="font-medium text-foreground">Tips voor een goede beschrijving:</span>
+                          <ul className="mt-1.5 space-y-1 list-disc list-inside">
+                            <li>Wie ben je? Familiebedrijf, solo of met een team? Hoeveel jaar ervaring?</li>
+                            <li>Welke diensten bied je precies aan? (bv. maaien, snoeien, aanleg, bemesting, vijvers)</li>
+                            <li>In welke regio's of gemeenten ben je actief?</li>
+                            <li>Wat maakt jou anders? (bv. milieuvriendelijk, eigen materiaal, vaste contactpersoon)</li>
+                            <li>Hoe werkt een samenwerking? (bv. vrijblijvend plaatsbezoek → persoonlijke prijsopgave)</li>
+                            <li>Schrijf in "wij" bij een team, in "ik" als soloondernemer.</li>
+                            <li className="font-medium">Heb je een website? Gebruik de AI-knop hierboven — die leest je site en schrijft een unieke tekst.</li>
+                          </ul>
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
