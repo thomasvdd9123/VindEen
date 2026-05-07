@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { Link } from "wouter";
 import { DashboardLayout } from "./DashboardLayout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -12,19 +11,20 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient, authFetch } from "@/lib/queryClient";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
-import { 
-  PlusCircle, 
+import {
+  Plus,
   Eye,
   Edit,
   Trash2,
-  CheckCircle,
-  Clock,
+  CheckCircle2,
+  Clock4,
   XCircle,
   Leaf,
   Loader2,
   CreditCard,
   Calendar,
   AlertTriangle,
+  ShieldCheck,
 } from "lucide-react";
 import type { Profile, SubscriptionItem } from "@shared/schema";
 
@@ -33,11 +33,10 @@ export default function DashboardProfiles() {
   const { toast } = useToast();
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
 
-  // Use useQuery for account to benefit from caching
   const { data: account, isLoading: isLoadingAccount } = useQuery<{ id: string }>({
     queryKey: ["/api/accounts/by-auth", user?.id],
     enabled: !!user?.id,
-    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+    staleTime: 1000 * 60 * 5,
   });
 
   const accountId = account?.id || null;
@@ -45,7 +44,7 @@ export default function DashboardProfiles() {
   const { data: profiles = [], isLoading: isLoadingProfiles } = useQuery<Profile[]>({
     queryKey: ["/api/my-profiles", accountId],
     enabled: !!accountId,
-    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+    staleTime: 1000 * 60 * 5,
   });
 
   const isLoading = isLoadingAccount || isLoadingProfiles;
@@ -55,7 +54,6 @@ export default function DashboardProfiles() {
       return apiRequest("DELETE", `/api/profiles/${profileId}`);
     },
     onSuccess: () => {
-      // Bust every cache that lists or counts profiles for this account.
       queryClient.invalidateQueries({ queryKey: ["/api/my-profiles"] });
       queryClient.invalidateQueries({ queryKey: ["/api/contact-requests"] });
       queryClient.invalidateQueries({ queryKey: ["/api/contact-requests/counts"] });
@@ -64,66 +62,75 @@ export default function DashboardProfiles() {
       toast({ title: "Profiel verwijderd", description: "Je profiel is succesvol verwijderd." });
     },
     onError: () => {
-      toast({
-        title: "Er ging iets mis",
-        description: "Kon profiel niet verwijderen.",
-        variant: "destructive",
-      });
+      toast({ title: "Er ging iets mis", description: "Kon profiel niet verwijderen.", variant: "destructive" });
     },
   });
 
-  const handleDelete = (profileId: string, profileName: string) => {
-    setDeleteTarget({ id: profileId, name: profileName });
-  };
-
   return (
-    <DashboardLayout 
-      title="Jouw praktijkprofielen" 
+    <DashboardLayout
+      title="Jouw profielen"
       description="Beheer je bedrijfsprofielen en maak nieuwe aan."
     >
-      <div className="space-y-6">
-        {/* Loading state */}
+      <div className="space-y-4">
+        {/* Loading */}
         {isLoading && (
-          <div className="flex items-center justify-center py-12">
+          <div className="flex items-center justify-center py-16">
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
           </div>
         )}
 
-        {/* No profiles - show big CTA */}
+        {/* Empty state */}
         {!isLoading && profiles.length === 0 && (
-          <Card className="border-dashed border-2 bg-muted/30" data-testid="card-create-profile">
-            <CardContent className="py-12 text-center">
-              <Leaf className="h-12 w-12 text-primary/40 mx-auto mb-4" />
-              <h3 className="font-semibold text-lg mb-2">Maak je eerste profiel aan</h3>
-              <p className="text-muted-foreground mb-4 max-w-md mx-auto">
-                Word zichtbaar voor potentiële klanten door een bedrijfsprofiel aan te maken.
-              </p>
-              <Link href="/dashboard/profielen/nieuw">
+          <Link href="/dashboard/profielen/nieuw">
+            <Card
+              className="border-2 border-dashed border-primary/30 bg-primary/5 hover:border-primary/50 hover:bg-primary/10 transition-colors cursor-pointer"
+              data-testid="card-create-profile"
+            >
+              <CardContent className="py-14 text-center">
+                <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-primary/10 mb-4">
+                  <Leaf className="h-7 w-7 text-primary" />
+                </div>
+                <h3 className="font-semibold text-lg mb-1">Maak je eerste profiel aan</h3>
+                <p className="text-sm text-muted-foreground mb-5 max-w-sm mx-auto">
+                  Word zichtbaar voor potentiële klanten door een bedrijfsprofiel aan te maken.
+                </p>
                 <Button className="gap-2" data-testid="button-new-profile">
-                  <PlusCircle className="h-4 w-4" />
-                  Start nieuw profiel
+                  <Plus className="h-4 w-4" />
+                  Profiel aanmaken
                 </Button>
-              </Link>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </Link>
         )}
 
-        {/* Existing profiles */}
+        {/* Profile list */}
         {!isLoading && profiles.length > 0 && (
-          <div className="space-y-4">
-            <h2 className="text-lg font-semibold">Je profielen</h2>
+          <>
             {profiles.map((profile: Profile) => (
-              <ProfileCard key={profile.id} profile={profile} onDelete={handleDelete} />
+              <ProfileCard
+                key={profile.id}
+                profile={profile}
+                onDelete={(id, name) => setDeleteTarget({ id, name })}
+              />
             ))}
-            
-            {/* Small add another profile button at bottom */}
-            <Link href="/dashboard/profielen/nieuw">
-              <Button variant="outline" className="w-full gap-2 border-dashed" data-testid="button-add-profile">
-                <PlusCircle className="h-4 w-4" />
-                Nog een profiel toevoegen
-              </Button>
-            </Link>
-          </div>
+
+            {/* Add another profile — more spacious, prominent */}
+            <div className="pt-4">
+              <Link href="/dashboard/profielen/nieuw">
+                <Card
+                  className="border-2 border-dashed border-muted-foreground/25 hover:border-primary/40 hover:bg-muted/40 transition-colors cursor-pointer group"
+                  data-testid="button-add-profile"
+                >
+                  <CardContent className="py-7 flex items-center justify-center gap-3 text-muted-foreground group-hover:text-foreground transition-colors">
+                    <div className="flex items-center justify-center w-9 h-9 rounded-full border-2 border-dashed border-current">
+                      <Plus className="h-4 w-4" />
+                    </div>
+                    <span className="font-medium">Nog een profiel toevoegen</span>
+                  </CardContent>
+                </Card>
+              </Link>
+            </div>
+          </>
         )}
       </div>
 
@@ -155,135 +162,177 @@ export default function DashboardProfiles() {
   );
 }
 
-function ProfileCard({ profile, onDelete }: { profile: Profile; onDelete: (id: string, name: string) => void }) {
-  // Fetch subscription status for this profile (404 = no subscription, return null)
+// ─── Profile Card ─────────────────────────────────────────────────────────────
+
+type VerifStatus = "APPROVED" | "PENDING" | "REJECTED";
+
+const VERIF_CONFIG: Record<VerifStatus, {
+  label: string;
+  icon: any;
+  bar: string;
+  pill: string;
+  pillText: string;
+}> = {
+  APPROVED: {
+    label: "Goedgekeurd",
+    icon: ShieldCheck,
+    bar: "bg-emerald-500",
+    pill: "bg-emerald-50 text-emerald-700 border border-emerald-200",
+    pillText: "text-emerald-700",
+  },
+  PENDING: {
+    label: "In behandeling",
+    icon: Clock4,
+    bar: "bg-amber-400",
+    pill: "bg-amber-50 text-amber-700 border border-amber-200",
+    pillText: "text-amber-700",
+  },
+  REJECTED: {
+    label: "Afgewezen",
+    icon: XCircle,
+    bar: "bg-red-500",
+    pill: "bg-red-50 text-red-700 border border-red-200",
+    pillText: "text-red-700",
+  },
+};
+
+function ProfileCard({ profile, onDelete }: {
+  profile: Profile;
+  onDelete: (id: string, name: string) => void;
+}) {
   const { data: subscription } = useQuery<SubscriptionItem | null>({
     queryKey: ["/api/subscriptions/profile", profile.id],
     queryFn: async () => {
-      const response = await authFetch(`/api/subscriptions/profile/${profile.id}`);
-      if (response.status === 404) return null;
-      if (!response.ok) throw new Error("Failed to fetch subscription");
-      return response.json();
+      const res = await authFetch(`/api/subscriptions/profile/${profile.id}`);
+      if (res.status === 404) return null;
+      if (!res.ok) throw new Error("Failed to fetch subscription");
+      return res.json();
     },
     staleTime: 1000 * 60 * 5,
     retry: false,
   });
 
-  const statusConfig: Record<string, { label: string; icon: any; variant: "default" | "secondary" | "destructive" | "outline" }> = {
-    APPROVED: { label: "Goedgekeurd", icon: CheckCircle, variant: "default" },
-    PENDING: { label: "In behandeling", icon: Clock, variant: "secondary" },
-    REJECTED: { label: "Afgewezen", icon: XCircle, variant: "destructive" },
-  };
+  const verifKey = (profile.verificationStatus || "PENDING") as VerifStatus;
+  const verif = VERIF_CONFIG[verifKey] ?? VERIF_CONFIG.PENDING;
+  const VerifIcon = verif.icon;
 
-  const subscriptionConfig: Record<string, { label: string; icon: any; variant: "default" | "secondary" | "destructive" | "outline" }> = {
-    ACTIVE: { label: "Actief abonnement", icon: CreditCard, variant: "default" },
-    EXPIRED: { label: "Verlopen", icon: AlertTriangle, variant: "destructive" },
-    CANCELLED: { label: "Opgezegd", icon: XCircle, variant: "secondary" },
-  };
-
-  const status = statusConfig[profile.verificationStatus || "PENDING"] || statusConfig.PENDING;
-  const StatusIcon = status.icon;
-
-  // Determine subscription display
-  const subStatus = subscription?.status ? subscriptionConfig[subscription.status] : null;
-  const SubIcon = subStatus?.icon;
+  const hasActiveSub = subscription?.status === "ACTIVE";
   const endDate = subscription?.endDate ? new Date(subscription.endDate) : null;
-  const isExpiringSoon = endDate && endDate.getTime() - Date.now() < 30 * 24 * 60 * 60 * 1000; // 30 days
+  const expiringSoon = endDate && endDate.getTime() - Date.now() < 30 * 24 * 60 * 60 * 1000;
 
   return (
-    <Card data-testid={`card-profile-${profile.id}`}>
-      <CardContent className="p-5">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="w-20 h-20 rounded-md bg-muted shrink-0 overflow-hidden">
-            {profile.logoUrl ? (
-              <img src={profile.logoUrl} alt={profile.name} className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-primary/5">
-                <Leaf className="h-8 w-8 text-primary/40" />
-              </div>
-            )}
-          </div>
+    <Card className="overflow-hidden" data-testid={`card-profile-${profile.id}`}>
+      {/* Coloured status bar along the left */}
+      <div className="flex">
+        <div className={`w-1 shrink-0 ${verif.bar}`} />
 
-          <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between gap-2 mb-2">
-              <div>
-                <h3 className="font-semibold text-lg">{profile.name}</h3>
-                {profile.title && (
-                  <p className="text-sm text-muted-foreground">{profile.title}</p>
-                )}
-              </div>
-              <div className="flex flex-col gap-1 items-end shrink-0">
-                <Badge variant={status.variant} className="gap-1">
-                  <StatusIcon className="h-3 w-3" />
-                  {status.label}
-                </Badge>
-                {/* Subscription status badge */}
-                {subscription && subStatus ? (
-                  <Badge 
-                    variant={isExpiringSoon ? "destructive" : subStatus.variant} 
-                    className="gap-1"
-                    data-testid={`badge-subscription-${profile.id}`}
-                  >
-                    {SubIcon && <SubIcon className="h-3 w-3" />}
-                    {isExpiringSoon ? "Verloopt binnenkort" : subStatus.label}
-                  </Badge>
-                ) : (
-                  <Badge variant="outline" className="gap-1 border-amber-500 text-amber-600">
-                    <AlertTriangle className="h-3 w-3" />
-                    Niet betaald
-                  </Badge>
-                )}
-              </div>
+        <CardContent className="flex-1 p-5">
+          <div className="flex flex-col sm:flex-row gap-4">
+            {/* Logo / avatar */}
+            <div className="w-16 h-16 rounded-lg bg-muted shrink-0 overflow-hidden">
+              {profile.logoUrl ? (
+                <img src={profile.logoUrl} alt={profile.name} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-primary/5">
+                  <Leaf className="h-6 w-6 text-primary/40" />
+                </div>
+              )}
             </div>
 
-            {/* Subscription info row */}
-            {subscription && endDate && (
-              <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
-                <Calendar className="h-3 w-3" />
-                <span>Abonnement geldig t/m {endDate.toLocaleDateString("nl-BE", { day: "numeric", month: "long", year: "numeric" })}</span>
+            {/* Main info */}
+            <div className="flex-1 min-w-0">
+              {/* Name row + status pills */}
+              <div className="flex items-start justify-between gap-3 mb-1">
+                <div className="min-w-0">
+                  <h3 className="font-semibold text-base leading-snug truncate">{profile.name}</h3>
+                  {profile.title && (
+                    <p className="text-sm text-muted-foreground truncate">{profile.title}</p>
+                  )}
+                </div>
+
+                {/* Status pills — clean, not badge */}
+                <div className="flex flex-col items-end gap-1.5 shrink-0">
+                  <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${verif.pill}`}>
+                    <VerifIcon className="h-3 w-3" />
+                    {verif.label}
+                  </span>
+
+                  {hasActiveSub ? (
+                    <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${expiringSoon ? "bg-orange-50 text-orange-700 border border-orange-200" : "bg-emerald-50 text-emerald-700 border border-emerald-200"}`}
+                      data-testid={`badge-subscription-${profile.id}`}
+                    >
+                      <CheckCircle2 className="h-3 w-3" />
+                      {expiringSoon ? "Verloopt binnenkort" : "Betaald"}
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200"
+                      data-testid={`badge-subscription-${profile.id}`}
+                    >
+                      <CreditCard className="h-3 w-3" />
+                      Geen abonnement
+                    </span>
+                  )}
+                </div>
               </div>
-            )}
 
-            <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
-              {profile.introduction || "Geen introductie ingesteld"}
-            </p>
+              {/* Subscription end date */}
+              {hasActiveSub && endDate && (
+                <p className="text-xs text-muted-foreground flex items-center gap-1 mb-2">
+                  <Calendar className="h-3 w-3" />
+                  Geldig t/m {endDate.toLocaleDateString("nl-BE", { day: "numeric", month: "long", year: "numeric" })}
+                </p>
+              )}
 
-            <div className="flex flex-wrap gap-2">
-              {/* Show payment button if no active subscription */}
-              {(!subscription || subscription.status !== "ACTIVE") && (
-                <Link href={`/dashboard/profielen/${profile.id}/betalen`}>
-                  <Button size="sm" className="gap-1" data-testid={`button-pay-${profile.id}`}>
-                    <CreditCard className="h-3.5 w-3.5" />
-                    Betalen
+              {/* Introduction */}
+              <p className="text-sm text-muted-foreground line-clamp-2 mt-1 mb-4">
+                {profile.introduction || <span className="italic">Geen introductie ingesteld</span>}
+              </p>
+
+              {/* Action row */}
+              <div className="flex flex-wrap items-center gap-2">
+                {!hasActiveSub && (
+                  <Link href={`/dashboard/profielen/${profile.id}/betalen`}>
+                    <Button size="sm" className="gap-1.5 h-8" data-testid={`button-pay-${profile.id}`}>
+                      <CreditCard className="h-3.5 w-3.5" />
+                      Activeren
+                    </Button>
+                  </Link>
+                )}
+                <Link href={`/dashboard/profielen/${profile.id}/bewerken`}>
+                  <Button variant="outline" size="sm" className="gap-1.5 h-8" data-testid={`button-edit-${profile.id}`}>
+                    <Edit className="h-3.5 w-3.5" />
+                    Bewerken
                   </Button>
                 </Link>
-              )}
-              <Link href={`/bedrijf/${profile.slug}`}>
-                <Button variant="outline" size="sm" className="gap-1" data-testid={`button-view-${profile.id}`}>
-                  <Eye className="h-3.5 w-3.5" />
-                  Bekijken
+                <Link href={`/bedrijf/${profile.slug}`}>
+                  <Button variant="outline" size="sm" className="gap-1.5 h-8" data-testid={`button-view-${profile.id}`}>
+                    <Eye className="h-3.5 w-3.5" />
+                    Bekijken
+                  </Button>
+                </Link>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="gap-1.5 h-8 text-destructive/70 hover:text-destructive ml-auto"
+                  onClick={() => onDelete(profile.id, profile.name)}
+                  data-testid={`button-delete-${profile.id}`}
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  Verwijderen
                 </Button>
-              </Link>
-              <Link href={`/dashboard/profielen/${profile.id}/bewerken`}>
-                <Button variant="outline" size="sm" className="gap-1" data-testid={`button-edit-${profile.id}`}>
-                  <Edit className="h-3.5 w-3.5" />
-                  Bewerken
-                </Button>
-              </Link>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="gap-1 text-destructive hover:text-destructive"
-                onClick={() => onDelete(profile.id, profile.name)}
-                data-testid={`button-delete-${profile.id}`}
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-                Verwijderen
-              </Button>
+              </div>
             </div>
           </div>
-        </div>
-      </CardContent>
+
+          {/* Warning strip — only when no subscription */}
+          {!hasActiveSub && (
+            <div className="mt-4 -mx-5 -mb-5 px-5 py-3 bg-amber-50 border-t border-amber-100 flex items-center gap-2 text-amber-700 text-xs">
+              <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+              <span>Dit profiel is nog niet actief — activeer een abonnement om zichtbaar te worden voor klanten.</span>
+            </div>
+          )}
+        </CardContent>
+      </div>
     </Card>
   );
 }
