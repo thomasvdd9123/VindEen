@@ -6,7 +6,6 @@ import { HelmetProvider } from "react-helmet-async";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/lib/auth";
-import { UnderConstructionOverlay } from "@/components/UnderConstructionOverlay";
 import { CookieConsent } from "@/components/CookieConsent";
 // Eagerly bundled: top-of-funnel + auth pages so the first paint after a
 // Google landing is instant. Everything else is lazy-loaded so the initial
@@ -146,7 +145,6 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <TooltipProvider>
-            <UnderConstructionOverlay />
             <Toaster />
             <Router />
             <CookieConsent />
