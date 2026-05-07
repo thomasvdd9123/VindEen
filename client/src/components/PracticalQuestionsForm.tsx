@@ -9,6 +9,7 @@ interface Props {
   values: Record<string, any>;
   onChange: (values: Record<string, any>) => void;
   heading?: string;
+  excludeKeys?: string[];
 }
 
 // Single source of truth for rendering practical-question forms.
@@ -16,8 +17,9 @@ interface Props {
 // STRING, DATE, BOOLEAN). Question/option set is fully data-driven from
 // /api/practical-questions, so adding a new question in the DB requires no
 // frontend changes.
-export function PracticalQuestionsForm({ values, onChange, heading }: Props) {
-  const { questions } = usePracticalQuestions();
+export function PracticalQuestionsForm({ values, onChange, heading, excludeKeys = [] }: Props) {
+  const { questions: allQuestions } = usePracticalQuestions();
+  const questions = allQuestions.filter((q) => !excludeKeys.includes(q.camelKey));
   if (!questions.length) return null;
 
   const set = (k: string, v: any) => onChange({ ...values, [k]: v });

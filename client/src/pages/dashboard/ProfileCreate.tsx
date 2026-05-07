@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useLocation } from "wouter";
@@ -23,6 +23,7 @@ import { Progress } from "@/components/ui/progress";
 import type { Category, Location } from "@shared/schema";
 import { siteConfig } from "@/lib/theme.config";
 import { useSpecializationMap } from "@/lib/useSpecializations";
+import { PracticalQuestionsForm } from "@/components/PracticalQuestionsForm";
 
 // Calculate profile completeness from form values
 function calculateProfileCompleteness(formValues: ProfileFormData): { percentage: number; missing: string[] } {
@@ -145,6 +146,8 @@ export default function ProfileCreate() {
     },
   });
 
+  const [practicalAnswers, setPracticalAnswers] = useState<Record<string, any>>({});
+
   // Watch main categories at component level to avoid infinite loops
   const watchedMainCategories = useWatch({
     control: form.control,
@@ -182,6 +185,7 @@ export default function ProfileCreate() {
         isActive: data.isActive,
         hideAddress: data.hideAddress,
         specializations: data.specializations,
+        practical: practicalAnswers,
         office: {
           street: data.officeStreet,
           number: data.officeNumber,
@@ -697,6 +701,16 @@ export default function ProfileCreate() {
                     </FormItem>
                   )}
                 />
+
+                {/* Praktische info */}
+                <div className="rounded-lg border p-4">
+                  <PracticalQuestionsForm
+                    values={practicalAnswers}
+                    onChange={setPracticalAnswers}
+                    heading="Praktische info"
+                    excludeKeys={["priceHour"]}
+                  />
+                </div>
 
                 <div className="pt-4 flex gap-4">
                   <Button 

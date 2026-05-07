@@ -1035,6 +1035,7 @@ export default function ProfileEdit() {
                     values={practicalAnswers}
                     onChange={setPracticalAnswers}
                     heading="Praktische info"
+                    excludeKeys={["priceHour"]}
                   />
                 </div>
 
