@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
+import { useResendTimer } from "@/hooks/use-resend-timer";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -12,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/lib/auth";
-import { Loader2, Save, Mail, Trash2, AlertTriangle, CreditCard, Calendar, CheckCircle, XCircle, Clock } from "lucide-react";
+import { Loader2, Save, Mail, Trash2, AlertTriangle, CreditCard, Calendar, CheckCircle, XCircle, Clock, RefreshCw } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -68,7 +69,12 @@ export default function DashboardAccount() {
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [newEmail, setNewEmail] = useState("");
   const [showEmailDialog, setShowEmailDialog] = useState(false);
+  const [emailDialogSent, setEmailDialogSent] = useState(false);
   const [isSendingPasswordReset, setIsSendingPasswordReset] = useState(false);
+  const [passwordResetSent, setPasswordResetSent] = useState(false);
+
+  const emailTimer = useResendTimer(60);
+  const passwordTimer = useResendTimer(60);
 
   const metadata = getUserMetadata();
 
@@ -234,13 +240,8 @@ export default function DashboardAccount() {
           variant: "destructive",
         });
       } else {
-        toast({
-          title: "Bevestigingsmails verzonden",
-          description: `Je ontvangt een bevestigingslink op ${user?.email} én op ${newEmail}. Beide moeten worden bevestigd voordat je email wijzigt.`,
-          duration: 8000,
-        });
-        setNewEmail("");
-        setShowEmailDialog(false);
+        setEmailDialogSent(true);
+        emailTimer.startCooldown();
       }
     } catch {
       toast({
@@ -263,7 +264,8 @@ export default function DashboardAccount() {
       if (error) {
         toast({ title: "Er ging iets mis", description: error.message, variant: "destructive" });
       } else {
-        toast({ title: "Email verstuurd", description: "Controleer je inbox voor de resetlink." });
+        setPasswordResetSent(true);
+        passwordTimer.startCooldown();
       }
     } catch {
       toast({ title: "Er ging iets mis", description: "Probeer het later opnieuw.", variant: "destructive" });
@@ -601,20 +603,44 @@ export default function DashboardAccount() {
           </div>
 
           {/* Change password */}
-          <div className="flex items-center justify-between px-4 py-3">
-            <div>
-              <p className="font-medium text-sm">Wachtwoord wijzigen</p>
-              <p className="text-xs text-muted-foreground">Stuur een resetlink naar je inbox</p>
+          {passwordResetSent ? (
+            <div className="px-4 py-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium text-sm">Wachtwoord wijzigen</p>
+                  <p className="text-xs text-green-700">Resetlink verstuurd naar {user?.email}</p>
+                </div>
+                <button
+                  onClick={handlePasswordReset}
+                  disabled={!passwordTimer.canResend || isSendingPasswordReset}
+                  className="text-xs text-muted-foreground border border-border hover:border-foreground/30 hover:text-foreground transition-colors rounded-md px-3 py-1.5 disabled:opacity-50 flex items-center gap-1.5"
+                  data-testid="button-password-resend"
+                >
+                  {isSendingPasswordReset ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
+                  {passwordTimer.canResend ? "Opnieuw sturen" : `Opnieuw over ${passwordTimer.countdown}s`}
+                </button>
+              </div>
+              <div className="flex items-start gap-1.5 rounded-md bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-800">
+                <span className="shrink-0">⚠️</span>
+                <span>Geen email? Controleer ook je <strong>spammap</strong>.</span>
+              </div>
             </div>
-            <button
-              onClick={handlePasswordReset}
-              disabled={isSendingPasswordReset}
-              className="text-xs text-muted-foreground border border-border hover:border-foreground/30 hover:text-foreground transition-colors rounded-md px-3 py-1.5 disabled:opacity-50"
-              data-testid="button-password-reset"
-            >
-              {isSendingPasswordReset ? <Loader2 className="h-3 w-3 animate-spin" /> : "Resetlink sturen"}
-            </button>
-          </div>
+          ) : (
+            <div className="flex items-center justify-between px-4 py-3">
+              <div>
+                <p className="font-medium text-sm">Wachtwoord wijzigen</p>
+                <p className="text-xs text-muted-foreground">Stuur een resetlink naar je inbox</p>
+              </div>
+              <button
+                onClick={handlePasswordReset}
+                disabled={isSendingPasswordReset}
+                className="text-xs text-muted-foreground border border-border hover:border-foreground/30 hover:text-foreground transition-colors rounded-md px-3 py-1.5 disabled:opacity-50"
+                data-testid="button-password-reset"
+              >
+                {isSendingPasswordReset ? <Loader2 className="h-3 w-3 animate-spin" /> : "Resetlink sturen"}
+              </button>
+            </div>
+          )}
 
           {/* Delete account */}
           <div className="flex items-center justify-between px-4 py-3">
@@ -633,32 +659,69 @@ export default function DashboardAccount() {
         </div>
 
         {/* Email change dialog */}
-        <Dialog open={showEmailDialog} onOpenChange={setShowEmailDialog}>
+        <Dialog open={showEmailDialog} onOpenChange={(open) => {
+          setShowEmailDialog(open);
+          if (!open) { setEmailDialogSent(false); setNewEmail(""); }
+        }}>
           <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>Email wijzigen</DialogTitle>
-              <DialogDescription>
-                Huidig email: <span className="font-medium text-foreground">{user?.email}</span>
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-3 py-2">
-              <Input
-                type="email"
-                placeholder="Nieuw email adres"
-                value={newEmail}
-                onChange={(e) => setNewEmail(e.target.value)}
-                data-testid="input-new-email"
-              />
-              <div className="rounded-md bg-amber-50 border border-amber-200 px-3 py-2.5 text-xs text-amber-800 leading-relaxed">
-                <strong>Let op:</strong> je ontvangt een bevestigingslink op <em>beide</em> adressen — het huidige én het nieuwe. Beide moeten worden bevestigd voordat de wijziging ingaat.
-              </div>
-            </div>
-            <DialogFooter className="gap-2">
-              <Button variant="outline" onClick={() => setShowEmailDialog(false)}>Annuleren</Button>
-              <Button onClick={handleEmailChange} disabled={isChangingEmail || !newEmail} data-testid="button-change-email">
-                {isChangingEmail ? <Loader2 className="h-4 w-4 animate-spin" /> : "Bevestigingsmail sturen"}
-              </Button>
-            </DialogFooter>
+            {emailDialogSent ? (
+              <>
+                <DialogHeader>
+                  <DialogTitle>Bevestigingsmails verstuurd</DialogTitle>
+                  <DialogDescription>
+                    Je ontvangt een bevestigingslink op <strong className="text-foreground">{user?.email}</strong> én op <strong className="text-foreground">{newEmail}</strong>. Beide moeten worden bevestigd voordat je email wijzigt.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-3 py-1">
+                  <div className="flex items-start gap-2 rounded-md bg-amber-50 border border-amber-200 px-3 py-2.5 text-xs text-amber-800 leading-relaxed">
+                    <span className="shrink-0 mt-0.5">⚠️</span>
+                    <span>Geen email ontvangen? Controleer ook je <strong>spammap</strong>. Markeer hem als "Geen spam" voor toekomstige berichten.</span>
+                  </div>
+                </div>
+                <DialogFooter className="gap-2">
+                  <Button variant="outline" onClick={() => { setShowEmailDialog(false); setEmailDialogSent(false); setNewEmail(""); }}>
+                    Sluiten
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    onClick={handleEmailChange}
+                    disabled={!emailTimer.canResend || isChangingEmail}
+                    className="gap-2"
+                    data-testid="button-resend-email-change"
+                  >
+                    {isChangingEmail ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+                    {emailTimer.canResend ? "Opnieuw sturen" : `Opnieuw over ${emailTimer.countdown}s`}
+                  </Button>
+                </DialogFooter>
+              </>
+            ) : (
+              <>
+                <DialogHeader>
+                  <DialogTitle>Email wijzigen</DialogTitle>
+                  <DialogDescription>
+                    Huidig email: <span className="font-medium text-foreground">{user?.email}</span>
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-3 py-2">
+                  <Input
+                    type="email"
+                    placeholder="Nieuw email adres"
+                    value={newEmail}
+                    onChange={(e) => setNewEmail(e.target.value)}
+                    data-testid="input-new-email"
+                  />
+                  <div className="rounded-md bg-amber-50 border border-amber-200 px-3 py-2.5 text-xs text-amber-800 leading-relaxed">
+                    <strong>Let op:</strong> je ontvangt een bevestigingslink op <em>beide</em> adressen — het huidige én het nieuwe. Beide moeten worden bevestigd voordat de wijziging ingaat.
+                  </div>
+                </div>
+                <DialogFooter className="gap-2">
+                  <Button variant="outline" onClick={() => setShowEmailDialog(false)}>Annuleren</Button>
+                  <Button onClick={handleEmailChange} disabled={isChangingEmail || !newEmail} data-testid="button-change-email">
+                    {isChangingEmail ? <Loader2 className="h-4 w-4 animate-spin" /> : "Bevestigingsmail sturen"}
+                  </Button>
+                </DialogFooter>
+              </>
+            )}
           </DialogContent>
         </Dialog>
 

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Link, useLocation } from "wouter";
@@ -12,8 +12,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/lib/auth";
-import { Leaf, Loader2, ArrowRight, CheckCircle, Mail } from "lucide-react";
+import { supabase } from "@/lib/supabase";
+import { Leaf, Loader2, ArrowRight, CheckCircle, Mail, RefreshCw } from "lucide-react";
 import { siteConfig, fillCopy } from "@/lib/theme.config";
+import { useResendTimer } from "@/hooks/use-resend-timer";
 
 const registerSchema = z.object({
   email: z.string().email("Ongeldig email adres"),
@@ -36,6 +38,30 @@ export default function Register() {
   const [isLoading, setIsLoading] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [registeredEmail, setRegisteredEmail] = useState("");
+  const [isResending, setIsResending] = useState(false);
+  const { countdown, canResend, startCooldown } = useResendTimer(60);
+
+  useEffect(() => {
+    if (showConfirmation) startCooldown();
+  }, [showConfirmation]);
+
+  const handleResend = async () => {
+    if (!canResend || !registeredEmail) return;
+    setIsResending(true);
+    try {
+      const { error } = await supabase.auth.resend({ type: "signup", email: registeredEmail });
+      if (error) {
+        toast({ title: "Mislukt", description: error.message, variant: "destructive" });
+      } else {
+        toast({ title: "Email opnieuw verstuurd", description: "Controleer ook je spammap als je het niet ziet.", duration: 6000 });
+        startCooldown();
+      }
+    } catch {
+      toast({ title: "Er ging iets mis", description: "Probeer het later opnieuw.", variant: "destructive" });
+    } finally {
+      setIsResending(false);
+    }
+  };
 
   const form = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
@@ -108,9 +134,25 @@ export default function Register() {
                   Geen email ontvangen? Controleer ook je <strong>spam- of ongewenste e-mailmap</strong>. Markeer de email als "Geen spam" zodat je toekomstige emails van ons ontvangt.
                 </span>
               </div>
-              <div className="pt-2">
-                <Link href="/login">
-                  <Button variant="outline" className="gap-2" data-testid="button-back-login">
+              <div className="flex flex-col items-center gap-3 pt-2">
+                <Button
+                  variant="outline"
+                  onClick={handleResend}
+                  disabled={!canResend || isResending}
+                  className="gap-2 w-full"
+                  data-testid="button-resend-confirmation"
+                >
+                  {isResending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <RefreshCw className="h-4 w-4" />
+                  )}
+                  {canResend
+                    ? "Email opnieuw sturen"
+                    : `Opnieuw sturen mogelijk over ${countdown}s`}
+                </Button>
+                <Link href="/login" className="w-full">
+                  <Button variant="ghost" className="gap-2 w-full text-muted-foreground" data-testid="button-back-login">
                     Terug naar inloggen
                     <ArrowRight className="h-4 w-4" />
                   </Button>
