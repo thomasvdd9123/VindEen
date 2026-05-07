@@ -24,6 +24,9 @@ import type { Category, Location } from "@shared/schema";
 import { siteConfig } from "@/lib/theme.config";
 import { useSpecializationMap } from "@/lib/useSpecializations";
 import { PracticalQuestionsForm } from "@/components/PracticalQuestionsForm";
+import { LogoUpload, WorkPhotosUpload } from "@/components/ProfilePhotoUploads";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Camera } from "lucide-react";
 
 // Calculate profile completeness from form values
 function calculateProfileCompleteness(formValues: ProfileFormData): { percentage: number; missing: string[] } {
@@ -147,6 +150,7 @@ export default function ProfileCreate() {
   });
 
   const [practicalAnswers, setPracticalAnswers] = useState<Record<string, any>>({});
+  const [createdProfileId, setCreatedProfileId] = useState<string | null>(null);
 
   // Watch main categories at component level to avoid infinite loops
   const watchedMainCategories = useWatch({
@@ -194,13 +198,9 @@ export default function ProfileCreate() {
         },
       });
     },
-    onSuccess: () => {
+    onSuccess: (profile: any) => {
       queryClient.invalidateQueries({ queryKey: ["/api/my-profiles"] });
-      toast({
-        title: "Profiel aangemaakt",
-        description: "Je bedrijfsprofiel is succesvol aangemaakt.",
-      });
-      setLocation("/dashboard/profielen");
+      setCreatedProfileId(profile?.id ?? null);
     },
     onError: (error: Error) => {
       toast({
@@ -739,15 +739,61 @@ export default function ProfileCreate() {
           </CardContent>
         </Card>
 
-        {/* Info about photo upload */}
-        <Card className="mt-6">
-          <CardHeader>
-            <CardTitle>Profielfoto & Werk foto's</CardTitle>
-            <CardDescription>
-              Na het aanmaken van je profiel kun je foto's uploaden via het bewerken scherm.
-            </CardDescription>
-          </CardHeader>
-        </Card>
+        {/* Photo upload dialog — shown immediately after profile creation */}
+        <Dialog
+          open={!!createdProfileId}
+          onOpenChange={(open) => {
+            if (!open) setLocation("/dashboard/profielen");
+          }}
+        >
+          <DialogContent className="max-w-lg" data-testid="dialog-photo-upload">
+            <DialogHeader>
+              <div className="flex items-center gap-2">
+                <Camera className="h-5 w-5 text-primary" />
+                <DialogTitle>Foto's toevoegen</DialogTitle>
+              </div>
+              <DialogDescription>
+                Je profiel is aangemaakt! Voeg nu een logo en werkfoto's toe om je profiel compleet te maken.
+              </DialogDescription>
+            </DialogHeader>
+            {createdProfileId && (
+              <div className="space-y-6 pt-2">
+                <div>
+                  <p className="text-sm font-medium mb-3">Profielfoto / logo</p>
+                  <LogoUpload
+                    profileId={createdProfileId}
+                    currentLogoUrl={null}
+                    onUploadSuccess={() => queryClient.invalidateQueries({ queryKey: ["/api/my-profiles"] })}
+                  />
+                </div>
+                <div>
+                  <p className="text-sm font-medium mb-3">Werkfoto's</p>
+                  <WorkPhotosUpload
+                    profileId={createdProfileId}
+                    currentPhotos={[]}
+                    onUploadSuccess={() => queryClient.invalidateQueries({ queryKey: ["/api/my-profiles"] })}
+                  />
+                </div>
+                <div className="flex gap-3 pt-2">
+                  <Button
+                    className="flex-1"
+                    onClick={() => setLocation("/dashboard/profielen")}
+                    data-testid="button-photos-done"
+                  >
+                    Klaar
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    onClick={() => setLocation("/dashboard/profielen")}
+                    data-testid="button-photos-skip"
+                  >
+                    Overslaan
+                  </Button>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );
