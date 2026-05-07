@@ -2,6 +2,18 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { createClient } from "@supabase/supabase-js";
 import Busboy from "busboy";
 import { z } from "zod";
+
+// Supabase echoes the full query URL in the `content-location` response header.
+// When query URLs are long (embedded joins, many filters), this can exceed
+// undici's default 16 KB max header size → HeadersOverflowError.
+// Increase the limit to 64 KB before any Supabase request is made.
+try {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const undici = require("undici");
+  undici.setGlobalDispatcher(new undici.Agent({ maxHeaderSize: 65536 }));
+} catch {
+  // undici not available in this runtime — no-op
+}
 // LLMS_TXT, LLMS_FULL_TXT and handleMcpRequest are inlined below (see end of file)
 // because Vercel's @vercel/node bundler does not reliably trace project-local
 // imports outside the api/ directory, leading to FUNCTION_INVOCATION_FAILED on
@@ -946,35 +958,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         if (sc) categoryIdsForMain = [sc.id];
       }
 
-      // Find candidate profile IDs via junctions
-      let candidateIds: string[] | null = null;
-      if (specId) {
-        const { data } = await supabase.from("profile_specialization").select("profile_id").eq("specialization_id", specId);
-        candidateIds = (data || []).map((r: any) => r.profile_id);
-        if (!candidateIds.length) {
-          if (isCount) return res.status(200).json({ total: 0, count: 0 });
-          return res.status(200).json({ profiles: [], total: 0, page, totalPages: 0 });
-        }
-      }
-      if (categoryIdsForMain) {
-        const { data } = await supabase
-          .from("profile_service_category")
-          .select("profile_id")
-          .in("service_category_id", categoryIdsForMain);
-        const ids = (data || []).map((r: any) => r.profile_id);
-        candidateIds = candidateIds ? candidateIds.filter((id) => ids.includes(id)) : ids;
-        if (!candidateIds.length) {
-          if (isCount) return res.status(200).json({ total: 0, count: 0 });
-          return res.status(200).json({ profiles: [], total: 0, page, totalPages: 0 });
-        }
-      }
-
       // Location: profile_service_area is autoritatief voor coverage.
       // Office-address afstand wordt enkel gebruikt voor sortering en als
       // optionele back-fill wanneer er géén expliciete service_area-match is.
       let searchLocationData: { lat: number; lng: number; name: string; id: string } | null = null;
       let coverageMatched = false;
       const SEARCH_RADIUS_KM = 20;
+      let locationCandidateIds: string[] | null = null;
       if (location) {
         const loc = serviceAreas.find((a) => a.slug === location);
         if (loc && loc.latitude && loc.longitude) {
@@ -986,18 +976,34 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           const areaIds = (areaProfiles || []).map((r) => (r as { profile_id: string }).profile_id);
           if (areaIds.length) {
             coverageMatched = true;
-            candidateIds = candidateIds ? candidateIds.filter((id) => areaIds.includes(id)) : areaIds;
-            if (!candidateIds.length) {
-              if (isCount) return res.status(200).json({ total: 0, count: 0 });
-              return res.status(200).json({ profiles: [], total: 0, page, totalPages: 0, searchLocation: searchLocationData });
-            }
+            locationCandidateIds = areaIds;
           }
         }
       }
 
-      // Build profile query — only APPROVED profiles appear in search/count
-      let q = supabase.from("profile").select("*", { count: "exact" }).eq("is_active", true).eq("is_public", true).eq("verification_status", "APPROVED");
-      if (candidateIds) q = q.in("id", candidateIds);
+      // Build profile query using inner joins for spec + category to avoid
+      // large .in() URL overflow (junction tables can have 400+ rows per category).
+      // Location still uses .in() since area matches are already small subsets.
+      let selectStr = "*";
+      if (specId) selectStr += ", profile_specialization!inner(specialization_id)";
+      if (categoryIdsForMain) selectStr += ", profile_service_category!inner(service_category_id)";
+
+      let q = supabase.from("profile").select(selectStr, { count: "exact" })
+        .eq("is_active", true).eq("is_public", true).eq("verification_status", "APPROVED");
+
+      // Inner-join filters (no large URL — PostgREST handles these server-side)
+      if (specId) q = (q as any).eq("profile_specialization.specialization_id", specId);
+      if (categoryIdsForMain) q = (q as any).eq("profile_service_category.service_category_id", categoryIdsForMain[0]);
+
+      // Location filter via candidate IDs (already a small, pre-filtered set)
+      if (locationCandidateIds) {
+        if (!locationCandidateIds.length) {
+          if (isCount) return res.status(200).json({ total: 0, count: 0 });
+          return res.status(200).json({ profiles: [], total: 0, page, totalPages: 0, searchLocation: searchLocationData });
+        }
+        q = q.in("id", locationCandidateIds);
+      }
+
       if (query) q = q.or(`company_name.ilike.%${query}%,introduction.ilike.%${query}%,title.ilike.%${query}%`);
 
       // Always fetch all matching first if we need distance filter/sort
