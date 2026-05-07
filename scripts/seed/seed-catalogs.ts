@@ -65,7 +65,6 @@ const SUBSCRIPTION_OFFERS = [
 const SERVICE_CATEGORIES = [
   { name: "Tuinonderhoud", slug: "tuinonderhoud", description: "Onderhoud van bestaande tuinen", sortOrder: 1 },
   { name: "Tuinaanleg", slug: "tuinaanleg", description: "Aanleg van nieuwe tuinen", sortOrder: 2 },
-  { name: "Architect", slug: "architect", description: "Tuinarchitectuur en ontwerp", sortOrder: 3 },
 ];
 
 // 16 specialisaties — gekoppeld aan service_category slug
@@ -161,8 +160,8 @@ const TEST_PRACTITIONERS = [
     vat: "BE0111222333", subjectToVat: true, practitionerTypeKey: "Licensed",
     billing: { street: "Avenue Louise", number: "100", municipality: "Brussel", postcode: "1000", province: "Brussel", region: "Brussel" },
     profiles: [{
-      slug: "jardin-bruxelles", companyName: "Jardin Bruxelles", title: "Tuinarchitectuur & ecologisch tuinonderhoud",
-      introduction: "Tweetalige tuinarchitect, gespecialiseerd in ecologische tuinen en duurzame aanleg.",
+      slug: "jardin-bruxelles", companyName: "Jardin Bruxelles", title: "Ecologisch tuinonderhoud & duurzame aanleg",
+      introduction: "Tweetalige tuinspecialist, gespecialiseerd in ecologische tuinen en duurzame aanleg.",
       telnr: "+32 2 345 67 89", contactEmail: "contact@jardinbxl.be", websiteurl: "", hasWebsite: false,
       office: { street: "Avenue Louise", number: "100", municipality: "Brussel", postcode: "1000", province: "Brussel", region: "Brussel" },
       specializations: ["beplanting", "vijvers", "irrigatie"],

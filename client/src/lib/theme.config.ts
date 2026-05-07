@@ -121,7 +121,7 @@ export const siteConfig = {
 
   // Form placeholders (per-vertical examples shown in input fields)
   placeholders: {
-    profileTitle: "bv. Tuinarchitect, Tuinonderhoud specialist",
+    profileTitle: "bv. Tuinonderhoud specialist, Hovenier",
     phone: "+32 xxx xx xx xx",
     website: "https://www.jouwsite.be",
   },
@@ -139,7 +139,6 @@ export const siteConfig = {
     // through CategoryPage's specialization-only flow OR existing landing pages.
     categoryLinks: [
       { slug: "tuinaanlegger", label: "Tuinaanleggers" },
-      { slug: "tuinarchitect", label: "Tuinarchitecten" },
       { slug: "hovenier", label: "Hoveniers" },
       { slug: "boomverzorger", label: "Boomverzorgers" },
     ],

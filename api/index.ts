@@ -3393,7 +3393,7 @@ Base URL: \`https://www.zoek-een-tuinman.be\`
 - \`GET /api/profiles/featured\` — top 6 verified profiles by view count.
 - \`GET /api/profiles/{slug}\` — full hydrated profile (cached 60s, ~3ms warm).
 - \`GET /api/specializations\` — catalog of all gardening specializations with slugs.
-- \`GET /api/service-categories\` — top-level categories (Tuinonderhoud, Tuinaanleg, Architect).
+- \`GET /api/service-categories\` — top-level categories (Tuinonderhoud, Tuinaanleg).
 - \`GET /api/locations\` — all 572 municipalities with postcode, coordinates, region, province.
 - \`GET /api/practical-questions\` — schema for practical fields (languages, price/hour, years experience).
 
@@ -3435,8 +3435,8 @@ APIs, URL conventions, pagination semantics, and data shapes.
 ## What we are
 
 Zoek-een-tuinman.be is an independent, advertising-free, free-to-use Belgian
-directory of professional gardeners ("tuinmannen", "tuinaanleggers",
-"tuinarchitecten"). Modelled after vind-een-psycholoog.be: a calm, neutral
+directory of professional gardeners ("tuinmannen", "hoveniers",
+"tuinaanleggers"). Modelled after vind-een-psycholoog.be: a calm, neutral
 catalog with no paid placement, no lead auctions, no per-quote fees. End users
 browse, find a gardener that matches their postcode and need, and contact that
 business directly via a form on the profile page. Businesses list themselves
@@ -3597,8 +3597,7 @@ Flat list of all specialization slugs with their parent category. Use the
 
 ### GET /api/service-categories
 
-Top-level categories: Tuinonderhoud (maintenance), Tuinaanleg (installation),
-Architect (design). Currently three.
+Top-level categories: Tuinonderhoud (maintenance), Tuinaanleg (installation). Currently two.
 
 ### GET /api/locations
 
@@ -3791,7 +3790,7 @@ const MCP_TOOLS = [
   },
   {
     name: "list_categories",
-    description: "Top-level service categories (Tuinonderhoud, Tuinaanleg, Architect).",
+    description: "Top-level service categories (Tuinonderhoud, Tuinaanleg).",
     inputSchema: { type: "object", properties: {} },
   },
   {

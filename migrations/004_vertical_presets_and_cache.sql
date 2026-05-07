@@ -212,8 +212,7 @@ INSERT INTO vertical_preset (slug, label, description, is_system_defined, sort_o
   },
   "categories": [
     {"name":"Tuinonderhoud","slug":"tuinonderhoud","description":"Onderhoud van bestaande tuinen","sortOrder":1},
-    {"name":"Tuinaanleg","slug":"tuinaanleg","description":"Aanleg van nieuwe tuinen","sortOrder":2},
-    {"name":"Architect","slug":"architect","description":"Tuinarchitectuur en ontwerp","sortOrder":3}
+    {"name":"Tuinaanleg","slug":"tuinaanleg","description":"Aanleg van nieuwe tuinen","sortOrder":2}
   ],
   "specializations": [
     {"name":"Gras maaien","slug":"gras-maaien","categorySlug":"tuinonderhoud","description":"Professioneel gazon maaien","sortOrder":1},
