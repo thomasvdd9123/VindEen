@@ -40,6 +40,36 @@ function escapeHtml(s: string): string {
     .replace(/'/g, "&#39;");
 }
 
+// Sanitize pagination params — returns safe integers regardless of what the client sends.
+function safePage(raw: string | null): number {
+  const n = parseInt(raw || "1", 10);
+  return isNaN(n) || n < 1 ? 1 : Math.min(n, 10_000);
+}
+function safeLimit(raw: string | null, def = 25, max = 100): number {
+  const n = parseInt(raw || String(def), 10);
+  return isNaN(n) || n < 1 ? def : Math.min(n, max);
+}
+
+// Trim free-text search strings to a safe length.
+function safeQuery(raw: string | null, maxLen = 200): string | null {
+  if (!raw) return null;
+  return raw.trim().slice(0, maxLen) || null;
+}
+
+// Rough UUID-v4 / cuid2 shape check — rejects obviously malformed IDs early.
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const CUID_RE = /^[a-z0-9]{20,30}$/i;
+function isValidId(id: string | undefined | null): boolean {
+  if (!id) return false;
+  return UUID_RE.test(id) || CUID_RE.test(id);
+}
+
+// Slug: lowercase letters, digits, hyphens, 1–120 chars.
+const SLUG_RE = /^[a-z0-9-]{1,120}$/;
+function isValidSlug(s: string | undefined | null): boolean {
+  return !!s && SLUG_RE.test(s);
+}
+
 const supabaseUrl = process.env.SUPABASE_URL!;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
@@ -833,6 +863,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (method === "GET" && path.match(/^\/api\/categories\/[^/]+$/)) {
       const slug = path.split("/").pop();
+      if (!isValidSlug(slug)) return res.status(400).json({ error: "Ongeldig slug" });
       const { specializations, serviceCategories } = await getCatalogs();
       const spec = specializations.find((s) => s.slug === slug);
       if (!spec) return res.status(404).json({ error: "Category not found" });
@@ -850,6 +881,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (method === "GET" && path.match(/^\/api\/locations\/[^/]+$/)) {
       const slug = path.split("/").pop();
+      if (!isValidSlug(slug)) return res.status(400).json({ error: "Ongeldig slug" });
       const { serviceAreas } = await getCatalogs();
       const area = serviceAreas.find((a) => a.slug === slug);
       if (!area) return res.status(404).json({ error: "Location not found" });
@@ -876,11 +908,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const isCount = path === "/api/profiles/count";
       const category = url.searchParams.get("category");
       const location = url.searchParams.get("location");
-      const query = url.searchParams.get("query") || url.searchParams.get("q");
+      const query = safeQuery(url.searchParams.get("query") || url.searchParams.get("q"));
       const mainCategory = url.searchParams.get("mainCategory");
       const spec = url.searchParams.get("spec");
-      const page = parseInt(url.searchParams.get("page") || "1");
-      const limit = parseInt(url.searchParams.get("limit") || "25");
+      const page = safePage(url.searchParams.get("page"));
+      const limit = safeLimit(url.searchParams.get("limit"), 25, 100);
       const offset = (page - 1) * limit;
 
       const { specializations, serviceCategories, serviceAreas } = await getCatalogs();
@@ -1029,6 +1061,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (method === "GET" && path.match(/^\/api\/profiles\/by-id\/[^/]+$/)) {
       const id = path.split("/").pop();
+      if (!isValidId(id)) return res.status(400).json({ error: "Ongeldig profiel-ID" });
       const { data } = await supabase.from("profile").select("*").eq("id", id).single();
       if (!data) return res.status(404).json({ error: "Profile not found" });
       const row = data as { is_active?: boolean; is_public?: boolean; practitioner_id: string };
@@ -1053,6 +1086,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (method === "GET" && path.match(/^\/api\/profiles\/[^/]+$/) && !path.includes("/by-id/")) {
       const slug = path.split("/").pop()!;
       if (slug === "featured" || slug === "count" || slug === "search") return res.status(404).json({ error: "Not found" });
+      if (!isValidSlug(slug)) return res.status(400).json({ error: "Ongeldig slug" });
 
       // Cache hit — serve immediately. View-count is incremented separately
       // via /track-click so we don't need to bump it on every cache hit; the
@@ -1277,6 +1311,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (method === "POST" && path.match(/^\/api\/contact\/[^/]+$/)) {
       const profileId = path.split("/").pop();
+      if (!isValidId(profileId)) return res.status(400).json({ error: "Ongeldig profiel-ID" });
       const { data: profile } = await supabase.from("profile").select("id, company_name, contact_email, is_active, is_public, practitioner_id").eq("id", profileId).single();
       if (!profile || !(profile as { is_active: boolean }).is_active || !(profile as { is_public: boolean }).is_public) {
         return res.status(404).json({ error: "Profile not found" });
@@ -1481,6 +1516,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const auth = await getAuthContext(req);
       if (!auth || !auth.practitionerId) return res.status(401).json({ error: "Unauthorized" });
       const profileId = path.split("/")[3];
+      if (!isValidId(profileId)) return res.status(400).json({ error: "Ongeldig profiel-ID" });
       const { data: prof } = await supabase.from("profile").select("practitioner_id, logourl, imageurls").eq("id", profileId).maybeSingle();
       if (!prof) return res.status(404).json({ error: "Profile not found" });
       const profRow = prof as { practitioner_id: string; logourl: string | null; imageurls: string[] | null };
@@ -1514,6 +1550,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const auth = await getAuthContext(req);
       if (!auth || !auth.practitionerId) return res.status(401).json({ error: "Unauthorized" });
       const profileId = path.split("/")[3];
+      if (!isValidId(profileId)) return res.status(400).json({ error: "Ongeldig profiel-ID" });
       const { data: prof } = await supabase.from("profile").select("practitioner_id, logourl").eq("id", profileId).maybeSingle();
       if (!prof) return res.status(404).json({ error: "Not found" });
       if ((prof as any).practitioner_id !== auth.practitionerId) return res.status(403).json({ error: "Forbidden" });
@@ -1530,6 +1567,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // ── GET portfolio projects (public) ────────────────────────────────────
     if (method === "GET" && path.match(/^\/api\/profiles\/[^/]+\/portfolio$/)) {
       const profileId = path.split("/")[3];
+      if (!isValidId(profileId)) return res.status(400).json({ error: "Ongeldig profiel-ID" });
       const { data, error } = await supabase
         .from("portfolio_project")
         .select("*")
@@ -1559,6 +1597,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const auth = await getAuthContext(req);
       if (!auth || !auth.practitionerId) return res.status(401).json({ error: "Unauthorized" });
       const profileId = path.split("/")[3];
+      if (!isValidId(profileId)) return res.status(400).json({ error: "Ongeldig profiel-ID" });
       const { data: prof } = await supabase.from("profile").select("practitioner_id").eq("id", profileId).maybeSingle();
       if (!prof || (prof as any).practitioner_id !== auth.practitionerId) return res.status(403).json({ error: "Forbidden" });
       const body = req.body || {};
@@ -1582,6 +1621,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const auth = await getAuthContext(req);
       if (!auth || !auth.practitionerId) return res.status(401).json({ error: "Unauthorized" });
       const projectId = path.split("/")[3];
+      if (!isValidId(projectId)) return res.status(400).json({ error: "Ongeldig project-ID" });
       const { data: proj } = await supabase.from("portfolio_project").select("profile_id").eq("id", projectId).maybeSingle();
       if (!proj) return res.status(404).json({ error: "Not found" });
       const { data: prof } = await supabase.from("profile").select("practitioner_id").eq("id", (proj as any).profile_id).maybeSingle();
@@ -1606,6 +1646,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const auth = await getAuthContext(req);
       if (!auth || !auth.practitionerId) return res.status(401).json({ error: "Unauthorized" });
       const projectId = path.split("/")[3];
+      if (!isValidId(projectId)) return res.status(400).json({ error: "Ongeldig project-ID" });
       const { data: proj } = await supabase.from("portfolio_project").select("profile_id, image_urls").eq("id", projectId).maybeSingle();
       if (!proj) return res.status(404).json({ error: "Not found" });
       const { data: prof } = await supabase.from("profile").select("practitioner_id").eq("id", (proj as any).profile_id).maybeSingle();
@@ -1624,6 +1665,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const auth = await getAuthContext(req);
       if (!auth || !auth.practitionerId) return res.status(401).json({ error: "Unauthorized" });
       const projectId = path.split("/")[3];
+      if (!isValidId(projectId)) return res.status(400).json({ error: "Ongeldig project-ID" });
       const { data: proj } = await supabase.from("portfolio_project").select("profile_id, image_urls").eq("id", projectId).maybeSingle();
       if (!proj) return res.status(404).json({ error: "Not found" });
       const { data: prof } = await supabase.from("profile").select("practitioner_id").eq("id", (proj as any).profile_id).maybeSingle();
