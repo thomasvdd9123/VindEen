@@ -73,40 +73,39 @@ export default function ProfilePage() {
   if (isLoading) {
     return (
       <Layout>
-        <div className="container mx-auto px-4 py-8">
-          <Skeleton className="h-6 w-64 mb-8" />
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2 space-y-6">
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex gap-6">
-                    <Skeleton className="h-24 w-24 rounded-full" />
-                    <div className="flex-1 space-y-3">
-                      <Skeleton className="h-8 w-3/4" />
-                      <Skeleton className="h-5 w-1/2" />
-                      <Skeleton className="h-4 w-1/3" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-6">
-                  <Skeleton className="h-6 w-32 mb-4" />
-                  <Skeleton className="h-4 w-full mb-2" />
-                  <Skeleton className="h-4 w-full mb-2" />
-                  <Skeleton className="h-4 w-3/4" />
-                </CardContent>
-              </Card>
+        <div className="bg-white border-b">
+          <div className="container mx-auto px-4 py-10">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+              <div className="lg:col-span-2 space-y-4">
+                <Skeleton className="h-4 w-48" />
+                <Skeleton className="h-10 w-3/4" />
+                <Skeleton className="h-5 w-1/2" />
+                <Skeleton className="h-4 w-1/3" />
+                <div className="flex gap-2 pt-2">
+                  <Skeleton className="h-6 w-20 rounded-full" />
+                  <Skeleton className="h-6 w-24 rounded-full" />
+                </div>
+              </div>
+              <div className="flex justify-center lg:justify-end">
+                <Skeleton className="h-36 w-36 rounded-2xl" />
+              </div>
             </div>
-            <div className="space-y-6">
+          </div>
+        </div>
+        <div className="container mx-auto px-4 py-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
+            <div className="lg:col-span-2 space-y-6">
+              <Skeleton className="h-4 w-24 mb-2" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-3/4" />
+            </div>
+            <div className="space-y-4">
               <Card>
-                <CardContent className="p-6">
-                  <Skeleton className="h-6 w-32 mb-4" />
-                  <div className="space-y-3">
-                    <Skeleton className="h-10 w-full" />
-                    <Skeleton className="h-10 w-full" />
-                    <Skeleton className="h-10 w-full" />
-                  </div>
+                <CardContent className="p-5 space-y-3">
+                  <Skeleton className="h-10 w-full rounded-md" />
+                  <Skeleton className="h-10 w-full rounded-md" />
+                  <Skeleton className="h-10 w-full rounded-md" />
                 </CardContent>
               </Card>
             </div>
@@ -214,6 +213,12 @@ export default function ProfilePage() {
     generateBreadcrumbSchema(breadcrumbItems),
   ];
 
+  const cleanIntroduction = profile.introduction
+    ? profile.introduction.startsWith("<")
+      ? profile.introduction.replace(/<[^>]*>/g, "").replace(/&[^;]+;/g, " ").trim()
+      : profile.introduction
+    : null;
+
   return (
     <Layout>
       <SEO
@@ -226,7 +231,7 @@ export default function ProfilePage() {
         noindex={!(profile.isPublic && profile.isVerified)}
       />
 
-      {/* Preview banner — only visible to the owner when profile isn't public yet */}
+      {/* Preview banner */}
       {previewId && (
         <div className="bg-amber-50 border-b border-amber-200">
           <div className="container mx-auto px-4 py-3 flex flex-wrap items-center gap-3 text-amber-800 text-sm">
@@ -241,9 +246,12 @@ export default function ProfilePage() {
         </div>
       )}
 
-      <div className="bg-muted/30 border-b border-border">
-        <div className="container mx-auto px-4 py-4">
-          <Breadcrumb>
+      {/* ── Hero ────────────────────────────────────────────────────── */}
+      <div className="bg-white border-b border-border">
+        <div className="container mx-auto px-4 pt-5 pb-8">
+
+          {/* Breadcrumb */}
+          <Breadcrumb className="mb-6">
             <BreadcrumbList>
               <BreadcrumbItem>
                 <BreadcrumbLink asChild>
@@ -261,10 +269,7 @@ export default function ProfilePage() {
                 <>
                   <BreadcrumbItem>
                     <BreadcrumbLink asChild>
-                      <Link 
-                        href={`/zoek/${locationSlug}`}
-                        data-testid="breadcrumb-location"
-                      >
+                      <Link href={`/zoek/${locationSlug}`} data-testid="breadcrumb-location">
                         {profile.location.name}
                       </Link>
                     </BreadcrumbLink>
@@ -276,10 +281,7 @@ export default function ProfilePage() {
                 <>
                   <BreadcrumbItem>
                     <BreadcrumbLink asChild>
-                      <Link 
-                        href={`/zoek/${locationSlug}/${profile.category!.slug}`}
-                        data-testid="breadcrumb-category-location"
-                      >
+                      <Link href={`/zoek/${locationSlug}/${profile.category!.slug}`} data-testid="breadcrumb-category-location">
                         {categoryInLocation}
                       </Link>
                     </BreadcrumbLink>
@@ -292,172 +294,228 @@ export default function ProfilePage() {
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
-        </div>
-      </div>
 
-      <div className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-6">
-            <Card data-testid="card-profile-header">
-              <CardContent className="p-6">
-                <div className="flex flex-col sm:flex-row gap-6">
-                  <Avatar className="h-24 w-24 border-4 border-primary/10 shrink-0">
-                    <AvatarImage src={profile.logoUrl || undefined} alt={profile.name} />
-                    <AvatarFallback className="bg-primary/10 text-primary font-bold text-2xl">
-                      {initials}
-                    </AvatarFallback>
-                  </Avatar>
+          {/* Name + avatar row */}
+          <div className="flex flex-col-reverse sm:flex-row gap-6 sm:gap-10 items-start">
 
-                  <div className="flex-1">
-                    <div className="flex flex-wrap items-start gap-2 mb-2">
-                      <h1 className="text-2xl sm:text-3xl font-bold" data-testid="text-profile-name">
-                        {profile.name}
-                      </h1>
-                      {profile.isVerified && (
-                        <Badge className="gap-1 shrink-0">
-                          <CheckCircle className="h-3 w-3" />
-                          Geverifieerd
-                        </Badge>
-                      )}
-                    </div>
+            {/* Left: identity */}
+            <div className="flex-1 min-w-0">
+              <div className="flex flex-wrap items-center gap-2 mb-1">
+                <h1 className="text-3xl sm:text-4xl font-bold tracking-tight" data-testid="text-profile-name">
+                  {profile.name}
+                </h1>
+                {profile.isVerified && (
+                  <Badge className="gap-1 shrink-0 self-center">
+                    <CheckCircle className="h-3 w-3" />
+                    Geverifieerd
+                  </Badge>
+                )}
+              </div>
 
-                    {profile.introduction && (
-                      <p className="text-lg text-muted-foreground mb-2 italic" data-testid="text-profile-tagline">
-                        {profile.introduction.startsWith("<")
-                          ? profile.introduction.replace(/<[^>]*>/g, "").replace(/&[^;]+;/g, " ").trim()
-                          : profile.introduction}
-                      </p>
-                    )}
+              {cleanIntroduction && (
+                <p className="text-lg text-muted-foreground italic mt-1 mb-3" data-testid="text-profile-tagline">
+                  {cleanIntroduction}
+                </p>
+              )}
 
-                    {profile.location && (
-                      <div className="flex items-center gap-1.5 text-muted-foreground">
-                        <MapPin className="h-4 w-4" />
-                        <span data-testid="text-profile-location">
-                          {profile.location.name}, {profile.location.region}
-                        </span>
-                      </div>
-                    )}
-
-                    {profile.specializations && profile.specializations.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mt-4">
-                        {profile.specializations.map((spec: string) => {
-                          const slug = specKeyToSlug[spec] || spec;
-                          return (
-                            <Link key={spec} href={`/zoek/${slug}`}>
-                              <Badge variant="outline" className="cursor-pointer">
-                                {specLabels[spec] || spec}
-                              </Badge>
-                            </Link>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
+              {(profile.location || office) && (
+                <div className="flex items-center gap-1.5 text-muted-foreground mb-4">
+                  <MapPin className="h-4 w-4 shrink-0" />
+                  <span data-testid="text-profile-location">
+                    {office && !profile.hideAddress && office.street
+                      ? `${office.street} ${office.number ?? ""}`.trim() + `, `
+                      : ""}
+                    {office?.postcode ?? ""} {office?.municipality || office?.town || profile.location?.name || ""}
+                  </span>
                 </div>
-              </CardContent>
-            </Card>
+              )}
 
-            {profile.description && (
-              <Card data-testid="card-profile-description">
-                <CardHeader>
-                  <CardTitle className="text-lg">Over {profile.name}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {profile.description.startsWith("<") ? (
-                    <div
-                      className="rich-text-content text-muted-foreground"
-                      data-testid="text-profile-description"
-                      dangerouslySetInnerHTML={{ __html: profile.description }}
-                    />
-                  ) : (
-                    <div
-                      className="text-muted-foreground"
-                      data-testid="text-profile-description"
-                    >
-                      {profile.description.split('\n').map((paragraph: string, i: number) => (
-                        <p key={i} className="mb-2 last:mb-0 leading-relaxed">{paragraph}</p>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            )}
+              {profile.specializations && profile.specializations.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-5">
+                  {profile.specializations.map((spec: string) => {
+                    const slug = specKeyToSlug[spec] || spec;
+                    return (
+                      <Link key={spec} href={`/zoek/${slug}`}>
+                        <Badge variant="secondary" className="cursor-pointer hover:bg-secondary/80 transition-colors">
+                          {specLabels[spec] || spec}
+                        </Badge>
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
 
-
-            <PracticalInfoCard practical={profile.practical} />
-          </div>
-
-          <div className="space-y-6">
-            <Card data-testid="card-profile-contact-info">
-              <CardHeader>
-                <CardTitle className="text-lg">Contactgegevens</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
+              {/* Quick-contact row */}
+              <div className="flex flex-wrap gap-2">
                 {profile.telnr && (
-                  <a 
-                    href={`tel:${profile.telnr}`}
-                    className="flex items-center gap-3 p-3 rounded-md bg-muted/50 hover:bg-muted transition-colors"
-                    data-testid="link-phone"
-                  >
-                    <Phone className="h-5 w-5 text-primary" />
-                    <div>
-                      <p className="text-sm text-muted-foreground">Telefoon</p>
-                      <p className="font-medium">{profile.telnr}</p>
-                    </div>
+                  <a href={`tel:${profile.telnr}`} data-testid="link-phone-hero">
+                    <Button size="sm" className="gap-2">
+                      <Phone className="h-4 w-4" />
+                      {profile.telnr}
+                    </Button>
                   </a>
                 )}
                 {profile.email && (
-                  <a 
-                    href={`mailto:${profile.email}`}
-                    className="flex items-center gap-3 p-3 rounded-md bg-muted/50 hover:bg-muted transition-colors"
-                    data-testid="link-email"
-                  >
-                    <Mail className="h-5 w-5 text-primary" />
-                    <div>
-                      <p className="text-sm text-muted-foreground">Email</p>
-                      <p className="font-medium truncate">{profile.email}</p>
-                    </div>
+                  <a href={`mailto:${profile.email}`} data-testid="link-email-hero">
+                    <Button size="sm" variant="outline" className="gap-2">
+                      <Mail className="h-4 w-4" />
+                      Stuur een e-mail
+                    </Button>
                   </a>
                 )}
                 {profile.hasWebsite && profile.website && (
-                  <a 
+                  <a
                     href={profile.website.match(/^https?:\/\//) ? profile.website : `https://${profile.website}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-3 p-3 rounded-md bg-muted/50 hover:bg-muted transition-colors"
-                    data-testid="link-website"
+                    data-testid="link-website-hero"
                     onMouseDown={(e) => {
-                      // Track website click for left-click (0) and middle-click (1)
                       if (e.button === 0 || e.button === 1) {
-                        fetch(`/api/profiles/${profile.id}/track-click`, { 
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ type: 'website' })
+                        fetch(`/api/profiles/${profile.id}/track-click`, {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ type: "website" }),
                         }).catch(() => {});
                       }
                     }}
                   >
-                    <Globe className="h-5 w-5 text-primary" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-muted-foreground">Website</p>
-                      <p className="font-medium truncate">{profile.website.replace(/^https?:\/\//, '')}</p>
+                    <Button size="sm" variant="outline" className="gap-2">
+                      <Globe className="h-4 w-4" />
+                      Website
+                      <ExternalLink className="h-3 w-3" />
+                    </Button>
+                  </a>
+                )}
+              </div>
+            </div>
+
+            {/* Right: avatar */}
+            <div className="shrink-0">
+              <Avatar className="h-28 w-28 sm:h-36 sm:w-36 rounded-2xl border border-border shadow-sm" data-testid="img-profile-avatar">
+                <AvatarImage src={profile.logoUrl || undefined} alt={profile.name} className="object-cover" />
+                <AvatarFallback className="bg-primary/10 text-primary font-bold text-3xl rounded-2xl">
+                  {initials}
+                </AvatarFallback>
+              </Avatar>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Content grid ────────────────────────────────────────────── */}
+      <div className="container mx-auto px-4 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12 items-start">
+
+          {/* Main: 2/3 */}
+          <div className="lg:col-span-2">
+
+            {/* Description */}
+            {profile.description && (
+              <section className="pb-8 mb-8 border-b border-border" data-testid="card-profile-description">
+                <h2 className="text-lg font-semibold mb-4">Over {profile.name}</h2>
+                {profile.description.startsWith("<") ? (
+                  <div
+                    className="rich-text-content text-muted-foreground leading-relaxed"
+                    data-testid="text-profile-description"
+                    dangerouslySetInnerHTML={{ __html: profile.description }}
+                  />
+                ) : (
+                  <div className="text-muted-foreground" data-testid="text-profile-description">
+                    {profile.description.split("\n").map((paragraph: string, i: number) => (
+                      <p key={i} className="mb-3 last:mb-0 leading-relaxed">{paragraph}</p>
+                    ))}
+                  </div>
+                )}
+              </section>
+            )}
+
+            {/* Practical info */}
+            <PracticalInfoSection practical={profile.practical} />
+          </div>
+
+          {/* Sidebar: 1/3 */}
+          <div className="space-y-6 lg:sticky lg:top-6">
+
+            {/* Contact details card */}
+            <Card data-testid="card-profile-contact-info">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">Contactgegevens</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2 pt-0">
+                {profile.telnr && (
+                  <a
+                    href={`tel:${profile.telnr}`}
+                    className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/60 transition-colors"
+                    data-testid="link-phone"
+                  >
+                    <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                      <Phone className="h-4 w-4 text-primary" />
                     </div>
-                    <ExternalLink className="h-4 w-4 text-muted-foreground" />
+                    <div className="min-w-0">
+                      <p className="text-xs text-muted-foreground">Telefoon</p>
+                      <p className="font-medium text-sm">{profile.telnr}</p>
+                    </div>
+                  </a>
+                )}
+                {profile.email && (
+                  <a
+                    href={`mailto:${profile.email}`}
+                    className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/60 transition-colors"
+                    data-testid="link-email"
+                  >
+                    <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                      <Mail className="h-4 w-4 text-primary" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs text-muted-foreground">E-mail</p>
+                      <p className="font-medium text-sm truncate">{profile.email}</p>
+                    </div>
+                  </a>
+                )}
+                {profile.hasWebsite && profile.website && (
+                  <a
+                    href={profile.website.match(/^https?:\/\//) ? profile.website : `https://${profile.website}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/60 transition-colors"
+                    data-testid="link-website"
+                    onMouseDown={(e) => {
+                      if (e.button === 0 || e.button === 1) {
+                        fetch(`/api/profiles/${profile.id}/track-click`, {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ type: "website" }),
+                        }).catch(() => {});
+                      }
+                    }}
+                  >
+                    <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                      <Globe className="h-4 w-4 text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-muted-foreground">Website</p>
+                      <p className="font-medium text-sm truncate">{profile.website.replace(/^https?:\/\//, "")}</p>
+                    </div>
+                    <ExternalLink className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                   </a>
                 )}
 
-                {profile.office && (
+                {office && (
                   <>
-                    <Separator />
-                    <div className="flex items-start gap-3">
-                      <MapPin className="h-5 w-5 text-primary mt-0.5" />
+                    <Separator className="my-1" />
+                    <div className="flex items-start gap-3 p-3">
+                      <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+                        <MapPin className="h-4 w-4 text-primary" />
+                      </div>
                       <div>
-                        <p className="text-sm text-muted-foreground mb-1">Locatie</p>
-                        {!profile.hideAddress && (
-                          <p className="font-medium">{profile.office.street} {profile.office.number}</p>
+                        <p className="text-xs text-muted-foreground mb-1">Locatie</p>
+                        {!profile.hideAddress && office.street && (
+                          <p className="font-medium text-sm">{office.street} {office.number}</p>
                         )}
-                        <p className={profile.hideAddress ? "font-medium" : "text-muted-foreground"}>{profile.office.postcode} {profile.office.town}</p>
-                        <p className="text-muted-foreground">{siteConfig.country}</p>
+                        <p className={`text-sm ${profile.hideAddress ? "font-medium" : "text-muted-foreground"}`}>
+                          {office.postcode} {office.municipality || office.town}
+                        </p>
+                        <p className="text-muted-foreground text-sm">{siteConfig.country}</p>
                       </div>
                     </div>
                   </>
@@ -473,10 +531,8 @@ export default function ProfilePage() {
   );
 }
 
-// Vertical-agnostic "Praktische informatie" card. Renders one row per
-// practical_question that has an answer on the profile, so adding a new
-// question in the DB shows up automatically without any frontend change.
-function PracticalInfoCard({ practical }: { practical: any }) {
+// Practical info as an open section (no card border) with subtle bg
+function PracticalInfoSection({ practical }: { practical: any }) {
   const { questions } = usePracticalQuestions();
   if (!practical || !questions.length) return null;
 
@@ -521,26 +577,24 @@ function PracticalInfoCard({ practical }: { practical: any }) {
   if (!rows.length) return null;
 
   return (
-    <Card data-testid="card-profile-practical">
-      <CardHeader>
-        <CardTitle className="text-lg">Praktische informatie</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <section data-testid="card-profile-practical">
+      <h2 className="text-lg font-semibold mb-4">Praktische informatie</h2>
+      <div className="bg-muted/40 rounded-xl p-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
           {rows.map(({ q, display }) => {
             const Icon = ICONS[q.camelKey] || Briefcase;
             return (
               <div key={q.id} className="flex items-start gap-3" data-testid={`practical-${q.camelKey}`}>
-                <Icon className="h-5 w-5 text-primary mt-0.5" />
+                <Icon className="h-4 w-4 text-primary mt-0.5 shrink-0" />
                 <div>
-                  <p className="font-medium text-sm">{q.name}</p>
-                  <p className="text-muted-foreground text-sm">{display}</p>
+                  <p className="text-xs text-muted-foreground">{q.name}</p>
+                  <p className="font-medium text-sm">{display}</p>
                 </div>
               </div>
             );
           })}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </section>
   );
 }
