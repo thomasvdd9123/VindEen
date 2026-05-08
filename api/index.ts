@@ -2781,6 +2781,169 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // Admin: payments lijst + Peppol resend
+    // ── POST /api/admin/import-profiles ──────────────────────────────────────
+    // Bulk-imports profiles from a CSV body (text/csv or multipart).
+    // Creates a single "platform" practitioner to own all unclaimed seeds.
+    if (method === "POST" && path === "/api/admin/import-profiles") {
+      const adm = await requireAdmin(req);
+      if (!adm) return res.status(403).json({ error: "Forbidden" });
+
+      // Parse CSV from request body (text/csv or multipart field "csv")
+      let csvText = "";
+      const ct = req.headers["content-type"] || "";
+      if (ct.includes("multipart/form-data")) {
+        const file = await parseMultipartFile(req);
+        if (!file) return res.status(400).json({ error: "Geen bestand gevonden" });
+        csvText = file.buffer.toString("utf-8");
+      } else {
+        const chunks: Buffer[] = [];
+        await new Promise<void>((resolve, reject) => {
+          req.on("data", (c: Buffer) => chunks.push(c));
+          req.on("end", resolve);
+          req.on("error", reject);
+        });
+        csvText = Buffer.concat(chunks).toString("utf-8");
+      }
+
+      // Minimal RFC-4180 CSV parser (handles quoted fields with embedded commas/newlines)
+      function parseCsv(text: string): Record<string, string>[] {
+        const lines: string[] = [];
+        let cur = "", inQ = false;
+        for (let i = 0; i < text.length; i++) {
+          const ch = text[i], nx = text[i + 1];
+          if (ch === '"') { if (inQ && nx === '"') { cur += '"'; i++; } else { inQ = !inQ; } }
+          else if (ch === '\r') { /* skip */ }
+          else if (ch === '\n' && !inQ) { lines.push(cur); cur = ""; }
+          else { cur += ch; }
+        }
+        if (cur) lines.push(cur);
+
+        function splitLine(line: string): string[] {
+          const cells: string[] = []; let c = "", q = false;
+          for (let i = 0; i < line.length; i++) {
+            const ch = line[i], nx = line[i + 1];
+            if (ch === '"') { if (q && nx === '"') { c += '"'; i++; } else { q = !q; } }
+            else if (ch === ',' && !q) { cells.push(c.trim()); c = ""; }
+            else { c += ch; }
+          }
+          cells.push(c.trim());
+          return cells;
+        }
+
+        const rows = lines.filter(l => l.trim() && !l.trim().startsWith("#"));
+        if (rows.length < 2) return [];
+        const headers = splitLine(rows[0]).map(h => h.replace(/^"|"$/g, "").trim().toLowerCase().replace(/\s+/g, "_"));
+        return rows.slice(1).map(row => {
+          const vals = splitLine(row);
+          const obj: Record<string, string> = {};
+          headers.forEach((h, i) => { obj[h] = (vals[i] || "").replace(/^"|"$/g, "").trim(); });
+          return obj;
+        }).filter(o => Object.values(o).some(v => v));
+      }
+
+      const rows = parseCsv(csvText);
+      if (!rows.length) return res.status(400).json({ error: "CSV is leeg of ongeldig" });
+
+      // Get or create platform practitioner
+      async function getPlatformPractitioner(): Promise<string> {
+        const PLATFORM_EMAIL = "platform@zoek-een-tuinman.be";
+        const { data: existing } = await supabase.from("practitioner").select("id").eq("email", PLATFORM_EMAIL).maybeSingle();
+        if ((existing as any)?.id) return (existing as any).id;
+        // Create Supabase auth user for platform account
+        const { data: authUser, error: authErr } = await supabase.auth.admin.createUser({
+          email: PLATFORM_EMAIL, password: crypto.randomUUID(), email_confirm: true,
+        });
+        if (authErr) throw new Error(`Platform auth user: ${authErr.message}`);
+        const { data: cfg } = await supabase.from("site_config").select("default_practitioner_type_id").limit(1).single();
+        const { data: pract, error: pErr } = await supabase.from("practitioner").insert({
+          auth_user_id: authUser.user.id,
+          email: PLATFORM_EMAIL,
+          company_name: "Platform (geseed profielen)",
+          practitioner_type_id: (cfg as any)?.default_practitioner_type_id,
+        }).select("id").single();
+        if (pErr) throw new Error(`Platform practitioner: ${pErr.message}`);
+        return (pract as any).id;
+      }
+
+      let platformId: string;
+      try { platformId = await getPlatformPractitioner(); }
+      catch (e: any) { return res.status(500).json({ error: `Platform account aanmaken mislukt: ${e.message}` }); }
+
+      const { specializations, serviceCategories, serviceAreas } = await getCatalogs();
+
+      const results: { row: number; status: "ok" | "error"; slug?: string; error?: string }[] = [];
+
+      for (let i = 0; i < rows.length; i++) {
+        const r = rows[i];
+        try {
+          // Slug
+          let slug = r.slug || generateSlug(r.company_name || `profiel-${i + 1}`);
+          let n = 1;
+          while ((await supabase.from("profile").select("id").eq("slug", slug).maybeSingle()).data) {
+            slug = `${generateSlug(r.company_name || `profiel-${i + 1}`)}-${n++}`;
+          }
+
+          // Insert profile
+          const { data: prof, error: pErr } = await supabase.from("profile").insert({
+            practitioner_id: platformId,
+            slug,
+            company_name: r.company_name || null,
+            contact_email: r.contact_email || null,
+            telnr: r.telnr || null,
+            websiteurl: r.website || null,
+            has_website: !!(r.website),
+            title: r.title || null,
+            introduction: r.introduction || null,
+            is_active: true,
+            is_public: r.is_public === "true",
+            is_verified: false,
+            is_claimed: r.is_claimed === "true",  // default false = unclaimed seed
+            verification_status: "PENDING",
+          }).select("id").single();
+          if (pErr) throw new Error(pErr.message);
+          const profileId = (prof as any).id;
+
+          // Build junction body for applyProfileJunctions
+          const body: Record<string, any> = {};
+
+          // Address
+          if (r.street || r.postcode || r.municipality) {
+            body.office = { street: r.street || null, number: r.number || null, municipality: r.municipality || null, postcode: r.postcode || null };
+          }
+
+          // Specializations
+          if (r.specializations) body.specializations = r.specializations.split("|").map((s: string) => s.trim()).filter(Boolean);
+
+          // Main categories
+          if (r.main_categories) body.mainCategories = r.main_categories.split("|").map((s: string) => s.trim()).filter(Boolean);
+
+          // Service areas — match by slug or postcode
+          if (r.service_areas) {
+            const inputs = r.service_areas.split("|").map((s: string) => s.trim()).filter(Boolean);
+            const matched = inputs.map(inp => serviceAreas.find((a: any) => a.slug === inp || a.postcode === inp || a.municipality?.toLowerCase() === inp.toLowerCase())).filter(Boolean).map((a: any) => a.id);
+            if (matched.length) body.serviceAreas = matched;
+          }
+
+          // VAT on practitioner (store on a temp per-profile practitioner? No — use profile note field)
+          // For now store VAT in a note we can map to claiming later; if a vat is given,
+          // store it so claiming-by-VAT works: create a thin practitioner per unique VAT.
+          // Actually: store nothing extra — VAT claim works at signup time via practitioner.vat.
+          // If vat is provided in import, we update the platform practitioner's vat (not ideal for multi-profile).
+          // Best approach: leave vat blank on platform practitioner, let real user provide it at signup.
+
+          await applyProfileJunctions(profileId, body);
+          results.push({ row: i + 1, status: "ok", slug });
+        } catch (e: any) {
+          results.push({ row: i + 1, status: "error", error: e.message });
+        }
+      }
+
+      bustProfileCache();
+      const ok = results.filter(r => r.status === "ok").length;
+      const errors = results.filter(r => r.status === "error").length;
+      return res.status(200).json({ imported: ok, errors, results });
+    }
+
     if (method === "GET" && path === "/api/admin/payments") {
       const adm = await requireAdmin(req);
       if (!adm) return res.status(403).json({ error: "Forbidden" });

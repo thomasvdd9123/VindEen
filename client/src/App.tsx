@@ -56,6 +56,7 @@ const AdminCatalogs = lazy(() => import("@/pages/admin/AdminCatalogs"));
 const AdminSubscriptions = lazy(() => import("@/pages/admin/AdminSubscriptions"));
 const AdminPayments = lazy(() => import("@/pages/admin/AdminPayments"));
 const AdminSettings = lazy(() => import("@/pages/admin/AdminSettings"));
+const AdminImport = lazy(() => import("@/pages/admin/AdminImport"));
 
 // Info-page registry: maps each info-route slot to its concrete component.
 // Paths are sourced from siteConfig.infoRoutes so a rebrand only edits
@@ -116,6 +117,7 @@ function Router() {
         <Route path="/admin/catalogi" component={AdminCatalogs} />
         <Route path="/admin/lidmaatschappen" component={AdminSubscriptions} />
         <Route path="/admin/betalingen" component={AdminPayments} />
+        <Route path="/admin/importeren" component={AdminImport} />
         <Route path="/admin/instellingen" component={AdminSettings} />
         <Route path="/faq" component={FAQ} />
         <Route path="/contact" component={Contact} />

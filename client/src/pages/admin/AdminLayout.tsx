@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/sidebar";
 import {
   ShieldCheck, LayoutDashboard, FileCheck, Users, Database, CreditCard,
-  Settings, LogOut, Home, Receipt,
+  Settings, LogOut, Home, Receipt, Upload,
 } from "lucide-react";
 import { useSiteConfig } from "@/lib/useSiteConfig";
 
@@ -28,6 +28,7 @@ const links = [
   { href: "/admin/catalogi", label: "Catalogi", icon: Database },
   { href: "/admin/lidmaatschappen", label: "Lidmaatschappen", icon: CreditCard },
   { href: "/admin/betalingen", label: "Betalingen", icon: Receipt },
+  { href: "/admin/importeren", label: "Importeren", icon: Upload },
   { href: "/admin/instellingen", label: "Project defaults", icon: Settings },
 ];
 
