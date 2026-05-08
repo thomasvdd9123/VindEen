@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { AdminLayout } from "./AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,6 +28,12 @@ export default function AdminImport() {
   const fileRef = useRef<HTMLInputElement>(null);
   const [csvText, setCsvText] = useState("");
   const [fileName, setFileName] = useState("");
+  const [elapsed, setElapsed] = useState(0);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  }, []);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ImportResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -52,6 +58,8 @@ export default function AdminImport() {
     setLoading(true);
     setResult(null);
     setError(null);
+    setElapsed(0);
+    timerRef.current = setInterval(() => setElapsed(s => s + 1), 1000);
     try {
       const res = await authFetch("/api/admin/import-profiles", {
         method: "POST",
@@ -64,6 +72,7 @@ export default function AdminImport() {
     } catch (e: any) {
       setError(e.message || "Onbekende fout");
     } finally {
+      if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
       setLoading(false);
     }
   };
@@ -79,6 +88,10 @@ export default function AdminImport() {
   const previewRows = csvText
     ? csvText.split("\n").filter(l => l.trim() && !l.startsWith("#")).slice(0, 6)
     : [];
+
+  const rowCount = csvText
+    ? csvText.split("\n").filter(l => l.trim() && !l.startsWith("#")).length - 1
+    : 0;
 
   return (
     <AdminLayout title="Profielen importeren" description="Bulk-import van profielen via CSV">
@@ -182,6 +195,18 @@ export default function AdminImport() {
             </div>
           )}
 
+          {loading && (
+            <div className="rounded-md bg-muted border p-4 space-y-2" data-testid="import-progress">
+              <div className="flex items-center gap-2 text-sm font-medium">
+                <Loader2 className="h-4 w-4 animate-spin text-primary shrink-0" />
+                Bezig met importeren… ({elapsed}s verstreken)
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Elke rij wordt apart verwerkt in de database. Bij {rowCount} rijen kan dit {Math.ceil(rowCount * 0.6)}–{Math.ceil(rowCount * 1.2)} seconden duren. Sluit dit venster <strong>niet</strong>.
+              </p>
+            </div>
+          )}
+
           <Button
             onClick={handleImport}
             disabled={!csvText.trim() || loading}
@@ -189,7 +214,7 @@ export default function AdminImport() {
             data-testid="btn-start-import"
           >
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-            {loading ? "Importeren…" : "Importeren starten"}
+            {loading ? `Importeren… (${elapsed}s)` : `Importeren starten${rowCount > 0 ? ` (${rowCount} rijen)` : ""}`}
           </Button>
         </CardContent>
       </Card>
