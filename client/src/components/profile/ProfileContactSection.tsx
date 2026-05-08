@@ -34,12 +34,9 @@ export function ProfileContactSection({ value, onChange, errors, vat }: Props) {
   return (
     <div className="space-y-6">
       <div className="border-b pb-2">
-        <h3 className="text-lg font-semibold">
-          Bedrijfsgegevens
-          {vat && <span className="ml-2 text-sm font-normal text-muted-foreground">({vat})</span>}
-        </h3>
+        <h3 className="text-lg font-semibold">Bedrijfsgegevens</h3>
         <p className="text-sm text-muted-foreground">
-          Basisgegevens en contactinformatie van je bedrijf
+          Basisgegevens en contactinformatie van je bedrijf{vat && <> ({vat})</>}
         </p>
       </div>
 
