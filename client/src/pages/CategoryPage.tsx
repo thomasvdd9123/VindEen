@@ -533,22 +533,25 @@ function SearchResultCard({ profile }: { profile: ProfileWithRelations }) {
   const blurb = profile.introduction || profile.description || "";
 
   return (
-    <Card className="hover-elevate transition-all" data-testid={`card-result-${profile.slug}`}>
-      <CardContent className="p-6 sm:p-8">
+    <Card className="hover-elevate transition-all relative" data-testid={`card-result-${profile.slug}`}>
+      {/* Full-card click overlay */}
+      <Link href={`/bedrijf/${profile.slug}`}>
+        <span className="absolute inset-0 z-0" aria-label={`Bekijk profiel van ${profile.name}`} />
+      </Link>
+
+      <CardContent className="p-6 sm:p-8 relative z-10">
         <div className="flex gap-6 sm:gap-8">
 
           {/* Left: all text */}
           <div className="flex-1 min-w-0">
 
             {/* Name */}
-            <Link href={`/bedrijf/${profile.slug}`}>
-              <h3
-                className="font-bold text-xl sm:text-2xl text-foreground hover:text-primary transition-colors cursor-pointer leading-tight mb-1"
-                data-testid={`text-result-name-${profile.slug}`}
-              >
-                {profile.name}
-              </h3>
-            </Link>
+            <h3
+              className="font-bold text-xl sm:text-2xl text-foreground leading-tight mb-1"
+              data-testid={`text-result-name-${profile.slug}`}
+            >
+              {profile.name}
+            </h3>
 
             {/* Subtitle in primary colour */}
             {profile.title && (
@@ -577,12 +580,10 @@ function SearchResultCard({ profile }: { profile: ProfileWithRelations }) {
               </p>
             )}
 
-            {/* Lees verder link */}
-            <Link href={`/bedrijf/${profile.slug}`}>
-              <span className="text-sm text-primary hover:underline cursor-pointer">
-                Lees verder ›
-              </span>
-            </Link>
+            {/* Lees verder */}
+            <span className="text-sm text-primary">
+              Lees verder ›
+            </span>
 
             {/* Specializations */}
             {profile.specializations && profile.specializations.length > 0 && (
