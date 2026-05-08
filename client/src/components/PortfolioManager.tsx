@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -218,6 +218,10 @@ function ProjectDialog({
   const qc = useQueryClient();
   const [form, setForm] = useState<ProjectFormData>(project ? projectToForm(project) : EMPTY_FORM);
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (open) setForm(project ? projectToForm(project) : EMPTY_FORM);
+  }, [open, project]);
 
   const set = (k: keyof ProjectFormData) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setForm((f) => ({ ...f, [k]: e.target.value }));
