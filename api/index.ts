@@ -3563,6 +3563,33 @@ Schrijf een aantrekkelijke beschrijving van 200-350 woorden die:
       return res.status(200).json(results);
     }
 
+    // ── GET /api/cron-sitemap ─────────────────────────────────────────────────
+    // Runs daily at midnight UTC. Busts the profile cache and warms all
+    // sitemap sub-feeds so they're fresh for crawlers.
+    if (method === "GET" && path === "/api/cron-sitemap") {
+      bustProfileCache();
+      const base = `${req.headers["x-forwarded-proto"] || "https"}://${req.headers.host}`;
+      const feeds = [
+        "/sitemap.xml",
+        "/sitemaps/site/sitemap.xml",
+        "/sitemaps/info/sitemap.xml",
+        "/sitemaps/profiles/sitemap.xml",
+        "/sitemaps/locations/sitemap.xml",
+        "/sitemaps/specializations/sitemap.xml",
+      ];
+      const results: { feed: string; status: number }[] = [];
+      for (const feed of feeds) {
+        try {
+          const r = await fetch(`${base}${feed}`);
+          results.push({ feed, status: r.status });
+        } catch {
+          results.push({ feed, status: 0 });
+        }
+      }
+      console.log("cron-sitemap: warmed feeds", results);
+      return res.status(200).json({ ok: true, feeds: results });
+    }
+
     return res.status(404).json({ error: "Not found" });
   } catch (error: any) {
     console.error("API Error:", error);
