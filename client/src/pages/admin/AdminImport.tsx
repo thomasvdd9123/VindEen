@@ -3,18 +3,20 @@ import { AdminLayout } from "./AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { authFetch } from "@/lib/queryClient";
-import { Upload, FileText, CheckCircle2, XCircle, Download, Loader2, AlertTriangle } from "lucide-react";
+import { Upload, FileText, CheckCircle2, XCircle, Download, Loader2, AlertTriangle, RefreshCw, PlusCircle } from "lucide-react";
 
 interface ImportResult {
   row: number;
-  status: "ok" | "error";
+  status: "ok" | "updated" | "error";
   slug?: string;
   error?: string;
 }
 
 interface ImportResponse {
   imported: number;
+  updated: number;
   errors: number;
   results: ImportResult[];
 }
@@ -30,13 +32,15 @@ export default function AdminImport() {
   const [fileName, setFileName] = useState("");
   const [elapsed, setElapsed] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<ImportResponse | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [showStrategyDialog, setShowStrategyDialog] = useState(false);
+  const [strategy, setStrategy] = useState<"fill" | "replace">("fill");
 
   useEffect(() => {
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, []);
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<ImportResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
 
   const handleFile = (file: File) => {
     setFileName(file.name);
@@ -53,15 +57,15 @@ export default function AdminImport() {
     if (file) handleFile(file);
   };
 
-  const handleImport = async () => {
-    if (!csvText.trim()) return;
+  const startImport = async (chosenStrategy: "fill" | "replace") => {
+    setShowStrategyDialog(false);
     setLoading(true);
     setResult(null);
     setError(null);
     setElapsed(0);
     timerRef.current = setInterval(() => setElapsed(s => s + 1), 1000);
     try {
-      const res = await authFetch("/api/admin/import-profiles", {
+      const res = await authFetch(`/api/admin/import-profiles?strategy=${chosenStrategy}`, {
         method: "POST",
         headers: { "Content-Type": "text/csv" },
         body: csvText,
@@ -95,6 +99,53 @@ export default function AdminImport() {
 
   return (
     <AdminLayout title="Profielen importeren" description="Bulk-import van profielen via CSV">
+
+      {/* Strategy dialog */}
+      <Dialog open={showStrategyDialog} onOpenChange={setShowStrategyDialog}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Wat moet er gebeuren met bestaande profielen?</DialogTitle>
+            <DialogDescription>
+              Duplicaten worden herkend op basis van slug, BTW-nummer of bedrijfsnaam.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-1 gap-3 py-2">
+            <button
+              type="button"
+              onClick={() => setStrategy("fill")}
+              className={`flex items-start gap-3 rounded-lg border-2 p-4 text-left transition-colors ${strategy === "fill" ? "border-primary bg-primary/5" : "border-muted hover:border-muted-foreground/40"}`}
+              data-testid="strategy-fill"
+            >
+              <PlusCircle className={`h-5 w-5 mt-0.5 shrink-0 ${strategy === "fill" ? "text-primary" : "text-muted-foreground"}`} />
+              <div>
+                <p className="font-medium">Alleen aanvullen</p>
+                <p className="text-sm text-muted-foreground mt-0.5">Lege velden worden ingevuld met data uit de CSV. Bestaande ingevulde velden blijven ongewijzigd.</p>
+              </div>
+            </button>
+            <button
+              type="button"
+              onClick={() => setStrategy("replace")}
+              className={`flex items-start gap-3 rounded-lg border-2 p-4 text-left transition-colors ${strategy === "replace" ? "border-primary bg-primary/5" : "border-muted hover:border-muted-foreground/40"}`}
+              data-testid="strategy-replace"
+            >
+              <RefreshCw className={`h-5 w-5 mt-0.5 shrink-0 ${strategy === "replace" ? "text-primary" : "text-muted-foreground"}`} />
+              <div>
+                <p className="font-medium">Overschrijven</p>
+                <p className="text-sm text-muted-foreground mt-0.5">Alle ingevulde CSV-velden overschrijven de bestaande waarden. Lege CSV-velden worden genegeerd.</p>
+              </div>
+            </button>
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setShowStrategyDialog(false)} data-testid="btn-strategy-cancel">
+              Annuleren
+            </Button>
+            <Button onClick={() => startImport(strategy)} data-testid="btn-strategy-confirm">
+              {rowCount} rijen importeren
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Template download */}
       <Card className="mb-6">
         <CardHeader className="pb-3">
@@ -183,7 +234,7 @@ export default function AdminImport() {
                 </tbody>
               </table>
               <p className="text-xs text-muted-foreground px-3 py-2 border-t">
-                {previewRows.length - 1} rij(en) gevonden (preview: eerste 8 kolommen)
+                {rowCount} rij(en) gevonden (preview: eerste 8 kolommen)
               </p>
             </div>
           )}
@@ -208,7 +259,7 @@ export default function AdminImport() {
           )}
 
           <Button
-            onClick={handleImport}
+            onClick={() => setShowStrategyDialog(true)}
             disabled={!csvText.trim() || loading}
             className="gap-2"
             data-testid="btn-start-import"
@@ -231,12 +282,21 @@ export default function AdminImport() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex gap-4">
-              <div className="flex items-center gap-2 text-emerald-700">
-                <CheckCircle2 className="h-4 w-4" />
-                <span className="font-semibold">{result.imported}</span>
-                <span className="text-sm">geïmporteerd</span>
-              </div>
+            <div className="flex gap-4 flex-wrap">
+              {result.imported > 0 && (
+                <div className="flex items-center gap-2 text-emerald-700">
+                  <CheckCircle2 className="h-4 w-4" />
+                  <span className="font-semibold">{result.imported}</span>
+                  <span className="text-sm">nieuw aangemaakt</span>
+                </div>
+              )}
+              {result.updated > 0 && (
+                <div className="flex items-center gap-2 text-blue-700">
+                  <RefreshCw className="h-4 w-4" />
+                  <span className="font-semibold">{result.updated}</span>
+                  <span className="text-sm">bijgewerkt</span>
+                </div>
+              )}
               {result.errors > 0 && (
                 <div className="flex items-center gap-2 text-destructive">
                   <XCircle className="h-4 w-4" />
@@ -260,11 +320,13 @@ export default function AdminImport() {
                       <td className="px-3 py-2 text-muted-foreground">{r.row}</td>
                       <td className="px-3 py-2">
                         {r.status === "ok"
-                          ? <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200">OK</Badge>
-                          : <Badge variant="destructive">Fout</Badge>}
+                          ? <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200">Nieuw</Badge>
+                          : r.status === "updated"
+                            ? <Badge className="bg-blue-100 text-blue-800 border-blue-200">Bijgewerkt</Badge>
+                            : <Badge variant="destructive">Fout</Badge>}
                       </td>
                       <td className="px-3 py-2 font-mono text-xs">
-                        {r.status === "ok"
+                        {r.status !== "error"
                           ? <a href={`/admin/profielen`} className="text-primary hover:underline">{r.slug}</a>
                           : <span className="text-destructive">{r.error}</span>}
                       </td>
@@ -273,9 +335,9 @@ export default function AdminImport() {
                 </tbody>
               </table>
             </div>
-            {result.errors === 0 && (
+            {result.errors === 0 && result.imported > 0 && (
               <p className="text-sm text-muted-foreground">
-                Alle profielen staan op <strong>niet-publiek</strong> en <strong>is_claimed=false</strong>.
+                Nieuwe profielen staan op <strong>niet-publiek</strong> en <strong>is_claimed=false</strong>.
                 Ga naar <a href="/admin/profielen" className="text-primary hover:underline">Profielen</a> om ze te bekijken en goed te keuren.
               </p>
             )}

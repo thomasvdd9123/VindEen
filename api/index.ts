@@ -2804,7 +2804,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // ── POST /api/admin/import-profiles ──────────────────────────────────────
     // Bulk-imports profiles from a CSV body (text/csv or multipart).
     // Creates a single "platform" practitioner to own all unclaimed seeds.
-    if (method === "POST" && path === "/api/admin/import-profiles") {
+    if (method === "POST" && path.startsWith("/api/admin/import-profiles")) {
       const adm = await requireAdmin(req);
       if (!adm) return res.status(403).json({ error: "Forbidden" });
 
@@ -2891,69 +2891,129 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       const { specializations, serviceCategories, serviceAreas } = await getCatalogs();
 
-      const results: { row: number; status: "ok" | "error"; slug?: string; error?: string }[] = [];
+      // Strategy: "fill" = only fill empty fields on duplicates; "replace" = overwrite with CSV values
+      const importUrl = new URL(req.url, "http://x");
+      const strategy = (importUrl.searchParams.get("strategy") || "fill") as "fill" | "replace";
+
+      const results: { row: number; status: "ok" | "updated" | "error"; slug?: string; error?: string }[] = [];
 
       for (let i = 0; i < rows.length; i++) {
         const r = rows[i];
         try {
-          // Slug
-          let slug = r.slug || generateSlug(r.company_name || `profiel-${i + 1}`);
-          let n = 1;
-          while ((await supabase.from("profile").select("id").eq("slug", slug).maybeSingle()).data) {
-            slug = `${generateSlug(r.company_name || `profiel-${i + 1}`)}-${n++}`;
+          const normalizedVat = r.vat ? r.vat.replace(/[\s.\-]/g, "").toUpperCase() : null;
+
+          // -- Duplicate detection: slug → vat → company_name (case-insensitive) --
+          const dupSelect = "id, slug, company_name, contact_email, telnr, websiteurl, title, introduction, vat, office_address_id";
+          let existing: any = null;
+          if (r.slug) {
+            const { data } = await supabase.from("profile").select(dupSelect).eq("slug", r.slug).maybeSingle();
+            existing = data;
+          }
+          if (!existing && normalizedVat) {
+            const { data } = await supabase.from("profile").select(dupSelect).eq("vat", normalizedVat).maybeSingle();
+            existing = data;
+          }
+          if (!existing && r.company_name) {
+            const { data } = await supabase.from("profile").select(dupSelect).ilike("company_name", r.company_name.trim()).maybeSingle();
+            existing = data;
           }
 
-          // Insert profile
-          const { data: prof, error: pErr } = await supabase.from("profile").insert({
-            practitioner_id: platformId,
-            slug,
-            company_name: r.company_name || null,
-            contact_email: r.contact_email || null,
-            telnr: r.telnr || null,
-            websiteurl: r.website || null,
-            has_website: !!(r.website),
-            title: r.title || null,
-            introduction: r.introduction || null,
-            is_active: true,
-            is_public: r.is_public === "true",
-            is_verified: false,
-            is_claimed: r.is_claimed === "true",  // default false = unclaimed seed
-            verification_status: "PENDING",
-            vat: r.vat ? r.vat.replace(/[\s.\-]/g, "").toUpperCase() : null,
-          }).select("id").single();
-          if (pErr) throw new Error(pErr.message);
-          const profileId = (prof as any).id;
-
-          // Build junction body for applyProfileJunctions
+          // -- Build junction body (shared for insert + update) --
           const body: Record<string, any> = {};
-
-          // Address
           if (r.street || r.postcode || r.municipality) {
             body.office = { street: r.street || null, number: r.number || null, municipality: r.municipality || null, postcode: r.postcode || null };
           }
-
-          // Specializations
           if (r.specializations) body.specializations = r.specializations.split("|").map((s: string) => s.trim()).filter(Boolean);
-
-          // Main categories
           if (r.main_categories) body.mainCategories = r.main_categories.split("|").map((s: string) => s.trim()).filter(Boolean);
-
-          // Service areas — match by slug or postcode
           if (r.service_areas) {
             const inputs = r.service_areas.split("|").map((s: string) => s.trim()).filter(Boolean);
             const matched = inputs.map(inp => serviceAreas.find((a: any) => a.slug === inp || a.postcode === inp || a.municipality?.toLowerCase() === inp.toLowerCase())).filter(Boolean).map((a: any) => a.id);
             if (matched.length) body.serviceAreas = matched;
           }
 
-          // VAT on practitioner (store on a temp per-profile practitioner? No — use profile note field)
-          // For now store VAT in a note we can map to claiming later; if a vat is given,
-          // store it so claiming-by-VAT works: create a thin practitioner per unique VAT.
-          // Actually: store nothing extra — VAT claim works at signup time via practitioner.vat.
-          // If vat is provided in import, we update the platform practitioner's vat (not ideal for multi-profile).
-          // Best approach: leave vat blank on platform practitioner, let real user provide it at signup.
+          if (existing) {
+            // ── Duplicate found: apply strategy ──
+            const profileId = existing.id;
+            const slug = existing.slug;
 
-          await applyProfileJunctions(profileId, body);
-          results.push({ row: i + 1, status: "ok", slug });
+            if (strategy === "replace") {
+              // Overwrite all fields where CSV has a non-empty value
+              const updates: Record<string, any> = {};
+              if (r.company_name) updates.company_name = r.company_name;
+              if (r.contact_email) updates.contact_email = r.contact_email;
+              if (r.telnr) updates.telnr = r.telnr;
+              if (r.website) { updates.websiteurl = r.website; updates.has_website = true; }
+              if (r.title) updates.title = r.title;
+              if (r.introduction) updates.introduction = r.introduction;
+              if (normalizedVat) updates.vat = normalizedVat;
+              if (r.is_public !== undefined && r.is_public !== "") updates.is_public = r.is_public === "true";
+              if (Object.keys(updates).length) {
+                const { error: upErr } = await supabase.from("profile").update(updates).eq("id", profileId);
+                if (upErr) throw new Error(upErr.message);
+              }
+              // Re-apply all provided junctions (applyProfileJunctions clears before re-adding)
+              await applyProfileJunctions(profileId, body);
+            } else {
+              // Fill: only update fields that are currently null/empty
+              const updates: Record<string, any> = {};
+              if (!existing.company_name && r.company_name) updates.company_name = r.company_name;
+              if (!existing.contact_email && r.contact_email) updates.contact_email = r.contact_email;
+              if (!existing.telnr && r.telnr) updates.telnr = r.telnr;
+              if (!existing.websiteurl && r.website) { updates.websiteurl = r.website; updates.has_website = true; }
+              if (!existing.title && r.title) updates.title = r.title;
+              if (!existing.introduction && r.introduction) updates.introduction = r.introduction;
+              if (!existing.vat && normalizedVat) updates.vat = normalizedVat;
+              if (Object.keys(updates).length) {
+                const { error: upErr } = await supabase.from("profile").update(updates).eq("id", profileId);
+                if (upErr) throw new Error(upErr.message);
+              }
+              // Only add junctions if none exist yet for that type
+              const fillBody: Record<string, any> = {};
+              if (body.office && !existing.office_address_id) fillBody.office = body.office;
+              if (body.specializations) {
+                const { count } = await supabase.from("profile_specialization").select("id", { count: "exact", head: true }).eq("profile_id", profileId);
+                if (!count) fillBody.specializations = body.specializations;
+              }
+              if (body.mainCategories) {
+                const { count } = await supabase.from("profile_service_category").select("id", { count: "exact", head: true }).eq("profile_id", profileId);
+                if (!count) fillBody.mainCategories = body.mainCategories;
+              }
+              if (body.serviceAreas) {
+                const { count } = await supabase.from("profile_service_area").select("id", { count: "exact", head: true }).eq("profile_id", profileId);
+                if (!count) fillBody.serviceAreas = body.serviceAreas;
+              }
+              if (Object.keys(fillBody).length) await applyProfileJunctions(profileId, fillBody);
+            }
+            results.push({ row: i + 1, status: "updated", slug });
+          } else {
+            // ── No duplicate: insert new profile ──
+            let slug = r.slug || generateSlug(r.company_name || `profiel-${i + 1}`);
+            let n = 1;
+            while ((await supabase.from("profile").select("id").eq("slug", slug).maybeSingle()).data) {
+              slug = `${generateSlug(r.company_name || `profiel-${i + 1}`)}-${n++}`;
+            }
+            const { data: prof, error: pErr } = await supabase.from("profile").insert({
+              practitioner_id: platformId,
+              slug,
+              company_name: r.company_name || null,
+              contact_email: r.contact_email || null,
+              telnr: r.telnr || null,
+              websiteurl: r.website || null,
+              has_website: !!(r.website),
+              title: r.title || null,
+              introduction: r.introduction || null,
+              is_active: true,
+              is_public: r.is_public === "true",
+              is_verified: false,
+              is_claimed: r.is_claimed === "true",
+              verification_status: "PENDING",
+              vat: normalizedVat,
+            }).select("id").single();
+            if (pErr) throw new Error(pErr.message);
+            const profileId = (prof as any).id;
+            await applyProfileJunctions(profileId, body);
+            results.push({ row: i + 1, status: "ok", slug });
+          }
         } catch (e: any) {
           results.push({ row: i + 1, status: "error", error: e.message });
         }
@@ -2961,8 +3021,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       bustProfileCache();
       const ok = results.filter(r => r.status === "ok").length;
+      const updated = results.filter(r => r.status === "updated").length;
       const errors = results.filter(r => r.status === "error").length;
-      return res.status(200).json({ imported: ok, errors, results });
+      return res.status(200).json({ imported: ok, updated, errors, results });
     }
 
     if (method === "GET" && path === "/api/admin/payments") {
