@@ -530,48 +530,37 @@ export default function CategoryPage() {
 
 // Search Result Card
 function SearchResultCard({ profile }: { profile: ProfileWithRelations }) {
+  const blurb = profile.introduction || profile.description || "";
+
   return (
     <Card className="hover-elevate transition-all" data-testid={`card-result-${profile.slug}`}>
-      <CardContent className="p-5 sm:p-6">
-        <div className="flex gap-4 sm:gap-6">
-          {/* Profile image — left on mobile too */}
-          <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl bg-muted shrink-0 overflow-hidden">
-            {profile.logoUrl ? (
-              <img
-                src={profile.logoUrl}
-                alt={profile.name}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-primary/5">
-                <Leaf className="h-8 w-8 text-primary/40" />
-              </div>
-            )}
-          </div>
+      <CardContent className="p-6 sm:p-8">
+        <div className="flex gap-6 sm:gap-8">
 
-          {/* Profile info */}
+          {/* Left: all text */}
           <div className="flex-1 min-w-0">
-            {/* Name — largest, bold */}
+
+            {/* Name */}
             <Link href={`/bedrijf/${profile.slug}`}>
               <h3
-                className="font-bold text-xl text-foreground hover:text-primary transition-colors cursor-pointer leading-tight mb-1"
+                className="font-bold text-xl sm:text-2xl text-foreground hover:text-primary transition-colors cursor-pointer leading-tight mb-1"
                 data-testid={`text-result-name-${profile.slug}`}
               >
                 {profile.name}
               </h3>
             </Link>
 
-            {/* Subtitle / title — medium, italic */}
+            {/* Subtitle in primary colour */}
             {profile.title && (
-              <p className="text-sm italic text-muted-foreground mb-1.5">
+              <p className="text-sm font-semibold text-primary mb-1">
                 {profile.title}
               </p>
             )}
 
-            {/* Location — small with icon */}
+            {/* Location */}
             {profile.location && (
-              <p className="flex items-center gap-1 text-xs text-muted-foreground mb-3">
-                <MapPin className="h-3 w-3 text-primary shrink-0" />
+              <p className="flex items-center gap-1 text-sm text-muted-foreground mb-3">
+                <MapPin className="h-3.5 w-3.5 shrink-0" />
                 <span>{profile.location.name}</span>
                 {(profile as any).distanceKm && (
                   <span className="font-semibold text-primary ml-0.5">
@@ -581,42 +570,60 @@ function SearchResultCard({ profile }: { profile: ProfileWithRelations }) {
               </p>
             )}
 
-            {/* Description — restrained, clamped */}
-            {(profile.introduction || profile.description) && (
-              <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2 mb-3">
-                {profile.introduction || profile.description?.substring(0, 200)}
+            {/* Description — 4 lines */}
+            {blurb && (
+              <p className="text-base text-foreground/80 leading-relaxed line-clamp-4 mb-2">
+                {blurb}
               </p>
             )}
 
-            {/* Footer row: specializations + link */}
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              {profile.specializations && profile.specializations.length > 0 ? (
-                <div className="flex flex-wrap gap-1.5">
-                  {profile.specializations.slice(0, 4).map((spec: string, index: number) => (
+            {/* Lees verder link */}
+            <Link href={`/bedrijf/${profile.slug}`}>
+              <span className="text-sm text-primary hover:underline cursor-pointer">
+                Lees verder ›
+              </span>
+            </Link>
+
+            {/* Specializations */}
+            {profile.specializations && profile.specializations.length > 0 && (
+              <div className="mt-4 pt-4 border-t border-border">
+                <p className="text-xs font-semibold text-primary uppercase tracking-wide mb-2">
+                  Specialisaties
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {profile.specializations.slice(0, 6).map((spec: string, index: number) => (
                     <span
                       key={index}
-                      className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-primary/10 text-primary font-medium"
+                      className="inline-flex items-center px-3 py-1 rounded-md border border-border text-xs text-foreground bg-muted"
                     >
                       {specializationLabels[spec] || spec.toLowerCase().replace(/_/g, " ")}
                     </span>
                   ))}
-                  {profile.specializations.length > 4 && (
+                  {profile.specializations.length > 6 && (
                     <span className="text-xs text-muted-foreground self-center">
-                      +{profile.specializations.length - 4}
+                      …
                     </span>
                   )}
                 </div>
-              ) : (
-                <span />
-              )}
-
-              <Link href={`/bedrijf/${profile.slug}`}>
-                <span className="text-sm font-medium text-primary hover:underline cursor-pointer whitespace-nowrap flex items-center gap-1">
-                  Bekijk profiel <ArrowRight className="h-3.5 w-3.5" />
-                </span>
-              </Link>
-            </div>
+              </div>
+            )}
           </div>
+
+          {/* Right: photo */}
+          <div className="w-28 h-28 sm:w-40 sm:h-40 rounded-lg bg-muted shrink-0 overflow-hidden self-start">
+            {profile.logoUrl ? (
+              <img
+                src={profile.logoUrl}
+                alt={profile.name}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-primary/5">
+                <Leaf className="h-10 w-10 text-primary/30" />
+              </div>
+            )}
+          </div>
+
         </div>
       </CardContent>
     </Card>
