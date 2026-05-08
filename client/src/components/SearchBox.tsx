@@ -9,6 +9,94 @@ import type { Location } from "@shared/schema";
 import { siteConfig, fillCopy } from "@/lib/theme.config";
 import { useSpecializationMap } from "@/lib/useSpecializations";
 
+// ─── Fuzzy location matching ──────────────────────────────────────────────────
+
+/** Normalize: lowercase, trim, strip diacritics (é→e, ë→e, etc.) */
+function normalize(s: string): string {
+  return s
+    .toLowerCase()
+    .trim()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+/** Simple Levenshtein distance */
+function levenshtein(a: string, b: string): number {
+  const m = a.length, n = b.length;
+  const dp: number[] = Array.from({ length: n + 1 }, (_, j) => j);
+  for (let i = 1; i <= m; i++) {
+    let prev = dp[0];
+    dp[0] = i;
+    for (let j = 1; j <= n; j++) {
+      const temp = dp[j];
+      dp[j] = a[i - 1] === b[j - 1] ? prev : 1 + Math.min(prev, dp[j], dp[j - 1]);
+      prev = temp;
+    }
+  }
+  return dp[n];
+}
+
+/**
+ * Score a location against a query. Higher = better match.
+ * Returns 0 if no reasonable match.
+ */
+function scoreLocation(loc: Location, rawQuery: string): number {
+  const q = normalize(rawQuery);
+  if (q.length < 2) return 0;
+
+  const name = normalize(loc.name);
+  const muni = normalize(loc.municipality ?? "");
+  const pc = loc.postcode;
+
+  // Postcode: exact or prefix match
+  if (pc === rawQuery.trim() || pc.startsWith(rawQuery.trim())) return 100;
+
+  // Exact name/municipality match
+  if (name === q || muni === q) return 95;
+
+  // Starts-with match on name or municipality
+  if (name.startsWith(q) || muni.startsWith(q)) return 80;
+
+  // Word-level starts-with (e.g. "bertem" matches "Sint-Agatha-Berchem")
+  const words = name.split(/[\s\-]+/);
+  const muniWords = muni.split(/[\s\-]+/);
+  for (const w of [...words, ...muniWords]) {
+    if (w.startsWith(q)) return 72;
+  }
+
+  // Contains match
+  if (name.includes(q) || muni.includes(q)) return 60;
+
+  // Fuzzy: compare query against the beginning of name (same length + 1)
+  const namePrefix = name.substring(0, q.length + 1);
+  const dist = levenshtein(q, namePrefix);
+  if (dist <= 1) return 50;
+  if (dist <= 2 && q.length >= 4) return 30;
+
+  // Fuzzy per word
+  for (const w of [...words, ...muniWords]) {
+    if (w.length < 2) continue;
+    const d = levenshtein(q, w.substring(0, q.length + 1));
+    if (d <= 1) return 45;
+    if (d <= 2 && q.length >= 5) return 25;
+  }
+
+  return 0;
+}
+
+/** Find best fuzzy-matched location from list (returns undefined if no good match) */
+function bestMatch(locations: Location[], rawQuery: string): Location | undefined {
+  const q = normalize(rawQuery);
+  if (q.length < 2) return undefined;
+  let best: Location | undefined;
+  let bestScore = 0;
+  for (const loc of locations) {
+    const score = scoreLocation(loc, rawQuery);
+    if (score > bestScore) { bestScore = score; best = loc; }
+  }
+  return bestScore >= 30 ? best : undefined;
+}
+
 interface SearchBoxProps {
   locations: Location[];
   initialCategory?: string;
@@ -75,14 +163,7 @@ export function SearchBox({
     countParams.set("spec", selectedSpecialization);
   }
   // Find location slug for count
-  const selectedLocation = locations.find(
-    (loc) =>
-      loc.name.toLowerCase() === cityQuery.toLowerCase() ||
-      loc.postcode === cityQuery ||
-      loc.slug === cityQuery.toLowerCase() ||
-      // Also match full location slug format like "3060-bertem"
-      `${loc.postcode}-${loc.slug}` === cityQuery.toLowerCase()
-  );
+  const selectedLocation = bestMatch(locations, cityQuery);
   if (selectedLocation) {
     countParams.set("location", selectedLocation.slug);
   }
@@ -101,17 +182,17 @@ export function SearchBox({
 
   const totalCount = searchData?.total || 0;
 
-  // Filter locations based on input - only show dropdown if user is actively typing
+  // Filter locations with fuzzy scoring — only show dropdown if user is actively typing
   useEffect(() => {
     if (cityQuery.length > 0 && isUserTyping) {
-      const filtered = locations.filter(
-        (loc) =>
-          loc.name.toLowerCase().includes(cityQuery.toLowerCase()) ||
-          loc.postcode.includes(cityQuery) ||
-          (loc.municipality ?? "").toLowerCase().includes(cityQuery.toLowerCase())
-      );
-      setFilteredLocations(filtered.slice(0, 6));
-      setShowLocationDropdown(filtered.length > 0 && cityQuery.length >= 2);
+      const scored = locations
+        .map((loc) => ({ loc, score: scoreLocation(loc, cityQuery) }))
+        .filter(({ score }) => score > 0)
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 6)
+        .map(({ loc }) => loc);
+      setFilteredLocations(scored);
+      setShowLocationDropdown(scored.length > 0 && cityQuery.trim().length >= 2);
     } else {
       setFilteredLocations([]);
       setShowLocationDropdown(false);
@@ -123,15 +204,8 @@ export function SearchBox({
     // /zoek/{postcode-city} - location only
     // /zoek/{postcode-city}/{specialization-slug} - location + specialization
     // /zoek/{specialization-slug} - specialization only
-    
-    const locationMatch = locations.find(
-      (loc) =>
-        loc.name.toLowerCase() === cityQuery.toLowerCase() ||
-        loc.postcode === cityQuery ||
-        loc.slug === cityQuery.toLowerCase() ||
-        // Also match full location slug format like "9000-gent"
-        `${loc.postcode}-${loc.slug}` === cityQuery.toLowerCase()
-    );
+
+    const locationMatch = bestMatch(locations, cityQuery);
 
     const specSlug = selectedSpecialization && selectedSpecialization !== "all" 
       ? specKeyToSlug[selectedSpecialization] 
