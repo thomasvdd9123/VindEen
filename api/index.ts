@@ -961,22 +961,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       // Locatiezoeklogica: toon profielen die minstens één servicegebied binnen 25km bedienen.
       // Sortering op afstand van het dichtstbijzijnde geregistreerde servicegebied.
       let searchLocationData: { lat: number; lng: number; name: string } | null = null;
-      const SEARCH_RADIUS_KM = 25;
+      const SEARCH_RADIUS_KM = 10;
       let locationCandidateIds: string[] | null = null;
-      // nearbyAreaDistMap: service_area id → afstand tot zoeklocatie (alleen < 25km)
+      // nearbyAreaDistMap: service_area id → afstand tot zoeklocatie (alleen ≤ 10km)
       const nearbyAreaDistMap = new Map<string, number>();
+      // nearbyAreaNameMap: service_area id → municipality naam
+      const nearbyAreaNameMap = new Map<string, string>();
       if (location) {
         const loc = serviceAreas.find((a) => a.slug === location);
         if (loc && loc.latitude && loc.longitude) {
           searchLocationData = { lat: loc.latitude, lng: loc.longitude, name: loc.municipality };
-          // Bereken welke service_areas binnen 25km liggen
           for (const area of serviceAreas) {
             if (area.latitude && area.longitude) {
               const d = calcDistance(loc.latitude, loc.longitude, area.latitude, area.longitude);
-              if (d <= SEARCH_RADIUS_KM) nearbyAreaDistMap.set(area.id, Math.round(d * 10) / 10);
+              if (d <= SEARCH_RADIUS_KM) {
+                nearbyAreaDistMap.set(area.id, Math.round(d * 10) / 10);
+                nearbyAreaNameMap.set(area.id, area.municipality || loc.municipality);
+              }
             }
           }
-          // Zoek profielen die minstens één nabij servicegebied bedienen
           const nearbyAreaIds = Array.from(nearbyAreaDistMap.keys());
           if (nearbyAreaIds.length) {
             const { data: areaProfiles } = await supabase
@@ -984,16 +987,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               .select("profile_id, service_area_id")
               .in("service_area_id", nearbyAreaIds)
               .limit(10000);
-            // Bereken voor elk profiel de minimale afstand (dichtstbijzijnde servicegebied)
+            // Bereken minimale afstand per profiel + bewaar de naam van dat dichtstbijzijnde gebied
             const profileMinDist = new Map<string, number>();
+            const profileNearestName = new Map<string, string>();
             for (const row of (areaProfiles || []) as { profile_id: string; service_area_id: string }[]) {
               const d = nearbyAreaDistMap.get(row.service_area_id) ?? SEARCH_RADIUS_KM;
               const cur = profileMinDist.get(row.profile_id);
-              if (cur === undefined || d < cur) profileMinDist.set(row.profile_id, d);
+              if (cur === undefined || d < cur) {
+                profileMinDist.set(row.profile_id, d);
+                profileNearestName.set(row.profile_id, nearbyAreaNameMap.get(row.service_area_id) || loc.municipality);
+              }
             }
             locationCandidateIds = Array.from(profileMinDist.keys());
-            // Sla de afstanden op voor later gebruik in de response
             (searchLocationData as any)._profileMinDist = profileMinDist;
+            (searchLocationData as any)._profileNearestName = profileNearestName;
           } else {
             locationCandidateIds = [];
           }
@@ -1025,12 +1032,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (error) throw error;
       let profiles = rawProfiles || [];
 
-      // Sorteer op afstand (dichtstbijzijnde geregistreerde servicegebied)
+      // Sorteer op afstand + annoteer met naam van dichtstbijzijnde geregistreerde servicegebied
       if (searchLocationData && (searchLocationData as any)._profileMinDist) {
         const profileMinDist: Map<string, number> = (searchLocationData as any)._profileMinDist;
+        const profileNearestName: Map<string, string> = (searchLocationData as any)._profileNearestName || new Map();
         profiles = [...profiles].map((p: any) => ({
           ...p,
           _distanceKm: profileMinDist.get(p.id) ?? null,
+          _nearestAreaName: profileNearestName.get(p.id) ?? null,
         }));
         profiles.sort((a: any, b: any) => {
           const da = a._distanceKm == null ? 999 : a._distanceKm;
@@ -1045,10 +1054,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       const paginated = profiles.slice(offset, offset + limit);
       const hydrated = await hydrateProfiles(paginated);
-      // Reattach distance
+      // Reattach distance + nearest area name (beide direct op het profiel-object gezet tijdens sort)
       if (searchLocationData) {
         for (let i = 0; i < hydrated.length; i++) {
           (hydrated[i] as any).distanceKm = (paginated[i] as any)._distanceKm;
+          (hydrated[i] as any).nearestAreaName = (paginated[i] as any)._nearestAreaName ?? null;
         }
       }
       return res.status(200).json({

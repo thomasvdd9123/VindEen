@@ -556,11 +556,11 @@ function SearchResultCard({ profile }: { profile: ProfileWithRelations }) {
               </p>
             )}
 
-            {/* Location */}
-            {profile.location && (
+            {/* Location — toon gematchte service area als beschikbaar, anders primaire locatie */}
+            {((profile as any).nearestAreaName || profile.location) && (
               <p className="flex items-center gap-1 text-sm text-muted-foreground mb-3">
                 <MapPin className="h-3.5 w-3.5 shrink-0" />
-                <span>{profile.location.name}</span>
+                <span>{(profile as any).nearestAreaName || profile.location?.name}</span>
                 {(profile as any).distanceKm != null && (profile as any).distanceKm > 0.5 && (
                   <span className="font-semibold text-primary ml-0.5">
                     · {(profile as any).distanceKm} km
