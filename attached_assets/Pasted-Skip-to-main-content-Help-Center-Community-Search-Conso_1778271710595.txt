@@ -1,0 +1,288 @@
+Skip to main content
+Help Center
+Community
+
+Search Console
+All reports and toolsPage indexing report
+Page indexing report
+See which pages Google can find and index on your site, and learn about any indexing problems encountered.
+
+Open Page indexing report
+
+ 
+
+
+
+ 
+
+Getting started
+Non-experts usage guide
+SEOs, developers, and experienced website owners usage guide
+Navigating the report
+The Page indexing report shows the Google indexing status of all URLs that Google knows about in your property.
+
+Summary page
+The top-level summary page in the report shows a graph and count of your indexed and non-indexed (but requested) pages, as well as tables showing reasons that URLs couldn't be indexed, or other indexing improvements.
+
+Why pages aren’t indexed table shows issues that prevented URLs from being indexed on your site. Click a row to see a details page that shows URLs affected by this issue and your site's history with this issue.
+Improve page experience table shows issues that didn't prevent page indexing, but we recommend that you fix them to improve Google's ability to understand your pages. Click a row to see a details page that focuses on all URLs with the same issue.
+View data about indexed pages link shows historical information about your indexed page count, as well as an example list of up to 1,000 URLs that are indexed.
+What to look for
+Ideally you should see a gradually increasing count of indexed pages as your site grows. If you see drops or spikes, see the troubleshooting section.
+
+Your goal is to get the canonical version of every important page indexed. Duplicate or alternate pages shouldn't be indexed. Having a page marked duplicate or alternate is usually a good thing; it means that we've found the canonical page and indexed it. You can find the canonical for any URL by running the URL Inspection tool.
+
+See more reasons why pages might be missing.
+
+What not to look for
+100% coverage: You should not expect all URLs on your site to be indexed, only the canonical pages, as described above.
+Immediate indexing: When you add new content, it can take a few days for Google to index it. You can reduce the indexing lag by requesting indexing.
+Status
+A URL can have one of the following statuses:
+
+Not indexed: The URL is not indexed, either because of an indexing error, or because of a legitimate reason (for example, if the page is blocked from indexing by your robots.txt file, or is a duplicate page). The reasons why URLs weren't indexed are listed in Why pages aren’t indexed table. Read the documentation for each reason to determine whether it is something that you should fix. The Source value indicates whether this is probably something you can fix.
+Indexed: These URLs were successfully indexed. See a sample of indexed URLs by clicking View data about indexed pages below the chart on the summary page for the report.
+Reason
+The reason why a URL couldn't be indexed. See the reason descriptions below for a description of each issue and how to handle it, if necessary.
+
+Source
+The Source value in the table shows whether the source of the issue is Google or the website. In general, you can fix only issues where the source is listed as "Website".
+
+Validation
+Whether you have requested validation of a fix for this issue, and if so, what the status of the validation attempt is. You should prioritize fixing issues that are in validation state "failed" or "not started" and source "Website".
+
+After you fix all instances of a specific issue on your site, you can ask Google to confirm your fixes. If all known instances are fixed, the issue count goes to zero in the issues table and drops to the bottom of the table.
+Why validate
+Telling Google that you have fixed all issues in a specific issue status or category has the following benefits:
+
+You'll get an email when Google has confirmed your fix on all URLs, or conversely, if Google has found remaining instances of that issue.
+You can track Google's progress in confirming your fixes, and see a log of all pages queued for checking, and the fix status of each URL.
+It might not always make sense to fix and validate a specific issue on your website: for example, URLs blocked by robots.txt are probably intentionally blocked. Use your judgment when deciding whether to address a given issue.
+
+You can also fix issues without validating; Google updates your instance count whenever it crawls a page with known issues, whether or not you explicitly requested fix validation.
+
+Pro tip: Validate your fixes by sitemap
+To speed up a fix request, create and submit a sitemap containing only your most important pages, then filter the report by that sitemap before requesting a fix validation. A validation request against a subset of your affected URLs can complete faster than a request that includes all affected URLs on your site.
+Start validation
+To tell Search Console that you fixed an issue:
+
+Fix all instances of the issue on your site. If you missed a fix, validation will stop when Google finds a single remaining instance of that issue.
+Open the issue details page of the issue that you fixed. Click the issue in the issues list in your report.
+⚠️ If you are filtered to a specific sitemap in your report, the validation will apply only to items in the sitemap at the time you requested validation. This might be what you want, or it might not. Just be aware of it.
+Click Validate fix. Do not click Validate fix again until validation has succeeded or failed. More details about how Google checks your fixes.
+You can monitor the validation progress. Validation typically takes up to about two weeks, but in some cases can take much longer, so please be patient. You will receive a notification when validation succeeds or fails.
+If validation fails, you can see which URL caused the validation to fail by clicking See details in the issue details page. Fix this page, confirm your fix on all URLs in Pending state, and restart validation.
+When is an issue considered "fixed" for a URL or item?
+
+An issue is marked as fixed for a URL or item when either of the following conditions are met:
+
+When the URL is crawled and the issue is no longer found on the page. For an AMP tag error, this can mean that you either fixed the tag or that the tag has been removed (if the tag is not required). During a validation attempt, it will be labeled Passed.
+If the page is not available to Google for any reason (page removed, marked noindex, requires authentication, and so on), the issue will be considered as fixed for that URL. During a validation attempt, it is categorized in the Other validation state.
+Issue lifetime
+Validation flow
+Revalidation
+See validation progress
+To see the progress of a current validation request, or the history of the last request if a validation is not in progress:
+
+Open the issue details page for the issue. Click the issue row in the main report page to open the issue details page.
+The validation request status is shown both in the issue details page and also in the Validation row of the Details table.
+Click See details to open the validation details page for that request.
+The instance status for each URL included in the request is shown in the table.
+The instance status applies to the specific issue that you are examining. You can have one issue labeled Passed on a page, but other issues labeled Failed, Pending, or Other on the same page.
+In the AMP report and Page Indexing report, entries in the validation history page are grouped by URL.
+In the Rich Result reports, items are grouped by the combination of URL + structured data item (as determined by the item's Name value).
+Validation request status
+Instance validation status
+Sitemap filter
+You can use the dropdown filter above the chart to filter index results by whether or not they are included in a sitemap. The following options are available:
+
+All known pages [Default] - Show all URLs known to Google, whether or not they are listed in a sitemap.
+All submitted pages - Show only URLs listed in a sitemap or sitemap index that was submitted using either the Sitemaps report or a robots.txt file on your site.
+Unsubmitted pages only - Show only URLs that were not listed in a sitemap submitted using either the Sitemaps report or a robots.txt file on your site.
+Specific sitemap URL - Show only URLs listed in a specific sitemap or sitemap index submitted using either the Sitemaps report or a robots.txt file on your site.
+A URL is considered to submitted by a sitemap even if it was also discovered through some other mechanism (for example, by organic crawling from another page).
+
+Details page
+Click on a row in the summary page to open a details page for URLs on that site with the same issue or status. You can see details about the chosen issue by clicking Learn more at the top of the page.
+
+The graph on this page shows the count of affected pages over time.
+
+The examples table shows an example list of pages affected by this issue. The list does not necessarily show all URLs with that issue, and is limited to 1,000 rows. Each example row has the following functionality:
+
+Click the row to see more details about that URL.
+ opens the URL in a new tab.
+ opens URL Inspection for that URL.
+ copies the URL
+When you've fixed all instances of an error or warning, click Validate Fix to let Google know that you've fixed the issue.
+
+See a URL marked with an issue that you've already fixed? Perhaps you fixed the issue AFTER the last Google crawl. Therefore, if you see a URL with an issue that you have fixed, be sure to check the crawl date for that URL. Check and confirm your fix, then request re-indexing
+
+Sharing the report
+You can share issue details in the coverage or enhancement reports by clicking the Share  button on the page. This link grants access only to the current issue details page, plus any validation history pages for this issue, to anyone with the link. It does not grant access to other pages for your resource, or enable the shared user to perform any actions on your property or account. You can revoke the link at any time by disabling sharing for this page.
+
+Exporting report data
+Many reports provide an export button  to export the report data. Both chart and table data are exported. Values shown as either ~ or - in the report (not available/not a number) will be zeros in the downloaded data.
+
+Troubleshooting
+The table is sorted by what we think are the most important issues to address. To investigate a specific reason in the indexing errors table:
+
+Click a row in the Why pages aren't indexed table. Decide whether there is a problem based on the not indexed reason and your indexing goal, and whether this is something that you can fix, based on the source value.
+Read the specific information about the issue.
+Inspect an example URL affected by the issue:
+Click the inspect iconnext to the URL in the examples table to open URL Inspection for that URL.
+See crawl and index details for that URL in the Coverage > Crawl and Coverage > Indexing sections of the URL Inspection report.
+To test the live version of the page, click Test live URL.
+Understand and fix common indexing issues
+Here are some of the most common indexing issues that you might see in this report:
+
+Drop in total indexed pages without corresponding errors
+More non-indexed than indexed pages
+Error spikes
+Server errors
+404 errors
+Missing pages or sites
+FAQs
+Indexing reasons
+The following reasons can be shown for non-indexing, or for problematic indexing, in the Page indexing report:
+
+Not indexed
+These pages have not been indexed, but not necessarily because of an error. Read the specific description to see if this is an error that you should address.
+
+Server error (5xx)
+Your server returned a 500-level error when the page was requested. See Fixing server errors.
+
+Redirect error
+Google experienced one of the following redirect errors:
+
+A redirect chain that was too long
+A redirect loop
+A redirect URL that eventually exceeded the max URL length
+A bad or empty URL in the redirect chain
+Use a web debugging tool such as Lighthouse to get more details about the redirect.
+
+URL blocked by robots.txt
+This page was blocked by your site's robots.txt file. You can verify this using the robots.txt tester. Note that this does not guarantee that the page won't be indexed through some other means. If Google can find other information about this page without loading it, there is a very small chance that the page might still be indexed. To ensure that a page is not indexed by Google, remove the robots.txt block and use a 'noindex' directive.
+
+URL marked ‘noindex’
+When Google tried to index the page it encountered a 'noindex' directive and therefore did not index it. If you do not want this page indexed, congratulations! If you do want this page to be indexed, you should remove the 'noindex' directive.
+
+To confirm the problem:
+
+Click the inspection icon  next to the URL in the table.
+Under Coverage > Indexing > Indexing allowed? the report should show that noindex is preventing indexing. You can search the page source or response headers for the word "noindex".
+Confirm that the noindex tag still exists in the live version:
+Clicking Test live URL
+Under Availability > Indexing > Indexing allowed? see if the noindex directive is still detected. If noindex is no longer present, you can click Request Indexing to ask Google to try again to index the page. If noindex is still present, you must remove it in order for the page to be indexed.
+If you want this page to be indexed, you must remove the tag or HTTP header.
+Soft 404
+The page request returns what we think is a soft 404 response. This means that it returns a user-friendly "not found" message but not a 404 HTTP response code. We recommend returning a 404 response code for truly "not found" pages and adding more information on the page to let us know that it is not a soft 404. To see how Google sees the page, run a live URL inspection test against the page and click View tested page to see a screenshot showing how Google renders the page. Learn how to fix a soft 404.
+
+Blocked due to unauthorized request (401)
+The page was blocked to Googlebot by a request for authorization (401 response). If you do want Googlebot to be able to index this page, either remove authorization requirements for this page, or else allow Googlebot to access your pages by verifying its identity. You can verify this error by visiting the page in incognito mode.
+
+Not found (404)
+This page returned a 404 error when requested. Google discovered this URL without any explicit request or sitemap. Google might have discovered the URL as a link from another page, or possibly the page existed before and was deleted. Googlebot will probably continue to try this URL for some period of time; there is no way to tell Googlebot to permanently forget a URL, although it will crawl it less and less often. 404 responses are not necessarily a problem, if the page has been removed without any replacement. If your page has moved, use a 301 redirect to the new location. See Fixing 404 errors
+
+Blocked due to access forbidden (403)
+HTTP 403 means that the user agent provided credentials, but was not granted access. However, Googlebot never provides credentials, so your server is returning this error incorrectly. The page will not be indexed.
+
+If you do want Googlebot to index this page, you should either admitting non-signed-in users or explicitly allow Googlebot requests without authentication (though you should verify its identity).
+
+URL blocked due to other 4xx issue
+The server encountered a 4xx error not covered by any other issue type described here. Try debugging your page using the URL Inspection tool.
+
+Crawled - currently not indexed
+The page was crawled by Google but not indexed. It may or may not be indexed in the future; no need to resubmit this URL for crawling.
+
+Discovered - currently not indexed
+The page was found by Google, but not crawled yet. Typically, Google wanted to crawl the URL but this was expected to overload the site; therefore Google rescheduled the crawl. This is why the last crawl date is empty on the report.
+
+Alternate page with proper canonical tag
+This page is marked as an alternate of another page (that is, an AMP page with a desktop canonical, or a mobile version of a desktop canonical, or the desktop version of a mobile canonical). This page correctly points to the canonical page, which is indexed, so there is nothing you need to do. Alternate language pages are not detected by Search Console.
+
+Duplicate without user-selected canonical
+This page is a duplicate of another page, although it doesn't indicate a preferred canonical page. Google has chosen the other page as the canonical for this page, and so will not serve this page in Search. You can Inspect this URL to see which URL Google considers canonical for this page.
+
+This is not an error, but is working as intended, because Google does not serve duplicate pages. However, if you think that Google has chosen the wrong URL as canonical, you can explicitly mark the canonical for this page. Alternately, if you think that this page is not a duplicate of the Google-chosen canonical, you should ensure that the content differs substantially between the two pages.
+
+Duplicate, Google chose different canonical than user
+This page is marked as canonical for a set of pages, but Google thinks another URL makes a better canonical. Google has indexed the page that we consider canonical rather than this one.
+
+Inspect this URL to see the Google-selected canonical URL under Page indexing > Google-selected canonical.
+Look at the canonical you chose under Page indexing > User-declared canonical.
+In your browser, look at the current page, the user-declared canonical, and the Google-selected canonical.
+This error means that Google thinks that the tested page isn't a duplicate of the user-declared canonical. Instead, Google thinks that the tested page is a duplicate of the Google-selected canonical.
+If the Google-selected canonical is the tested page, then Google thinks that the tested page isn't similar to any other pages.
+If the user-declared canonical is not similar to the current page, then Google won't ever choose that URL as canonical. A duplicate page must be similar to the canonical. (That's what duplicate means.)
+Page with redirect
+This is a non-canonical URL that redirects to another page. As such, this URL will not be indexed. The target URL of the redirect might or might not be indexed, depending on what Google thinks about that target URL.
+
+A canonical URL with a redirect can be indexed.
+
+If you view this URL in the URL Inspection report, the indexed information applies to the tested URL (ignoring any redirects). To see the index status of the canonical URL associated with this URL (the URL that is in the Google Index), click the INSPECT button in the Page indexing > Indexing section of the report.
+
+The live URL Inspection test follows redirects and then tests the final URL, although the live test doesn't indicate that it is following a redirect.
+
+Warning
+Warnings are listed in the Improve page experience table on the summary page of the Page indexing report. These issues don't prevent a page from being indexed, but they do reduce Google's ability to understand and index your pages.
+
+Indexed, though blocked by robots.txt
+The page was indexed despite being blocked by your website's robots.txt file. Google always respects robots.txt, but this doesn't necessarily prevent indexing if someone else links to your page. Google won't request and crawl the page, but we can still index it, using the information from the page that links to your blocked page. Because of the robots.txt rule, any snippet shown in Google Search results for the page will probably be very limited.
+
+Next steps:
+
+If you do want to block this page from Google Search, robots.txt is not the correct mechanism to avoid being indexed. To avoid being indexed, remove the robots.txt block and use 'noindex'.
+If you do not want to block this page, update your robots.txt file to unblock your page. You can use the robots.txt tester to determine which rule is blocking this page.
+Page indexed without content
+This page appears in the Google index, but for some reason Google could not read the content. Possible reasons are that the page might be cloaked to Google or the page might be in a format that Google can't index. This is not a case of robots.txt blocking. Inspect the page, and look at the Coverage section for details.
+
+Indexed
+You can see your indexed URL count in the graph on the summary page. You can see an example list of URLs and more information about them by clicking View data about indexed pages below the graph.
+
+Page is indexed
+The page has been indexed successfully. However, it might have other issues that should be addressed, such as structured data issues. Any other issues will be described in the appropriate section in the URL Inspection report.
+
+ 
+
+ 
+
+If you are having issues indexing your site, you can contact us:
+
+Report an Indexing Issue
+
+
+Give feedback about this article
+Was this helpful?YesNo
+Need more help?
+Try these next steps:
+Post to the help community
+Get answers from community members
+All reports and tools
+Reports at a glance
+Search Console's overview page
+Insights report
+URL Inspection tool
+Performance reports
+Page indexing report
+Video indexing report
+Sitemaps report
+Removals and SafeSearch reports tool
+Core Web Vitals report
+HTTPS report
+AMP tools and reports
+Rich results tools and reports
+Manual actions report
+Security issues report
+Links report
+Achievements in Search Console
+Property and user settings
+Change of Address tool
+Recommendations in Search Console
+Search Console annotations
+
+New to Search Console?
+Never used Search Console before? Start here, whether you're a complete beginner, an SEO expert, or a website developer.
+
+©2026 Google  Privacy Policy  Terms of Service
+Language
+
