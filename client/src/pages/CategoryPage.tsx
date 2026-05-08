@@ -533,13 +533,9 @@ function SearchResultCard({ profile }: { profile: ProfileWithRelations }) {
   const blurb = profile.introduction || profile.description || "";
 
   return (
-    <Card className="hover-elevate transition-all relative" data-testid={`card-result-${profile.slug}`}>
-      {/* Full-card click overlay */}
-      <Link href={`/bedrijf/${profile.slug}`}>
-        <span className="absolute inset-0 z-0" aria-label={`Bekijk profiel van ${profile.name}`} />
-      </Link>
-
-      <CardContent className="p-6 sm:p-8 relative z-10">
+    <Link href={`/bedrijf/${profile.slug}`} className="block">
+    <Card className="hover-elevate transition-all cursor-pointer" data-testid={`card-result-${profile.slug}`}>
+      <CardContent className="p-6 sm:p-8">
         <div className="flex gap-6 sm:gap-8">
 
           {/* Left: all text */}
@@ -628,5 +624,6 @@ function SearchResultCard({ profile }: { profile: ProfileWithRelations }) {
         </div>
       </CardContent>
     </Card>
+    </Link>
   );
 }
