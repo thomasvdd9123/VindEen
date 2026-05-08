@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "wouter";
 import { DashboardLayout } from "./DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,11 +13,13 @@ import {
   Eye,
   Mail,
   Loader2,
+  Wand2,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import type { Account } from "@shared/schema";
+import { OnboardingWizard } from "@/components/OnboardingWizard";
 
 interface ProfileWithStats {
   id: string;
@@ -26,6 +29,7 @@ interface ProfileWithStats {
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const [wizardDismissed, setWizardDismissed] = useState(false);
 
   const { data: account, isLoading: accountLoading } = useQuery<Account>({
     queryKey: ["/api/accounts/by-auth", user?.id],
@@ -51,6 +55,14 @@ export default function Dashboard() {
   });
 
   const isLoading = accountLoading || profilesLoading || contactsLoading;
+
+  const onboardingDone = !!user?.id && !!localStorage.getItem(`onboarding_done_${user.id}`);
+  const showWizard =
+    !isLoading &&
+    !!account?.id &&
+    profiles.length === 0 &&
+    !onboardingDone &&
+    !wizardDismissed;
   const totalViews = profiles.reduce((acc, p) => acc + (p.viewCount || 0), 0);
   const activeProfiles = profiles.filter(p => p.isPublic).length;
   const totalContacts = contacts.length;
@@ -93,6 +105,14 @@ export default function Dashboard() {
       title="Dashboard" 
       description={`Welkom terug${user?.email ? `, ${user.email.split("@")[0]}` : ""}!`}
     >
+      {/* Onboarding wizard — auto-opens for new users with no profiles */}
+      {showWizard && account?.id && (
+        <OnboardingWizard
+          accountId={account.id}
+          onComplete={() => setWizardDismissed(true)}
+        />
+      )}
+
       {/* Stats overview */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
         {stats.map((stat, index) => {
@@ -115,23 +135,34 @@ export default function Dashboard() {
         })}
       </div>
 
-      {/* Create profile CTA - only show if no profiles and data is loaded */}
-      {profiles.length === 0 && !isLoading && (
+      {/* Create profile CTA - only show if no profiles, data is loaded, and wizard was dismissed */}
+      {profiles.length === 0 && !isLoading && (onboardingDone || wizardDismissed) && (
         <Card className="mb-8 border-primary/20 bg-primary/5">
           <CardContent className="py-6">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
-                <h3 className="font-semibold text-lg mb-1">Maak je eerste profiel aan</h3>
+                <h3 className="font-semibold text-lg mb-1">Maak uw eerste profiel aan</h3>
                 <p className="text-muted-foreground">
                   Word zichtbaar voor potentiële klanten door een bedrijfsprofiel aan te maken.
                 </p>
               </div>
-              <Link href="/dashboard/profielen/nieuw">
-                <Button className="gap-2" data-testid="button-create-profile">
-                  <PlusCircle className="h-4 w-4" />
-                  Profiel aanmaken
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant="outline"
+                  className="gap-2"
+                  onClick={() => setWizardDismissed(false)}
+                  data-testid="button-reopen-wizard"
+                >
+                  <Wand2 className="h-4 w-4" />
+                  Wizard opnieuw starten
                 </Button>
-              </Link>
+                <Link href="/dashboard/profielen/nieuw">
+                  <Button className="gap-2" data-testid="button-create-profile">
+                    <PlusCircle className="h-4 w-4" />
+                    Handmatig aanmaken
+                  </Button>
+                </Link>
+              </div>
             </div>
           </CardContent>
         </Card>
