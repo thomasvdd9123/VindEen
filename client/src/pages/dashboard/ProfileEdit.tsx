@@ -353,7 +353,7 @@ export default function ProfileEdit() {
                     email: form.formState.errors.email?.message,
                     locationId: form.formState.errors.locationId?.message,
                   }}
-                  vat={(account as any)?.vatNumber ?? null}
+                  vat={(profile as any)?.vat ?? (account as any)?.vatNumber ?? null}
                 />
 
                 <ProfileAddressSection
