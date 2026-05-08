@@ -1863,8 +1863,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (method === "GET" && path === "/sitemaps/site/sitemap.xml") {
       const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>${SITEMAP_BASE_URL}/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>
-  <url><loc>${SITEMAP_BASE_URL}/login</loc><changefreq>monthly</changefreq><priority>0.3</priority></url>
-  <url><loc>${SITEMAP_BASE_URL}/registreren</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
+  <url><loc>${SITEMAP_BASE_URL}/zoek/alle</loc><changefreq>daily</changefreq><priority>0.9</priority></url>
+  <url><loc>${SITEMAP_BASE_URL}/prijzen</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
 </urlset>`;
       res.setHeader("Content-Type", "application/xml");
       return res.send(xml);
