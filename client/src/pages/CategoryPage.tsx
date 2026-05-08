@@ -528,85 +528,94 @@ export default function CategoryPage() {
   );
 }
 
-// Search Result Card - matches vind-een-psycholoog.be style
+// Search Result Card
 function SearchResultCard({ profile }: { profile: ProfileWithRelations }) {
   return (
     <Card className="hover-elevate transition-all" data-testid={`card-result-${profile.slug}`}>
-      <CardContent className="p-5">
-        <div className="flex flex-col sm:flex-row gap-4">
-          {/* Profile info */}
-          <div className="flex-1 min-w-0">
-            <Link href={`/bedrijf/${profile.slug}`}>
-              <h3 className="font-semibold text-lg text-foreground hover:text-primary hover:underline cursor-pointer mb-0.5" data-testid={`text-result-name-${profile.slug}`}>
-                {profile.name}
-              </h3>
-            </Link>
-            
-            {profile.title && (
-              <p className="text-sm text-muted-foreground mb-1">
-                {profile.title}
-              </p>
-            )}
-            
-            {profile.location && (
-              <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1">
-                <MapPin className="h-3 w-3" />
-                {profile.location.name}
-                {(profile as any).distanceKm && (
-                  <span className="text-primary font-medium">
-                    ({(profile as any).distanceKm} km)
-                  </span>
-                )}
-              </p>
-            )}
-            
-            <p className="text-sm text-muted-foreground mb-3 line-clamp-3">
-              {profile.introduction || profile.description?.substring(0, 200)}
-            </p>
-
-            <Link href={`/bedrijf/${profile.slug}`}>
-              <span className="text-sm text-muted-foreground hover:text-primary cursor-pointer">
-                Lees verder <ArrowRight className="h-3 w-3 inline" />
-              </span>
-            </Link>
-
-            {/* Specializations */}
-            {profile.specializations && profile.specializations.length > 0 && (
-              <div className="mt-4 pt-3 border-t border-border">
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <span className="text-xs font-medium text-muted-foreground">Specialisaties</span>
-                  {profile.specializations.slice(0, 5).map((spec: string, index: number) => (
-                    <span 
-                      key={index}
-                      className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-muted text-muted-foreground"
-                    >
-                      {specializationLabels[spec] || spec.toLowerCase().replace(/_/g, " ")}
-                    </span>
-                  ))}
-                  {profile.specializations.length > 5 && (
-                    <span className="text-xs text-muted-foreground">
-                      +{profile.specializations.length - 5}
-                    </span>
-                  )}
-                </div>
-              </div>
-            )}
-
-          </div>
-
-          {/* Profile image */}
-          <div className="w-full sm:w-28 h-32 sm:h-28 rounded-md bg-muted shrink-0 overflow-hidden order-first sm:order-last">
+      <CardContent className="p-5 sm:p-6">
+        <div className="flex gap-4 sm:gap-6">
+          {/* Profile image — left on mobile too */}
+          <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl bg-muted shrink-0 overflow-hidden">
             {profile.logoUrl ? (
-              <img 
-                src={profile.logoUrl} 
+              <img
+                src={profile.logoUrl}
                 alt={profile.name}
                 className="w-full h-full object-cover"
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-primary/5">
-                <Leaf className="h-10 w-10 text-primary/40" />
+                <Leaf className="h-8 w-8 text-primary/40" />
               </div>
             )}
+          </div>
+
+          {/* Profile info */}
+          <div className="flex-1 min-w-0">
+            {/* Name — largest, bold */}
+            <Link href={`/bedrijf/${profile.slug}`}>
+              <h3
+                className="font-bold text-xl text-foreground hover:text-primary transition-colors cursor-pointer leading-tight mb-1"
+                data-testid={`text-result-name-${profile.slug}`}
+              >
+                {profile.name}
+              </h3>
+            </Link>
+
+            {/* Subtitle / title — medium, italic */}
+            {profile.title && (
+              <p className="text-sm italic text-muted-foreground mb-1.5">
+                {profile.title}
+              </p>
+            )}
+
+            {/* Location — small with icon */}
+            {profile.location && (
+              <p className="flex items-center gap-1 text-xs text-muted-foreground mb-3">
+                <MapPin className="h-3 w-3 text-primary shrink-0" />
+                <span>{profile.location.name}</span>
+                {(profile as any).distanceKm && (
+                  <span className="font-semibold text-primary ml-0.5">
+                    · {(profile as any).distanceKm} km
+                  </span>
+                )}
+              </p>
+            )}
+
+            {/* Description — restrained, clamped */}
+            {(profile.introduction || profile.description) && (
+              <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2 mb-3">
+                {profile.introduction || profile.description?.substring(0, 200)}
+              </p>
+            )}
+
+            {/* Footer row: specializations + link */}
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              {profile.specializations && profile.specializations.length > 0 ? (
+                <div className="flex flex-wrap gap-1.5">
+                  {profile.specializations.slice(0, 4).map((spec: string, index: number) => (
+                    <span
+                      key={index}
+                      className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-primary/10 text-primary font-medium"
+                    >
+                      {specializationLabels[spec] || spec.toLowerCase().replace(/_/g, " ")}
+                    </span>
+                  ))}
+                  {profile.specializations.length > 4 && (
+                    <span className="text-xs text-muted-foreground self-center">
+                      +{profile.specializations.length - 4}
+                    </span>
+                  )}
+                </div>
+              ) : (
+                <span />
+              )}
+
+              <Link href={`/bedrijf/${profile.slug}`}>
+                <span className="text-sm font-medium text-primary hover:underline cursor-pointer whitespace-nowrap flex items-center gap-1">
+                  Bekijk profiel <ArrowRight className="h-3.5 w-3.5" />
+                </span>
+              </Link>
+            </div>
           </div>
         </div>
       </CardContent>
