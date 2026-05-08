@@ -4,30 +4,29 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
-import { Checkbox } from "@/components/ui/checkbox";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useAuth } from "@/lib/auth";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useSpecializationMap } from "@/lib/useSpecializations";
 import { useToast } from "@/hooks/use-toast";
 import { isValidBelgianVAT, formatBelgianVAT } from "@/lib/utils";
 import { siteConfig } from "@/lib/theme.config";
-import type { Account, Location } from "@shared/schema";
+import type { Account } from "@shared/schema";
 import {
   CheckCircle2, ChevronRight, ChevronLeft, X, Leaf,
-  Loader2, Eye, Rocket, Clock, Building2, User2, MapPin,
-  Phone, Mail, Globe, FileText, Tags, Sparkles,
+  Loader2, Eye, Rocket, Clock, Building2, User2, FileText, Tags,
 } from "lucide-react";
+import { ProfileContactSection } from "@/components/profile/ProfileContactSection";
+import { ProfileAddressSection } from "@/components/profile/ProfileAddressSection";
+import { ProfileAboutSection } from "@/components/profile/ProfileAboutSection";
+import { ProfileServicesSection } from "@/components/profile/ProfileServicesSection";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface PersonalData { firstName: string; lastName: string; }
 interface BillingData { companyName: string; vatNumber: string; btwPlichtig: string; street: string; houseNumber: string; municipality: string; postcode: string; }
-interface ProfileData { name: string; email: string; telnr: string; website: string; locationId: string; officeStreet: string; officeNumber: string; officeTown: string; officePostcode: string; }
+interface ProfileData { name: string; email: string; telnr: string; website: string; locationId: string; officeStreet: string; officeNumber: string; officeTown: string; officePostcode: string; hideAddress: boolean; }
 interface AboutData { introduction: string; description: string; }
 interface ServicesData { mainCategories: string[]; specializations: string[]; }
 
@@ -218,281 +217,6 @@ function StepPersonalBilling({
   );
 }
 
-function StepProfileBasics({
-  data, setData, locations,
-}: {
-  data: ProfileData; setData: (d: ProfileData) => void; locations: Location[];
-}) {
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-2 border-b pb-2">
-        <Building2 className="h-5 w-5 text-primary" />
-        <h3 className="text-lg font-semibold">Uw bedrijfsprofiel</h3>
-      </div>
-      <p className="text-sm text-muted-foreground">
-        Dit zijn de gegevens die klanten te zien krijgen op uw publieke profiel.
-      </p>
-
-      <Field label="Bedrijfsnaam" required hint="Zo wordt uw bedrijf gevonden door klanten">
-        <Input
-          placeholder="Bv. Tuinaanleg Janssen"
-          value={data.name}
-          onChange={e => setData({ ...data, name: e.target.value })}
-          className="text-base h-11"
-          data-testid="input-onboarding-profilename"
-        />
-      </Field>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Field label="Contactmail" required hint="Klanten kunnen u hier mailen">
-          <div className="relative">
-            <Mail className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
-            <Input
-              type="email"
-              placeholder="info@uwbedrijf.be"
-              value={data.email}
-              onChange={e => setData({ ...data, email: e.target.value })}
-              className="text-base h-11 pl-10"
-              data-testid="input-onboarding-email"
-            />
-          </div>
-        </Field>
-        <Field label="Telefoonnummer" hint="Optioneel, maar sterk aangeraden">
-          <div className="relative">
-            <Phone className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
-            <Input
-              type="tel"
-              placeholder="+32 471 00 00 00"
-              value={data.telnr}
-              onChange={e => setData({ ...data, telnr: e.target.value })}
-              className="text-base h-11 pl-10"
-              data-testid="input-onboarding-phone"
-            />
-          </div>
-        </Field>
-      </div>
-
-      <Field label="Website" hint="Optioneel — uw eigen website URL">
-        <div className="relative">
-          <Globe className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
-          <Input
-            placeholder="https://www.uwbedrijf.be"
-            value={data.website}
-            onChange={e => setData({ ...data, website: e.target.value })}
-            className="text-base h-11 pl-10"
-            data-testid="input-onboarding-website"
-          />
-        </div>
-      </Field>
-
-      <Field label="Hoofdregio" required hint="De regio waarbinnen u voornamelijk actief bent">
-        <div className="relative">
-          <MapPin className="absolute left-3 top-3 h-5 w-5 text-muted-foreground pointer-events-none z-10" />
-          <Select value={data.locationId} onValueChange={v => setData({ ...data, locationId: v })}>
-            <SelectTrigger className="text-base h-11 pl-10" data-testid="select-onboarding-location">
-              <SelectValue placeholder="Selecteer uw regio" />
-            </SelectTrigger>
-            <SelectContent>
-              {locations.map(loc => (
-                <SelectItem key={loc.id} value={loc.id}>{loc.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </Field>
-
-      <div className="space-y-4 pt-2">
-        <p className="text-sm font-medium text-muted-foreground">Kantooradres (optioneel)</p>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="sm:col-span-2">
-            <Field label="Straat">
-              <Input
-                placeholder="Kerkstraat"
-                value={data.officeStreet}
-                onChange={e => setData({ ...data, officeStreet: e.target.value })}
-                className="text-base h-11"
-                data-testid="input-onboarding-officestreet"
-              />
-            </Field>
-          </div>
-          <Field label="Nummer">
-            <Input
-              placeholder="12"
-              value={data.officeNumber}
-              onChange={e => setData({ ...data, officeNumber: e.target.value })}
-              className="text-base h-11"
-              data-testid="input-onboarding-officenumber"
-            />
-          </Field>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Field label="Postcode">
-            <Input
-              placeholder="3000"
-              value={data.officePostcode}
-              onChange={e => setData({ ...data, officePostcode: e.target.value })}
-              className="text-base h-11"
-              data-testid="input-onboarding-officepostcode"
-            />
-          </Field>
-          <Field label="Gemeente">
-            <Input
-              placeholder="Leuven"
-              value={data.officeTown}
-              onChange={e => setData({ ...data, officeTown: e.target.value })}
-              className="text-base h-11"
-              data-testid="input-onboarding-officetown"
-            />
-          </Field>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function StepAbout({ data, setData }: { data: AboutData; setData: (d: AboutData) => void }) {
-  const remaining = 200 - (data.introduction?.length || 0);
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-2 border-b pb-2">
-        <Sparkles className="h-5 w-5 text-primary" />
-        <h3 className="text-lg font-semibold">Over uw bedrijf</h3>
-      </div>
-      <p className="text-sm text-muted-foreground">
-        Vertel potentiële klanten wie u bent en wat u doet. Een goede beschrijving verhoogt uw vindbaarheid.
-      </p>
-
-      <Field
-        label="Slagzin"
-        hint="Een korte krachtige zin — dit is het eerste wat klanten zien"
-      >
-        <div className="relative">
-          <Textarea
-            placeholder="Bv. Al 15 jaar de meest betrouwbare tuinman van Vlaams-Brabant"
-            value={data.introduction}
-            onChange={e => setData({ ...data, introduction: e.target.value })}
-            className="text-base min-h-[70px] resize-none"
-            maxLength={200}
-            data-testid="input-onboarding-introduction"
-          />
-          <span className={`text-xs absolute bottom-2 right-3 ${remaining < 20 ? "text-destructive" : "text-muted-foreground"}`}>
-            {remaining} tekens resterend
-          </span>
-        </div>
-      </Field>
-
-      <Field
-        label="Uitgebreide beschrijving"
-        hint="Vertel meer over uw aanpak, ervaring en wat u onderscheidt van anderen"
-      >
-        <Textarea
-          placeholder="Beschrijf uw bedrijf, werkwijze, ervaring en wat klanten van u mogen verwachten..."
-          value={data.description}
-          onChange={e => setData({ ...data, description: e.target.value })}
-          className="text-base min-h-[160px]"
-          data-testid="input-onboarding-description"
-        />
-      </Field>
-    </div>
-  );
-}
-
-function StepServices({
-  data, setData, serviceCategories, mainCategoryLabels, specializationsByCategory, labelByKey,
-}: {
-  data: ServicesData;
-  setData: (d: ServicesData) => void;
-  serviceCategories: any[];
-  mainCategoryLabels: Record<string, string>;
-  specializationsByCategory: Record<string, string[]>;
-  labelByKey: Record<string, string>;
-}) {
-
-  const toggleCategory = (slug: string) => {
-    const next = data.mainCategories.includes(slug)
-      ? data.mainCategories.filter(s => s !== slug)
-      : [...data.mainCategories, slug];
-    setData({ ...data, mainCategories: next });
-  };
-
-  const toggleSpec = (slug: string) => {
-    const next = data.specializations.includes(slug)
-      ? data.specializations.filter(s => s !== slug)
-      : [...data.specializations, slug];
-    setData({ ...data, specializations: next });
-  };
-
-  const relevantSpecs = data.mainCategories.flatMap(cat => specializationsByCategory[cat] || []);
-
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-2 border-b pb-2">
-        <Tags className="h-5 w-5 text-primary" />
-        <h3 className="text-lg font-semibold">Uw diensten</h3>
-      </div>
-      <p className="text-sm text-muted-foreground">
-        Kies welke categorieën en specialisaties op uw profiel verschijnen. Dit helpt klanten u te vinden.
-      </p>
-
-      <div className="space-y-3">
-        <Label className="text-base font-medium">Categorieën</Label>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          {serviceCategories.map(cat => (
-            <label
-              key={cat.slug}
-              className={`flex items-start gap-3 rounded-lg border p-3 cursor-pointer transition-colors ${
-                data.mainCategories.includes(cat.slug)
-                  ? "border-primary bg-primary/5"
-                  : "border-border hover:border-primary/40"
-              }`}
-            >
-              <Checkbox
-                checked={data.mainCategories.includes(cat.slug)}
-                onCheckedChange={() => toggleCategory(cat.slug)}
-                className="mt-0.5"
-                data-testid={`checkbox-category-${cat.slug}`}
-              />
-              <div>
-                <p className="font-medium text-sm">{mainCategoryLabels[cat.slug] || cat.name}</p>
-                {cat.description && <p className="text-xs text-muted-foreground mt-0.5">{cat.description}</p>}
-              </div>
-            </label>
-          ))}
-        </div>
-      </div>
-
-      {relevantSpecs.length > 0 && (
-        <div className="space-y-3">
-          <Label className="text-base font-medium">Specialisaties</Label>
-          <p className="text-sm text-muted-foreground">Kies de specifieke diensten die u aanbiedt.</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {relevantSpecs.map(spec => (
-              <label
-                key={spec}
-                className={`flex items-center gap-3 rounded-lg border p-3 cursor-pointer transition-colors ${
-                  data.specializations.includes(spec)
-                    ? "border-primary bg-primary/5"
-                    : "border-border hover:border-primary/40"
-                }`}
-              >
-                <Checkbox
-                  checked={data.specializations.includes(spec)}
-                  onCheckedChange={() => toggleSpec(spec)}
-                  data-testid={`checkbox-spec-${spec}`}
-                />
-                <span className="text-sm font-medium">{spec}</span>
-              </label>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {serviceCategories.length === 0 && (
-        <p className="text-sm text-muted-foreground italic">Categorieën worden geladen...</p>
-      )}
-    </div>
-  );
-}
 
 function StepDone({
   profileSlug, profileId, onActivate, onLater,
@@ -580,16 +304,10 @@ export function OnboardingWizard({ accountId, onComplete }: OnboardingWizardProp
   const [profileId, setProfileId] = useState<string | null>(null);
   const [profileSlug, setProfileSlug] = useState<string>("");
 
-  const { data: locations = [] } = useQuery<Location[]>({
-    queryKey: ["/api/locations"],
-  });
-
   const { data: accountData } = useQuery<Account>({
     queryKey: ["/api/accounts/by-auth", user?.id],
     enabled: !!user?.id,
   });
-
-  const { mainCategoryLabels, specializationsByCategory, serviceCategories, labelByKey } = useSpecializationMap();
 
   const [personal, setPersonal] = useState<PersonalData>({ firstName: "", lastName: "" });
   const [billing, setBilling] = useState<BillingData>({
@@ -598,7 +316,7 @@ export function OnboardingWizard({ accountId, onComplete }: OnboardingWizardProp
   });
   const [profileData, setProfileData] = useState<ProfileData>({
     name: "", email: user?.email || "", telnr: "", website: "",
-    locationId: "", officeStreet: "", officeNumber: "", officeTown: "", officePostcode: "",
+    locationId: "", officeStreet: "", officeNumber: "", officeTown: "", officePostcode: "", hideAddress: false,
   });
   const [about, setAbout] = useState<AboutData>({ introduction: "", description: "" });
   const [services, setServices] = useState<ServicesData>({ mainCategories: [], specializations: [] });
@@ -653,6 +371,7 @@ export function OnboardingWizard({ accountId, onComplete }: OnboardingWizardProp
         website: profileData.website,
         locationId: profileData.locationId,
         hasWebsite: !!profileData.website,
+        hideAddress: profileData.hideAddress,
         office: {
           street: profileData.officeStreet,
           number: profileData.officeNumber,
@@ -669,7 +388,7 @@ export function OnboardingWizard({ accountId, onComplete }: OnboardingWizardProp
         locationId: profileData.locationId,
         hasWebsite: !!profileData.website,
         isActive: true,
-        hideAddress: false,
+        hideAddress: profileData.hideAddress,
         office: {
           street: profileData.officeStreet,
           number: profileData.officeNumber,
@@ -813,19 +532,41 @@ export function OnboardingWizard({ accountId, onComplete }: OnboardingWizardProp
               />
             )}
             {step === 2 && (
-              <StepProfileBasics
-                data={profileData} setData={setProfileData} locations={locations}
+              <div className="space-y-8">
+                <ProfileContactSection
+                  value={{
+                    name: profileData.name,
+                    email: profileData.email,
+                    telnr: profileData.telnr,
+                    website: profileData.website,
+                    locationId: profileData.locationId,
+                  }}
+                  onChange={(key, val) => setProfileData(d => ({ ...d, [key]: val }))}
+                />
+                <ProfileAddressSection
+                  value={{
+                    officeStreet: profileData.officeStreet,
+                    officeNumber: profileData.officeNumber,
+                    officeTown: profileData.officeTown,
+                    officePostcode: profileData.officePostcode,
+                    hideAddress: profileData.hideAddress,
+                  }}
+                  onChange={(key, val) => setProfileData(d => ({ ...d, [key]: val }))}
+                />
+              </div>
+            )}
+            {step === 3 && (
+              <ProfileAboutSection
+                value={about}
+                onChange={(key, val) => setAbout(d => ({ ...d, [key]: val }))}
+                websiteUrl={profileData.website}
+                companyName={profileData.name}
               />
             )}
-            {step === 3 && <StepAbout data={about} setData={setAbout} />}
             {step === 4 && (
-              <StepServices
-                data={services}
-                setData={setServices}
-                serviceCategories={serviceCategories}
-                mainCategoryLabels={mainCategoryLabels}
-                specializationsByCategory={specializationsByCategory}
-                labelByKey={labelByKey}
+              <ProfileServicesSection
+                value={services}
+                onChange={(cats, specs) => setServices({ mainCategories: cats, specializations: specs })}
               />
             )}
             {step === 5 && (
