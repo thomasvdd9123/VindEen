@@ -105,37 +105,32 @@ export default function DashboardAccount() {
     },
   });
 
-  // Only load form values on initial mount, not on every metadata change
-  const [hasLoadedAccount, setHasLoadedAccount] = useState(false);
-  const [hasLoadedInvoice, setHasLoadedInvoice] = useState(false);
-
+  // Populate personal form from auth metadata — only when not dirty (user hasn't started typing)
   useEffect(() => {
-    if (!hasLoadedAccount && metadata.firstName) {
-      accountForm.reset({
-        firstName: metadata.firstName || "",
-        lastName: metadata.lastName || "",
-        gender: metadata.gender || "",
-      });
-      setHasLoadedAccount(true);
-    }
-  }, [metadata.firstName, hasLoadedAccount]);
+    if (!metadata.firstName && !metadata.lastName) return;
+    if (accountForm.formState.isDirty) return;
+    accountForm.reset({
+      firstName: metadata.firstName || "",
+      lastName: metadata.lastName || "",
+      gender: metadata.gender || "",
+    });
+  }, [metadata.firstName, metadata.lastName, metadata.gender]);
 
-  // Load invoice form from account data (from database)
+  // Populate invoice form from DB — only when not dirty (user hasn't started typing)
   useEffect(() => {
-    if (!hasLoadedInvoice && accountData) {
-      invoiceForm.reset({
-        invoiceName: accountData.companyName || "",
-        street: accountData.billingStreet || "",
-        houseNumber: accountData.billingNumber || "",
-        municipality: accountData.billingCity || "",
-        postcode: accountData.billingPostcode || "",
-        country: siteConfig.country,
-        btwPlichtig: accountData.vatNumber ? "yes" : "no",
-        btwNumber: accountData.vatNumber || "",
-      });
-      setHasLoadedInvoice(true);
-    }
-  }, [accountData, hasLoadedInvoice]);
+    if (!accountData) return;
+    if (invoiceForm.formState.isDirty) return;
+    invoiceForm.reset({
+      invoiceName: accountData.companyName || "",
+      street: accountData.billingStreet || "",
+      houseNumber: accountData.billingNumber || "",
+      municipality: accountData.billingCity || "",
+      postcode: accountData.billingPostcode || "",
+      country: siteConfig.country,
+      btwPlichtig: accountData.vatNumber ? "yes" : "no",
+      btwNumber: accountData.vatNumber || "",
+    });
+  }, [accountData]);
 
   const onSubmitAccount = async (data: AccountFormData) => {
     setIsLoadingAccount(true);
@@ -153,6 +148,7 @@ export default function DashboardAccount() {
           variant: "destructive",
         });
       } else {
+        accountForm.reset(data); // mark form pristine so re-fetched data can repopulate if needed
         toast({
           title: "Gegevens opgeslagen",
           description: "Je persoonlijke gegevens zijn bijgewerkt.",
@@ -189,8 +185,8 @@ export default function DashboardAccount() {
         billingPostcode: data.postcode,
         vatNumber: data.btwPlichtig === "yes" && data.btwNumber ? formatBelgianVAT(data.btwNumber) : null,
       });
-      
-      // Invalidate account cache to refresh data
+
+      invoiceForm.reset(data); // mark form pristine so re-fetched data can repopulate correctly
       queryClient.invalidateQueries({ queryKey: ["/api/accounts/by-auth", user?.id] });
       
       toast({
