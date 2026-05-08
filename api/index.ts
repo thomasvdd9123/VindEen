@@ -963,7 +963,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       // optionele back-fill wanneer er géén expliciete service_area-match is.
       let searchLocationData: { lat: number; lng: number; name: string; id: string } | null = null;
       let coverageMatched = false;
-      const SEARCH_RADIUS_KM = 20;
+      const SEARCH_RADIUS_KM = 25;
       let locationCandidateIds: string[] | null = null;
       if (location) {
         const loc = serviceAreas.find((a) => a.slug === location);
