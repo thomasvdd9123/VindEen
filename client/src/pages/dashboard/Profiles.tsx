@@ -201,7 +201,7 @@ function ProfileCard({ profile, onDelete }: {
   const { toast } = useToast();
   const [cancelTarget, setCancelTarget] = useState(false);
 
-  const { data: subscription } = useQuery<SubscriptionItem | null>({
+  const { data: subscription, isLoading: isLoadingSubscription } = useQuery<SubscriptionItem | null>({
     queryKey: ["/api/subscriptions/profile", profile.id],
     queryFn: async () => {
       const res = await authFetch(`/api/subscriptions/profile/${profile.id}`);
@@ -296,13 +296,17 @@ function ProfileCard({ profile, onDelete }: {
                       <VerifIcon className="h-3 w-3" />
                       {verif.label}
                     </span>
-                    <span
-                      className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${subPill.cls}`}
-                      data-testid={`badge-subscription-${profile.id}`}
-                    >
-                      <SubIcon className="h-3 w-3" />
-                      {subPill.label}
-                    </span>
+                    {isLoadingSubscription ? (
+                      <span className="h-5 w-28 rounded-full bg-muted animate-pulse" />
+                    ) : (
+                      <span
+                        className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${subPill.cls}`}
+                        data-testid={`badge-subscription-${profile.id}`}
+                      >
+                        <SubIcon className="h-3 w-3" />
+                        {subPill.label}
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -322,39 +326,43 @@ function ProfileCard({ profile, onDelete }: {
 
                 {/* Action row */}
                 <div className="flex flex-wrap items-center gap-2">
-                  {/* Pay / Renew button */}
-                  {needsPayment && (
-                    <Link href={`/dashboard/profielen/${profile.id}/betalen`}>
-                      <Button size="sm" className="gap-1.5 h-8" data-testid={`button-pay-${profile.id}`}>
-                        <CreditCard className="h-3.5 w-3.5" />
-                        {isExpired ? "Opnieuw activeren" : "Activeren"}
-                      </Button>
-                    </Link>
-                  )}
+                  {!isLoadingSubscription && (
+                    <>
+                      {/* Pay / Renew button */}
+                      {needsPayment && (
+                        <Link href={`/dashboard/profielen/${profile.id}/betalen`}>
+                          <Button size="sm" className="gap-1.5 h-8" data-testid={`button-pay-${profile.id}`}>
+                            <CreditCard className="h-3.5 w-3.5" />
+                            {isExpired ? "Opnieuw activeren" : "Activeren"}
+                          </Button>
+                        </Link>
+                      )}
 
-                  {/* Renew early if cancelled (still has time) */}
-                  {isCancelled && (
-                    <Link href={`/dashboard/profielen/${profile.id}/betalen`}>
-                      <Button size="sm" variant="outline" className="gap-1.5 h-8" data-testid={`button-renew-${profile.id}`}>
-                        <RefreshCw className="h-3.5 w-3.5" />
-                        Heractiveren
-                      </Button>
-                    </Link>
-                  )}
+                      {/* Renew early if cancelled (still has time) */}
+                      {isCancelled && (
+                        <Link href={`/dashboard/profielen/${profile.id}/betalen`}>
+                          <Button size="sm" variant="outline" className="gap-1.5 h-8" data-testid={`button-renew-${profile.id}`}>
+                            <RefreshCw className="h-3.5 w-3.5" />
+                            Heractiveren
+                          </Button>
+                        </Link>
+                      )}
 
-                  {/* Stop lidmaatschap — only when ACTIVE */}
-                  {hasActiveSub && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="gap-1.5 h-8 text-slate-600 border-slate-300 hover:text-destructive hover:border-destructive/50"
-                      onClick={() => setCancelTarget(true)}
-                      disabled={cancelMutation.isPending}
-                      data-testid={`button-cancel-subscription-${profile.id}`}
-                    >
-                      <Ban className="h-3.5 w-3.5" />
-                      Stop lidmaatschap
-                    </Button>
+                      {/* Stop lidmaatschap — only when ACTIVE */}
+                      {hasActiveSub && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="gap-1.5 h-8 text-slate-600 border-slate-300 hover:text-destructive hover:border-destructive/50"
+                          onClick={() => setCancelTarget(true)}
+                          disabled={cancelMutation.isPending}
+                          data-testid={`button-cancel-subscription-${profile.id}`}
+                        >
+                          <Ban className="h-3.5 w-3.5" />
+                          Stop lidmaatschap
+                        </Button>
+                      )}
+                    </>
                   )}
 
                   <Link href={`/dashboard/profielen/${profile.id}/bewerken`}>
@@ -387,8 +395,8 @@ function ProfileCard({ profile, onDelete }: {
               </div>
             </div>
 
-            {/* Warning strip */}
-            {needsPayment && (
+            {/* Warning strip — alleen tonen als abonnementsdata geladen is */}
+            {!isLoadingSubscription && needsPayment && (
               <div className="mt-4 -mx-5 -mb-5 px-5 py-3 bg-amber-50 border-t border-amber-100 flex items-center gap-2 text-amber-700 text-xs">
                 <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
                 <span>
@@ -398,7 +406,7 @@ function ProfileCard({ profile, onDelete }: {
                 </span>
               </div>
             )}
-            {isCancelled && endDate && (
+            {!isLoadingSubscription && isCancelled && endDate && (
               <div className="mt-4 -mx-5 -mb-5 px-5 py-3 bg-slate-50 border-t border-slate-100 flex items-center gap-2 text-slate-600 text-xs">
                 <Ban className="h-3.5 w-3.5 shrink-0" />
                 <span>
