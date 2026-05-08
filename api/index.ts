@@ -958,33 +958,49 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         if (sc) categoryIdsForMain = [sc.id];
       }
 
-      // Location: profile_service_area is autoritatief voor coverage.
-      // Office-address afstand wordt enkel gebruikt voor sortering en als
-      // optionele back-fill wanneer er géén expliciete service_area-match is.
-      let searchLocationData: { lat: number; lng: number; name: string; id: string; postcode: string | null } | null = null;
+      // Locatiezoeklogica: toon profielen die minstens één servicegebied binnen 25km bedienen.
+      // Sortering op afstand van het dichtstbijzijnde geregistreerde servicegebied.
+      let searchLocationData: { lat: number; lng: number; name: string } | null = null;
       const SEARCH_RADIUS_KM = 25;
       let locationCandidateIds: string[] | null = null;
-      // coverageMatchedSet: snelle lookup welke profielen expliciet dit gebied bedienen
-      let coverageMatchedSet = new Set<string>();
+      // nearbyAreaDistMap: service_area id → afstand tot zoeklocatie (alleen < 25km)
+      const nearbyAreaDistMap = new Map<string, number>();
       if (location) {
         const loc = serviceAreas.find((a) => a.slug === location);
         if (loc && loc.latitude && loc.longitude) {
-          searchLocationData = { lat: loc.latitude, lng: loc.longitude, name: loc.municipality, id: loc.id, postcode: loc.postcode || null };
-          const { data: areaProfiles } = await supabase
-            .from("profile_service_area")
-            .select("profile_id")
-            .eq("service_area_id", loc.id);
-          const areaIds = (areaProfiles || []).map((r) => (r as { profile_id: string }).profile_id);
-          coverageMatchedSet = new Set(areaIds);
-          // locationCandidateIds wordt NIET meer gebruikt als query-filter —
-          // we halen alle profielen op en filteren in JS op coverage ÓF radius.
-          locationCandidateIds = null;
+          searchLocationData = { lat: loc.latitude, lng: loc.longitude, name: loc.municipality };
+          // Bereken welke service_areas binnen 25km liggen
+          for (const area of serviceAreas) {
+            if (area.latitude && area.longitude) {
+              const d = calcDistance(loc.latitude, loc.longitude, area.latitude, area.longitude);
+              if (d <= SEARCH_RADIUS_KM) nearbyAreaDistMap.set(area.id, Math.round(d * 10) / 10);
+            }
+          }
+          // Zoek profielen die minstens één nabij servicegebied bedienen
+          const nearbyAreaIds = Array.from(nearbyAreaDistMap.keys());
+          if (nearbyAreaIds.length) {
+            const { data: areaProfiles } = await supabase
+              .from("profile_service_area")
+              .select("profile_id, service_area_id")
+              .in("service_area_id", nearbyAreaIds)
+              .limit(10000);
+            // Bereken voor elk profiel de minimale afstand (dichtstbijzijnde servicegebied)
+            const profileMinDist = new Map<string, number>();
+            for (const row of (areaProfiles || []) as { profile_id: string; service_area_id: string }[]) {
+              const d = nearbyAreaDistMap.get(row.service_area_id) ?? SEARCH_RADIUS_KM;
+              const cur = profileMinDist.get(row.profile_id);
+              if (cur === undefined || d < cur) profileMinDist.set(row.profile_id, d);
+            }
+            locationCandidateIds = Array.from(profileMinDist.keys());
+            // Sla de afstanden op voor later gebruik in de response
+            (searchLocationData as any)._profileMinDist = profileMinDist;
+          } else {
+            locationCandidateIds = [];
+          }
         }
       }
 
-      // Build profile query using inner joins for spec + category to avoid
-      // large .in() URL overflow (junction tables can have 400+ rows per category).
-      // Location still uses .in() since area matches are already small subsets.
+      // Build profile query
       let selectStr = "*";
       if (specId) selectStr += ", profile_specialization!inner(specialization_id)";
       if (categoryIdsForMain) selectStr += ", profile_service_category!inner(service_category_id)";
@@ -992,61 +1008,35 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       let q = supabase.from("profile").select(selectStr, { count: "exact" })
         .eq("is_active", true).eq("is_public", true).eq("verification_status", "APPROVED");
 
-      // Inner-join filters (no large URL — PostgREST handles these server-side)
       if (specId) q = (q as any).eq("profile_specialization.specialization_id", specId);
       if (categoryIdsForMain) q = (q as any).eq("profile_service_category.service_category_id", categoryIdsForMain[0]);
 
-      // Geen query-filter op locatie — filtering op coverage ÓF radius gebeurt in JS na afstandsberekening.
+      if (locationCandidateIds !== null) {
+        if (!locationCandidateIds.length) {
+          if (isCount) return res.status(200).json({ total: 0, count: 0 });
+          return res.status(200).json({ profiles: [], total: 0, page, totalPages: 0, searchLocation: searchLocationData });
+        }
+        q = q.in("id", locationCandidateIds);
+      }
 
       if (query) q = q.or(`company_name.ilike.%${query}%,introduction.ilike.%${query}%,title.ilike.%${query}%`);
 
-      // Always fetch all matching first if we need distance filter/sort
       const { data: rawProfiles, count, error } = await q;
       if (error) throw error;
       let profiles = rawProfiles || [];
 
-      // Afstandsberekening en -filtering:
-      //  - Coverage-match (service_area): profiel heeft expliciet dit gebied aangeduid →
-      //    altijd opnemen. Afstand wordt berekend voor sortering.
-      //  - Geen coverage-match: fallback 25km-radius rond office_address.
-      //  - Sortering: dichtstbij eerst. Coverage-matched profielen zonder GPS-coördinaten
-      //    krijgen een sorteerpositie net ná berekende afstanden (grote maar niet-oneindige
-      //    waarde), zodat ze niet achter radius-profielen vallen.
-      if (searchLocationData) {
-        const ids = profiles.map((p) => p.office_address_id).filter(Boolean);
-        const { data: addrs } = await supabase.from("address").select("id, latitude, longitude, postcode, municipality").in("id", ids);
-        const addrMap: Record<string, { id: string; latitude: number | null; longitude: number | null; postcode: string | null; municipality: string | null }> = {};
-        for (const a of addrs || []) {
-          const row = a as { id: string; latitude: number | null; longitude: number | null; postcode: string | null; municipality: string | null };
-          addrMap[row.id] = row;
-        }
-        const annotated: any[] = [];
-        for (const p of profiles) {
-          const a = p.office_address_id ? addrMap[p.office_address_id] : null;
-          let d: number | null = null;
-          if (a && a.latitude && a.longitude) {
-            d = calcDistance(searchLocationData.lat, searchLocationData.lng, a.latitude, a.longitude);
-          }
-          const isCoverageMatch = coverageMatchedSet.has(p.id);
-          if (isCoverageMatch) {
-            // Altijd opnemen — profiel dient dit gebied expliciet.
-            // Postcode-match zonder GPS → afstand 0 (lokaal).
-            const isLocal = a && searchLocationData.postcode && a.postcode === searchLocationData.postcode;
-            const dist = d != null ? Math.round(d * 10) / 10 : (isLocal ? 0 : null);
-            annotated.push({ ...p, _distanceKm: dist });
-          } else if (d != null && d <= SEARCH_RADIUS_KM) {
-            // Nabijgelegen maar geen expliciete coverage: opnemen als binnen 25km
-            annotated.push({ ...p, _distanceKm: Math.round(d * 10) / 10 });
-          }
-        }
-        // Sortering: afstand oplopend; coverage-matched zonder coördinaten (null) komen
-        // na profielen met bekende afstand, maar vóór alles via de SEARCH_RADIUS_KM+1-sentinel.
-        annotated.sort((a, b) => {
-          const da = a._distanceKm == null ? SEARCH_RADIUS_KM + 1 : a._distanceKm;
-          const db = b._distanceKm == null ? SEARCH_RADIUS_KM + 1 : b._distanceKm;
-          return da - db || (a.company_name || "").localeCompare(b.company_name || "");
+      // Sorteer op afstand (dichtstbijzijnde geregistreerde servicegebied)
+      if (searchLocationData && (searchLocationData as any)._profileMinDist) {
+        const profileMinDist: Map<string, number> = (searchLocationData as any)._profileMinDist;
+        profiles = [...profiles].map((p: any) => ({
+          ...p,
+          _distanceKm: profileMinDist.get(p.id) ?? null,
+        }));
+        profiles.sort((a: any, b: any) => {
+          const da = a._distanceKm == null ? 999 : a._distanceKm;
+          const db = b._distanceKm == null ? 999 : b._distanceKm;
+          return da - db || ((a.company_name || "").localeCompare(b.company_name || ""));
         });
-        profiles = annotated;
       }
 
       const total = searchLocationData ? profiles.length : count || profiles.length;
