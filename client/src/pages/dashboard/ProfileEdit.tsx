@@ -14,7 +14,6 @@ import { Loader2, Save, ArrowLeft, Info, Eye, EyeOff, CheckCircle } from "lucide
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Progress } from "@/components/ui/progress";
 import type { Profile } from "@shared/schema";
 import { PracticalQuestionsForm } from "@/components/PracticalQuestionsForm";
 import { LogoUpload } from "@/components/ProfilePhotoUploads";
@@ -25,23 +24,27 @@ import { ProfileAddressSection } from "@/components/profile/ProfileAddressSectio
 import { ProfileAboutSection } from "@/components/profile/ProfileAboutSection";
 import { ProfileServicesSection } from "@/components/profile/ProfileServicesSection";
 
-// Calculate profile completeness from form values
-function calculateProfileCompleteness(formValues: ProfileFormData): { percentage: number; missing: string[] } {
+// Calculate profile completeness from all real data sources
+function calculateProfileCompleteness(
+  formValues: ProfileFormData,
+  logoUrl: string | null | undefined,
+  practicalAnswers: Record<string, any>,
+): { percentage: number; missing: string[] } {
   const fields = [
-    { key: "name", label: "Bedrijfsnaam", value: formValues.name },
-    { key: "email", label: "Email", value: formValues.email },
-    { key: "introduction", label: "Slagzin", value: formValues.introduction },
-    { key: "categoryId", label: "Categorie", value: formValues.categoryId },
-    { key: "locationId", label: "Locatie", value: formValues.locationId },
-    { key: "telnr", label: "Telefoonnummer", value: formValues.telnr },
-    { key: "website", label: "Website", value: formValues.website },
-    { key: "description", label: "Beschrijving", value: formValues.description },
-    { key: "specializations", label: "Specialisaties", value: formValues.specializations?.length ? formValues.specializations : null },
+    { label: "Bedrijfsnaam",     filled: !!formValues.name?.trim() },
+    { label: "Email",            filled: !!formValues.email?.trim() },
+    { label: "Telefoonnummer",   filled: !!formValues.telnr?.trim() },
+    { label: "Locatie",          filled: !!formValues.locationId?.trim() },
+    { label: "Slagzin",         filled: !!formValues.introduction?.trim() },
+    { label: "Beschrijving",    filled: !!formValues.description?.trim() },
+    { label: "Specialisaties",  filled: (formValues.specializations?.length ?? 0) > 0 },
+    { label: "Profielfoto",     filled: !!logoUrl },
+    { label: "Praktische info", filled: Object.values(practicalAnswers).some(v => v !== null && v !== undefined && v !== "") },
   ];
-  
-  const filled = fields.filter(f => f.value && String(f.value).trim() !== "");
-  const missing = fields.filter(f => !f.value || String(f.value).trim() === "").map(f => f.label);
-  
+
+  const filled = fields.filter(f => f.filled);
+  const missing = fields.filter(f => !f.filled).map(f => f.label);
+
   return {
     percentage: Math.round((filled.length / fields.length) * 100),
     missing,
@@ -70,10 +73,27 @@ const profileSchema = z.object({
 
 type ProfileFormData = z.infer<typeof profileSchema>;
 
-function ProfileCompletenessCard({ form }: { form: ReturnType<typeof useForm<ProfileFormData>> }) {
+function ProfileCompletenessCard({
+  form,
+  logoUrl,
+  practicalAnswers,
+}: {
+  form: ReturnType<typeof useForm<ProfileFormData>>;
+  logoUrl: string | null | undefined;
+  practicalAnswers: Record<string, any>;
+}) {
   const formValues = form.watch();
-  const { percentage, missing } = calculateProfileCompleteness(formValues);
-  
+  const { percentage, missing } = calculateProfileCompleteness(formValues, logoUrl, practicalAnswers);
+
+  const color =
+    percentage === 100
+      ? "bg-primary"
+      : percentage >= 67
+      ? "bg-primary"
+      : percentage >= 34
+      ? "bg-amber-500"
+      : "bg-destructive";
+
   return (
     <Card className="mb-4" data-testid="card-profile-completeness">
       <CardContent className="pt-4">
@@ -83,7 +103,13 @@ function ProfileCompletenessCard({ form }: { form: ReturnType<typeof useForm<Pro
             {percentage}%
           </Badge>
         </div>
-        <Progress value={percentage} className="h-2" />
+        {/* Native progress bar — no dependency on Radix colours */}
+        <div className="relative h-2 w-full overflow-hidden rounded-full bg-secondary">
+          <div
+            className={`h-full rounded-full transition-all duration-500 ${color}`}
+            style={{ width: `${percentage}%` }}
+          />
+        </div>
         {missing.length > 0 && (
           <p className="text-xs text-muted-foreground mt-2">
             Nog toe te voegen: {missing.join(", ")}
@@ -288,7 +314,11 @@ export default function ProfileEdit() {
         )}
 
         {/* Profile Completeness Indicator */}
-        <ProfileCompletenessCard form={form} />
+        <ProfileCompletenessCard
+          form={form}
+          logoUrl={profile?.logoUrl}
+          practicalAnswers={practicalAnswers}
+        />
 
         <Card>
           <CardHeader>
