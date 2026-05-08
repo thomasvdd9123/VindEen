@@ -961,14 +961,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       // Location: profile_service_area is autoritatief voor coverage.
       // Office-address afstand wordt enkel gebruikt voor sortering en als
       // optionele back-fill wanneer er géén expliciete service_area-match is.
-      let searchLocationData: { lat: number; lng: number; name: string; id: string } | null = null;
+      let searchLocationData: { lat: number; lng: number; name: string; id: string; postcode: string | null } | null = null;
       let coverageMatched = false;
       const SEARCH_RADIUS_KM = 25;
       let locationCandidateIds: string[] | null = null;
       if (location) {
         const loc = serviceAreas.find((a) => a.slug === location);
         if (loc && loc.latitude && loc.longitude) {
-          searchLocationData = { lat: loc.latitude, lng: loc.longitude, name: loc.municipality, id: loc.id };
+          searchLocationData = { lat: loc.latitude, lng: loc.longitude, name: loc.municipality, id: loc.id, postcode: loc.postcode || null };
           const { data: areaProfiles } = await supabase
             .from("profile_service_area")
             .select("profile_id")
@@ -1011,15 +1011,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (error) throw error;
       let profiles = rawProfiles || [];
 
-      // Afstandsberekening:
-      //  - Coverage-match (service_area): bereken afstand voor sortering, geen filter.
-      //  - Geen coverage-match: fallback 20km-radius rond office_address.
+      // Afstandsberekening en -filtering:
+      //  - 25km-radius geldt altijd, ook bij coverage-match.
+      //  - Profielen in dezelfde postcode zonder GPS-coördinaten krijgen afstand 0
+      //    zodat ze bovenaan sorteren (lokale tuinmannen eerst).
+      //  - Coverage-match bepaalt alleen de kandidatenlijst, niet of de afstandsfilter
+      //    overgeslagen wordt.
       if (searchLocationData) {
         const ids = profiles.map((p) => p.office_address_id).filter(Boolean);
-        const { data: addrs } = await supabase.from("address").select("id, latitude, longitude").in("id", ids);
-        const addrMap: Record<string, { id: string; latitude: number | null; longitude: number | null }> = {};
+        const { data: addrs } = await supabase.from("address").select("id, latitude, longitude, postcode, municipality").in("id", ids);
+        const addrMap: Record<string, { id: string; latitude: number | null; longitude: number | null; postcode: string | null; municipality: string | null }> = {};
         for (const a of addrs || []) {
-          const row = a as { id: string; latitude: number | null; longitude: number | null };
+          const row = a as { id: string; latitude: number | null; longitude: number | null; postcode: string | null; municipality: string | null };
           addrMap[row.id] = row;
         }
         const annotated: any[] = [];
@@ -1029,11 +1032,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           if (a && a.latitude && a.longitude) {
             d = calcDistance(searchLocationData.lat, searchLocationData.lng, a.latitude, a.longitude);
           }
-          if (coverageMatched) {
-            annotated.push({ ...p, _distanceKm: d == null ? null : Math.round(d * 10) / 10 });
+          // Lokale match: postcode van profiel == postcode van gezochte locatie
+          const isLocal = a && searchLocationData.postcode && a.postcode === searchLocationData.postcode;
+          if (isLocal && d == null) {
+            // Zelfde postcode maar geen GPS → behandel als afstand 0
+            annotated.push({ ...p, _distanceKm: 0 });
           } else if (d != null && d <= SEARCH_RADIUS_KM) {
             annotated.push({ ...p, _distanceKm: Math.round(d * 10) / 10 });
           }
+          // Profielen zonder coördinaten en niet-lokaal worden overgeslagen
         }
         annotated.sort((a, b) => {
           const da = a._distanceKm == null ? Number.POSITIVE_INFINITY : a._distanceKm;
