@@ -282,16 +282,6 @@ function ContactCard({ contact }: { contact: ContactRequest }) {
                   <Reply className="h-3.5 w-3.5" />
                   Beantwoorden
                 </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="gap-1"
-                  onClick={handleArchive}
-                  data-testid={`button-archive-${contact.id}`}
-                >
-                  <Archive className="h-3.5 w-3.5" />
-                  Verwijderen
-                </Button>
               </div>
             </div>
           </div>
