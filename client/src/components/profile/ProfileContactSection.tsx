@@ -23,9 +23,10 @@ interface Props {
   value: ContactValues;
   onChange: (key: keyof ContactValues, val: string) => void;
   errors?: ContactErrors;
+  vat?: string | null;
 }
 
-export function ProfileContactSection({ value, onChange, errors }: Props) {
+export function ProfileContactSection({ value, onChange, errors, vat }: Props) {
   const { data: locations = [] } = useQuery<Location[]>({
     queryKey: ["/api/locations"],
   });
@@ -33,7 +34,10 @@ export function ProfileContactSection({ value, onChange, errors }: Props) {
   return (
     <div className="space-y-6">
       <div className="border-b pb-2">
-        <h3 className="text-lg font-semibold">Bedrijfsgegevens</h3>
+        <h3 className="text-lg font-semibold">
+          Bedrijfsgegevens
+          {vat && <span className="ml-2 text-sm font-normal text-muted-foreground">({vat})</span>}
+        </h3>
         <p className="text-sm text-muted-foreground">
           Basisgegevens en contactinformatie van je bedrijf
         </p>

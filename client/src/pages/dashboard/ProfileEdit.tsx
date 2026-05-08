@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { useAuth } from "@/lib/auth";
+import type { Account } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Loader2, Save, ArrowLeft, Info, Eye, EyeOff, CheckCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -124,6 +126,11 @@ export default function ProfileEdit() {
   const [, setLocation] = useLocation();
   const { id } = useParams<{ id: string }>();
   const { toast } = useToast();
+  const { user } = useAuth();
+  const { data: account } = useQuery<Account>({
+    queryKey: ["/api/accounts/by-auth", user?.id],
+    enabled: !!user?.id,
+  });
   const { data: profile, isLoading: profileLoading } = useQuery<Profile>({
     queryKey: ["/api/profiles/id", id],
     queryFn: async () => {
@@ -346,6 +353,7 @@ export default function ProfileEdit() {
                     email: form.formState.errors.email?.message,
                     locationId: form.formState.errors.locationId?.message,
                   }}
+                  vat={(account as any)?.vatNumber ?? null}
                 />
 
                 <ProfileAddressSection
