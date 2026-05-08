@@ -42,7 +42,7 @@ export function ProfileContactSection({ value, onChange, errors, vat }: Props) {
 
       <div className="space-y-1.5">
         <Label htmlFor="pcs-name">
-          Bedrijfsnaam <span className="text-destructive">*</span>
+          Commerciële bedrijfsnaam <span className="text-destructive">*</span>
         </Label>
         <Input
           id="pcs-name"
