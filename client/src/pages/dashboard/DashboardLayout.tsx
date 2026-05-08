@@ -60,8 +60,16 @@ export function DashboardLayout({ children, title, description }: DashboardLayou
         body: JSON.stringify({ authUserId: user.id, email: user.email }),
       })
         .then(res => res.json())
-        .then((account: { id: string }) => {
+        .then((account: { id: string; autoClaimedProfiles?: { id: string; companyName: string | null; slug: string }[] }) => {
           if (account?.id) {
+            // If this is a brand-new signup and profiles were auto-claimed, store for Dashboard banner
+            if (account.autoClaimedProfiles?.length) {
+              localStorage.setItem(
+                `auto_claimed_${user.id}`,
+                JSON.stringify(account.autoClaimedProfiles),
+              );
+            }
+
             // Cache the account under the canonical by-auth key
             queryClient.setQueryData(["/api/accounts/by-auth", user.id], account);
             

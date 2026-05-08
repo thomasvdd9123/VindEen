@@ -295,6 +295,8 @@ interface OnboardingWizardProps {
   initialStep?: number;
 }
 
+interface ClaimableProfile { id: string; companyName: string | null; slug: string; contactEmail: string | null; telnr: string | null; }
+
 export function OnboardingWizard({ accountId, onComplete, initialStep = 0 }: OnboardingWizardProps) {
   const { user, updateUserMetadata } = useAuth();
   const { toast } = useToast();
@@ -305,6 +307,10 @@ export function OnboardingWizard({ accountId, onComplete, initialStep = 0 }: Onb
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
   const [profileId, setProfileId] = useState<string | null>(null);
   const [profileSlug, setProfileSlug] = useState<string>("");
+  // VAT-based claim state — shown only within this wizard, never publicly
+  const [claimableProfiles, setClaimableProfiles] = useState<ClaimableProfile[]>([]);
+  const [showClaimPrompt, setShowClaimPrompt] = useState(false);
+  const [claimingId, setClaimingId] = useState<string | null>(null);
 
   const { data: accountData } = useQuery<Account>({
     queryKey: ["/api/accounts/by-auth", user?.id],
@@ -458,11 +464,45 @@ export function OnboardingWizard({ accountId, onComplete, initialStep = 0 }: Onb
     setSaving(true);
     try {
       await saveCurrentStep();
+
+      // After billing step: silently check for VAT-matching unclaimed profiles
+      if (step === 1 && billing.btwPlichtig === "yes" && billing.vatNumber && isValidBelgianVAT(billing.vatNumber)) {
+        try {
+          const vat = formatBelgianVAT(billing.vatNumber);
+          const found = await apiRequest("GET", `/api/profiles/claim-check?vat=${encodeURIComponent(vat)}`);
+          if (Array.isArray(found) && found.length > 0) {
+            setClaimableProfiles(found);
+            setShowClaimPrompt(true);
+            setSaving(false);
+            return; // Pause wizard — user must decide on claim first
+          }
+        } catch { /* non-fatal — feature activates after DB migration */ }
+      }
+
       setStep(s => s + 1);
     } catch (e: any) {
       toast({ title: "Opslaan mislukt", description: e?.message || "Probeer opnieuw", variant: "destructive" });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleClaimProfile = async (profileId: string) => {
+    setClaimingId(profileId);
+    try {
+      await apiRequest("POST", `/api/profiles/${profileId}/claim`, {});
+      queryClient.invalidateQueries({ queryKey: ["/api/my-profiles"] });
+      // Remove from list and continue wizard
+      const remaining = claimableProfiles.filter(p => p.id !== profileId);
+      setClaimableProfiles(remaining);
+      if (remaining.length === 0) {
+        setShowClaimPrompt(false);
+        setStep(s => s + 1);
+      }
+    } catch {
+      toast({ title: "Claimen mislukt", description: "Probeer opnieuw", variant: "destructive" });
+    } finally {
+      setClaimingId(null);
     }
   };
 
@@ -528,14 +568,66 @@ export function OnboardingWizard({ accountId, onComplete, initialStep = 0 }: Onb
 
           {/* Body */}
           <div className="px-6 py-6">
-            {step === 0 && <StepWelcome onNext={() => setStep(1)} />}
-            {step === 1 && (
+            {/* VAT-based claim prompt — only shown mid-wizard when unclaimed profiles match */}
+            {showClaimPrompt && (
+              <div className="flex flex-col gap-6">
+                <div className="flex flex-col items-center text-center gap-3">
+                  <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center">
+                    <Building2 className="h-8 w-8 text-emerald-600" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold mb-1">
+                      {claimableProfiles.length === 1 ? "We vonden een bestaand profiel!" : `We vonden ${claimableProfiles.length} bestaande profielen!`}
+                    </h2>
+                    <p className="text-muted-foreground text-sm max-w-md mx-auto">
+                      Uw BTW-nummer komt overeen met {claimableProfiles.length === 1 ? "een profiel" : "profielen"} dat al op ons platform staat.
+                      Klik hieronder om {claimableProfiles.length === 1 ? "het" : "ze"} te koppelen aan uw account, of sla dit over om een nieuw profiel aan te maken.
+                    </p>
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  {claimableProfiles.map(p => (
+                    <div key={p.id} className="flex items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50 p-4 gap-4">
+                      <div className="min-w-0">
+                        <p className="font-semibold text-emerald-900 truncate">{p.companyName || p.slug}</p>
+                        {(p.contactEmail || p.telnr) && (
+                          <p className="text-xs text-emerald-700 mt-0.5">
+                            {[p.contactEmail, p.telnr].filter(Boolean).join(" · ")}
+                          </p>
+                        )}
+                      </div>
+                      <Button
+                        size="sm"
+                        className="shrink-0 gap-1.5"
+                        disabled={claimingId === p.id}
+                        onClick={() => handleClaimProfile(p.id)}
+                        data-testid={`btn-claim-profile-${p.id}`}
+                      >
+                        {claimingId === p.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
+                        Koppelen
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+                <Button
+                  variant="ghost"
+                  className="w-full text-muted-foreground"
+                  onClick={() => { setShowClaimPrompt(false); setStep(s => s + 1); }}
+                  data-testid="btn-claim-skip"
+                >
+                  Overslaan — nieuw profiel aanmaken
+                </Button>
+              </div>
+            )}
+
+            {!showClaimPrompt && step === 0 && <StepWelcome onNext={() => setStep(1)} />}
+            {!showClaimPrompt && step === 1 && (
               <StepPersonalBilling
                 personal={personal} setPersonal={setPersonal}
                 billing={billing} setBilling={setBilling}
               />
             )}
-            {step === 2 && (
+            {!showClaimPrompt && step === 2 && (
               <div className="space-y-8">
                 <ProfileContactSection
                   value={{
@@ -559,7 +651,7 @@ export function OnboardingWizard({ accountId, onComplete, initialStep = 0 }: Onb
                 />
               </div>
             )}
-            {step === 3 && (
+            {!showClaimPrompt && step === 3 && (
               <ProfileAboutSection
                 value={about}
                 onChange={(key, val) => setAbout(d => ({ ...d, [key]: val }))}
@@ -567,13 +659,13 @@ export function OnboardingWizard({ accountId, onComplete, initialStep = 0 }: Onb
                 companyName={profileData.name}
               />
             )}
-            {step === 4 && (
+            {!showClaimPrompt && step === 4 && (
               <ProfileServicesSection
                 value={services}
                 onChange={(cats, specs) => setServices({ mainCategories: cats, specializations: specs })}
               />
             )}
-            {step === 5 && (
+            {!showClaimPrompt && step === 5 && (
               <StepDone
                 profileSlug={profileSlug}
                 profileId={profileId || ""}
@@ -583,8 +675,8 @@ export function OnboardingWizard({ accountId, onComplete, initialStep = 0 }: Onb
             )}
           </div>
 
-          {/* Footer nav — only on steps 1-4 */}
-          {step >= 1 && step <= 4 && (
+          {/* Footer nav — only on steps 1-4 and not during claim prompt */}
+          {!showClaimPrompt && step >= 1 && step <= 4 && (
             <div className="sticky bottom-0 bg-background border-t px-6 py-4 flex items-center justify-between gap-3">
               <Button
                 variant="ghost"

@@ -13,6 +13,8 @@ import {
   Eye,
   Mail,
   Loader2,
+  PartyPopper,
+  X,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useQuery } from "@tanstack/react-query";
@@ -26,9 +28,21 @@ interface ProfileWithStats {
   viewCount?: number;
 }
 
+interface ClaimedProfile { id: string; companyName: string | null; slug: string; }
+
 export default function Dashboard() {
   const { user } = useAuth();
   const [wizardDismissed, setWizardDismissed] = useState(false);
+  const [claimBannerDismissed, setClaimBannerDismissed] = useState(false);
+
+  // Auto-claimed profiles stored by DashboardLayout after first signup
+  const autoClaimedProfiles: ClaimedProfile[] = (() => {
+    if (!user?.id) return [];
+    try {
+      const raw = localStorage.getItem(`auto_claimed_${user.id}`);
+      return raw ? JSON.parse(raw) : [];
+    } catch { return []; }
+  })();
 
   const { data: account, isLoading: accountLoading } = useQuery<Account>({
     queryKey: ["/api/accounts/by-auth", user?.id],
@@ -110,6 +124,48 @@ export default function Dashboard() {
           accountId={account.id}
           onComplete={() => setWizardDismissed(true)}
         />
+      )}
+
+      {/* Auto-claim banner — shown once after signup when profiles were auto-claimed by email match */}
+      {autoClaimedProfiles.length > 0 && !claimBannerDismissed && (
+        <div className="mb-6 rounded-xl border border-emerald-200 bg-emerald-50 p-4 relative" data-testid="banner-auto-claimed">
+          <button
+            className="absolute top-3 right-3 text-emerald-700 hover:text-emerald-900"
+            onClick={() => {
+              setClaimBannerDismissed(true);
+              if (user?.id) localStorage.removeItem(`auto_claimed_${user.id}`);
+            }}
+            aria-label="Sluiten"
+            data-testid="btn-dismiss-claim-banner"
+          >
+            <X className="h-4 w-4" />
+          </button>
+          <div className="flex items-start gap-3 pr-6">
+            <PartyPopper className="h-6 w-6 text-emerald-600 mt-0.5 shrink-0" />
+            <div>
+              <p className="font-semibold text-emerald-800 mb-1">
+                {autoClaimedProfiles.length === 1
+                  ? "We vonden uw bedrijfsprofiel!"
+                  : `We vonden ${autoClaimedProfiles.length} bedrijfsprofielen!`}
+              </p>
+              <p className="text-sm text-emerald-700 mb-3">
+                {autoClaimedProfiles.length === 1
+                  ? `Het profiel van ${autoClaimedProfiles[0].companyName || "uw bedrijf"} is automatisch aan uw account gekoppeld. U kunt het nu bewerken en activeren.`
+                  : "De volgende profielen zijn automatisch aan uw account gekoppeld. U kunt ze nu bewerken en activeren."}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {autoClaimedProfiles.map(p => (
+                  <Link key={p.id} href={`/dashboard/profielen`}>
+                    <span className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-100 border border-emerald-300 text-emerald-800 text-sm font-medium px-3 py-1.5 hover:bg-emerald-200 transition-colors cursor-pointer" data-testid={`link-claimed-profile-${p.id}`}>
+                      {p.companyName || p.slug}
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Stats overview */}

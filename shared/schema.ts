@@ -110,6 +110,7 @@ export const profile = pgTable("profile", {
   viewCount: integer("view_count").default(0),
   websiteClicks: integer("website_clicks").default(0),
   slug: text("slug").notNull().unique(),
+  isClaimed: boolean("is_claimed").notNull().default(true),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

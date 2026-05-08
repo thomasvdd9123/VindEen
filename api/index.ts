@@ -1171,7 +1171,33 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         .select()
         .single();
       if (error) throw error;
-      return res.status(200).json(toCamelCase({ ...data, account_id: (data as any).id, role: "GARDENER", email_verified: true }));
+      const newId = (data as any).id;
+
+      // Auto-claim unclaimed profiles matching this email (only during signup, silent)
+      let autoClaimedProfiles: { id: string; companyName: string | null; slug: string }[] = [];
+      if (email) {
+        try {
+          const { data: claimable } = await supabase
+            .from("profile")
+            .select("id, company_name, slug")
+            .eq("contact_email", email)
+            .eq("is_claimed", false)
+            .limit(10);
+          if (claimable?.length) {
+            const ids = claimable.map((p: any) => p.id);
+            await supabase.from("profile").update({ practitioner_id: newId, is_claimed: true }).in("id", ids);
+            autoClaimedProfiles = claimable.map((p: any) => ({ id: p.id, companyName: p.company_name, slug: p.slug }));
+          }
+        } catch { /* non-fatal — column may not exist yet */ }
+      }
+
+      return res.status(200).json(toCamelCase({
+        ...data,
+        account_id: newId,
+        role: "GARDENER",
+        email_verified: true,
+        auto_claimed_profiles: autoClaimedProfiles,
+      }));
     }
 
     if (method === "GET" && path.match(/^\/api\/accounts\/by-auth\/[^/]+$/)) {
@@ -1522,6 +1548,68 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       bustProfileCache();
       const fresh = await supabase.from("profile").select("*").eq("id", (data as { id: string }).id).single();
       return res.status(201).json(await hydrateProfile(fresh.data));
+    }
+
+    // GET /api/profiles/claim-check?vat=BE0123456789
+    // Returns unclaimed profiles that match the caller's VAT number.
+    // Only used inside the onboarding wizard — never shown publicly.
+    if (method === "GET" && path === "/api/profiles/claim-check") {
+      const auth = await getAuthContext(req);
+      if (!auth) return res.status(401).json({ error: "Unauthorized" });
+      const vat = (req.query as any)?.vat as string | undefined;
+      if (!vat) return res.status(400).json({ error: "vat required" });
+      // Normalise: strip spaces, dots, dashes, uppercase
+      const normalised = vat.replace(/[\s.\-]/g, "").toUpperCase();
+      try {
+        // VAT lives on the practitioner, not directly on profile.
+        // Step 1: find practitioners whose VAT matches (case-insensitive exact).
+        const { data: pract } = await supabase
+          .from("practitioner")
+          .select("id")
+          .ilike("vat", normalised)
+          .limit(10);
+        if (!pract?.length) return res.status(200).json([]);
+
+        // Step 2: find unclaimed profiles belonging to those practitioners.
+        const { data: profiles } = await supabase
+          .from("profile")
+          .select("id, company_name, slug, contact_email, telnr")
+          .in("practitioner_id", (pract as any[]).map(p => p.id))
+          .eq("is_claimed", false)
+          .limit(10);
+        return res.status(200).json((profiles || []).map((p: any) => toCamelCase(p)));
+      } catch {
+        return res.status(200).json([]); // column may not exist yet
+      }
+    }
+
+    // POST /api/profiles/:id/claim
+    // Claims an unclaimed seeded profile and assigns it to the authenticated practitioner.
+    if (method === "POST" && path.match(/^\/api\/profiles\/[^/]+\/claim$/)) {
+      const auth = await getAuthContext(req);
+      if (!auth || !auth.practitionerId) return res.status(401).json({ error: "Unauthorized" });
+      const profileId = path.split("/")[3];
+      if (!isValidId(profileId)) return res.status(400).json({ error: "Ongeldig profiel-ID" });
+      try {
+        const { data: prof } = await supabase
+          .from("profile")
+          .select("id, is_claimed, practitioner_id")
+          .eq("id", profileId)
+          .maybeSingle();
+        if (!prof) return res.status(404).json({ error: "Profiel niet gevonden" });
+        const p = prof as any;
+        if (p.is_claimed && p.practitioner_id !== auth.practitionerId) {
+          return res.status(409).json({ error: "Dit profiel is al geclaimd" });
+        }
+        await supabase
+          .from("profile")
+          .update({ practitioner_id: auth.practitionerId, is_claimed: true })
+          .eq("id", profileId);
+        bustProfileCache();
+        return res.status(200).json({ success: true });
+      } catch {
+        return res.status(200).json({ success: false }); // non-fatal
+      }
     }
 
     if (method === "POST" && path.match(/^\/api\/profiles\/[^/]+\/upload$/)) {
