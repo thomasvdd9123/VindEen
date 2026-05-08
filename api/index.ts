@@ -1561,23 +1561,43 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       // Normalise: strip spaces, dots, dashes, uppercase
       const normalised = vat.replace(/[\s.\-]/g, "").toUpperCase();
       try {
-        // VAT lives on the practitioner, not directly on profile.
-        // Step 1: find practitioners whose VAT matches (case-insensitive exact).
+        // Strategy A: match via practitioner.vat (real practitioners with VAT)
         const { data: pract } = await supabase
           .from("practitioner")
           .select("id")
           .ilike("vat", normalised)
           .limit(10);
-        if (!pract?.length) return res.status(200).json([]);
 
-        // Step 2: find unclaimed profiles belonging to those practitioners.
-        const { data: profiles } = await supabase
+        const practIds = (pract || []).map((p: any) => p.id);
+
+        // Strategy B: match via profile.vat (seeded/imported profiles with VAT stored directly)
+        const { data: byProfileVat } = await supabase
           .from("profile")
           .select("id, company_name, slug, contact_email, telnr")
-          .in("practitioner_id", (pract as any[]).map(p => p.id))
+          .ilike("vat", normalised)
           .eq("is_claimed", false)
           .limit(10);
-        return res.status(200).json((profiles || []).map((p: any) => toCamelCase(p)));
+
+        // Strategy A results
+        let byPractitioner: any[] = [];
+        if (practIds.length) {
+          const { data } = await supabase
+            .from("profile")
+            .select("id, company_name, slug, contact_email, telnr")
+            .in("practitioner_id", practIds)
+            .eq("is_claimed", false)
+            .limit(10);
+          byPractitioner = data || [];
+        }
+
+        // Merge, deduplicate by id
+        const seen = new Set<string>();
+        const profiles: any[] = [];
+        for (const p of [...byPractitioner, ...(byProfileVat || [])]) {
+          if (!seen.has(p.id)) { seen.add(p.id); profiles.push(p); }
+        }
+
+        return res.status(200).json(profiles.map((p: any) => toCamelCase(p)));
       } catch {
         return res.status(200).json([]); // column may not exist yet
       }
@@ -2899,6 +2919,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             is_verified: false,
             is_claimed: r.is_claimed === "true",  // default false = unclaimed seed
             verification_status: "PENDING",
+            vat: r.vat ? r.vat.replace(/[\s.\-]/g, "").toUpperCase() : null,
           }).select("id").single();
           if (pErr) throw new Error(pErr.message);
           const profileId = (prof as any).id;

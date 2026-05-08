@@ -111,6 +111,7 @@ export const profile = pgTable("profile", {
   websiteClicks: integer("website_clicks").default(0),
   slug: text("slug").notNull().unique(),
   isClaimed: boolean("is_claimed").notNull().default(true),
+  vat: text("vat"), // internal-only: used for claim-by-VAT matching, never shown in dashboard
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
