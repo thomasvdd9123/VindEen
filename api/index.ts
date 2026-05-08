@@ -2869,14 +2869,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const PLATFORM_EMAIL = "platform@zoek-een-tuinman.be";
         const { data: existing } = await supabase.from("practitioner").select("id").eq("email", PLATFORM_EMAIL).maybeSingle();
         if ((existing as any)?.id) return (existing as any).id;
-        // Create Supabase auth user for platform account
+        // Get or create Supabase auth user for platform account
+        let authUserId: string;
         const { data: authUser, error: authErr } = await supabase.auth.admin.createUser({
           email: PLATFORM_EMAIL, password: crypto.randomUUID(), email_confirm: true,
         });
-        if (authErr) throw new Error(`Platform auth user: ${authErr.message}`);
+        if (authErr) {
+          if (authErr.message.includes("already been registered") || authErr.message.includes("already registered")) {
+            // Auth user exists but practitioner row was deleted — find the existing auth user
+            const { data: usersPage } = await supabase.auth.admin.listUsers({ page: 1, perPage: 1000 });
+            const found = usersPage?.users?.find((u: any) => u.email === PLATFORM_EMAIL);
+            if (!found) throw new Error(`Platform auth user bestaat maar kon niet worden gevonden`);
+            authUserId = found.id;
+          } else {
+            throw new Error(`Platform auth user: ${authErr.message}`);
+          }
+        } else {
+          authUserId = authUser.user.id;
+        }
         const { data: cfg } = await supabase.from("site_config").select("default_practitioner_type_id").limit(1).single();
         const { data: pract, error: pErr } = await supabase.from("practitioner").insert({
-          auth_user_id: authUser.user.id,
+          auth_user_id: authUserId,
           email: PLATFORM_EMAIL,
           company_name: "Platform (geseed profielen)",
           practitioner_type_id: (cfg as any)?.default_practitioner_type_id,
