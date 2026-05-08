@@ -958,12 +958,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         if (sc) categoryIdsForMain = [sc.id];
       }
 
-      // Locatiezoeklogica: toon profielen die minstens één servicegebied binnen 25km bedienen.
+      // Locatiezoeklogica: toon profielen die minstens één servicegebied binnen 50km bedienen.
       // Sortering op afstand van het dichtstbijzijnde geregistreerde servicegebied.
       let searchLocationData: { lat: number; lng: number; name: string } | null = null;
-      const SEARCH_RADIUS_KM = 10;
+      const SEARCH_RADIUS_KM = 50;
       let locationCandidateIds: string[] | null = null;
-      // nearbyAreaDistMap: service_area id → afstand tot zoeklocatie (alleen ≤ 10km)
+      // nearbyAreaDistMap: service_area id → afstand tot zoeklocatie (alleen ≤ 50km)
       const nearbyAreaDistMap = new Map<string, number>();
       // nearbyAreaNameMap: service_area id → municipality naam
       const nearbyAreaNameMap = new Map<string, string>();
