@@ -962,9 +962,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       // Office-address afstand wordt enkel gebruikt voor sortering en als
       // optionele back-fill wanneer er géén expliciete service_area-match is.
       let searchLocationData: { lat: number; lng: number; name: string; id: string; postcode: string | null } | null = null;
-      let coverageMatched = false;
       const SEARCH_RADIUS_KM = 25;
       let locationCandidateIds: string[] | null = null;
+      // coverageMatchedSet: snelle lookup welke profielen expliciet dit gebied bedienen
+      let coverageMatchedSet = new Set<string>();
       if (location) {
         const loc = serviceAreas.find((a) => a.slug === location);
         if (loc && loc.latitude && loc.longitude) {
@@ -974,10 +975,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             .select("profile_id")
             .eq("service_area_id", loc.id);
           const areaIds = (areaProfiles || []).map((r) => (r as { profile_id: string }).profile_id);
-          if (areaIds.length) {
-            coverageMatched = true;
-            locationCandidateIds = areaIds;
-          }
+          coverageMatchedSet = new Set(areaIds);
+          // locationCandidateIds wordt NIET meer gebruikt als query-filter —
+          // we halen alle profielen op en filteren in JS op coverage ÓF radius.
+          locationCandidateIds = null;
         }
       }
 
@@ -995,14 +996,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (specId) q = (q as any).eq("profile_specialization.specialization_id", specId);
       if (categoryIdsForMain) q = (q as any).eq("profile_service_category.service_category_id", categoryIdsForMain[0]);
 
-      // Location filter via candidate IDs (already a small, pre-filtered set)
-      if (locationCandidateIds) {
-        if (!locationCandidateIds.length) {
-          if (isCount) return res.status(200).json({ total: 0, count: 0 });
-          return res.status(200).json({ profiles: [], total: 0, page, totalPages: 0, searchLocation: searchLocationData });
-        }
-        q = q.in("id", locationCandidateIds);
-      }
+      // Geen query-filter op locatie — filtering op coverage ÓF radius gebeurt in JS na afstandsberekening.
 
       if (query) q = q.or(`company_name.ilike.%${query}%,introduction.ilike.%${query}%,title.ilike.%${query}%`);
 
@@ -1012,11 +1006,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       let profiles = rawProfiles || [];
 
       // Afstandsberekening en -filtering:
-      //  - 25km-radius geldt altijd, ook bij coverage-match.
-      //  - Profielen in dezelfde postcode zonder GPS-coördinaten krijgen afstand 0
-      //    zodat ze bovenaan sorteren (lokale tuinmannen eerst).
-      //  - Coverage-match bepaalt alleen de kandidatenlijst, niet of de afstandsfilter
-      //    overgeslagen wordt.
+      //  - Coverage-match (service_area): profiel heeft expliciet dit gebied aangeduid →
+      //    altijd opnemen. Afstand wordt berekend voor sortering.
+      //  - Geen coverage-match: fallback 25km-radius rond office_address.
+      //  - Sortering: dichtstbij eerst. Coverage-matched profielen zonder GPS-coördinaten
+      //    krijgen een sorteerpositie net ná berekende afstanden (grote maar niet-oneindige
+      //    waarde), zodat ze niet achter radius-profielen vallen.
       if (searchLocationData) {
         const ids = profiles.map((p) => p.office_address_id).filter(Boolean);
         const { data: addrs } = await supabase.from("address").select("id, latitude, longitude, postcode, municipality").in("id", ids);
@@ -1032,19 +1027,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           if (a && a.latitude && a.longitude) {
             d = calcDistance(searchLocationData.lat, searchLocationData.lng, a.latitude, a.longitude);
           }
-          // Lokale match: postcode van profiel == postcode van gezochte locatie
-          const isLocal = a && searchLocationData.postcode && a.postcode === searchLocationData.postcode;
-          if (isLocal && d == null) {
-            // Zelfde postcode maar geen GPS → behandel als afstand 0
-            annotated.push({ ...p, _distanceKm: 0 });
+          const isCoverageMatch = coverageMatchedSet.has(p.id);
+          if (isCoverageMatch) {
+            // Altijd opnemen — profiel dient dit gebied expliciet.
+            // Postcode-match zonder GPS → afstand 0 (lokaal).
+            const isLocal = a && searchLocationData.postcode && a.postcode === searchLocationData.postcode;
+            const dist = d != null ? Math.round(d * 10) / 10 : (isLocal ? 0 : null);
+            annotated.push({ ...p, _distanceKm: dist });
           } else if (d != null && d <= SEARCH_RADIUS_KM) {
+            // Nabijgelegen maar geen expliciete coverage: opnemen als binnen 25km
             annotated.push({ ...p, _distanceKm: Math.round(d * 10) / 10 });
           }
-          // Profielen zonder coördinaten en niet-lokaal worden overgeslagen
         }
+        // Sortering: afstand oplopend; coverage-matched zonder coördinaten (null) komen
+        // na profielen met bekende afstand, maar vóór alles via de SEARCH_RADIUS_KM+1-sentinel.
         annotated.sort((a, b) => {
-          const da = a._distanceKm == null ? Number.POSITIVE_INFINITY : a._distanceKm;
-          const db = b._distanceKm == null ? Number.POSITIVE_INFINITY : b._distanceKm;
+          const da = a._distanceKm == null ? SEARCH_RADIUS_KM + 1 : a._distanceKm;
+          const db = b._distanceKm == null ? SEARCH_RADIUS_KM + 1 : b._distanceKm;
           return da - db || (a.company_name || "").localeCompare(b.company_name || "");
         });
         profiles = annotated;
