@@ -13,7 +13,6 @@ import {
   Eye,
   Mail,
   Loader2,
-  Wand2,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useQuery } from "@tanstack/react-query";
@@ -148,20 +147,13 @@ export default function Dashboard() {
               </div>
               <div className="flex flex-wrap gap-2">
                 <Button
-                  variant="outline"
                   className="gap-2"
                   onClick={() => setWizardDismissed(false)}
                   data-testid="button-reopen-wizard"
                 >
-                  <Wand2 className="h-4 w-4" />
-                  Wizard opnieuw starten
+                  <PlusCircle className="h-4 w-4" />
+                  Profiel aanmaken
                 </Button>
-                <Link href="/dashboard/profielen/nieuw">
-                  <Button className="gap-2" data-testid="button-create-profile">
-                    <PlusCircle className="h-4 w-4" />
-                    Handmatig aanmaken
-                  </Button>
-                </Link>
               </div>
             </div>
           </CardContent>

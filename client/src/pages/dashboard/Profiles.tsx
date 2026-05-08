@@ -29,11 +29,13 @@ import {
   RefreshCw,
 } from "lucide-react";
 import type { Profile, SubscriptionItem } from "@shared/schema";
+import { OnboardingWizard } from "@/components/OnboardingWizard";
 
 export default function DashboardProfiles() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
+  const [showAddWizard, setShowAddWizard] = useState(false);
 
   const { data: account, isLoading: isLoadingAccount } = useQuery<{ id: string }>({
     queryKey: ["/api/accounts/by-auth", user?.id],
@@ -68,11 +70,25 @@ export default function DashboardProfiles() {
     },
   });
 
+  const handleWizardComplete = () => {
+    setShowAddWizard(false);
+    queryClient.invalidateQueries({ queryKey: ["/api/my-profiles"] });
+  };
+
   return (
     <DashboardLayout
       title="Jouw profielen"
       description="Beheer je bedrijfsprofielen en maak nieuwe aan."
     >
+      {/* Add-profile wizard (skips welcome + billing) */}
+      {showAddWizard && accountId && (
+        <OnboardingWizard
+          accountId={accountId}
+          initialStep={2}
+          onComplete={handleWizardComplete}
+        />
+      )}
+
       <div className="space-y-4">
         {/* Loading */}
         {isLoading && (
@@ -83,26 +99,25 @@ export default function DashboardProfiles() {
 
         {/* Empty state */}
         {!isLoading && profiles.length === 0 && (
-          <Link href="/dashboard/profielen/nieuw">
-            <Card
-              className="border-2 border-dashed border-primary/30 bg-primary/5 hover:border-primary/50 hover:bg-primary/10 transition-colors cursor-pointer"
-              data-testid="card-create-profile"
-            >
-              <CardContent className="py-14 text-center">
-                <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-primary/10 mb-4">
-                  <Leaf className="h-7 w-7 text-primary" />
-                </div>
-                <h3 className="font-semibold text-lg mb-1">Maak je eerste profiel aan</h3>
-                <p className="text-sm text-muted-foreground mb-5 max-w-sm mx-auto">
-                  Word zichtbaar voor potentiële klanten door een bedrijfsprofiel aan te maken.
-                </p>
-                <Button className="gap-2" data-testid="button-new-profile">
-                  <Plus className="h-4 w-4" />
-                  Profiel aanmaken
-                </Button>
-              </CardContent>
-            </Card>
-          </Link>
+          <Card
+            className="border-2 border-dashed border-primary/30 bg-primary/5 hover:border-primary/50 hover:bg-primary/10 transition-colors cursor-pointer"
+            data-testid="card-create-profile"
+            onClick={() => accountId && setShowAddWizard(true)}
+          >
+            <CardContent className="py-14 text-center">
+              <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-primary/10 mb-4">
+                <Leaf className="h-7 w-7 text-primary" />
+              </div>
+              <h3 className="font-semibold text-lg mb-1">Maak je eerste profiel aan</h3>
+              <p className="text-sm text-muted-foreground mb-5 max-w-sm mx-auto">
+                Word zichtbaar voor potentiële klanten door een bedrijfsprofiel aan te maken.
+              </p>
+              <Button className="gap-2" data-testid="button-new-profile">
+                <Plus className="h-4 w-4" />
+                Profiel aanmaken
+              </Button>
+            </CardContent>
+          </Card>
         )}
 
         {/* Profile list */}
@@ -118,19 +133,18 @@ export default function DashboardProfiles() {
 
             {/* Add another profile */}
             <div className="pt-4">
-              <Link href="/dashboard/profielen/nieuw">
-                <Card
-                  className="border-2 border-dashed border-muted-foreground/25 hover:border-primary/40 hover:bg-muted/40 transition-colors cursor-pointer group"
-                  data-testid="button-add-profile"
-                >
-                  <CardContent className="py-7 flex items-center justify-center gap-3 text-muted-foreground group-hover:text-foreground transition-colors">
-                    <div className="flex items-center justify-center w-9 h-9 rounded-full border-2 border-dashed border-current">
-                      <Plus className="h-4 w-4" />
-                    </div>
-                    <span className="font-medium">Nog een profiel toevoegen</span>
-                  </CardContent>
-                </Card>
-              </Link>
+              <Card
+                className="border-2 border-dashed border-muted-foreground/25 hover:border-primary/40 hover:bg-muted/40 transition-colors cursor-pointer group"
+                data-testid="button-add-profile"
+                onClick={() => accountId && setShowAddWizard(true)}
+              >
+                <CardContent className="py-7 flex items-center justify-center gap-3 text-muted-foreground group-hover:text-foreground transition-colors">
+                  <div className="flex items-center justify-center w-9 h-9 rounded-full border-2 border-dashed border-current">
+                    <Plus className="h-4 w-4" />
+                  </div>
+                  <span className="font-medium">Nog een profiel toevoegen</span>
+                </CardContent>
+              </Card>
             </div>
           </>
         )}
@@ -248,7 +262,6 @@ function ProfileCard({ profile, onDelete }: {
   const expiringSoon = endDate && hasActiveSub && endDate.getTime() - Date.now() < 30 * 24 * 60 * 60 * 1000;
   const needsPayment = !hasActiveSub && !isCancelled;
 
-  // Subscription pill config
   const subPill = hasActiveSub
     ? expiringSoon
       ? { cls: "bg-orange-50 text-orange-700 border border-orange-200", icon: AlertTriangle, label: "Verloopt binnenkort" }
@@ -328,7 +341,6 @@ function ProfileCard({ profile, onDelete }: {
                 <div className="flex flex-wrap items-center gap-2">
                   {!isLoadingSubscription && (
                     <>
-                      {/* Pay / Renew button */}
                       {needsPayment && (
                         <Link href={`/dashboard/profielen/${profile.id}/betalen`}>
                           <Button size="sm" className="gap-1.5 h-8" data-testid={`button-pay-${profile.id}`}>
@@ -338,7 +350,6 @@ function ProfileCard({ profile, onDelete }: {
                         </Link>
                       )}
 
-                      {/* Renew early if cancelled (still has time) */}
                       {isCancelled && (
                         <Link href={`/dashboard/profielen/${profile.id}/betalen`}>
                           <Button size="sm" variant="outline" className="gap-1.5 h-8" data-testid={`button-renew-${profile.id}`}>
@@ -348,7 +359,6 @@ function ProfileCard({ profile, onDelete }: {
                         </Link>
                       )}
 
-                      {/* Stop lidmaatschap — only when ACTIVE */}
                       {hasActiveSub && (
                         <Button
                           size="sm"
@@ -395,7 +405,6 @@ function ProfileCard({ profile, onDelete }: {
               </div>
             </div>
 
-            {/* Warning strip — alleen tonen als abonnementsdata geladen is */}
             {!isLoadingSubscription && needsPayment && (
               <div className="mt-4 -mx-5 -mb-5 px-5 py-3 bg-amber-50 border-t border-amber-100 flex items-center gap-2 text-amber-700 text-xs">
                 <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
@@ -419,7 +428,6 @@ function ProfileCard({ profile, onDelete }: {
         </div>
       </Card>
 
-      {/* Cancel subscription dialog */}
       <AlertDialog open={cancelTarget} onOpenChange={(o) => !o && setCancelTarget(false)}>
         <AlertDialogContent>
           <AlertDialogHeader>

@@ -291,14 +291,16 @@ function StepDone({
 interface OnboardingWizardProps {
   accountId: string;
   onComplete: () => void;
+  /** Start at a specific step index (skips welcome + billing when set to 2) */
+  initialStep?: number;
 }
 
-export function OnboardingWizard({ accountId, onComplete }: OnboardingWizardProps) {
+export function OnboardingWizard({ accountId, onComplete, initialStep = 0 }: OnboardingWizardProps) {
   const { user, updateUserMetadata } = useAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
 
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState(initialStep);
   const [saving, setSaving] = useState(false);
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
   const [profileId, setProfileId] = useState<string | null>(null);
@@ -464,10 +466,10 @@ export function OnboardingWizard({ accountId, onComplete }: OnboardingWizardProp
     }
   };
 
-  const handleBack = () => setStep(s => Math.max(0, s - 1));
+  const handleBack = () => setStep(s => Math.max(initialStep, s - 1));
 
   const handleCloseRequest = () => {
-    if (step === 0 || step === 5) { markDone(); return; }
+    if (step <= initialStep || step === 5) { markDone(); return; }
     setShowCloseConfirm(true);
   };
 
@@ -478,7 +480,8 @@ export function OnboardingWizard({ accountId, onComplete }: OnboardingWizardProp
   };
 
   const markDone = () => {
-    if (user?.id) localStorage.setItem(`onboarding_done_${user.id}`, "1");
+    // Only set localStorage flag for full onboarding (not "add profile" mode)
+    if (initialStep === 0 && user?.id) localStorage.setItem(`onboarding_done_${user.id}`, "1");
     onComplete();
   };
 
@@ -491,7 +494,8 @@ export function OnboardingWizard({ accountId, onComplete }: OnboardingWizardProp
   const handleLater = () => markDone();
 
   const stepLabels = ["Welkom", "Uw gegevens", "Profiel aanmaken", "Beschrijving", "Diensten", "Gelukt!"];
-  const progressPct = (step / (TOTAL_STEPS - 1)) * 100;
+  const totalVisible = TOTAL_STEPS - 1 - initialStep;
+  const progressPct = totalVisible > 0 ? ((step - initialStep) / totalVisible) * 100 : 100;
 
   return (
     <>
@@ -507,7 +511,7 @@ export function OnboardingWizard({ accountId, onComplete }: OnboardingWizardProp
             <div className="flex items-center justify-between mb-3">
               <div>
                 <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
-                  Stap {Math.max(1, step)} van {TOTAL_STEPS - 1} — {stepLabels[step]}
+                  Stap {Math.max(1, step - initialStep + (initialStep > 0 ? 1 : 1))} van {TOTAL_STEPS - 1 - initialStep} — {stepLabels[step]}
                 </p>
               </div>
               <button
