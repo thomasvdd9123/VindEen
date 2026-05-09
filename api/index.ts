@@ -1656,9 +1656,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         if (p.is_claimed && p.practitioner_id !== auth.practitionerId) {
           return res.status(409).json({ error: "Dit profiel is al geclaimd" });
         }
+        // Bij claimen: zet profiel op onzichtbaar. Betaling is vereist om terug live te gaan.
         await supabase
           .from("profile")
-          .update({ practitioner_id: auth.practitionerId, is_claimed: true })
+          .update({ practitioner_id: auth.practitionerId, is_claimed: true, is_public: false })
           .eq("id", profileId);
         bustProfileCache();
         return res.status(200).json({ success: true });
