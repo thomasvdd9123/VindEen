@@ -903,8 +903,30 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // -----------------------------------------------------------------------
     // PROFILES
     // -----------------------------------------------------------------------
-    if (method === "GET" && path === "/api/profiles/featured") {
+
+    // Helper: haal IDs van profielen met een actief betaalabonnement op.
+    // Unclaimed profielen (is_claimed=false) zijn altijd zichtbaar zonder betaling.
+    async function getActiveSubProfileIds(): Promise<string[]> {
       const { data } = await supabase
+        .from("profile_subscription")
+        .select("profile_id")
+        .eq("status", "ACTIVE");
+      return (data || []).map((s: any) => s.profile_id as string);
+    }
+
+    // Voeg betaalgate toe aan een Supabase query:
+    // zichtbaar als is_claimed=false OF id zit in activeSubIds.
+    function applyPaymentGate<Q>(q: Q, activeSubIds: string[]): Q {
+      if (activeSubIds.length > 0) {
+        return (q as any).or(`is_claimed.eq.false,id.in.(${activeSubIds.join(",")})`) as Q;
+      }
+      // Geen actieve abonnementen → enkel unclaimed profielen tonen
+      return (q as any).eq("is_claimed", false) as Q;
+    }
+
+    if (method === "GET" && path === "/api/profiles/featured") {
+      const activeSubIds = await getActiveSubProfileIds();
+      let fq = supabase
         .from("profile")
         .select("*")
         .eq("is_active", true)
@@ -912,6 +934,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         .eq("is_verified", true)
         .order("view_count", { ascending: false })
         .limit(6);
+      fq = applyPaymentGate(fq, activeSubIds);
+      const { data } = await fq;
       const hydrated = await hydrateProfiles(data || [], { withPracticals: true });
       return res.status(200).json(hydrated);
     }
@@ -1012,8 +1036,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (specId) selectStr += ", profile_specialization!inner(specialization_id)";
       if (categoryIdsForMain) selectStr += ", profile_service_category!inner(service_category_id)";
 
+      const activeSubIds = await getActiveSubProfileIds();
       let q = supabase.from("profile").select(selectStr, { count: "exact" })
-        .eq("is_active", true).eq("is_public", true).eq("verification_status", "APPROVED");
+        .eq("is_active", true).eq("is_public", true).eq("is_verified", true).eq("verification_status", "APPROVED");
+      q = applyPaymentGate(q, activeSubIds);
 
       if (specId) q = (q as any).eq("profile_specialization.specialization_id", specId);
       if (categoryIdsForMain) q = (q as any).eq("profile_service_category.service_category_id", categoryIdsForMain[0]);
@@ -1076,9 +1102,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (!isValidId(id)) return res.status(400).json({ error: "Ongeldig profiel-ID" });
       const { data } = await supabase.from("profile").select("*").eq("id", id).single();
       if (!data) return res.status(404).json({ error: "Profile not found" });
-      const row = data as { is_active?: boolean; is_public?: boolean; practitioner_id: string };
-      // Publieke toegang enkel voor actieve én publieke profielen; eigenaar mag altijd zijn eigen profiel zien
-      if (!row.is_active || !row.is_public) {
+      const row = data as { is_active?: boolean; is_public?: boolean; is_claimed?: boolean; practitioner_id: string };
+      // Publieke toegang: actief + publiek + (unclaimed OF actieve betaling); eigenaar mag altijd eigen profiel zien
+      const isPubliclyVisible = row.is_active && row.is_public && (
+        !row.is_claimed || (await getActiveSubProfileIds()).includes(id as string)
+      );
+      if (!isPubliclyVisible) {
         const auth = await getAuthContext(req);
         if (!auth || auth.practitionerId !== row.practitioner_id) {
           return res.status(403).json({ error: "Forbidden" });
@@ -1123,6 +1152,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             .eq("is_public", true)
             .single();
           if (!data) return null;
+          // Betaalgate: geclaimde profielen vereisen actief abonnement
+          const p = data as any;
+          if (p.is_claimed) {
+            const activeSubIds = await getActiveSubProfileIds();
+            if (!activeSubIds.includes(p.id)) return null;
+          }
           // fire & forget view increment
           supabase
             .from("profile")
@@ -2007,12 +2042,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (method === "GET" && path === "/sitemaps/profiles/sitemap.xml") {
       const today = new Date().toISOString().split("T")[0];
-      const { data: profiles } = await supabase
+      const activeSubIds = await getActiveSubProfileIds();
+      let sitemapQ = supabase
         .from("profile")
         .select("slug")
         .eq("is_public", true)
         .eq("is_active", true)
         .eq("is_verified", true);
+      sitemapQ = applyPaymentGate(sitemapQ, activeSubIds);
+      const { data: profiles } = await sitemapQ;
       let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
       for (const p of profiles || []) {
         xml += `  <url><loc>${SITEMAP_BASE_URL}/bedrijf/${(p as any).slug}</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.3</priority></url>\n`;
