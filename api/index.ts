@@ -3298,12 +3298,14 @@ Schrijf een aantrekkelijke beschrijving van 200-350 woorden die:
       ];
       const MAX_AGE_MS = 32 * 24 * 60 * 60 * 1000; // stop reminders after ~32 days
 
-      // 1. Find all profiles without an ACTIVE subscription, created within the window
+      // 1. Find all CLAIMED profiles without an ACTIVE subscription, created within the window
+      // is_claimed = true means a real user registered — seeded/imported profiles must never get reminders
       const cutoff = new Date(Date.now() - MAX_AGE_MS).toISOString();
       const { data: candidates, error: candErr } = await supabase
         .from("profile")
         .select("id, company_name, slug, contact_email, practitioner_id, created_at")
         .gte("created_at", cutoff)
+        .eq("is_claimed", true)
         .order("created_at", { ascending: false });
 
       if (candErr) {
