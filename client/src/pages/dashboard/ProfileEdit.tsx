@@ -63,7 +63,7 @@ const profileSchema = z.object({
   description: z.string().optional(),
   categoryId: z.string().min(1, "Selecteer een categorie"),
   locationId: z.string().min(1, "Selecteer een locatie"),
-  isActive: z.boolean().default(true),
+  isPublic: z.boolean().default(false),
   hideAddress: z.boolean().default(false),
   specializations: z.array(z.string()).optional(),
   mainCategories: z.array(z.string()).optional(),
@@ -154,7 +154,7 @@ export default function ProfileEdit() {
       description: "",
       categoryId: "",
       locationId: "",
-      isActive: true,
+      isPublic: false,
       hideAddress: false,
       specializations: [],
       mainCategories: [],
@@ -193,7 +193,7 @@ export default function ProfileEdit() {
         description: profile.description || "",
         categoryId: profile.categoryId || "",
         locationId: profile.locationId || "",
-        isActive: profile.isActive ?? true,
+        isPublic: profile.isPublic ?? false,
         hideAddress: profile.hideAddress ?? false,
         specializations: profile.specializations || [],
         mainCategories: derivedMainCategories,
@@ -211,7 +211,7 @@ export default function ProfileEdit() {
       return apiRequest("PUT", `/api/profiles/${id}`, {
         ...data,
         hasWebsite: !!data.website,
-        isActive: data.isActive,
+        isPublic: data.isPublic,
         hideAddress: data.hideAddress,
         specializations: data.specializations,
         office: {
@@ -401,7 +401,7 @@ export default function ProfileEdit() {
                 {/* Active/Inactive Toggle */}
                 <FormField
                   control={form.control}
-                  name="isActive"
+                  name="isPublic"
                   render={({ field }) => (
                     <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                       <div className="space-y-0.5">
@@ -411,7 +411,7 @@ export default function ProfileEdit() {
                           ) : (
                             <EyeOff className="h-4 w-4 text-muted-foreground" />
                           )}
-                          Profiel actief
+                          Profiel zichtbaar
                         </FormLabel>
                         <FormDescription>
                           {field.value 
